@@ -48,6 +48,44 @@ export const translations = {
       analytics: 'Analytics',
     },
 
+    navbar: {
+      admin: 'Admin',
+      close: 'Close',
+      exitSafely: 'Exit safely',
+      closeApp: 'Close App',
+    },
+
+    admin: {
+      dashboardTitle: 'Admin Dashboard',
+      adminAccess: 'Admin Access',
+      totalUsers: 'Total Users',
+      totalTrips: 'Total Trips',
+      totalRevenue: 'Total Revenue',
+      totalProfit: 'Total Profit',
+      allUsers: 'All Users',
+      userTrips: 'User Trips',
+      showAllTrips: 'Show All Trips',
+      table: {
+        email: 'Email',
+        fullName: 'Full Name',
+        businessName: 'Business Name',
+        phone: 'Phone',
+        role: 'Role',
+        actions: 'Actions',
+        destination: 'Destination',
+        client: 'Client',
+        dates: 'Dates',
+        salePrice: 'Sale Price',
+        profit: 'Profit',
+        paymentStatus: 'Payment Status',
+        status: 'Status',
+      },
+      roles: {
+        user: 'User',
+        admin: 'Admin',
+      },
+    },
+
     trips: {
       title: 'Trip Management',
       newTrip: 'New Trip',
@@ -217,6 +255,44 @@ export const translations = {
       analytics: 'التحليلات',
     },
 
+    navbar: {
+      admin: 'مسؤول',
+      close: 'إغلاق',
+      exitSafely: 'خروج آمن',
+      closeApp: 'إغلاق التطبيق',
+    },
+
+    admin: {
+      dashboardTitle: 'لوحة التحكم',
+      adminAccess: 'وصول المسؤول',
+      totalUsers: 'إجمالي المستخدمين',
+      totalTrips: 'إجمالي الرحلات',
+      totalRevenue: 'إجمالي الإيرادات',
+      totalProfit: 'إجمالي الأرباح',
+      allUsers: 'جميع المستخدمين',
+      userTrips: 'رحلات المستخدم',
+      showAllTrips: 'عرض كل الرحلات',
+      table: {
+        email: 'البريد الإلكتروني',
+        fullName: 'الاسم الكامل',
+        businessName: 'اسم العمل',
+        phone: 'الهاتف',
+        role: 'الدور',
+        actions: 'إجراءات',
+        destination: 'الوجهة',
+        client: 'العميل',
+        dates: 'التواريخ',
+        salePrice: 'سعر البيع',
+        profit: 'الربح',
+        paymentStatus: 'حالة الدفع',
+        status: 'الحالة',
+      },
+      roles: {
+        user: 'مستخدم',
+        admin: 'مسؤول',
+      },
+    },
+
     trips: {
       title: 'إدارة الرحلات',
       newTrip: 'رحلة جديدة',
@@ -384,6 +460,44 @@ export const translations = {
       home: 'בית',
       trips: 'טיולים',
       analytics: 'אנליטיקס',
+    },
+
+    navbar: {
+      admin: 'מנהל',
+      close: 'סגור',
+      exitSafely: 'יציאה בטוחה',
+      closeApp: 'סגור אפליקציה',
+    },
+
+    admin: {
+      dashboardTitle: 'לוח בקרה',
+      adminAccess: 'גישת מנהל',
+      totalUsers: 'סה"כ משתמשים',
+      totalTrips: 'סה"כ טיולים',
+      totalRevenue: 'סה"כ הכנסות',
+      totalProfit: 'סה"כ רווח',
+      allUsers: 'כל המשתמשים',
+      userTrips: 'טיולי משתמש',
+      showAllTrips: 'הצג את כל הטיולים',
+      table: {
+        email: 'אימייל',
+        fullName: 'שם מלא',
+        businessName: 'שם העסק',
+        phone: 'טלפון',
+        role: 'תפקיד',
+        actions: 'פעולות',
+        destination: 'יעד',
+        client: 'לקוח',
+        dates: 'תאריכים',
+        salePrice: 'מחיר מכירה',
+        profit: 'רווח',
+        paymentStatus: 'סטטוס תשלום',
+        status: 'סטטוס',
+      },
+      roles: {
+        user: 'משתמש',
+        admin: 'מנהל',
+      },
     },
 
     trips: {

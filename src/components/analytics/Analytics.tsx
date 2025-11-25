@@ -86,45 +86,26 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
 };
 
 export default function Analytics({
+  trips,
   onOpenTripsWithFilter }: AnalyticsProps) {
   const { t } = useLanguage();
-  const { user, isAdmin } = useAuth();
+  const { isAdmin } = useAuth();
   const { convert, format, currency, isLoading: ratesLoading } = useCurrency();
 
-  // Server-side data states
-  const [serverUserStats, setServerUserStats] = useState<any>(null);
-  const [serverMonthlyStats, setServerMonthlyStats] = useState<any[]>([]);
-
   const [userProfiles, setUserProfiles] = useState<UserProfile[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  // Fetch analytics data from server
+  // Fetch user profiles for admin
   useEffect(() => {
-    const fetchAnalytics = async () => {
-      if (!user?.id || isAdmin) return;
-
-      setLoading(true);
-      try {
-        const [
-          { data: userStats },
-          { data: monthlyStats },
-        ] = await Promise.all([
-          supabase.rpc('get_user_stats', { p_user_id: user.id }),
-          supabase.rpc('get_monthly_stats', { p_user_id: user.id }),
-        ]);
-
-        if (userStats && userStats[0]) setServerUserStats(userStats[0]);
-        if (monthlyStats) setServerMonthlyStats(monthlyStats);
-
-      } catch (error) {
-        console.error('Error fetching analytics:', error);
-      } finally {
-        setLoading(false);
+    const loadData = async () => {
+      if (isAdmin) {
+        setLoading(true);
+        await fetchUserProfiles();
       }
     };
 
-    fetchAnalytics();
-  }, [user?.id, isAdmin]);
+    loadData();
+  }, [isAdmin]);
 
   const fetchUserProfiles = async () => {
     try {
@@ -155,17 +136,7 @@ export default function Analytics({
     }
   };
 
-  // Fetch user profiles for admin
-  useEffect(() => {
-    const loadData = async () => {
-      if (isAdmin) {
-        setLoading(true);
-        await fetchUserProfiles();
-      }
-    };
 
-    loadData();
-  }, [isAdmin]);
 
   const getMonthsSinceFirstUser = (profiles: UserProfile[]) => {
     if (profiles.length === 0) return 1;
@@ -208,28 +179,23 @@ export default function Analytics({
             : 0,
       };
     } else {
-      // Use server-side stats with conversion
-      if (!serverUserStats) {
-        return {
-          totalRevenue: 0,
-          totalProfit: 0,
-          totalTrips: 0,
-          totalTravelers: 0,
-          averageProfit: 0,
-        };
-      }
+      // Client-side calculation from trips prop
+      const totalRevenue = trips.reduce((sum: number, trip: Trip) => sum + (trip.sale_price || 0), 0);
+      const totalProfit = trips.reduce((sum: number, trip: Trip) => sum + (trip.profit || 0), 0);
+      const totalTrips = trips.length;
+      const totalTravelers = trips.reduce((sum: number, trip: Trip) => sum + (trip.travelers_count || 0), 0);
 
       return {
-        totalRevenue: convert(Number(serverUserStats.total_revenue)),
-        totalProfit: convert(Number(serverUserStats.total_profit)),
-        totalTrips: Number(serverUserStats.total_trips),
-        totalTravelers: Number(serverUserStats.total_travelers),
-        averageProfit: Number(serverUserStats.total_trips) > 0
-          ? convert(Number(serverUserStats.total_profit) / Number(serverUserStats.total_trips))
+        totalRevenue: convert(totalRevenue),
+        totalProfit: convert(totalProfit),
+        totalTrips,
+        totalTravelers,
+        averageProfit: totalTrips > 0
+          ? convert(totalProfit / totalTrips)
           : 0,
       };
     }
-  }, [userProfiles, isAdmin, serverUserStats, convert]);
+  }, [userProfiles, isAdmin, trips, convert]);
 
   const monthlyData = useMemo(() => {
     if (isAdmin) {
@@ -269,15 +235,33 @@ export default function Analytics({
           regularUsers: data.regularUsers,
         }));
     } else {
-      // Regular user: trip trends from server with conversion
-      return serverMonthlyStats.map((item: any) => ({
-        month: item.month,
-        profit: convert(Number(item.profit)),
-        revenue: convert(Number(item.revenue)),
-        travelers: Number(item.travelers),
-      }));
+      // Regular user: Calculate monthly stats from trips
+      const monthMap = new Map<string, { profit: number; revenue: number; travelers: number }>();
+
+      trips.forEach((trip) => {
+        const date = new Date(trip.start_date); // Use start_date for grouping
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+
+        const existing = monthMap.get(monthKey) || { profit: 0, revenue: 0, travelers: 0 };
+
+        monthMap.set(monthKey, {
+          profit: existing.profit + (trip.profit || 0),
+          revenue: existing.revenue + (trip.sale_price || 0),
+          travelers: existing.travelers + (trip.travelers_count || 0),
+        });
+      });
+
+      // Sort by month and format
+      return Array.from(monthMap.entries())
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([month, data]) => ({
+          month,
+          profit: convert(data.profit),
+          revenue: convert(data.revenue),
+          travelers: data.travelers,
+        }));
     }
-  }, [userProfiles, isAdmin, serverMonthlyStats, convert]);
+  }, [userProfiles, isAdmin, trips, convert]);
 
   // User-focused derived analytics
   const {
@@ -299,17 +283,25 @@ export default function Analytics({
       };
     }
 
-    // Use server stats for calculations
-    const totalRevenue = Number(serverUserStats?.total_revenue || 0);
-    const totalProfit = Number(serverUserStats?.total_profit || 0);
-    const profitMarginPct =
-      totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
+    // Calculate totals from trips
+    const totalRevenue = trips.reduce((sum: number, trip: Trip) => sum + (trip.sale_price || 0), 0);
+    const totalProfit = trips.reduce((sum: number, trip: Trip) => sum + (trip.profit || 0), 0);
+    const profitMarginPct = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
 
-    // Note: We don't have totalCollected/totalPending in serverUserStats yet.
-    // Assuming 0 for now as per previous logic.
-    const totalCollected = 0;
-    const totalPending = 0;
-    const paymentHealthPct = 0;
+    // Calculate Payment Health
+    const totalCollectedRaw = trips.reduce((sum: number, trip: Trip) => sum + (trip.amount_paid || 0), 0);
+    // Pending is (Sale Price - Amount Paid)
+    const totalPendingRaw = trips.reduce((sum: number, trip: Trip) => {
+      const price = trip.sale_price || 0;
+      const paid = trip.amount_paid || 0;
+      return sum + Math.max(0, price - paid);
+    }, 0);
+
+    const totalCollected = convert(totalCollectedRaw);
+    const totalPending = convert(totalPendingRaw);
+
+    const totalDue = totalCollectedRaw + totalPendingRaw;
+    const paymentHealthPct = totalDue > 0 ? (totalCollectedRaw / totalDue) * 100 : 0;
 
     const monthlyProfitOnly = (monthlyData as {
       month: string;
@@ -343,7 +335,7 @@ export default function Analytics({
       paymentHealthPct,
       monthlyProfitOnly,
     };
-  }, [isAdmin, monthlyData, serverUserStats, convert]);
+  }, [isAdmin, monthlyData, trips, convert]);
 
   if (loading) {
     return (

@@ -143,7 +143,7 @@ export default function Navbar({ onNavigate, currentPage }: NavbarProps) {
                     }`}
                 >
                   <Shield className="w-4 h-4 text-sky-200" />
-                  <span>Admin</span>
+                  <span>{t('navbar.admin')}</span>
                 </button>
               )}
             </div>
@@ -161,9 +161,9 @@ export default function Navbar({ onNavigate, currentPage }: NavbarProps) {
                     <LogOut className="w-3 h-3" />
                   </span>
                   <span className="flex flex-col leading-tight text-left">
-                    <span className="text-[10px] font-semibold">Close</span>
+                    <span className="text-[10px] font-semibold">{t('navbar.close')}</span>
                     <span className="text-[9px] text-red-100/85">
-                      Exit safely
+                      {t('navbar.exitSafely')}
                     </span>
                   </span>
                 </button>
@@ -239,7 +239,7 @@ export default function Navbar({ onNavigate, currentPage }: NavbarProps) {
                     }`}
                 >
                   <Shield className="w-4 h-4 text-sky-200" />
-                  <span>Admin</span>
+                  <span>{t('navbar.admin')}</span>
                 </button>
               )}
               <button
@@ -269,10 +269,10 @@ export default function Navbar({ onNavigate, currentPage }: NavbarProps) {
                     </span>
                     <span className="flex flex-col leading-tight text-center">
                       <span className="text-[11px] font-semibold">
-                        Close App
+                        {t('navbar.closeApp')}
                       </span>
                       <span className="text-[10px] text-red-100/85">
-                        Exit safely
+                        {t('navbar.exitSafely')}
                       </span>
                     </span>
                   </button>
