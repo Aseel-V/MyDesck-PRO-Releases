@@ -62,8 +62,6 @@ export default function Trips({ initialFilters, initialViewTrip }: TripsProps) {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [showPDFExport, setShowPDFExport] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [page, setPage] = useState(1);
-  const PAGE_SIZE = 12;
 
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
@@ -117,7 +115,7 @@ export default function Trips({ initialFilters, initialViewTrip }: TripsProps) {
     ' border-transparent text-slate-300 hover:text-slate-50 hover:bg-slate-900/50 hover:border-slate-500/80';
 
   const { data: { data: trips, count } = { data: [], count: 0 }, isLoading: loading } = useQuery({
-    queryKey: ['trips', user?.id, page, debouncedSearchTerm, statusFilter, yearFilter, monthFilter, destinationFilter],
+    queryKey: ['trips', user?.id, debouncedSearchTerm, statusFilter, yearFilter, monthFilter, destinationFilter],
     queryFn: async () => {
       if (!user?.id) return { data: [], count: 0 };
 
@@ -165,12 +163,8 @@ export default function Trips({ initialFilters, initialViewTrip }: TripsProps) {
         query = query.eq('destination', destinationFilter);
       }
 
-      const from = (page - 1) * PAGE_SIZE;
-      const to = from + PAGE_SIZE - 1;
-
       const { data, error, count } = await query
-        .order('start_date', { ascending: false })
-        .range(from, to);
+        .order('start_date', { ascending: false });
 
       if (error) throw error;
       return { data: data as Trip[], count: count || 0 };
@@ -647,28 +641,7 @@ export default function Trips({ initialFilters, initialViewTrip }: TripsProps) {
         </div>
       )}
 
-      {/* Pagination Controls */}
-      {count > PAGE_SIZE && (
-        <div className="flex items-center justify-center gap-4 mt-8">
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1 || loading}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900/80 border border-slate-700 text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-800 transition-all"
-          >
-            Previous
-          </button>
-          <span className="text-sm text-slate-400">
-            Page {page} of {Math.ceil(count / PAGE_SIZE)}
-          </span>
-          <button
-            onClick={() => setPage((p) => p + 1)}
-            disabled={page * PAGE_SIZE >= count || loading}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900/80 border border-slate-700 text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-800 transition-all"
-          >
-            Next
-          </button>
-        </div>
-      )}
+
 
 
       {

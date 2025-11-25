@@ -12,9 +12,11 @@ import {
   Download,
   Upload,
   RotateCcw,
+  RefreshCw,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { resizeImage } from '../lib/imageUtils';
+import { CurrencyService } from '../lib/currency';
 
 type NoticeType = 'success' | 'error' | 'info';
 
@@ -45,6 +47,8 @@ export default function Settings() {
   );
   const [uploading, setUploading] = useState(false);
   const [notice, setNotice] = useState<null | { type: NoticeType; message: string }>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [refreshingRates, setRefreshingRates] = useState(false);
 
   // Simple toast helper
   const showNotice = (type: NoticeType, message: string, timeout = 3500) => {
@@ -93,6 +97,13 @@ export default function Settings() {
   useEffect(() => {
     setSuccess(false);
   }, [activeTab]);
+
+  // Load last updated currency rates timestamp
+  useEffect(() => {
+    const updated = CurrencyService.getLastUpdated();
+    setLastUpdated(updated);
+  }, []);
+
 
   const fetchUserProfile = async () => {
     if (!user) return;
@@ -270,6 +281,21 @@ export default function Settings() {
     } catch (error) {
       console.error('Error refreshing profile:', error);
       showNotice('error', 'Failed to refresh profile');
+    }
+  };
+
+  const handleRefreshRates = async () => {
+    setRefreshingRates(true);
+    try {
+      await CurrencyService.refreshRates('USD');
+      const updated = CurrencyService.getLastUpdated();
+      setLastUpdated(updated);
+      showNotice('success', 'Exchange rates updated successfully', 2500);
+    } catch (error) {
+      console.error('Error refreshing rates:', error);
+      showNotice('error', 'Failed to refresh exchange rates');
+    } finally {
+      setRefreshingRates(false);
     }
   };
 
@@ -489,8 +515,8 @@ export default function Settings() {
               <button
                 onClick={() => setActiveTab('profile')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${activeTab === 'profile'
-                    ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
-                    : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
+                  ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
+                  : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
                   }`}
               >
                 <User className="w-4 h-4" />
@@ -500,8 +526,8 @@ export default function Settings() {
               <button
                 onClick={() => setActiveTab('business')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${activeTab === 'business'
-                    ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
-                    : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
+                  ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
+                  : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
                   }`}
               >
                 <Building2 className="w-4 h-4" />
@@ -511,8 +537,8 @@ export default function Settings() {
               <button
                 onClick={() => setActiveTab('security')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${activeTab === 'security'
-                    ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
-                    : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
+                  ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
+                  : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
                   }`}
               >
                 <Key className="w-4 h-4" />
@@ -522,8 +548,8 @@ export default function Settings() {
               <button
                 onClick={() => setActiveTab('data')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${activeTab === 'data'
-                    ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
-                    : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
+                  ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
+                  : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
                   }`}
               >
                 <Download className="w-4 h-4" />
@@ -623,8 +649,8 @@ export default function Settings() {
                         <label
                           htmlFor="logo-upload"
                           className={`w-full flex flex-col items-center justify-center px-4 py-6 rounded-xl border-2 border-dashed transition-all ${uploading
-                              ? 'bg-slate-900/60 border-slate-800 text-slate-500 cursor-not-allowed'
-                              : 'bg-slate-900/80 border-slate-700 text-slate-400 hover:border-sky-500 hover:text-sky-300 cursor-pointer'
+                            ? 'bg-slate-900/60 border-slate-800 text-slate-500 cursor-not-allowed'
+                            : 'bg-slate-900/80 border-slate-700 text-slate-400 hover:border-sky-500 hover:text-sky-300 cursor-pointer'
                             }`}
                         >
                           <Upload className={`w-8 h-8 mb-2 ${uploading ? 'animate-pulse' : ''}`} />
@@ -719,6 +745,43 @@ export default function Settings() {
                         {darkMode ? 'Dark Mode On' : 'Light Mode On'}
                       </span>
                     </button>
+                  </div>
+
+                  {/* Exchange Rates Management */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-200 mb-2">
+                      Exchange Rates
+                    </label>
+                    <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-slate-100 text-sm mb-1">
+                            Live Currency Conversion
+                          </h3>
+                          <p className="text-xs text-slate-400">
+                            Last updated:{' '}
+                            {lastUpdated ? (
+                              <span className="text-slate-300">
+                                {lastUpdated.toLocaleString()}
+                              </span>
+                            ) : (
+                              <span className="text-slate-500">Never</span>
+                            )}
+                          </p>
+                          <p className="text-xs text-slate-500 mt-1">
+                            Auto-refreshes every 12 hours
+                          </p>
+                        </div>
+                        <button
+                          onClick={handleRefreshRates}
+                          disabled={refreshingRates}
+                          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-600 text-white text-sm font-medium hover:bg-sky-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <RefreshCw className={`w-4 h-4 ${refreshingRates ? 'animate-spin' : ''}`} />
+                          <span>{refreshingRates ? 'Updating...' : 'Refresh Now'}</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
 

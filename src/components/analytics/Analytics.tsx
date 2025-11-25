@@ -198,7 +198,8 @@ export default function Analytics({
       }
 
       setRatesLoading(true);
-      const rates = await CurrencyService.getLatestRates('USD');
+      // Using smart caching - automatically handles cache, API, and offline fallback
+      const rates = await CurrencyService.getCachedOrFetchRates('USD');
       if (rates && rates.rates[targetCurrency]) {
         setExchangeRate(rates.rates[targetCurrency]);
       }

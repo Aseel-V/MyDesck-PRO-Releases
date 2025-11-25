@@ -6,7 +6,7 @@
   "main": "electron.js",
   "homepage": "./",
   "build": {
-    "appId": "com.yourcompany.vite-react-typescript-starter",
+    "appId": "com.mydesckpro.app",
     "productName": "MyDesck PRO",
     "directories": {
       "output": "C:\\_mydesck_build"
@@ -27,6 +27,15 @@
       ],
       "icon": "assets/icon.ico"
     },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.business",
+      "identity": null
+    },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
@@ -45,6 +54,7 @@
     "electron:build-start": "npm run build && cross-env NODE_ENV=production node node_modules/electron/cli.js .",
     "dist": "npm run build && electron-builder",
     "dist:win": "npm run build && electron-builder --win",
+    "dist:mac": "npm run build && electron-builder --mac",
     "dist:dir": "npm run build && electron-builder --win dir",
     "dist:portable": "npm run build && electron-builder --win portable"
   },

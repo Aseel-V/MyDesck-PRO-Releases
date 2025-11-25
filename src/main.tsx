@@ -34,11 +34,11 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>
       <PersistQueryClientProvider client={queryClient} persistOptions={{ persister }}>
-        <LanguageProvider>
-          <AuthProvider>
+        <AuthProvider>
+          <LanguageProvider>
             <App />
-          </AuthProvider>
-        </LanguageProvider>
+          </LanguageProvider>
+        </AuthProvider>
       </PersistQueryClientProvider>
     </ErrorBoundary>
   </StrictMode>

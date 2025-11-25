@@ -1,3 +1,4 @@
+# Logs
 logs
 *.log
 npm-debug.log*
@@ -6,11 +7,26 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# Dependency folders
+node_modules/
 
+# Build outputs
+dist/
+dist-ssr/
+build/
+release/
+win-unpacked/
+
+# Ignore executables and installers
+*.exe
+*.msi
+*.asar
+
+# Local environment files
+*.local
+.env
+
+# Editor folders and files
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -20,4 +36,20 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-.env
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# Supabase
+supabase/.branches
+supabase/.temp
+supabase/.cache
+
+# Misc
+*.pem
+*.p12
+*.key
+*.crt
+*.cache
