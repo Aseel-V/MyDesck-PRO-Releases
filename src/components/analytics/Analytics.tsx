@@ -10,9 +10,6 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
 } from 'recharts';
 import {
   TrendingUp,
@@ -27,11 +24,10 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useCurrency } from '../../contexts/CurrencyContext';
 import { Trip } from '../../types/trip';
 import { supabase } from '../../lib/supabase';
-import { CurrencyService } from '../../lib/currency';
 import type { Database } from '../../types/supabase';
-import { ErrorBoundary } from '../ui/ErrorBoundary';
 
 type UserProfile = Database['public']['Tables']['user_profiles']['Row'];
 
@@ -92,20 +88,15 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
 export default function Analytics({
   onOpenTripsWithFilter }: AnalyticsProps) {
   const { t } = useLanguage();
-  const { profile, user, isAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
+  const { convert, format, currency, isLoading: ratesLoading } = useCurrency();
 
   // Server-side data states
   const [serverUserStats, setServerUserStats] = useState<any>(null);
   const [serverMonthlyStats, setServerMonthlyStats] = useState<any[]>([]);
-  const [serverYearlyStats, setServerYearlyStats] = useState<any[]>([]);
-  const [serverTopDestinations, setServerTopDestinations] = useState<any[]>([]);
-  const [serverStatusBreakdown, setServerStatusBreakdown] = useState<any[]>([]);
-  const [serverPaymentBreakdown, setServerPaymentBreakdown] = useState<any[]>([]);
 
   const [userProfiles, setUserProfiles] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [exchangeRate, setExchangeRate] = useState<number>(1);
-  const [ratesLoading, setRatesLoading] = useState(false);
 
   // Fetch analytics data from server
   useEffect(() => {
@@ -117,25 +108,13 @@ export default function Analytics({
         const [
           { data: userStats },
           { data: monthlyStats },
-          { data: yearlyStats },
-          { data: topDestinations },
-          { data: statusBreakdown },
-          { data: paymentBreakdown }
         ] = await Promise.all([
           supabase.rpc('get_user_stats', { p_user_id: user.id }),
           supabase.rpc('get_monthly_stats', { p_user_id: user.id }),
-          supabase.rpc('get_yearly_stats', { p_user_id: user.id }),
-          supabase.rpc('get_top_destinations', { p_user_id: user.id, limit_count: 5 }),
-          supabase.rpc('get_status_breakdown', { p_user_id: user.id }),
-          supabase.rpc('get_payment_status_breakdown', { p_user_id: user.id })
         ]);
 
         if (userStats && userStats[0]) setServerUserStats(userStats[0]);
         if (monthlyStats) setServerMonthlyStats(monthlyStats);
-        if (yearlyStats) setServerYearlyStats(yearlyStats);
-        if (topDestinations) setServerTopDestinations(topDestinations);
-        if (statusBreakdown) setServerStatusBreakdown(statusBreakdown);
-        if (paymentBreakdown) setServerPaymentBreakdown(paymentBreakdown);
 
       } catch (error) {
         console.error('Error fetching analytics:', error);
@@ -188,42 +167,6 @@ export default function Analytics({
     loadData();
   }, [isAdmin]);
 
-  // Fetch exchange rates when currency changes
-  useEffect(() => {
-    const fetchRates = async () => {
-      const targetCurrency = profile?.preferred_currency || 'USD';
-      if (targetCurrency === 'USD') {
-        setExchangeRate(1);
-        return;
-      }
-
-      setRatesLoading(true);
-      // Using smart caching - automatically handles cache, API, and offline fallback
-      const rates = await CurrencyService.getCachedOrFetchRates('USD');
-      if (rates && rates.rates[targetCurrency]) {
-        setExchangeRate(rates.rates[targetCurrency]);
-      }
-      setRatesLoading(false);
-    };
-
-    fetchRates();
-  }, [profile?.preferred_currency]);
-
-  const getCurrencySymbol = (currency: string) => {
-    switch (currency) {
-      case 'USD':
-        return '$';
-      case 'EUR':
-        return '€';
-      case 'ILS':
-        return '₪';
-      default:
-        return '$';
-    }
-  };
-
-  const currencySymbol = getCurrencySymbol(profile?.preferred_currency || 'USD');
-
   const getMonthsSinceFirstUser = (profiles: UserProfile[]) => {
     if (profiles.length === 0) return 1;
     const firstUser = profiles[profiles.length - 1];
@@ -234,8 +177,6 @@ export default function Analytics({
       (now.getMonth() - firstDate.getMonth());
     return Math.max(1, months + 1);
   };
-
-  const PIE_COLORS = ['#10b981', '#3b82f6', '#ef4444', '#f59e0b', '#8b5cf6'];
 
   const stats = useMemo((): AdminStats | UserStats => {
     if (isAdmin) {
@@ -267,7 +208,7 @@ export default function Analytics({
             : 0,
       };
     } else {
-      // Use server-side stats
+      // Use server-side stats with conversion
       if (!serverUserStats) {
         return {
           totalRevenue: 0,
@@ -279,16 +220,16 @@ export default function Analytics({
       }
 
       return {
-        totalRevenue: Number(serverUserStats.total_revenue) * exchangeRate,
-        totalProfit: Number(serverUserStats.total_profit) * exchangeRate,
+        totalRevenue: convert(Number(serverUserStats.total_revenue)),
+        totalProfit: convert(Number(serverUserStats.total_profit)),
         totalTrips: Number(serverUserStats.total_trips),
         totalTravelers: Number(serverUserStats.total_travelers),
         averageProfit: Number(serverUserStats.total_trips) > 0
-          ? (Number(serverUserStats.total_profit) / Number(serverUserStats.total_trips)) * exchangeRate
+          ? convert(Number(serverUserStats.total_profit) / Number(serverUserStats.total_trips))
           : 0,
       };
     }
-  }, [userProfiles, isAdmin, exchangeRate, serverUserStats]);
+  }, [userProfiles, isAdmin, serverUserStats, convert]);
 
   const monthlyData = useMemo(() => {
     if (isAdmin) {
@@ -328,40 +269,15 @@ export default function Analytics({
           regularUsers: data.regularUsers,
         }));
     } else {
-      // Regular user: trip trends from server
+      // Regular user: trip trends from server with conversion
       return serverMonthlyStats.map((item: any) => ({
         month: item.month,
-        profit: Number(item.profit) * exchangeRate,
-        revenue: Number(item.revenue) * exchangeRate,
+        profit: convert(Number(item.profit)),
+        revenue: convert(Number(item.revenue)),
         travelers: Number(item.travelers),
       }));
     }
-  }, [userProfiles, isAdmin, exchangeRate, serverMonthlyStats]);
-
-  const yearlyData = useMemo(() => {
-    if (isAdmin) {
-      // Admin: yearly user registrations
-      const yearMap = new Map<string, number>();
-
-      userProfiles.forEach((profile) => {
-        const year = new Date(profile.created_at).getFullYear().toString();
-        yearMap.set(year, (yearMap.get(year) || 0) + 1);
-      });
-
-      return Array.from(yearMap.entries())
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([year, users]) => ({
-          year,
-          users,
-        }));
-    } else {
-      // Regular user: yearly profit from server
-      return serverYearlyStats.map((item: any) => ({
-        year: item.year,
-        profit: Number(item.profit) * exchangeRate,
-      }));
-    }
-  }, [userProfiles, isAdmin, exchangeRate, serverYearlyStats]);
+  }, [userProfiles, isAdmin, serverMonthlyStats, convert]);
 
   // User-focused derived analytics
   const {
@@ -370,9 +286,6 @@ export default function Analytics({
     totalCollected,
     totalPending,
     paymentHealthPct,
-    topDestinations,
-    statusBreakdown,
-    paymentDistribution,
     monthlyProfitOnly,
   } = useMemo(() => {
     if (isAdmin) {
@@ -382,9 +295,6 @@ export default function Analytics({
         totalCollected: 0,
         totalPending: 0,
         paymentHealthPct: 0,
-        topDestinations: [] as { name: string; profit: number; count: number }[],
-        statusBreakdown: { active: 0, completed: 0, cancelled: 0 },
-        paymentDistribution: { paid: 0, partial: 0, unpaid: 0 },
         monthlyProfitOnly: [] as { month: string; profit: number }[],
       };
     }
@@ -396,35 +306,10 @@ export default function Analytics({
       totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
 
     // Note: We don't have totalCollected/totalPending in serverUserStats yet.
-    // We can either add them to the RPC or just use 0 for now if not critical, 
-    // OR we can calculate them if we had the data. 
-    // The RPC "get_user_stats" didn't include them.
-    // Let's assume we want to add them to the RPC later. For now, 0.
+    // Assuming 0 for now as per previous logic.
     const totalCollected = 0;
     const totalPending = 0;
     const paymentHealthPct = 0;
-
-    const topDestinations = serverTopDestinations.map((d: any) => ({
-      name: d.destination || 'Unknown',
-      profit: Number(d.profit) * exchangeRate,
-      count: Number(d.trip_count)
-    }));
-
-    const statusBreakdown = serverStatusBreakdown.reduce(
-      (acc: any, item: any) => {
-        acc[item.status] = Number(item.count);
-        return acc;
-      },
-      { active: 0, completed: 0, cancelled: 0 }
-    );
-
-    const paymentDistribution = serverPaymentBreakdown.reduce(
-      (acc: any, item: any) => {
-        acc[item.payment_status] = Number(item.count);
-        return acc;
-      },
-      { paid: 0, partial: 0, unpaid: 0 }
-    );
 
     const monthlyProfitOnly = (monthlyData as {
       month: string;
@@ -456,12 +341,9 @@ export default function Analytics({
       totalCollected,
       totalPending,
       paymentHealthPct,
-      topDestinations,
-      statusBreakdown,
-      paymentDistribution,
       monthlyProfitOnly,
     };
-  }, [isAdmin, monthlyData, exchangeRate, serverUserStats, serverTopDestinations, serverStatusBreakdown, serverPaymentBreakdown]);
+  }, [isAdmin, monthlyData, serverUserStats, convert]);
 
   if (loading) {
     return (
@@ -486,9 +368,9 @@ export default function Analytics({
             {isAdmin
               ? 'Track user growth, admin distribution, and overall platform activity.'
               : 'Follow your trips, profit, payments health, and destinations performance.'}
-            {exchangeRate !== 1 && !isAdmin && (
+            {currency !== 'USD' && !isAdmin && (
               <span className="ml-2 text-xs text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-full border border-sky-500/20">
-                Converted to {profile?.preferred_currency} (Rate: {exchangeRate.toFixed(2)})
+                Converted to {currency}
                 {ratesLoading && <span className="ml-1 animate-pulse">...</span>}
               </span>
             )}
@@ -594,8 +476,7 @@ export default function Analytics({
                 </div>
               </div>
               <div className="text-3xl font-bold mb-2">
-                {currencySymbol}
-                {((stats as UserStats).totalRevenue ?? 0).toFixed(2)}
+                {format((stats as UserStats).totalRevenue ?? 0)}
               </div>
               <div className="text-slate-400 text-sm">
                 {t('analytics.totalRevenue')}
@@ -612,8 +493,7 @@ export default function Analytics({
                 </div>
               </div>
               <div className="text-3xl font-bold mb-2">
-                {currencySymbol}
-                {((stats as UserStats).totalProfit ?? 0).toFixed(2)}
+                {format((stats as UserStats).totalProfit ?? 0)}
               </div>
               <div className="text-slate-400 text-sm">
                 {t('analytics.totalProfit')}
@@ -673,21 +553,18 @@ export default function Analytics({
             <span>
               Collected:{' '}
               <span className="text-emerald-400 font-semibold">
-                {currencySymbol}
-                {totalCollected.toFixed(2)}
+                {format(totalCollected)}
               </span>
             </span>
             <span>
               Pending:{' '}
-              {/* ✅ لو ضغطت على Pending يفتح الرحلات مع pendingOnly */}
               <span
                 className="text-red-400 font-semibold cursor-pointer hover:underline decoration-red-400/70"
                 onClick={() =>
                   onOpenTripsWithFilter?.({ pendingOnly: true })
                 }
               >
-                {currencySymbol}
-                {totalPending.toFixed(2)}
+                {format(totalPending)}
               </span>
             </span>
           </div>
@@ -771,7 +648,6 @@ export default function Analytics({
                     dataKey="profit"
                     fill="#10b981"
                     name={t('analytics.profit')}
-                    // ✅ لو ضغطت على العمود → فلتر حسب هذا الشهر
                     cursor={onOpenTripsWithFilter ? 'pointer' : 'default'}
                     onClick={(data: any) => {
                       const month = data?.payload?.month as string | undefined;
@@ -807,7 +683,7 @@ export default function Analytics({
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               {isAdmin ? (
-                <LineChart data={monthlyData}>
+                <BarChart data={monthlyData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#0f172a" />
                   <XAxis
                     dataKey="month"
@@ -815,23 +691,14 @@ export default function Analytics({
                     tick={{ fill: '#94a3b8' }}
                   />
                   <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'rgba(2,6,23,0.95)',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      borderRadius: '10px',
-                      color: '#e2e8f0',
-                    }}
-                  />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
                   <Legend />
-                  <Line
-                    type="monotone"
+                  <Bar
                     dataKey="users"
-                    stroke="#3b82f6"
-                    strokeWidth={2}
+                    fill="#3b82f6"
                     name="Total Users"
                   />
-                </LineChart>
+                </BarChart>
               ) : (
                 <LineChart data={monthlyData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#0f172a" />
@@ -841,14 +708,7 @@ export default function Analytics({
                     tick={{ fill: '#94a3b8' }}
                   />
                   <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'rgba(2,6,23,0.95)',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      borderRadius: '10px',
-                      color: '#e2e8f0',
-                    }}
-                  />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
                   <Legend />
                   <Line
                     type="monotone"
@@ -863,227 +723,6 @@ export default function Analytics({
           </div>
         )}
       </div>
-
-      {/* BOTTOM GRID */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="glass-panel rounded-2xl border border-slate-800/80 bg-slate-950/95 shadow-[0_20px_60px_rgba(15,23,42,1)] p-6">
-          <h3 className="text-xl font-bold text-slate-100 mb-6">
-            {isAdmin ? 'User Types Distribution' : t('analytics.profitPerYear')}
-          </h3>
-          <div className="h-[300px] w-full">
-            <ErrorBoundary>
-              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                {isAdmin ? (
-                  <BarChart data={monthlyData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#0f172a" />
-                    <XAxis
-                      dataKey="month"
-                      stroke="#94a3b8"
-                      tick={{ fill: '#94a3b8' }}
-                    />
-                    <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'rgba(2,6,23,0.95)',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        borderRadius: '10px',
-                        color: '#e2e8f0',
-                      }}
-                    />
-                    <Legend />
-                    <Bar dataKey="admins" fill="#8b5cf6" name="Admins" />
-                    <Bar
-                      dataKey="regularUsers"
-                      fill="#10b981"
-                      name="Regular Users"
-                    />
-                  </BarChart>
-                ) : (
-                  <BarChart data={yearlyData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#0f172a" />
-                    <XAxis
-                      dataKey="year"
-                      stroke="#94a3b8"
-                      tick={{ fill: '#94a3b8' }}
-                    />
-                    <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'rgba(2,6,23,0.95)',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        borderRadius: '10px',
-                        color: '#e2e8f0',
-                      }}
-                    />
-                    <Legend />
-                    <Bar
-                      dataKey="profit"
-                      fill="#8b5cf6"
-                      name={t('analytics.profit')}
-                    />
-                  </BarChart>
-                )}
-              </ResponsiveContainer>
-            </ErrorBoundary>
-          </div>
-        </div>
-
-        <div className="glass-panel rounded-2xl border border-slate-800/80 bg-slate-950/95 shadow-[0_20px_60px_rgba(15,23,42,1)] p-6">
-          <h3 className="text-xl font-bold text-slate-100 mb-6">
-            {isAdmin ? 'Monthly User Growth' : 'Top Destinations (by Profit)'}
-          </h3>
-          <div className="h-[300px] w-full">
-            <ErrorBoundary>
-              {isAdmin ? (
-                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                  <LineChart data={monthlyData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#0f172a" />
-                    <XAxis
-                      dataKey="month"
-                      stroke="#94a3b8"
-                      tick={{ fill: '#94a3b8' }}
-                    />
-                    <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'rgba(2,6,23,0.95)',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        borderRadius: '10px',
-                        color: '#e2e8f0',
-                      }}
-                    />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="users"
-                      stroke="#f97316"
-                      strokeWidth={2}
-                      name="New Users"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              ) : (
-                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                  <BarChart data={topDestinations} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" stroke="#0f172a" />
-                    <XAxis
-                      type="number"
-                      stroke="#94a3b8"
-                      tick={{ fill: '#94a3b8' }}
-                    />
-                    <YAxis
-                      type="category"
-                      dataKey="name"
-                      stroke="#94a3b8"
-                      tick={{ fill: '#94a3b8' }}
-                      width={100}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'rgba(2,6,23,0.95)',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        borderRadius: '10px',
-                        color: '#e2e8f0',
-                      }}
-                    />
-                    <Legend />
-                    <Bar dataKey="profit" fill="#8b5cf6" name="Profit" />
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
-            </ErrorBoundary>
-          </div>
-        </div>
-      </div>
-
-      {/* DISTRIBUTIONS */}
-      {!isAdmin && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="glass-panel rounded-2xl border border-slate-800/80 bg-slate-950/95 shadow-[0_20px_60px_rgba(15,23,42,1)] p-6">
-            <h3 className="text-xl font-bold text-slate-100 mb-6">
-              Trip Status Breakdown
-            </h3>
-            <div className="h-[300px] w-full">
-              <ErrorBoundary>
-                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                  <PieChart>
-                    <Pie
-                      data={[
-                        { name: 'Active', value: statusBreakdown.active },
-                        { name: 'Completed', value: statusBreakdown.completed },
-                        { name: 'Cancelled', value: statusBreakdown.cancelled },
-                      ]}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={90}
-                      label
-                    >
-                      {['Active', 'Completed', 'Cancelled'].map((_, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={PIE_COLORS[index % PIE_COLORS.length]}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'rgba(2,6,23,0.95)',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        borderRadius: '10px',
-                        color: '#e2e8f0',
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </ErrorBoundary>
-            </div>
-          </div>
-
-          <div className="glass-panel rounded-2xl border border-slate-800/80 bg-slate-950/95 shadow-[0_20px_60px_rgba(15,23,42,1)] p-6">
-            <h3 className="text-xl font-bold text-slate-100 mb-6">
-              Payment Status Distribution
-            </h3>
-            <div className="h-[300px] w-full">
-              <ErrorBoundary>
-                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                  <PieChart>
-                    <Pie
-                      data={[
-                        { name: 'Paid', value: paymentDistribution.paid },
-                        { name: 'Partial', value: paymentDistribution.partial },
-                        { name: 'Unpaid', value: paymentDistribution.unpaid },
-                      ]}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={90}
-                      label
-                    >
-                      {['Paid', 'Partial', 'Unpaid'].map((_, index) => (
-                        <Cell
-                          key={`cell2-${index}`}
-                          fill={PIE_COLORS[index % PIE_COLORS.length]}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'rgba(2,6,23,0.95)',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        borderRadius: '10px',
-                        color: '#e2e8f0',
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </ErrorBoundary>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

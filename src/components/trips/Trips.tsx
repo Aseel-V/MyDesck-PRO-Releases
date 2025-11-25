@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useCurrency } from '../../contexts/CurrencyContext';
 import { supabase } from '../../lib/supabase';
 import { Trip, TripFormData } from '../../types/trip';
 import { useDebounce } from '../../hooks/useDebounce';
@@ -26,21 +27,6 @@ import ViewTripModal from './ViewTripModal';
 import { Skeleton } from '../ui/Skeleton';
 import { AnimatePresence, motion } from 'framer-motion';
 
-
-
-const getCurrencySymbol = (currency: string) => {
-  switch (currency) {
-    case 'USD':
-      return '$';
-    case 'EUR':
-      return '€';
-    case 'ILS':
-      return '₪';
-    default:
-      return '$';
-  }
-};
-
 interface TripsProps {
   initialFilters?: {
     month?: string; // format YYYY-MM
@@ -51,7 +37,8 @@ interface TripsProps {
 
 export default function Trips({ initialFilters, initialViewTrip }: TripsProps) {
   const { t } = useLanguage();
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
+  const { convert, format, currency, isLoading: isCurrencyLoading } = useCurrency();
   const queryClient = useQueryClient();
 
   const [showNewTripForm, setShowNewTripForm] = useState(false);
@@ -100,11 +87,6 @@ export default function Trips({ initialFilters, initialViewTrip }: TripsProps) {
     }
   }, [initialViewTrip]);
 
-
-
-  const currencySymbol = getCurrencySymbol(profile?.preferred_currency || 'USD');
-
-  // نفس روح أزرار الـ navbar
   const baseActionBtn =
     'inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium rounded-xl transition-all border-b-2';
   const primaryActionBtn =
@@ -141,16 +123,6 @@ export default function Trips({ initialFilters, initialViewTrip }: TripsProps) {
       }
 
       if (monthFilter) {
-        // If year is selected, filter by specific month in that year
-        // If no year, filter by month across all years? Original logic:
-        // const tripMonth = String(new Date(trip.start_date).getMonth() + 1).padStart(2, '0');
-        // matchesMonth = !monthFilter || tripMonth === monthFilter;
-        // Server-side filtering by month across years is hard in standard Supabase/PostgREST without a view or RPC.
-        // I will assume yearFilter is present if monthFilter is present, or I'll skip month filter if no year.
-        // Actually, the UI usually enforces year selection for month?
-        // Let's check the filters UI. It seems independent.
-        // If independent, I might need a raw query or ignore month filter if no year.
-        // For now, I'll only apply month filter if yearFilter is also set.
         if (yearFilter) {
           const start = `${yearFilter}-${monthFilter}-01`;
           // Calculate end of month
@@ -272,7 +244,6 @@ export default function Trips({ initialFilters, initialViewTrip }: TripsProps) {
     toggleExportMutation.mutate({ id, value });
   };
 
-  // Client-side filtering removed in favor of server-side
   const filteredTrips = trips || [];
 
   const availableYears = useMemo(() => {
@@ -292,14 +263,21 @@ export default function Trips({ initialFilters, initialViewTrip }: TripsProps) {
     [trips]
   );
 
-  // إحصائيات سريعة للرحلات
+  // Statistics with Currency Conversion
   const stats = useMemo(() => {
     const totalTrips = trips.length;
-    const totalRevenue = trips.reduce(
+
+    // Calculate totals in base currency (USD) first, then convert
+    // OR convert each item. Converting sum is more efficient if rate is constant.
+    // However, if we want per-item precision, we might convert each.
+    // Given convert() is linear, sum(convert(x)) == convert(sum(x)).
+
+    const totalRevenueBase = trips.reduce(
       (sum, trip) => sum + (trip.sale_price || 0),
       0
     );
-    const totalProfit = trips.reduce((sum, trip) => {
+
+    const totalProfitBase = trips.reduce((sum, trip) => {
       const profit =
         typeof trip.profit === 'number'
           ? trip.profit
@@ -307,7 +285,7 @@ export default function Trips({ initialFilters, initialViewTrip }: TripsProps) {
       return sum + profit;
     }, 0);
 
-    const totalUnpaid = trips.reduce((sum, trip) => {
+    const totalUnpaidBase = trips.reduce((sum, trip) => {
       const due = (trip.sale_price || 0) - (trip.amount_paid || 0);
       return sum + (due > 0 ? due : 0);
     }, 0);
@@ -320,12 +298,12 @@ export default function Trips({ initialFilters, initialViewTrip }: TripsProps) {
 
     return {
       totalTrips,
-      totalRevenue,
-      totalProfit,
-      unpaidAmount: totalUnpaid,
+      totalRevenue: convert(totalRevenueBase),
+      totalProfit: convert(totalProfitBase),
+      unpaidAmount: convert(totalUnpaidBase),
       upcoming: upcomingTrips,
     };
-  }, [trips]);
+  }, [trips, convert]);
 
   const handleEditTrip = (trip: Trip) => {
     setEditingTrip(trip);
@@ -394,6 +372,11 @@ export default function Trips({ initialFilters, initialViewTrip }: TripsProps) {
             {count === 0
               ? 'No trips found'
               : `Showing ${filteredTrips.length} of ${count} trips`}
+            {currency !== 'USD' && (
+              <span className="ml-2 text-xs text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-full border border-sky-500/20">
+                {currency} {isCurrencyLoading && '...'}
+              </span>
+            )}
           </p>
         </div>
 
@@ -441,7 +424,7 @@ export default function Trips({ initialFilters, initialViewTrip }: TripsProps) {
         </div>
       </div>
 
-      {/* Quick stats – نفس روح كرت اللوجو في الـ navbar */}
+      {/* Quick stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="rounded-2xl bg-slate-950/95 border border-slate-800/90 p-4 flex items-center justify-between shadow-md shadow-slate-950/70">
           <div>
@@ -463,8 +446,7 @@ export default function Trips({ initialFilters, initialViewTrip }: TripsProps) {
               {t('trips.stats.totalRevenue') ?? 'Total Revenue'}
             </p>
             <p className="text-2xl font-bold text-slate-50">
-              {currencySymbol}
-              {stats.totalRevenue.toFixed(2)}
+              {format(stats.totalRevenue)}
             </p>
           </div>
           <div className="p-3 rounded-full bg-indigo-500/10 border border-indigo-500/40">
@@ -478,8 +460,7 @@ export default function Trips({ initialFilters, initialViewTrip }: TripsProps) {
               {t('trips.stats.totalProfit') ?? 'Total Profit'}
             </p>
             <p className="text-2xl font-bold text-emerald-300">
-              {currencySymbol}
-              {stats.totalProfit.toFixed(2)}
+              {format(stats.totalProfit)}
             </p>
           </div>
           <div className="p-3 rounded-full bg-emerald-500/10 border border-emerald-500/40">
@@ -493,8 +474,7 @@ export default function Trips({ initialFilters, initialViewTrip }: TripsProps) {
               {t('trips.stats.unpaidAmount') ?? 'Unpaid Amount'}
             </p>
             <p className="text-2xl font-bold text-rose-300">
-              {currencySymbol}
-              {stats.unpaidAmount.toFixed(2)}
+              {format(stats.unpaidAmount)}
             </p>
           </div>
           <div className="p-3 rounded-full bg-rose-500/10 border border-rose-500/40">
@@ -517,7 +497,7 @@ export default function Trips({ initialFilters, initialViewTrip }: TripsProps) {
         </div>
       </div>
 
-      {/* Filters – كرت داكن مثل البار */}
+      {/* Filters */}
       <div className="rounded-2xl bg-slate-950/90 border border-slate-800/80 p-4 shadow-md shadow-slate-950/60">
         <TripFilters
           searchTerm={searchTerm}
@@ -610,7 +590,7 @@ export default function Trips({ initialFilters, initialViewTrip }: TripsProps) {
                         {new Date(trip.start_date).toLocaleDateString()}
                       </td>
                       <td className="py-3 px-4 text-slate-300">
-                        {currencySymbol}{trip.sale_price?.toLocaleString()}
+                        {format(trip.sale_price || 0)}
                       </td>
                       <td className="py-3 px-4">
                         <span
@@ -640,9 +620,6 @@ export default function Trips({ initialFilters, initialViewTrip }: TripsProps) {
           </div>
         </div>
       )}
-
-
-
 
       {
         showNewTripForm && (

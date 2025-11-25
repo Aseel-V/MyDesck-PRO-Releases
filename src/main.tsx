@@ -17,6 +17,7 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 import { createIDBPersister } from './lib/persister';
 import { LanguageProvider } from './contexts/LanguageContext'; // Assuming path for LanguageProvider
 import { AuthProvider } from './contexts/AuthContext'; // Assuming path for AuthProvider
+import { CurrencyProvider } from './contexts/CurrencyContext';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,7 +37,9 @@ createRoot(document.getElementById('root')!).render(
       <PersistQueryClientProvider client={queryClient} persistOptions={{ persister }}>
         <AuthProvider>
           <LanguageProvider>
-            <App />
+            <CurrencyProvider>
+              <App />
+            </CurrencyProvider>
           </LanguageProvider>
         </AuthProvider>
       </PersistQueryClientProvider>
