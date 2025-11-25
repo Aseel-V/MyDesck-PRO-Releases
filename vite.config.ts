@@ -1,0 +1,58 @@
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { VitePWA } from 'vite-plugin-pwa';
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// https://vitejs.dev/config/
+export default defineConfig({
+  plugins: [
+    react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+      manifest: {
+        name: 'MyDesck PRO',
+        short_name: 'MyDesck',
+        description: 'Professional Travel Agency Dashboard',
+        theme_color: '#0f172a',
+        icons: [
+          {
+            src: 'pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+          },
+        ],
+      },
+      workbox: {
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024, // 4MB
+      },
+    }),
+  ],
+  base: './',
+  optimizeDeps: {
+    exclude: ['lucide-react'],
+  },
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, './src'),
+    },
+  },
+  assetsInclude: ['**/*.woff', '**/*.woff2', '**/*.ttf', '**/*.otf'],
+  build: {
+    assetsInlineLimit: 0,
+    rollupOptions: {
+      output: {
+        assetFileNames: 'assets/[name]-[hash][extname]',
+      },
+    },
+  },
+});
