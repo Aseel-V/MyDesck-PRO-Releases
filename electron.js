@@ -13,7 +13,7 @@ try {
   const portableBase = process.env.PORTABLE_EXECUTABLE_DIR || path.dirname(process.execPath);
   const portableUserData = path.join(portableBase, 'app-data');
   app.setPath('userData', portableUserData);
-} catch {}
+} catch { }
 
 // Reduce noisy DevTools/Autofill warnings in production
 if (!isDev) {
@@ -72,6 +72,51 @@ function createWindow() {
 // Handle quit app request from renderer
 ipcMain.on('quit-app', () => {
   app.quit();
+});
+
+// Handle PDF generation
+ipcMain.handle('print-to-pdf', async (event, data) => {
+  const pdfWindow = new BrowserWindow({
+    width: 800,
+    height: 600,
+    show: false, // Hidden window
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.cjs'),
+    },
+  });
+
+  const dataStr = encodeURIComponent(JSON.stringify(data));
+
+  if (isDev) {
+    await pdfWindow.loadURL(`http://localhost:5173?invoice=true&data=${dataStr}`);
+  } else {
+    // In production, we need to load the index.html and handle the routing via query param if possible,
+    // or hash. Since we used window.location.search in App.tsx, query param on file:// protocol might be tricky.
+    // Electron supports query params on file URLs.
+    await pdfWindow.loadFile(path.join(__dirname, 'dist/index.html'), { search: `?invoice=true&data=${dataStr}` });
+  }
+
+  try {
+    const pdfData = await pdfWindow.webContents.printToPDF({
+      printBackground: true,
+      pageSize: 'A4',
+      margins: {
+        top: 0,
+        bottom: 0,
+        left: 0,
+        right: 0
+      }
+    });
+
+    pdfWindow.close();
+    return pdfData;
+  } catch (error) {
+    console.error('Failed to generate PDF', error);
+    pdfWindow.close();
+    throw error;
+  }
 });
 
 // This method will be called when Electron has finished initialization

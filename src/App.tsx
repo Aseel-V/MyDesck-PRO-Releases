@@ -6,7 +6,17 @@ import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import SplashScreen from './components/SplashScreen';
 
+import InvoiceTemplate from './components/invoice/InvoiceTemplate';
+
 function App() {
+  // Check if we are in "invoice mode" (window opened by Electron for printing)
+  const params = new URLSearchParams(window.location.search);
+  const isInvoice = params.get('invoice') === 'true';
+
+  if (isInvoice) {
+    return <InvoiceTemplate />;
+  }
+
   return (
     <AuthProvider>
       <LanguageProvider>
@@ -67,9 +77,8 @@ function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div
-      className={`min-h-screen flex flex-col bg-slate-950 text-slate-50 ${
-        direction === 'rtl' ? 'rtl' : 'ltr'
-      }`}
+      className={`min-h-screen flex flex-col bg-slate-950 text-slate-50 ${direction === 'rtl' ? 'rtl' : 'ltr'
+        }`}
     >
       <main className="flex-1 overflow-y-auto pt-16 md:pt-20">
         {children}
