@@ -24,6 +24,8 @@ import NewTripForm from './NewTripForm';
 import UpdatePaymentForm from './UpdatePaymentForm';
 import PDFExportModal from './PDFExportModal';
 import ViewTripModal from './ViewTripModal';
+import JSZip from 'jszip';
+import { generateTripInvoice } from '../../lib/pdfGenerator';
 import { Skeleton } from '../ui/Skeleton';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -37,7 +39,7 @@ interface TripsProps {
 
 export default function Trips({ initialFilters, initialViewTrip }: TripsProps) {
   const { t } = useLanguage();
-  const { user } = useAuth();
+  const { user, profile, userProfile } = useAuth();
   const { convert, format, currency, isLoading: isCurrencyLoading } = useCurrency();
   const queryClient = useQueryClient();
 
@@ -49,6 +51,7 @@ export default function Trips({ initialFilters, initialViewTrip }: TripsProps) {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [showPDFExport, setShowPDFExport] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [isExportingBatch, setIsExportingBatch] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
@@ -329,6 +332,53 @@ export default function Trips({ initialFilters, initialViewTrip }: TripsProps) {
     setPaymentTrip(undefined);
   };
 
+  const handleDownloadAllInvoices = async () => {
+    if (!filteredTrips.length || !user || !profile) return;
+    setIsExportingBatch(true);
+
+    const userFullName = userProfile?.full_name || '';
+    const phoneNumber = userProfile?.phone_number || '';
+    const language = profile.preferred_language || 'en';
+
+    try {
+      const zip = new JSZip();
+      const folder = zip.folder(`Invoices_${new Date().toISOString().split('T')[0]}`);
+      if (!folder) throw new Error('Failed to create zip folder');
+
+      await Promise.all(
+        filteredTrips.map(async (trip) => {
+          try {
+            const pdfBytes = await generateTripInvoice(
+              trip,
+              profile,
+              userFullName,
+              phoneNumber,
+              language
+            );
+            const fileName = `Invoice_${trip.client_name}_${trip.destination}.pdf`;
+            folder.file(fileName, pdfBytes);
+          } catch (e) {
+            console.error(`Failed to generate PDF for trip ${trip.id}`, e);
+          }
+        })
+      );
+
+      const content = await zip.generateAsync({ type: 'blob' });
+      const url = window.URL.createObjectURL(content);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Invoices_${new Date().toISOString().split('T')[0]}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error generating batch zip:', error);
+    } finally {
+      setIsExportingBatch(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-6 animate-fadeIn">
@@ -401,6 +451,21 @@ export default function Trips({ initialFilters, initialViewTrip }: TripsProps) {
               <List className="w-4 h-4" />
             </button>
           </div>
+
+          {/* Batch Download Button */}
+          {filteredTrips.length > 0 && (
+            <button
+              onClick={handleDownloadAllInvoices}
+              disabled={isExportingBatch}
+              className={secondaryActionBtn}
+              title="Download all displayed invoices"
+            >
+              <FileText className="w-5 h-5" />
+              <span>
+                {isExportingBatch ? 'Zipping...' : 'Download All'}
+              </span>
+            </button>
+          )}
 
           {tripsMarkedForExport.length > 0 && (
             <button

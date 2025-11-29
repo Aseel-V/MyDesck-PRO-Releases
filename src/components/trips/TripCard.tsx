@@ -10,6 +10,7 @@ import {
   Square,
   Share2,
 } from 'lucide-react';
+import { formatDateHijri } from '../../lib/utils';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { Trip } from '../../types/trip';
@@ -218,9 +219,14 @@ export default function TripCard({
         {/* dates */}
         <div className="flex flex-wrap items-center gap-2 text-slate-300 text-sm">
           <Calendar className="w-4 h-4" />
-          <span className="font-medium">
-            {formatDate(trip.start_date)} — {formatDate(trip.end_date)}
-          </span>
+          <div className="flex flex-col">
+            <span className="font-medium">
+              {formatDate(trip.start_date)} — {formatDate(trip.end_date)}
+            </span>
+            <span className="text-xs text-slate-500">
+              {formatDateHijri(trip.start_date)} — {formatDateHijri(trip.end_date)}
+            </span>
+          </div>
         </div>
 
         {/* money strip */}

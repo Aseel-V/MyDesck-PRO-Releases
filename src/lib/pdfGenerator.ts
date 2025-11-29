@@ -1,40 +1,53 @@
 import { Trip } from '../types/trip';
 import { BusinessProfile } from './supabase';
+import QRCode from 'qrcode';
 
 type Language = 'en' | 'ar' | 'he';
 
 interface PDFOptions {
   profile: BusinessProfile;
-  trips: Trip[]; // نستخدمه للفاتورة (رحلة واحدة) وللتقرير (عدة رحلات)
+  trips: Trip[];
   userFullName: string;
   phoneNumber: string;
   language: Language;
+  templateId?: 'modern' | 'classic';
 }
 
 type PdfMode = 'invoice' | 'summary';
 
-// 🔹 دالة داخلية مشتركة بين الفاتورة والتقرير
-const generatePDF = async (mode: PdfMode, options: PDFOptions): Promise<void> => {
-  const { profile, trips, userFullName, phoneNumber, language } = options;
+const generateQRCode = async (text: string): Promise<string> => {
+  try {
+    return await QRCode.toDataURL(text, { width: 100, margin: 1 });
+  } catch (err) {
+    console.error(err);
+    return '';
+  }
+};
+
+const generatePDF = async (mode: PdfMode, options: PDFOptions): Promise<Uint8Array> => {
+  const { profile, trips, userFullName, phoneNumber, language, templateId = 'modern' } = options;
 
   if (!trips.length) {
     throw new Error('No trips provided for PDF generation.');
   }
 
-  // الرحلة الأولى تستعمل للفواتير (Invoice)
   const firstTrip = trips[0];
 
-  // تجهيز البيانات التي ستُرسل إلى Electron Main
+  // Generate QR Code for the first trip (Invoice ID + Amount)
+  const qrData = `INV-${firstTrip.id.slice(0, 8)}\nAmount: ${firstTrip.sale_price} ${firstTrip.currency}`;
+  const qrCodeDataUrl = await generateQRCode(qrData);
+
   const payload = {
-    mode,            // 'invoice' أو 'summary' – يمكنك استعمالها في الـ main لتبديل القالب
+    mode,
     language,
     userFullName,
     phoneNumber,
-    trips,           // للتقرير (summary) أو إذا احتجت كل الرحلات
-    trip: firstTrip, // للفاتورة (رحلة واحدة) – للحفاظ على التوافق مع القالب الحالي
+    trips,
+    trip: firstTrip,
+    templateId,
+    qrCode: qrCodeDataUrl,
     profile: {
       ...profile,
-      // لو كان عندك email في الـ profile تقدر تستخدمه، وإلا يظل undefined
       email: (profile as any).email ?? undefined,
       phone_number: phoneNumber,
     },
@@ -42,71 +55,54 @@ const generatePDF = async (mode: PdfMode, options: PDFOptions): Promise<void> =>
 
   try {
     const pdfBytes = await window.electronAPI.printToPDF(payload);
-
-    // إنشاء Blob من البايتات
-    const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
-    const url = window.URL.createObjectURL(blob);
-
-    // اختيار اسم الملف حسب نوع التقرير
-    const fileName =
-      mode === 'invoice'
-        ? `Invoice_${firstTrip.client_name}_${firstTrip.destination}.pdf`
-        : `Trips_Summary_${(profile as any).business_name ?? 'Report'}.pdf`;
-
-    // تفعيل التحميل
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
+    return pdfBytes;
   } catch (error) {
     console.error('Error generating PDF:', error);
     throw new Error('Failed to generate PDF. Please try again.');
   }
 };
 
-/**
- * 🔹 توليد فاتورة (Invoice) لرحلة واحدة
- */
+export const generateSingleTripPDF = async (
+  options: Omit<PDFOptions, 'trips'> & { trips: Trip[] }
+): Promise<Uint8Array> => {
+  return generatePDF('invoice', options);
+};
+
 export const generateTripInvoice = async (
   trip: Trip,
   profile: BusinessProfile,
   userFullName: string,
   phoneNumber: string,
   language: Language
-): Promise<void> => {
-  const options: PDFOptions = {
+): Promise<Uint8Array> => {
+  return generateSingleTripPDF({
     profile,
-    trips: [trip], // نضع الرحلة في Array حتى نستغل نفس الدالة المشتركة
+    trips: [trip],
     userFullName,
     phoneNumber,
-    language,
-  };
-
-  return generatePDF('invoice', options);
+    language
+  });
 };
 
-/**
- * 🔹 توليد تقرير ملخّص لعدة رحلات (Summary Report)
- *  يمكنك لاحقاً في الـ Electron Main تمييزه بـ mode === 'summary'
- *  واستخدام قالب HTML مختلف.
- */
+export const generateMultipleTripsPDF = async (
+  options: PDFOptions
+): Promise<Uint8Array> => {
+  return generatePDF('summary', options);
+};
+
 export const generateSummaryReport = async (
   trips: Trip[],
   profile: BusinessProfile,
   userFullName: string,
   phoneNumber: string,
   language: Language
-): Promise<void> => {
-  const options: PDFOptions = {
+): Promise<Uint8Array> => {
+  return generateMultipleTripsPDF({
     profile,
     trips,
     userFullName,
     phoneNumber,
-    language,
-  };
-
-  return generatePDF('summary', options);
+    language
+  });
 };
+

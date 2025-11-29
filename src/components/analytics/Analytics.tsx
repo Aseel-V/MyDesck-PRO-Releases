@@ -10,6 +10,9 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
 } from 'recharts';
 import {
   TrendingUp,
@@ -327,6 +330,22 @@ export default function Analytics({
       profitMarginTrend = lastMargin - prevMargin;
     }
 
+    // Top Destinations Logic
+    const destinationsMap = new Map<string, number>();
+    trips.forEach((trip) => {
+      if (trip.destination) {
+        destinationsMap.set(
+          trip.destination,
+          (destinationsMap.get(trip.destination) || 0) + 1
+        );
+      }
+    });
+
+    const topDestinations = Array.from(destinationsMap.entries())
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5); // Top 5
+
     return {
       profitMarginPct,
       profitMarginTrend,
@@ -334,8 +353,11 @@ export default function Analytics({
       totalPending,
       paymentHealthPct,
       monthlyProfitOnly,
+      topDestinations,
     };
   }, [isAdmin, monthlyData, trips, convert]);
+
+  const COLORS = ['#0ea5e9', '#8b5cf6', '#10b981', '#f59e0b', '#f43f5e'];
 
   if (loading) {
     return (
@@ -715,6 +737,45 @@ export default function Analytics({
           </div>
         )}
       </div>
+
+      {/* TOP DESTINATIONS PIE CHART */}
+      {!isAdmin && (
+        <div className="glass-panel rounded-2xl border border-slate-800/80 bg-slate-950/95 shadow-[0_20px_60px_rgba(15,23,42,1)] p-6">
+          <h3 className="text-xl font-bold text-slate-100 mb-6">
+            Top Destinations
+          </h3>
+          {(stats as any).topDestinations?.length === 0 ? (
+            <div className="flex items-center justify-center h-64 text-slate-400">
+              No destination data available.
+            </div>
+          ) : (
+            <div className="h-[300px] w-full flex items-center justify-center">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={(stats as any).topDestinations}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }: { name?: string; percent?: number }) =>
+                      `${name ?? ''} ${((percent || 0) * 100).toFixed(0)}%`
+                    }
+                    outerRadius={100}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {(stats as any).topDestinations?.map((_: any, index: number) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -13,6 +13,7 @@ import {
   Upload,
   RotateCcw,
   RefreshCw,
+  CreditCard,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { resizeImage } from '../lib/imageUtils';
@@ -42,9 +43,9 @@ export default function Settings() {
   const [success, setSuccess] = useState(false);
   const [showCurrencyWarning, setShowCurrencyWarning] = useState(false);
   const [pendingCurrency, setPendingCurrency] = useState<'USD' | 'EUR' | 'ILS'>('USD');
-  const [activeTab, setActiveTab] = useState<'profile' | 'business' | 'security' | 'data'>(
-    'profile'
-  );
+  const [activeTab, setActiveTab] = useState<
+    'profile' | 'business' | 'security' | 'data' | 'payments'
+  >('profile');
   const [uploading, setUploading] = useState(false);
   const [notice, setNotice] = useState<null | { type: NoticeType; message: string }>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -103,7 +104,6 @@ export default function Settings() {
     const updated = CurrencyService.getLastUpdated();
     setLastUpdated(updated);
   }, []);
-
 
   const fetchUserProfile = async () => {
     if (!user) return;
@@ -515,8 +515,8 @@ export default function Settings() {
               <button
                 onClick={() => setActiveTab('profile')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${activeTab === 'profile'
-                  ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
-                  : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
+                    ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
+                    : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
                   }`}
               >
                 <User className="w-4 h-4" />
@@ -526,8 +526,8 @@ export default function Settings() {
               <button
                 onClick={() => setActiveTab('business')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${activeTab === 'business'
-                  ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
-                  : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
+                    ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
+                    : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
                   }`}
               >
                 <Building2 className="w-4 h-4" />
@@ -537,8 +537,8 @@ export default function Settings() {
               <button
                 onClick={() => setActiveTab('security')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${activeTab === 'security'
-                  ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
-                  : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
+                    ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
+                    : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
                   }`}
               >
                 <Key className="w-4 h-4" />
@@ -548,12 +548,23 @@ export default function Settings() {
               <button
                 onClick={() => setActiveTab('data')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${activeTab === 'data'
-                  ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
-                  : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
+                    ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
+                    : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
                   }`}
               >
                 <Download className="w-4 h-4" />
                 <span>Data</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('payments')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${activeTab === 'payments'
+                    ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
+                    : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
+                  }`}
+              >
+                <CreditCard className="w-4 h-4" />
+                <span>Payments</span>
               </button>
             </div>
           </div>
@@ -649,8 +660,8 @@ export default function Settings() {
                         <label
                           htmlFor="logo-upload"
                           className={`w-full flex flex-col items-center justify-center px-4 py-6 rounded-xl border-2 border-dashed transition-all ${uploading
-                            ? 'bg-slate-900/60 border-slate-800 text-slate-500 cursor-not-allowed'
-                            : 'bg-slate-900/80 border-slate-700 text-slate-400 hover:border-sky-500 hover:text-sky-300 cursor-pointer'
+                              ? 'bg-slate-900/60 border-slate-800 text-slate-500 cursor-not-allowed'
+                              : 'bg-slate-900/80 border-slate-700 text-slate-400 hover:border-sky-500 hover:text-sky-300 cursor-pointer'
                             }`}
                         >
                           <Upload className={`w-8 h-8 mb-2 ${uploading ? 'animate-pulse' : ''}`} />
@@ -777,7 +788,9 @@ export default function Settings() {
                           disabled={refreshingRates}
                           className="flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-600 text-white text-sm font-medium hover:bg-sky-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          <RefreshCw className={`w-4 h-4 ${refreshingRates ? 'animate-spin' : ''}`} />
+                          <RefreshCw
+                            className={`w-4 h-4 ${refreshingRates ? 'animate-spin' : ''}`}
+                          />
                           <span>{refreshingRates ? 'Updating...' : 'Refresh Now'}</span>
                         </button>
                       </div>
@@ -793,88 +806,86 @@ export default function Settings() {
 
                 <div className="flex flex-col md:flex-row gap-3">
                   <button
-                    onClick={handleResetBranding}
-                    className="flex-1 flex items-center justify-center gap-2 bg-slate-700 text-white py-3 rounded-xl font-semibold hover:bg-slate-600 transition-all"
-                  >
-                    <RotateCcw className="w-5 h-5" />
-                    <span>Reset Branding</span>
-                  </button>
-
-                  <button
                     onClick={handleSaveBusiness}
                     disabled={loading}
                     className="flex-1 flex items-center justify-center gap-2 bg-sky-600 text-white py-3 rounded-xl font-semibold hover:bg-sky-700 focus:ring-4 focus:ring-sky-500/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.01]"
                   >
                     <Save className="w-5 h-5" />
-                    <span>{loading ? t('auth.loading') : t('settings.save')}</span>
+                    <span>{loading ? 'Saving...' : 'Save Business Settings'}</span>
+                  </button>
+
+                  <button
+                    onClick={handleResetBranding}
+                    className="flex-1 flex items-center justify-center gap-2 bg-slate-800 text-slate-100 py-3 rounded-xl font-semibold hover:bg-slate-700 transition-all"
+                  >
+                    <RotateCcw className="w-5 h-5" />
+                    <span>Reset Branding</span>
                   </button>
                 </div>
               </div>
             )}
 
             {activeTab === 'security' && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-bold">Security</h2>
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold mb-2">Security</h2>
 
-                <div className="space-y-4">
-                  <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <h3 className="font-semibold text-slate-100">Change Password</h3>
-                        <p className="text-sm text-slate-400">
-                          Update your account password
-                        </p>
-                      </div>
-                      <button
-                        onClick={handleChangePassword}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-600 text-white text-sm font-medium hover:bg-sky-700 transition-all"
-                      >
-                        <Key className="w-4 h-4" />
-                        <span>Change</span>
-                      </button>
+                <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <h3 className="font-semibold text-slate-100">Change Password</h3>
+                      <p className="text-sm text-slate-400">
+                        Update your account password
+                      </p>
                     </div>
+                    <button
+                      onClick={handleChangePassword}
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-600 text-white text-sm font-medium hover:bg-sky-700 transition-all"
+                    >
+                      <Key className="w-4 h-4" />
+                      <span>Change</span>
+                    </button>
                   </div>
+                </div>
 
-                  <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <h3 className="font-semibold text-slate-100">Sign Out</h3>
-                        <p className="text-sm text-slate-400">
-                          Sign out and return to the login screen
-                        </p>
-                      </div>
-                      <button
-                        onClick={async () => {
-                          try {
-                            await signOut();
-                          } catch (e) {
-                            console.error(e);
-                          }
-                        }}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-700 text-white text-sm font-medium hover:bg-slate-600 transition-all"
-                      >
-                        <RotateCcw className="w-4 h-4" />
-                        <span>Sign Out</span>
-                      </button>
+                <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <h3 className="font-semibold text-slate-100">Sign Out</h3>
+                      <p className="text-sm text-slate-400">
+                        Sign out and return to the login screen
+                      </p>
                     </div>
+                    <button
+                      onClick={async () => {
+                        try {
+                          await signOut();
+                        } catch (e) {
+                          console.error(e);
+                        }
+                      }}
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-700 text-white text-sm font-medium hover:bg-slate-600 transition-all"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                      <span>Sign Out</span>
+                    </button>
                   </div>
+                </div>
 
-                  <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <h3 className="font-semibold text-slate-100">Refresh Profile</h3>
-                        <p className="text-sm text-slate-400">
-                          Force refresh user profile to get latest role updates
-                        </p>
-                      </div>
-                      <button
-                        onClick={handleRefreshProfile}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition-all"
-                      >
-                        <RotateCcw className="w-4 h-4" />
-                        <span>Refresh</span>
-                      </button>
+                <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <h3 className="font-semibold text-slate-100">Refresh Profile</h3>
+                      <p className="text-sm text-slate-400">
+                        Force refresh user profile to get latest role updates
+                      </p>
                     </div>
+                    <button
+                      onClick={handleRefreshProfile}
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition-all"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                      <span>Refresh</span>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -907,9 +918,7 @@ export default function Settings() {
                     <div className="flex items-center justify-between gap-4">
                       <div>
                         <h3 className="font-semibold text-slate-100">Import Data</h3>
-                        <p className="text-sm text-slate-400">
-                          Restore from a backup file
-                        </p>
+                        <p className="text-sm text-slate-400">Restore from a backup file</p>
                       </div>
                       <label className="flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-600 text-white text-sm font-medium hover:bg-sky-700 transition-all cursor-pointer">
                         <Upload className="w-4 h-4" />
@@ -924,6 +933,16 @@ export default function Settings() {
                     </div>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {activeTab === 'payments' && (
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold">Payment Settings</h2>
+                <p className="text-sm text-slate-400">
+                  Here you will configure your payment providers (Stripe, PayPal, etc.). This
+                  section is still under construction.
+                </p>
               </div>
             )}
           </div>

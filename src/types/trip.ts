@@ -1,19 +1,65 @@
 // Trip row as stored in Supabase
+export interface Traveler {
+  full_name: string;
+  passport_number?: string;
+  nationality?: string;
+  room_type?: 'single' | 'double' | 'triple' | 'suite';
+}
+
+export interface ItineraryItem {
+  day: number;
+  date?: string;
+  title: string;
+  description: string;
+}
+
+export interface Payment {
+  date: string;
+  amount: number;
+  method: 'cash' | 'transfer' | 'card' | 'check';
+  receipt_id?: string;
+}
+
+export interface Attachment {
+  file_name: string;
+  url: string;
+  type: 'ticket' | 'visa' | 'voucher' | 'other';
+}
+
 export interface Trip {
   id: string;
   user_id: string;
   destination: string;
   client_name: string;
-  travelers_count: number;
+
+  // Detailed Traveler Management
+  travelers: Traveler[];
+  travelers_count: number; // Kept for backward compatibility/quick access
+
+  // Itinerary
+  itinerary: ItineraryItem[];
+
+  // Dates
   start_date: string;
   end_date: string;
+
+  // Financials
+  currency: 'USD' | 'EUR' | 'ILS';
+  exchange_rate: number;
   wholesale_cost: number;
   sale_price: number;
   profit: number;
   profit_percentage: number;
+
+  // Payment History
+  payments: Payment[];
   payment_status: 'paid' | 'partial' | 'unpaid';
-  amount_paid: number;
+  amount_paid: number; // Calculated sum of payments
   amount_due: number;
+
+  // Documents
+  attachments: Attachment[];
+
   notes: string;
   status: 'active' | 'completed' | 'cancelled';
   export_to_pdf: boolean;
@@ -25,13 +71,26 @@ export interface Trip {
 export interface TripFormData {
   destination: string;
   client_name: string;
+
+  travelers: Traveler[];
   travelers_count: number;
+
+  itinerary: ItineraryItem[];
+
   start_date: string;
   end_date: string;
+
+  currency: 'USD' | 'EUR' | 'ILS';
+  exchange_rate: number;
   wholesale_cost: number;
   sale_price: number;
+
+  payments: Payment[];
   payment_status: 'paid' | 'partial' | 'unpaid';
   amount_paid: number;
+
+  attachments: Attachment[];
+
   notes?: string;
   status: 'active' | 'completed' | 'cancelled';
 }
@@ -41,15 +100,28 @@ export interface TripInsert {
   user_id: string;
   destination: string;
   client_name: string;
-  travelers_count: number;
+
+  travelers?: Traveler[];
+  travelers_count?: number;
+
+  itinerary?: ItineraryItem[];
+
   start_date: string;
   end_date: string;
+
+  currency?: 'USD' | 'EUR' | 'ILS';
+  exchange_rate?: number;
   wholesale_cost: number;
   sale_price: number;
-  payment_status: 'paid' | 'partial' | 'unpaid';
-  amount_paid: number;
+
+  payments?: Payment[];
+  payment_status?: 'paid' | 'partial' | 'unpaid';
+  amount_paid?: number;
+
+  attachments?: Attachment[];
+
   notes?: string;
-  status: 'active' | 'completed' | 'cancelled';
+  status?: 'active' | 'completed' | 'cancelled';
 
   // computed fields optional
   profit?: number;
@@ -63,13 +135,26 @@ export interface TripInsert {
 export interface TripUpdate {
   destination?: string;
   client_name?: string;
+
+  travelers?: Traveler[];
   travelers_count?: number;
+
+  itinerary?: ItineraryItem[];
+
   start_date?: string;
   end_date?: string;
+
+  currency?: 'USD' | 'EUR' | 'ILS';
+  exchange_rate?: number;
   wholesale_cost?: number;
   sale_price?: number;
+
+  payments?: Payment[];
   payment_status?: 'paid' | 'partial' | 'unpaid';
   amount_paid?: number;
+
+  attachments?: Attachment[];
+
   notes?: string;
   status?: 'active' | 'completed' | 'cancelled';
 

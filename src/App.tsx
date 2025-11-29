@@ -1,6 +1,7 @@
 // src/App.tsx
 import { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
@@ -19,9 +20,11 @@ function App() {
 
   return (
     <AuthProvider>
-      <LanguageProvider>
-        <AppContent />
-      </LanguageProvider>
+      <ThemeProvider>
+        <LanguageProvider>
+          <AppContent />
+        </LanguageProvider>
+      </ThemeProvider>
     </AuthProvider>
   );
 }
@@ -77,7 +80,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div
-      className={`min-h-screen flex flex-col bg-slate-950 text-slate-50 ${direction === 'rtl' ? 'rtl' : 'ltr'
+      className={`min-h-screen flex flex-col ${direction === 'rtl' ? 'rtl' : 'ltr'
         }`}
     >
       <main className="flex-1 overflow-y-auto pt-16 md:pt-20">

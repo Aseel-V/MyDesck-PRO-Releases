@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { useBranding } from '../hooks/useBranding';
 import LogoPng from '../../logo.png';
 import {
@@ -12,6 +13,8 @@ import {
   Menu,
   X,
   Shield,
+  Moon,
+  Sun,
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -22,6 +25,7 @@ interface NavbarProps {
 export default function Navbar({ onNavigate, currentPage }: NavbarProps) {
   const { isAdmin } = useAuth();
   const { t, direction } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
   const { displayLogoUrl, displayName } = useBranding();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -148,6 +152,15 @@ export default function Navbar({ onNavigate, currentPage }: NavbarProps) {
               )}
             </div>
 
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-xl text-slate-400 hover:text-sky-400 hover:bg-slate-900/50 transition-colors"
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+
             {/* Electron close button */}
             {isElectron && (
               <>
@@ -252,6 +265,18 @@ export default function Navbar({ onNavigate, currentPage }: NavbarProps) {
               >
                 <Settings className="w-4 h-4" />
                 <span>{t('dashboard.settings')}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  toggleTheme();
+                  setMobileMenuOpen(false);
+                }}
+                className={`${mobileBaseBtn} ${mobileInactiveNavBtn}`}
+              >
+                {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
               </button>
 
               {isElectron && (
