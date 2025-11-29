@@ -20,9 +20,10 @@ import { Trip } from '@/types/trip';
 interface CommandPaletteProps {
   onNavigate?: (page: 'home' | 'trips' | 'analytics' | 'settings' | 'admin') => void;
   onSelectTrip?: (trip: Trip) => void;
+  onCreateTrip?: () => void;
 }
 
-export function CommandPalette({ onNavigate, onSelectTrip }: CommandPaletteProps) {
+export function CommandPalette({ onNavigate, onSelectTrip, onCreateTrip }: CommandPaletteProps) {
   const [open, setOpen] = useState(false);
   const { t, language, setLanguage } = useLanguage();
   const { signOut, isAdmin, user } = useAuth();
@@ -88,6 +89,19 @@ export function CommandPalette({ onNavigate, onSelectTrip }: CommandPaletteProps
                 <Command.Empty className="py-6 text-center text-sm text-slate-500">
                   No results found.
                 </Command.Empty>
+
+                <Command.Group heading="Quick Actions" className="text-xs font-medium text-slate-500 px-2 py-1.5">
+                  <Command.Item
+                    onSelect={() => runCommand(() => onCreateTrip?.())}
+                    className="flex items-center gap-2 px-2 py-2 rounded-lg text-sm text-slate-200 aria-selected:bg-sky-500/20 aria-selected:text-sky-300 cursor-pointer"
+                  >
+                    <Plane className="h-4 w-4" />
+                    <span>Create New Trip</span>
+                    <span className="ml-auto text-xs text-slate-500">Ctrl+N</span>
+                  </Command.Item>
+                </Command.Group>
+
+                <Command.Separator className="my-1 h-px bg-slate-800" />
 
                 <Command.Group heading="Navigation" className="text-xs font-medium text-slate-500 px-2 py-1.5">
                   <Command.Item
@@ -174,8 +188,9 @@ export function CommandPalette({ onNavigate, onSelectTrip }: CommandPaletteProps
               </Command.List>
             </Command>
           </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
+        </div >
+      )
+      }
+    </AnimatePresence >
   );
 }

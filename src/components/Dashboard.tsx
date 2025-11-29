@@ -16,6 +16,10 @@ import AdminDashboard from "./admin/AdminDashboard";
 import { Toaster } from "sonner";
 import { CommandPalette } from "./CommandPalette";
 import { Skeleton } from "./ui/Skeleton";
+import NewTripForm from "./trips/NewTripForm";
+import { TripFormData } from "../types/trip";
+import { useTripMutations } from "../hooks/useTripMutations";
+import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 
 type Page = "home" | "trips" | "analytics" | "settings" | "admin";
 
@@ -44,6 +48,41 @@ export default function Dashboard() {
     totalRegularUsers: 0,
     newUsersThisMonth: 0,
   });
+
+  // State for NewTripForm (Lifted from Trips.tsx)
+  const [showNewTripForm, setShowNewTripForm] = useState(false);
+  const [editingTrip, setEditingTrip] = useState<Trip | undefined>(undefined);
+  const { saveTrip } = useTripMutations();
+
+  const handleCreateTrip = () => {
+    setEditingTrip(undefined);
+    setShowNewTripForm(true);
+  };
+
+  const handleEditTrip = (trip: Trip) => {
+    setEditingTrip(trip);
+    setShowNewTripForm(true);
+  };
+
+  useKeyboardShortcuts([
+    {
+      key: 'n',
+      ctrlKey: true,
+      action: handleCreateTrip,
+      preventDefault: true,
+    },
+  ]);
+
+  const handleSaveTrip = async (data: TripFormData) => {
+    await saveTrip({ formData: data, editTripId: editingTrip?.id });
+    setShowNewTripForm(false);
+    setEditingTrip(undefined);
+  };
+
+  const handleCloseNewTripForm = () => {
+    setShowNewTripForm(false);
+    setEditingTrip(undefined);
+  };
 
   // 🧭 تحميل الرحلات (للمستخدم العادي فقط)
   const {
@@ -125,7 +164,19 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen flex flex-col bg-slate-950 relative">
       <Toaster position="top-center" theme="dark" richColors closeButton />
-      <CommandPalette onNavigate={handleNavigate} onSelectTrip={handleSelectTrip} />
+      <CommandPalette
+        onNavigate={handleNavigate}
+        onSelectTrip={handleSelectTrip}
+        onCreateTrip={handleCreateTrip}
+      />
+
+      {showNewTripForm && (
+        <NewTripForm
+          onClose={handleCloseNewTripForm}
+          onSave={handleSaveTrip}
+          editTrip={editingTrip}
+        />
+      )}
 
       {/* خلفية ناعمة */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -369,10 +420,10 @@ export default function Dashboard() {
                                 <td className="py-2 pr-4">
                                   <span
                                     className={`inline-flex px-2 py-1 rounded-full text-[11px] font-semibold ${trip.status === "active"
-                                        ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/40"
-                                        : trip.status === "completed"
-                                          ? "bg-sky-500/15 text-sky-300 border border-sky-500/40"
-                                          : "bg-rose-500/15 text-rose-300 border border-rose-500/40"
+                                      ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/40"
+                                      : trip.status === "completed"
+                                        ? "bg-sky-500/15 text-sky-300 border border-sky-500/40"
+                                        : "bg-rose-500/15 text-rose-300 border border-rose-500/40"
                                       }`}
                                   >
                                     {trip.status}
@@ -444,6 +495,8 @@ export default function Dashboard() {
               <Trips
                 initialFilters={initialTripFilters || undefined}
                 initialViewTrip={selectedTrip}
+                onEditTrip={handleEditTrip}
+                onCreateTrip={handleCreateTrip}
               />
             </MotionWrapper>
           )}

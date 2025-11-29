@@ -1,6 +1,7 @@
 import { useState, useEffect, ChangeEvent } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useTheme } from '../contexts/ThemeContext';
 import {
   Save,
   AlertTriangle,
@@ -24,6 +25,7 @@ type NoticeType = 'success' | 'error' | 'info';
 export default function Settings() {
   const { profile, updateProfile, user, refreshProfile, signOut } = useAuth();
   const { t, setLanguage } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
 
   const [businessName, setBusinessName] = useState(profile?.business_name || '');
   const [logoUrl, setLogoUrl] = useState(profile?.logo_url || '');
@@ -33,7 +35,7 @@ export default function Settings() {
   const [language, setLanguageState] = useState<'en' | 'ar' | 'he'>(
     (profile?.preferred_language as 'en' | 'ar' | 'he') || 'en'
   );
-  const [darkMode, setDarkMode] = useState(false);
+  // const [darkMode, setDarkMode] = useState(false); // Removed local state
 
   const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -73,12 +75,7 @@ export default function Settings() {
 
   // Sync dark mode + load profile details
   useEffect(() => {
-    const savedDarkMode = localStorage.getItem('darkMode') === 'true';
-    setDarkMode(savedDarkMode);
-    if (savedDarkMode) {
-      document.documentElement.classList.add('dark');
-    }
-
+    // Theme is now handled by ThemeContext
     if (user) {
       fetchUserProfile();
     }
@@ -139,17 +136,7 @@ export default function Settings() {
     setShowCurrencyWarning(false);
   };
 
-  const toggleDarkMode = () => {
-    const newDarkMode = !darkMode;
-    setDarkMode(newDarkMode);
-    localStorage.setItem('darkMode', newDarkMode.toString());
-
-    if (newDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  };
+  // toggleDarkMode is now handled by toggleTheme from context
 
   const handleSaveProfile = async () => {
     if (!user) {
@@ -515,8 +502,8 @@ export default function Settings() {
               <button
                 onClick={() => setActiveTab('profile')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${activeTab === 'profile'
-                    ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
-                    : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
+                  ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
+                  : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
                   }`}
               >
                 <User className="w-4 h-4" />
@@ -526,8 +513,8 @@ export default function Settings() {
               <button
                 onClick={() => setActiveTab('business')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${activeTab === 'business'
-                    ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
-                    : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
+                  ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
+                  : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
                   }`}
               >
                 <Building2 className="w-4 h-4" />
@@ -537,8 +524,8 @@ export default function Settings() {
               <button
                 onClick={() => setActiveTab('security')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${activeTab === 'security'
-                    ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
-                    : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
+                  ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
+                  : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
                   }`}
               >
                 <Key className="w-4 h-4" />
@@ -548,8 +535,8 @@ export default function Settings() {
               <button
                 onClick={() => setActiveTab('data')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${activeTab === 'data'
-                    ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
-                    : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
+                  ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
+                  : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
                   }`}
               >
                 <Download className="w-4 h-4" />
@@ -559,8 +546,8 @@ export default function Settings() {
               <button
                 onClick={() => setActiveTab('payments')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${activeTab === 'payments'
-                    ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
-                    : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
+                  ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
+                  : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
                   }`}
               >
                 <CreditCard className="w-4 h-4" />
@@ -660,8 +647,8 @@ export default function Settings() {
                         <label
                           htmlFor="logo-upload"
                           className={`w-full flex flex-col items-center justify-center px-4 py-6 rounded-xl border-2 border-dashed transition-all ${uploading
-                              ? 'bg-slate-900/60 border-slate-800 text-slate-500 cursor-not-allowed'
-                              : 'bg-slate-900/80 border-slate-700 text-slate-400 hover:border-sky-500 hover:text-sky-300 cursor-pointer'
+                            ? 'bg-slate-900/60 border-slate-800 text-slate-500 cursor-not-allowed'
+                            : 'bg-slate-900/80 border-slate-700 text-slate-400 hover:border-sky-500 hover:text-sky-300 cursor-pointer'
                             }`}
                         >
                           <Upload className={`w-8 h-8 mb-2 ${uploading ? 'animate-pulse' : ''}`} />
@@ -744,16 +731,16 @@ export default function Settings() {
                       Dark Mode
                     </label>
                     <button
-                      onClick={toggleDarkMode}
+                      onClick={toggleTheme}
                       className="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-900/80 border border-slate-700 hover:bg-slate-800/80 transition-all w-full"
                     >
-                      {darkMode ? (
+                      {theme === 'dark' ? (
                         <Moon className="w-5 h-5 text-sky-400" />
                       ) : (
                         <Sun className="w-5 h-5 text-amber-400" />
                       )}
                       <span className="font-medium">
-                        {darkMode ? 'Dark Mode On' : 'Light Mode On'}
+                        {theme === 'dark' ? 'Dark Mode On' : 'Light Mode On'}
                       </span>
                     </button>
                   </div>

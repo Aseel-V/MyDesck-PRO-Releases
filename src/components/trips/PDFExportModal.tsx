@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { formatDate } from '../../lib/utils';
 import { X, Download, FileText } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -217,15 +218,7 @@ export default function PDFExportModal({ trips, onClose }: PDFExportModalProps) 
 
   // text and labels moved above for reuse in validation
 
-  const formatTripDate = (date: string) => {
-    try {
-      return new Date(date).toLocaleDateString(
-        language === 'ar' ? 'ar' : language === 'he' ? 'he-IL' : 'en-US'
-      );
-    } catch {
-      return date;
-    }
-  };
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
@@ -362,7 +355,7 @@ export default function PDFExportModal({ trips, onClose }: PDFExportModalProps) 
                   >
                     {trips.map((trip) => (
                       <option key={trip.id} value={trip.id} className="bg-slate-900 text-slate-100">
-                        {trip.destination} - {trip.client_name} ({formatTripDate(trip.start_date)})
+                        {trip.destination} - {trip.client_name} ({formatDate(trip.start_date)})
                       </option>
                     ))}
                   </select>
@@ -382,7 +375,7 @@ export default function PDFExportModal({ trips, onClose }: PDFExportModalProps) 
                       >
                         <div className="w-2 h-2 bg-sky-500 rounded-full"></div>
                         <span>
-                          {trip.destination} - {trip.client_name} ({formatTripDate(trip.start_date)})
+                          {trip.destination} - {trip.client_name} ({formatDate(trip.start_date)})
                         </span>
                       </li>
                     ))}

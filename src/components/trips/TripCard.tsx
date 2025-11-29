@@ -10,7 +10,7 @@ import {
   Square,
   Share2,
 } from 'lucide-react';
-import { formatDateHijri } from '../../lib/utils';
+import { formatDateHijri, formatDate } from '../../lib/utils';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { Trip } from '../../types/trip';
@@ -86,17 +86,7 @@ export default function TripCard({
     }
   };
 
-  const formatDate = (date: string) => {
-    if (!date) return '-';
-    return new Date(date).toLocaleDateString(
-      profile?.preferred_language || 'en',
-      {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-      }
-    );
-  };
+
 
   // قيم آمنة
   const wholesale = trip.wholesale_cost ?? 0;

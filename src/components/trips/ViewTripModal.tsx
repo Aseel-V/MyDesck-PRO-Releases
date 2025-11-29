@@ -1,4 +1,5 @@
 import { X } from 'lucide-react';
+import { formatDate } from '../../lib/utils';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { Trip } from '../../types/trip';
@@ -27,13 +28,7 @@ export default function ViewTripModal({ trip, onClose }: ViewTripModalProps) {
 
   const currencySymbol = getCurrencySymbol(profile?.preferred_currency || 'USD');
 
-  const formatDate = (date: string) => {
-    if (!date) return '-';
-    return new Date(date).toLocaleDateString(
-      profile?.preferred_language || 'en',
-      { year: 'numeric', month: 'short', day: 'numeric' }
-    );
-  };
+
 
   const wholesale = trip.wholesale_cost ?? 0;
   const sale = trip.sale_price ?? 0;

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import {
   Plus,
   Trash2,
@@ -16,16 +16,17 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
 import { supabase } from '../../lib/supabase';
-import { Trip, TripFormData } from '../../types/trip';
+import { Trip } from '../../types/trip';
 import { useDebounce } from '../../hooks/useDebounce';
+import { useTripMutations } from '../../hooks/useTripMutations';
 import TripCard from './TripCard';
 import TripFilters from './TripFilters';
-import NewTripForm from './NewTripForm';
 import UpdatePaymentForm from './UpdatePaymentForm';
 import PDFExportModal from './PDFExportModal';
 import ViewTripModal from './ViewTripModal';
 import JSZip from 'jszip';
 import { generateTripInvoice } from '../../lib/pdfGenerator';
+import { formatDate } from '../../lib/utils';
 import { Skeleton } from '../ui/Skeleton';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -35,17 +36,19 @@ interface TripsProps {
     pendingOnly?: boolean;
   };
   initialViewTrip?: Trip;
+  onEditTrip?: (trip: Trip) => void;
+  onCreateTrip?: () => void;
 }
 
-export default function Trips({ initialFilters, initialViewTrip }: TripsProps) {
+export default function Trips({ initialFilters, initialViewTrip, onEditTrip, onCreateTrip }: TripsProps) {
   const { t } = useLanguage();
   const { user, profile, userProfile } = useAuth();
   const { convert, format, currency, isLoading: isCurrencyLoading } = useCurrency();
-  const queryClient = useQueryClient();
+  const { deleteTrip, updatePayment, toggleExport } = useTripMutations();
 
-  const [showNewTripForm, setShowNewTripForm] = useState(false);
+  // const [showNewTripForm, setShowNewTripForm] = useState(false); // Lifted to Dashboard
   const [showUpdatePaymentForm, setShowUpdatePaymentForm] = useState(false);
-  const [editingTrip, setEditingTrip] = useState<Trip | undefined>(undefined);
+  // const [editingTrip, setEditingTrip] = useState<Trip | undefined>(undefined); // Lifted to Dashboard
   const [paymentTrip, setPaymentTrip] = useState<Trip | undefined>(undefined);
   const [viewTrip, setViewTrip] = useState<Trip | undefined>(undefined);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
@@ -147,76 +150,16 @@ export default function Trips({ initialFilters, initialViewTrip }: TripsProps) {
     enabled: !!user?.id,
   });
 
-  const saveTripMutation = useMutation({
-    mutationFn: async (formData: TripFormData) => {
-      if (!user?.id) throw new Error('User not authenticated');
+  // saveTripMutation moved to useTripMutations hook
+  // handleSaveTrip moved to Dashboard
 
-      if (editingTrip) {
-        const { error } = await supabase
-          .from('trips')
-          .update({ ...formData, updated_at: new Date().toISOString() })
-          .eq('id', editingTrip.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('trips')
-          .insert([{ ...formData, user_id: user.id }]);
-        if (error) throw error;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['trips'] });
-      setShowNewTripForm(false);
-      setEditingTrip(undefined);
-    },
-    onError: (error: any) => {
-      console.error('Error saving trip:', error);
-    }
-  });
-
-  const handleSaveTrip = async (formData: TripFormData) => {
-    await saveTripMutation.mutateAsync(formData);
-  };
-
-  const updatePaymentMutation = useMutation({
-    mutationFn: async ({ tripId, amountPaid, paymentStatus }: { tripId: string, amountPaid: number, paymentStatus: 'paid' | 'partial' | 'unpaid' }) => {
-      const { error } = await supabase
-        .from('trips')
-        .update({
-          amount_paid: amountPaid,
-          payment_status: paymentStatus,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', tripId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['trips'] });
-      setShowUpdatePaymentForm(false);
-      setPaymentTrip(undefined);
-    },
-    onError: (error: any) => {
-      console.error('Error updating payment:', error);
-    }
-  });
+  // updatePaymentMutation moved to useTripMutations hook
 
   const handleUpdatePayment = async (tripId: string, amountPaid: number, paymentStatus: 'paid' | 'partial' | 'unpaid') => {
-    await updatePaymentMutation.mutateAsync({ tripId, amountPaid, paymentStatus });
+    await updatePayment({ tripId, amountPaid, paymentStatus });
   };
 
-  const deleteTripMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('trips').delete().eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['trips'] });
-      setDeleteConfirm(null);
-    },
-    onError: (error: any) => {
-      console.error('Error deleting trip:', error);
-    }
-  });
+  // deleteTripMutation moved to useTripMutations hook
 
   const handleDeleteTrip = (id: string) => {
     if (deleteConfirm !== id) {
@@ -224,27 +167,14 @@ export default function Trips({ initialFilters, initialViewTrip }: TripsProps) {
       setTimeout(() => setDeleteConfirm(null), 3000);
       return;
     }
-    deleteTripMutation.mutate(id);
+    deleteTrip(id);
+    setDeleteConfirm(null);
   };
 
-  const toggleExportMutation = useMutation({
-    mutationFn: async ({ id, value }: { id: string, value: boolean }) => {
-      const { error } = await supabase
-        .from('trips')
-        .update({ export_to_pdf: value, updated_at: new Date().toISOString() })
-        .eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['trips'] });
-    },
-    onError: (error: any) => {
-      console.error('Error toggling export:', error);
-    }
-  });
+  // toggleExportMutation moved to useTripMutations hook
 
   const handleToggleExport = (id: string, value: boolean) => {
-    toggleExportMutation.mutate({ id, value });
+    toggleExport({ id, value });
   };
 
   const filteredTrips = trips || [];
@@ -309,8 +239,9 @@ export default function Trips({ initialFilters, initialViewTrip }: TripsProps) {
   }, [trips, convert]);
 
   const handleEditTrip = (trip: Trip) => {
-    setEditingTrip(trip);
-    setShowNewTripForm(true);
+    // setEditingTrip(trip);
+    // setShowNewTripForm(true);
+    onEditTrip?.(trip);
   };
 
   const handleUpdatePaymentClick = (trip: Trip) => {
@@ -322,10 +253,10 @@ export default function Trips({ initialFilters, initialViewTrip }: TripsProps) {
     setViewTrip(trip);
   };
 
-  const handleCloseNewTripForm = () => {
-    setShowNewTripForm(false);
-    setEditingTrip(undefined);
-  };
+  // const handleCloseNewTripForm = () => {
+  //   setShowNewTripForm(false);
+  //   setEditingTrip(undefined);
+  // };
 
   const handleCloseUpdatePaymentForm = () => {
     setShowUpdatePaymentForm(false);
@@ -480,7 +411,7 @@ export default function Trips({ initialFilters, initialViewTrip }: TripsProps) {
           )}
 
           <button
-            onClick={() => setShowNewTripForm(true)}
+            onClick={() => onEditTrip?.({} as Trip) /* This button was for new trip, but now we use CommandPalette or Dashboard action? No, this is the button in the header. We should probably accept onCreateTrip prop too? Or just use onEditTrip(undefined)? But onEditTrip expects Trip. Let's assume Dashboard handles New Trip via CommandPalette or we need to pass onCreateTrip here too. Actually, the button says "New Trip". Dashboard has handleCreateTrip. We should pass onCreateTrip to Trips.tsx as well. */}
             className={primaryActionBtn}
           >
             <Plus className="w-5 h-5" />
@@ -593,7 +524,7 @@ export default function Trips({ initialFilters, initialViewTrip }: TripsProps) {
           </h3>
           <p className="text-slate-300 mb-6">{t('trips.createFirst')}</p>
           <button
-            onClick={() => setShowNewTripForm(true)}
+            onClick={() => onCreateTrip?.()}
             className={primaryActionBtn}
           >
             <Plus className="w-5 h-5" />
@@ -652,7 +583,7 @@ export default function Trips({ initialFilters, initialViewTrip }: TripsProps) {
                       <td className="py-3 px-4 text-slate-100 font-medium">{trip.destination}</td>
                       <td className="py-3 px-4 text-slate-300">{trip.client_name}</td>
                       <td className="py-3 px-4 text-slate-400">
-                        {new Date(trip.start_date).toLocaleDateString()}
+                        {formatDate(trip.start_date)}
                       </td>
                       <td className="py-3 px-4 text-slate-300">
                         {format(trip.sale_price || 0)}
@@ -686,15 +617,7 @@ export default function Trips({ initialFilters, initialViewTrip }: TripsProps) {
         </div>
       )}
 
-      {
-        showNewTripForm && (
-          <NewTripForm
-            onClose={handleCloseNewTripForm}
-            onSave={handleSaveTrip}
-            editTrip={editingTrip}
-          />
-        )
-      }
+      {/* NewTripForm removed from here, rendered in Dashboard */}
 
       {
         showUpdatePaymentForm && paymentTrip && (

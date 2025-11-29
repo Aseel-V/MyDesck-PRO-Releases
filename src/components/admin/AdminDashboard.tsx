@@ -158,7 +158,7 @@ export default function AdminDashboard() {
 
       if (error) throw error;
 
-      setTrips(data || []);
+      setTrips((data as Trip[]) || []);
       setTotalTrips(count || 0);
     } catch (error) {
       console.error('Error fetching trips:', error);

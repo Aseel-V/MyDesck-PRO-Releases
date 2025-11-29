@@ -8,6 +8,10 @@ import { Trip, TripFormData } from '../../types/trip';
 import { tripSchema } from '../../lib/schemas';
 import { cn } from '../../lib/utils';
 import { z } from 'zod';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '../../lib/supabase';
+import { toast } from 'sonner';
+import { useDebounce } from '../../hooks/useDebounce';
 
 interface NewTripFormProps {
   onClose: () => void;
@@ -55,6 +59,67 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
       notes: editTrip?.notes || '',
       status: (editTrip?.status as TripFormValues['status']) || 'active',
     },
+  });
+
+  // ------------------------------------------------------------------
+  // 1. Auto-Save Logic
+  // ------------------------------------------------------------------
+  const watchedValues = watch();
+  const debouncedValues = useDebounce(watchedValues, 1000);
+
+  useEffect(() => {
+    // Only auto-save if it's a new trip (not editing)
+    if (!editTrip) {
+      localStorage.setItem('new_trip_draft', JSON.stringify(debouncedValues));
+    }
+  }, [debouncedValues, editTrip]);
+
+  useEffect(() => {
+    // Load draft on mount
+    if (!editTrip) {
+      const savedDraft = localStorage.getItem('new_trip_draft');
+      if (savedDraft) {
+        try {
+          const parsed = JSON.parse(savedDraft);
+          // We could ask the user if they want to restore, but for now let's just restore
+          // or show a toast. Let's restore quietly or with a toast.
+          // Ideally, we should check if the draft is empty or meaningful.
+          if (parsed.destination || parsed.client_name) {
+            Object.keys(parsed).forEach((key) => {
+              setValue(key as any, parsed[key]);
+            });
+            toast.info(t('trips.draftRestored', 'Draft restored'));
+          }
+        } catch (e) {
+          console.error('Failed to parse draft', e);
+        }
+      }
+    }
+  }, [editTrip, setValue, t]);
+
+  // ------------------------------------------------------------------
+  // 2. Autocomplete Logic
+  // ------------------------------------------------------------------
+  const { data: distinctClients = [] } = useQuery({
+    queryKey: ['distinct-clients'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('trips')
+        .select('client_name')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Deduplicate by client_name
+      const unique = new Map();
+      data?.forEach((item: any) => {
+        if (item.client_name && !unique.has(item.client_name)) {
+          unique.set(item.client_name, item);
+        }
+      });
+      return Array.from(unique.values());
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   const { fields: travelerFields, append: appendTraveler, remove: removeTraveler } =
@@ -135,6 +200,12 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
       }
 
       await onSave(data as TripFormData);
+
+      // Clear draft on success
+      if (!editTrip) {
+        localStorage.removeItem('new_trip_draft');
+      }
+
       onClose();
     } catch (error) {
       console.error('Failed to save trip:', error);
@@ -247,7 +318,17 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                     type="text"
                     {...register('client_name')}
                     className={cn(baseInputClasses, errors.client_name && errorInputClasses)}
+                    list="client-names"
+                    onChange={(e) => {
+                      register('client_name').onChange(e);
+                      // If we had phone number logic, we'd call it here
+                    }}
                   />
+                  <datalist id="client-names">
+                    {distinctClients.map((c: any, i: number) => (
+                      <option key={i} value={c.client_name} />
+                    ))}
+                  </datalist>
                   {errors.client_name && (
                     <p className="text-xs text-rose-400 mt-1">
                       {errors.client_name.message as string}

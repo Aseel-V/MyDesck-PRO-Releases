@@ -1,8 +1,7 @@
 // src/App.tsx
 import { useState, useEffect } from 'react';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { ThemeProvider } from './contexts/ThemeContext';
-import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
+import { useAuth } from './contexts/AuthContext';
+import { useLanguage } from './contexts/LanguageContext';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import SplashScreen from './components/SplashScreen';
@@ -19,13 +18,7 @@ function App() {
   }
 
   return (
-    <AuthProvider>
-      <ThemeProvider>
-        <LanguageProvider>
-          <AppContent />
-        </LanguageProvider>
-      </ThemeProvider>
-    </AuthProvider>
+    <AppContent />
   );
 }
 

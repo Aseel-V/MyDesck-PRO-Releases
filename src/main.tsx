@@ -18,6 +18,7 @@ import { createIDBPersister } from './lib/persister';
 import { LanguageProvider } from './contexts/LanguageContext'; // Assuming path for LanguageProvider
 import { AuthProvider } from './contexts/AuthContext'; // Assuming path for AuthProvider
 import { CurrencyProvider } from './contexts/CurrencyContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -37,9 +38,11 @@ createRoot(document.getElementById('root')!).render(
       <PersistQueryClientProvider client={queryClient} persistOptions={{ persister }}>
         <AuthProvider>
           <LanguageProvider>
-            <CurrencyProvider>
-              <App />
-            </CurrencyProvider>
+            <ThemeProvider>
+              <CurrencyProvider>
+                <App />
+              </CurrencyProvider>
+            </ThemeProvider>
           </LanguageProvider>
         </AuthProvider>
       </PersistQueryClientProvider>
