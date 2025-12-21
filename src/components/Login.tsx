@@ -3,6 +3,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { LogIn } from 'lucide-react';
 
+import ForgotPassword from './ForgotPassword';
+
 export default function Login() {
   const { signIn } = useAuth();
   const { t } = useLanguage();
@@ -10,6 +12,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [view, setView] = useState<'login' | 'forgot-password'>('login');
   const isElectron =
     typeof window !== 'undefined' && !!window.electronAPI;
 
@@ -31,9 +34,23 @@ export default function Login() {
     'w-full text-slate-100 placeholder-slate-400 bg-slate-950/80 border border-slate-800/80 rounded-xl px-3 py-2.5 text-sm ' +
     'focus:outline-none focus:ring-2 focus:ring-sky-500/80 focus:border-sky-500/80 transition-all shadow-sm shadow-slate-950/70';
 
+  if (view === 'forgot-password') {
+    return (
+      <div className="min-h-screen relative flex items-center justify-center bg-slate-950 px-4 py-10">
+         {/* Background elements */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="absolute -top-32 -left-32 w-80 h-80 bg-sky-500/20 blur-3xl rounded-full" />
+            <div className="absolute -bottom-40 -right-32 w-96 h-96 bg-fuchsia-500/18 blur-3xl rounded-full" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.10),transparent_60%)]" />
+        </div>
+        <ForgotPassword onBack={() => setView('login')} />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen relative flex items-center justify-center bg-slate-950 px-4 py-10">
-      {/* زر إغلاق للتطبيق (إلكترون) */}
+      {/* Search for 'isElectron' button and keep it... */}
       {isElectron && (
         <div className="absolute top-4 right-4 z-20">
           <button
@@ -48,21 +65,21 @@ export default function Login() {
         </div>
       )}
 
-      {/* خلفية ناعمة مثل الـ Dashboard */}
+      {/* Background Softness */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-32 -left-32 w-80 h-80 bg-sky-500/20 blur-3xl rounded-full" />
         <div className="absolute -bottom-40 -right-32 w-96 h-96 bg-fuchsia-500/18 blur-3xl rounded-full" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.10),transparent_60%)]" />
       </div>
 
-      {/* الكرت الرئيسي */}
+      {/* Main Card */}
       <div className="w-full max-w-4xl relative z-10">
         <div className="rounded-3xl overflow-hidden border border-slate-800/80 bg-slate-950/95 shadow-[0_24px_80px_rgba(0,0,0,0.8)] glass-panel animate-scaleIn">
-          {/* خط جمالي علوي */}
+          {/* Top Line */}
           <div className="h-[2px] bg-gradient-to-r from-sky-500/70 via-fuchsia-500/60 to-sky-400/70" />
 
           <div className="grid lg:grid-cols-[1.1fr,1fr]">
-            {/* الجزء الأيسر – الترحيب / المزايا */}
+            {/* Left Part - Welcome */}
             <div className="relative px-8 py-10 md:px-10 md:py-12 bg-gradient-to-br from-slate-950 via-slate-900/80 to-slate-950">
               <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute -top-20 right-0 w-56 h-56 bg-sky-400/18 blur-3xl rounded-full" />
@@ -113,7 +130,7 @@ export default function Login() {
               </div>
             </div>
 
-            {/* الجزء الأيمن – فورم تسجيل الدخول */}
+            {/* Right Part - Login Form */}
             <div className="relative bg-slate-950/90 px-6 py-8 md:px-8 md:py-10">
               <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-40 bg-sky-400/12 blur-3xl rounded-full" />
@@ -169,6 +186,7 @@ export default function Login() {
                       </label>
                       <button
                         type="button"
+                        onClick={() => setView('forgot-password')}
                         className="text-[11px] text-sky-300/80 hover:text-sky-200 transition-colors"
                       >
                         {t('auth.forgotPassword', 'Forgot password?')}

@@ -89,6 +89,9 @@ export const translations = {
     trips: {
       title: 'Trip Management',
       newTrip: 'New Trip',
+      details: 'Details',
+      financials: 'Financials',
+      paymentDate: 'Payment Date',
       destination: 'Destination',
       clientName: 'Client Name',
       travelers: 'Travelers',
@@ -296,6 +299,9 @@ export const translations = {
     trips: {
       title: 'إدارة الرحلات',
       newTrip: 'رحلة جديدة',
+      details: 'التفاصيل',
+      financials: 'المالية',
+      paymentDate: 'تاريخ الدفع',
       destination: 'الوجهة',
       clientName: 'اسم العميل',
       travelers: 'المسافرون',
@@ -503,6 +509,9 @@ export const translations = {
     trips: {
       title: 'ניהול טיולים',
       newTrip: 'טיול חדש',
+      details: 'פרטים',
+      financials: 'פיננסים',
+      paymentDate: 'תאריך תשלום',
       destination: 'יעד',
       clientName: 'שם לקוח',
       travelers: 'נוסעים',

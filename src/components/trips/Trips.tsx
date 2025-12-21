@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Plus,
-  Trash2,
   FileText,
   BarChart3,
   CalendarCheck2,
@@ -58,10 +57,15 @@ export default function Trips({ initialFilters, initialViewTrip, onEditTrip, onC
 
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
-  const [statusFilter, setStatusFilter] = useState('');
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState('');
+  const [tripStatusFilter, setTripStatusFilter] = useState('');
   const [yearFilter, setYearFilter] = useState('');
   const [monthFilter, setMonthFilter] = useState('');
   const [destinationFilter, setDestinationFilter] = useState('');
+
+  // Pagination
+  const [page, setPage] = useState(1);
+  // PAGE_SIZE removed
 
   // Apply initial filters from Dashboard/Analytics (month and pending)
   useEffect(() => {
@@ -70,15 +74,17 @@ export default function Trips({ initialFilters, initialViewTrip, onEditTrip, onC
 
     // Reset all filters first
     setSearchTerm('');
-    setStatusFilter('');
+    setPaymentStatusFilter('');
+    setTripStatusFilter('');
     setYearFilter('');
     setMonthFilter('');
     setDestinationFilter('');
+    setPage(1); // Reset page
 
     // Then apply incoming filters
     if (typeof pendingOnly === 'boolean' && pendingOnly) {
       // Map "Pending" to payment status = partial (חלקי)
-      setStatusFilter('partial');
+      setPaymentStatusFilter('partial');
     }
     if (month && /^\d{4}-\d{2}$/.test(month)) {
       const [year, m] = month.split('-');
@@ -93,6 +99,11 @@ export default function Trips({ initialFilters, initialViewTrip, onEditTrip, onC
     }
   }, [initialViewTrip]);
 
+  // Reset page when filters change
+  useEffect(() => {
+      setPage(1);
+  }, [debouncedSearchTerm, paymentStatusFilter, tripStatusFilter, yearFilter, monthFilter, destinationFilter]);
+
   const baseActionBtn =
     'inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium rounded-xl transition-all border-b-2';
   const primaryActionBtn =
@@ -103,7 +114,7 @@ export default function Trips({ initialFilters, initialViewTrip, onEditTrip, onC
     ' border-transparent text-slate-300 hover:text-slate-50 hover:bg-slate-900/50 hover:border-slate-500/80';
 
   const { data: { data: trips, count } = { data: [], count: 0 }, isLoading: loading } = useQuery({
-    queryKey: ['trips', user?.id, debouncedSearchTerm, statusFilter, yearFilter, monthFilter, destinationFilter],
+    queryKey: ['trips', user?.id, debouncedSearchTerm, paymentStatusFilter, tripStatusFilter, yearFilter, monthFilter, destinationFilter, page],
     queryFn: async () => {
       if (!user?.id) return { data: [], count: 0 };
 
@@ -117,9 +128,12 @@ export default function Trips({ initialFilters, initialViewTrip, onEditTrip, onC
         query = query.or(`destination.ilike.%${debouncedSearchTerm}%,client_name.ilike.%${debouncedSearchTerm}%,notes.ilike.%${debouncedSearchTerm}%`);
       }
 
-      if (statusFilter) {
-        // Check both payment_status and status columns as per original logic
-        query = query.or(`payment_status.eq.${statusFilter},status.eq.${statusFilter}`);
+      if (paymentStatusFilter) {
+        query = query.eq('payment_status', paymentStatusFilter as any);
+      }
+
+      if (tripStatusFilter) {
+        query = query.eq('status', tripStatusFilter as any);
       }
 
       if (yearFilter) {
@@ -140,12 +154,17 @@ export default function Trips({ initialFilters, initialViewTrip, onEditTrip, onC
       if (destinationFilter) {
         query = query.eq('destination', destinationFilter);
       }
+      
+      // Removed pagination range to show all trips
+      // const from = (page - 1) * PAGE_SIZE;
+      // const to = from + PAGE_SIZE - 1;
 
       const { data, error, count } = await query
         .order('start_date', { ascending: false });
+        // .range(from, to);
 
       if (error) throw error;
-      return { data: data as Trip[], count: count || 0 };
+      return { data: data as unknown as Trip[], count: count || 0 };
     },
     enabled: !!user?.id,
   });
@@ -178,8 +197,19 @@ export default function Trips({ initialFilters, initialViewTrip, onEditTrip, onC
   };
 
   const filteredTrips = trips || [];
+  // const totalPages = Math.ceil((count || 0) / PAGE_SIZE);
+
+  // saveTripMutation moved to useTripMutations hook
+  // handleSaveTrip moved to Dashboard
+  // ... (rest of handlers)
 
   const availableYears = useMemo(() => {
+      // Logic for years needs all data dates or distinct query.
+      // For now, we can hardcode recent years or fetch distinct?
+      // Optimization: hardcode 2023-2030 or similar? 
+      // Or just keep it as is (will only show years from current page).
+      // Let's settle on the pagination fix first.
+    if (!trips) return [];
     const years = new Set(
       trips.map((trip) => new Date(trip.start_date).getFullYear().toString())
     );
@@ -187,6 +217,7 @@ export default function Trips({ initialFilters, initialViewTrip, onEditTrip, onC
   }, [trips]);
 
   const availableDestinations = useMemo(() => {
+    if (!trips) return [];
     const destinations = new Set(trips.map((trip) => trip.destination));
     return Array.from(destinations).sort();
   }, [trips]);
@@ -195,48 +226,55 @@ export default function Trips({ initialFilters, initialViewTrip, onEditTrip, onC
     () => trips.filter((trip) => trip.export_to_pdf),
     [trips]
   );
+  
+  // ... (Stats calculation on current page)
+  
+  // Separate query for Stats (No Pagination)
+  
 
-  // Statistics with Currency Conversion
   const stats = useMemo(() => {
-    const totalTrips = trips.length;
-
-    // Calculate totals in base currency (USD) first, then convert
-    // OR convert each item. Converting sum is more efficient if rate is constant.
-    // However, if we want per-item precision, we might convert each.
-    // Given convert() is linear, sum(convert(x)) == convert(sum(x)).
-
-    const totalRevenueBase = trips.reduce(
-      (sum, trip) => sum + (trip.sale_price || 0),
-      0
-    );
-
-    const totalProfitBase = trips.reduce((sum, trip) => {
-      const profit =
-        typeof trip.profit === 'number'
-          ? trip.profit
-          : (trip.sale_price || 0) - (trip.wholesale_cost || 0);
-      return sum + profit;
+    if (!trips || trips.length === 0) return { totalTrips: 0, totalRevenue: 0, totalProfit: 0, unpaidAmount: 0, upcoming: 0 };
+    
+    // Since we now load ALL trips, totalTrips is just length. count is also fine.
+    const totalTrips = count || 0; 
+    
+    // Correctly convert each trip's values to the user's display currency before summing
+    const totalRevenue = trips.reduce((sum, trip) => {
+      const tripCurrency = trip.currency || currency; // Default to user currency if missing
+      const price = trip.sale_price || 0;
+      return sum + convert(price, tripCurrency, currency);
     }, 0);
 
-    const totalUnpaidBase = trips.reduce((sum, trip) => {
-      const due = (trip.sale_price || 0) - (trip.amount_paid || 0);
-      return sum + (due > 0 ? due : 0);
+    const totalProfit = trips.reduce((sum, trip) => {
+       const tripCurrency = trip.currency || currency;
+       const profit = typeof trip.profit === 'number'
+          ? trip.profit
+          : (trip.sale_price || 0) - (trip.wholesale_cost || 0);
+       return sum + convert(profit, tripCurrency, currency);
+    }, 0);
+
+    const unpaidAmount = trips.reduce((sum, trip) => {
+       const tripCurrency = trip.currency || currency;
+       const due = (trip.sale_price || 0) - (trip.amount_paid || 0);
+       const positiveDue = due > 0 ? due : 0;
+       return sum + convert(positiveDue, tripCurrency, currency);
     }, 0);
 
     const now = new Date();
     const upcomingTrips = trips.filter((trip) => {
+      if (!trip.start_date) return false;
       const start = new Date(trip.start_date);
-      return start >= new Date(now.toDateString());
+      return start >= now;
     }).length;
 
     return {
       totalTrips,
-      totalRevenue: convert(totalRevenueBase),
-      totalProfit: convert(totalProfitBase),
-      unpaidAmount: convert(totalUnpaidBase),
+      totalRevenue,
+      totalProfit,
+      unpaidAmount,
       upcoming: upcomingTrips,
     };
-  }, [trips, convert]);
+  }, [trips, count, convert, currency]);
 
   const handleEditTrip = (trip: Trip) => {
     // setEditingTrip(trip);
@@ -411,7 +449,7 @@ export default function Trips({ initialFilters, initialViewTrip, onEditTrip, onC
           )}
 
           <button
-            onClick={() => onEditTrip?.({} as Trip) /* This button was for new trip, but now we use CommandPalette or Dashboard action? No, this is the button in the header. We should probably accept onCreateTrip prop too? Or just use onEditTrip(undefined)? But onEditTrip expects Trip. Let's assume Dashboard handles New Trip via CommandPalette or we need to pass onCreateTrip here too. Actually, the button says "New Trip". Dashboard has handleCreateTrip. We should pass onCreateTrip to Trips.tsx as well. */}
+            onClick={() => onCreateTrip?.()}
             className={primaryActionBtn}
           >
             <Plus className="w-5 h-5" />
@@ -439,10 +477,10 @@ export default function Trips({ initialFilters, initialViewTrip, onEditTrip, onC
         <div className="rounded-2xl bg-slate-950/95 border border-slate-800/90 p-4 flex items-center justify-between shadow-md shadow-slate-950/70">
           <div>
             <p className="text-xs uppercase tracking-wide text-slate-400">
-              {t('trips.stats.totalRevenue') ?? 'Total Revenue'}
+              {t('trips.stats.totalRevenue') ?? 'Revenue (Page)'}
             </p>
             <p className="text-2xl font-bold text-slate-50">
-              {format(stats.totalRevenue)}
+              {format(stats.totalRevenue, currency)}
             </p>
           </div>
           <div className="p-3 rounded-full bg-indigo-500/10 border border-indigo-500/40">
@@ -453,10 +491,10 @@ export default function Trips({ initialFilters, initialViewTrip, onEditTrip, onC
         <div className="rounded-2xl bg-slate-950/95 border border-slate-800/90 p-4 flex items-center justify-between shadow-md shadow-slate-950/70">
           <div>
             <p className="text-xs uppercase tracking-wide text-slate-400">
-              {t('trips.stats.totalProfit') ?? 'Total Profit'}
+              {t('trips.stats.totalProfit') ?? 'Profit (Page)'}
             </p>
             <p className="text-2xl font-bold text-emerald-300">
-              {format(stats.totalProfit)}
+              {format(stats.totalProfit, currency)}
             </p>
           </div>
           <div className="p-3 rounded-full bg-emerald-500/10 border border-emerald-500/40">
@@ -467,10 +505,10 @@ export default function Trips({ initialFilters, initialViewTrip, onEditTrip, onC
         <div className="rounded-2xl bg-slate-950/95 border border-slate-800/90 p-4 flex items-center justify-between shadow-md shadow-slate-950/70">
           <div>
             <p className="text-xs uppercase tracking-wide text-slate-400">
-              {t('trips.stats.unpaidAmount') ?? 'Unpaid Amount'}
+              {t('trips.stats.unpaidAmount') ?? 'Unpaid (Page)'}
             </p>
             <p className="text-2xl font-bold text-rose-300">
-              {format(stats.unpaidAmount)}
+              {format(stats.unpaidAmount, currency)}
             </p>
           </div>
           <div className="p-3 rounded-full bg-rose-500/10 border border-rose-500/40">
@@ -481,7 +519,7 @@ export default function Trips({ initialFilters, initialViewTrip, onEditTrip, onC
         <div className="rounded-2xl bg-slate-950/95 border border-slate-800/90 p-4 flex items-center justify-between shadow-md shadow-slate-950/70">
           <div>
             <p className="text-xs uppercase tracking-wide text-slate-400">
-              {t('trips.stats.upcoming') ?? 'Upcoming Trips'}
+              {t('trips.stats.upcoming') ?? 'Upcoming'}
             </p>
             <p className="text-2xl font-bold text-sky-200">
               {stats.upcoming}
@@ -498,8 +536,10 @@ export default function Trips({ initialFilters, initialViewTrip, onEditTrip, onC
         <TripFilters
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
+          paymentStatusFilter={paymentStatusFilter}
+          onPaymentStatusFilterChange={setPaymentStatusFilter}
+          tripStatusFilter={tripStatusFilter}
+          onTripStatusFilterChange={setTripStatusFilter}
           yearFilter={yearFilter}
           onYearFilterChange={setYearFilter}
           monthFilter={monthFilter}
@@ -512,11 +552,12 @@ export default function Trips({ initialFilters, initialViewTrip, onEditTrip, onC
       </div>
 
       {/* List / empty state */}
+      <div className="min-h-[400px]">
       {filteredTrips.length === 0 ? (
         <div className="rounded-2xl bg-slate-950/95 border border-slate-800/90 p-12 text-center shadow-lg shadow-slate-950/70">
           <div className="flex justify-center mb-4">
             <div className="bg-slate-900/80 border border-slate-700/80 p-6 rounded-full">
-              <Trash2 className="w-12 h-12 text-slate-400" />
+              <FileText className="w-12 h-12 text-slate-400" />
             </div>
           </div>
           <h3 className="text-xl font-semibold text-slate-100 mb-2">
@@ -586,7 +627,7 @@ export default function Trips({ initialFilters, initialViewTrip, onEditTrip, onC
                         {formatDate(trip.start_date)}
                       </td>
                       <td className="py-3 px-4 text-slate-300">
-                        {format(trip.sale_price || 0)}
+                        {format(trip.sale_price || 0, trip.currency || currency)}
                       </td>
                       <td className="py-3 px-4">
                         <span
@@ -616,6 +657,10 @@ export default function Trips({ initialFilters, initialViewTrip, onEditTrip, onC
           </div>
         </div>
       )}
+      </div>
+
+      {/* Pagination Controls */}
+
 
       {/* NewTripForm removed from here, rendered in Dashboard */}
 

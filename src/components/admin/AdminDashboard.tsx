@@ -64,14 +64,11 @@ export default function AdminDashboard() {
 
   const fetchGlobalStats = async () => {
     try {
-      // We still need aggregate stats, but we can optimize this later with a dedicated RPC function or separate table
-      // For now, we'll keep it simple but separate from the table data fetching
-      const { count: userCount } = await supabase.from('user_profiles').select('*', { count: 'exact', head: true });
-      const { count: tripCount } = await supabase.from('trips').select('*', { count: 'exact', head: true });
+      // Optimize: Use head: true for counts to avoid fetching data
+      const { count: userCount } = await supabase.from('user_profiles').select('id', { count: 'exact', head: true });
+      const { count: tripCount } = await supabase.from('trips').select('id', { count: 'exact', head: true });
 
-      // For revenue/profit, we might need a different approach if the dataset is huge. 
-      // But for "Pro" upgrade, let's assume we can still fetch a summary or use a Supabase function.
-      // For now, fetching all just for stats is still heavy, but let's try to limit fields.
+      // For revenue/profit, fetch only necessary columns
       const { data: financialData } = await supabase.from('trips').select('sale_price, profit');
 
       const totalRevenue = financialData?.reduce((sum, t) => sum + (t.sale_price || 0), 0) || 0;
@@ -91,9 +88,10 @@ export default function AdminDashboard() {
   const fetchUsers = async () => {
     setLoadingUsers(true);
     try {
+      // Optimize: Fetch only needed columns
       let query = supabase
         .from('user_profiles')
-        .select('*', { count: 'exact' });
+        .select('id, email, full_name, phone_number, role, created_at', { count: 'exact' });
 
       if (debouncedUserSearch) {
         query = query.or(`email.ilike.%${debouncedUserSearch}%,full_name.ilike.%${debouncedUserSearch}%`);
@@ -141,9 +139,12 @@ export default function AdminDashboard() {
   const fetchTrips = async () => {
     setLoadingTrips(true);
     try {
+      // Optimize: Fetch only needed columns
+      // Note: We need all columns for the table rendering? 
+      // The table uses: destination, client_name, start_date, end_date, sale_price, profit, payment_status, status
       let query = supabase
         .from('trips')
-        .select('*', { count: 'exact' });
+        .select('id, user_id, destination, client_name, start_date, end_date, sale_price, profit, payment_status, status', { count: 'exact' });
 
       if (selectedUserId) {
         query = query.eq('user_id', selectedUserId);

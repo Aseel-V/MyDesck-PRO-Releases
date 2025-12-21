@@ -46,6 +46,9 @@
     },
     "trips": {
         "title": "ניהול טיולים",
+        "details": "פרטים",
+        "itinerary": "מסלול",
+        "financials": "פיננסים",
         "newTrip": "טיול חדש",
         "destination": "יעד",
         "clientName": "שם לקוח",

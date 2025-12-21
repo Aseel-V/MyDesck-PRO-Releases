@@ -5,11 +5,11 @@ export const tripSchema = z.object({
     client_name: z.string().min(1, 'Client name is required'),
 
     travelers: z.array(z.object({
-        full_name: z.string().min(1, 'Name is required'),
+        full_name: z.string().optional(),
         passport_number: z.string().optional(),
         nationality: z.string().optional(),
         room_type: z.enum(['single', 'double', 'triple', 'suite']).optional(),
-    })),
+    })).default([]),
     travelers_count: z.number().min(1, 'At least 1 traveler is required'),
 
     itinerary: z.array(z.object({
@@ -17,7 +17,7 @@ export const tripSchema = z.object({
         date: z.string().optional(),
         title: z.string().min(1, 'Title is required'),
         description: z.string(),
-    })),
+    })).default([]),
 
     start_date: z.string().min(1, 'Start date is required'),
     end_date: z.string().min(1, 'End date is required'),
@@ -35,6 +35,7 @@ export const tripSchema = z.object({
     })),
     payment_status: z.enum(['paid', 'partial', 'unpaid']),
     amount_paid: z.number().min(0, 'Amount paid cannot be negative'),
+    payment_date: z.string().optional(),
 
     attachments: z.array(z.object({
         file_name: z.string(),

@@ -13,24 +13,71 @@ export default function InvoiceTemplate() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Parse data from URL query params
-        const params = new URLSearchParams(window.location.search);
-        const dataStr = params.get('data');
-
-        if (dataStr) {
+        // Listen for data from Electron via IPC
+        // We need to define the interface for window.ipcRenderer if it's not globally available, 
+        // but typically it's exposed via preload.
+        // Assuming window.electron or window.ipcRenderer is available.
+        // Based on electron.js preload, we likely have contextIsolation.
+        // Let's check if there is a global declaration or just try to use it safely.
+        
+        const handleInvoiceData = (data: any) => {
             try {
-                const decoded = JSON.parse(decodeURIComponent(dataStr));
-                setTrip(decoded.trip);
-                setProfile(decoded.profile);
+                // If data is passed directly (object) or stringified
+                const parsed = typeof data === 'string' ? JSON.parse(data) : data;
+                setTrip(parsed.trip);
+                setProfile(parsed.profile);
+                setLoading(false);
             } catch (e) {
-                console.error('Failed to parse invoice data', e);
+                console.error('Failed to parse invoice data from IPC', e);
+                setLoading(false);
             }
+        };
+
+        if (window.electronAPI?.onInvoiceData) {
+             window.electronAPI.onInvoiceData(handleInvoiceData);
+        } else {
+             // Fallback for dev/browser testing if needed, or maybe the preload exposes it differently?
+             // Checking URL just in case for dev mode fallback
+             const params = new URLSearchParams(window.location.search);
+             const dataStr = params.get('data');
+             if (dataStr) {
+                 try {
+                     const decoded = JSON.parse(decodeURIComponent(dataStr));
+                     setTrip(decoded.trip);
+                     setProfile(decoded.profile);
+                 } catch (e) { console.error(e); }
+             }
+             setLoading(false);
         }
-        setLoading(false);
+
+        return () => {
+             if (window.electronAPI?.removeInvoiceDataListeners) {
+                window.electronAPI.removeInvoiceDataListeners();
+             }
+        };
     }, []);
 
-    if (loading) return <div>Loading Invoice...</div>;
-    if (!trip || !profile) return <div>Error: Missing Invoice Data</div>;
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-white text-slate-800">
+                <div className="animate-pulse flex flex-col items-center">
+                    <div className="h-4 w-32 bg-slate-200 rounded mb-4"></div>
+                    <div className="text-sm">Preparing Invoice...</div>
+                </div>
+            </div>
+        );
+    }
+
+    if (!trip || !profile) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-white text-red-600">
+                <div className="text-center">
+                    <h2 className="text-xl font-bold mb-2">Error Loading Invoice</h2>
+                    <p className="text-sm text-slate-600">Could not retrieve invoice data.</p>
+                </div>
+            </div>
+        );
+    }
 
     const isRtl = true; // For Arabic/Hebrew, we can detect or pass this preference
 

@@ -51,12 +51,13 @@ export function useTripMutations() {
     });
 
     const updatePaymentMutation = useMutation({
-        mutationFn: async ({ tripId, amountPaid, paymentStatus }: { tripId: string, amountPaid: number, paymentStatus: 'paid' | 'partial' | 'unpaid' }) => {
+        mutationFn: async ({ tripId, amountPaid, paymentStatus, payments }: { tripId: string, amountPaid: number, paymentStatus: 'paid' | 'partial' | 'unpaid', payments?: any[] }) => {
             const { error } = await supabase
                 .from('trips')
                 .update({
                     amount_paid: amountPaid,
                     payment_status: paymentStatus,
+                    payments: payments, // Update the payments history/array
                     updated_at: new Date().toISOString(),
                 })
                 .eq('id', tripId);

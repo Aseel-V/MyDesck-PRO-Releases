@@ -79,7 +79,7 @@ ipcMain.handle('print-to-pdf', async (event, data) => {
   const pdfWindow = new BrowserWindow({
     width: 800,
     height: 600,
-    show: false, // Hidden window
+    show: false,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -87,18 +87,32 @@ ipcMain.handle('print-to-pdf', async (event, data) => {
     },
   });
 
-  const dataStr = encodeURIComponent(JSON.stringify(data));
-
-  if (isDev) {
-    await pdfWindow.loadURL(`http://localhost:5173?invoice=true&data=${dataStr}`);
-  } else {
-    // In production, we need to load the index.html and handle the routing via query param if possible,
-    // or hash. Since we used window.location.search in App.tsx, query param on file:// protocol might be tricky.
-    // Electron supports query params on file URLs.
-    await pdfWindow.loadFile(path.join(__dirname, 'dist/index.html'), { search: `?invoice=true&data=${dataStr}` });
-  }
-
   try {
+    // 1. Load the page first (without data in URL)
+    const invoiceUrl = isDev
+      ? 'http://localhost:5173?invoice=true'
+      : `file://${path.join(__dirname, 'dist/index.html')}?invoice=true`;
+    
+    await pdfWindow.loadURL(invoiceUrl);
+
+    // 2. Send data via IPC once loaded
+    // We wait a brief moment or ensuring dom-ready to be safe, 
+    // but loadURL awaits the load event.
+    // Sending immediately after loadURL usually works if renderer is ready.
+    // For robustness, we can use executeJavaScript or just send.
+    // But better: wait for renderer to say "I am ready".
+    // HOWEVER, for simplicity and speed in this "fix", we will just send it.
+    // A more robust way is pdfWindow.webContents.send('invoice-data', data)
+    
+    // We need to ensure the renderer is listening. 
+    // We can wrap it in a small timeout or wait for an event? 
+    // Let's rely on the fact loadURL finishes when the page is loaded.
+    
+    pdfWindow.webContents.send('invoice-data', data);
+
+    // Give it a moment to render (React effect)
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
     const pdfData = await pdfWindow.webContents.printToPDF({
       printBackground: true,
       pageSize: 'A4',
@@ -110,12 +124,14 @@ ipcMain.handle('print-to-pdf', async (event, data) => {
       }
     });
 
-    pdfWindow.close();
     return pdfData;
   } catch (error) {
     console.error('Failed to generate PDF', error);
-    pdfWindow.close();
     throw error;
+  } finally {
+    if (!pdfWindow.isDestroyed()) {
+        pdfWindow.close();
+    }
   }
 });
 
@@ -123,7 +139,7 @@ ipcMain.handle('print-to-pdf', async (event, data) => {
 app.whenReady().then(() => {
   // Set a Windows App User Model ID for notifications and taskbar grouping
   if (process.platform === 'win32') {
-    app.setAppUserModelId('com.yourcompany.vite-react-typescript-starter');
+    app.setAppUserModelId('com.mydesck.pro');
   }
   createWindow();
 

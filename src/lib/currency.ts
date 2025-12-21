@@ -1,85 +1,83 @@
 // ============================================================================
 // INTELLIGENT CURRENCY SERVICE
-// Features: Live API + Smart Caching (12h TTL) + Offline Fallback
+// Features: Live API + Smart Caching (24h TTL) + Offline Fallback
 // ============================================================================
 
-interface ExchangeRates {
+export interface ExchangeRates {
     amount: number;
     base: string;
-    date: string;
+    date: string; // YYYY-MM-DD
     rates: Record<string, number>;
 }
 
-interface CachedRates {
+export interface CachedRates {
     rates: ExchangeRates;
     timestamp: number;
     base: string;
 }
 
-// Hardcoded fallback rates (approximate values, used when both cache and API fail)
-const FALLBACK_RATES: Record<string, Record<string, number>> = {
-    USD: { USD: 1, EUR: 0.92, ILS: 3.65 },
-    EUR: { USD: 1.09, EUR: 1, ILS: 3.97 },
-    ILS: { USD: 0.27, EUR: 0.25, ILS: 1 },
-};
-
 const BASE_URL = 'https://api.frankfurter.app';
 const CACHE_KEY = 'mydesck_currency_cache';
-const CACHE_TTL = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
+const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
 export const CurrencyService = {
     /**
-     * Get cached rates or fetch from API with intelligent fallback
-     * Priority: 1) Valid cache → 2) Fresh API → 3) Stale cache (offline) → 4) Hardcoded fallback
+     * Get cached rates or fetch from API.
+     * Base is strictly 'USD' for this app to ensure consistent cross-rates.
      */
-    getCachedOrFetchRates: async (base: string = 'USD'): Promise<ExchangeRates | null> => {
+    getRates: async (base: string = 'USD'): Promise<{ rates: ExchangeRates | null; isStale: boolean; lastUpdated: number | null }> => {
         try {
-            // Step 1: Check cache
-            const cached = CurrencyService.getCache(base);
-            const now = Date.now();
-
-            if (cached && now - cached.timestamp < CACHE_TTL) {
-                console.log(`[Currency] Using cached rates for ${base} (age: ${Math.round((now - cached.timestamp) / 1000 / 60)} min)`);
-                return cached.rates;
+            const cacheStr = localStorage.getItem(CACHE_KEY);
+            let cached: CachedRates | null = null;
+            
+            if (cacheStr) {
+                cached = JSON.parse(cacheStr);
+                // Invalidate if base doesn't match (shouldn't happen if we stick to USD)
+                if (cached && cached.base !== base) cached = null;
             }
 
-            // Step 2: Try fetch from API
+            const now = Date.now();
+            const isCacheValid = cached && (now - cached.timestamp < CACHE_TTL);
+
+            // 1. If cache is valid (fresh), use it
+            if (isCacheValid && cached) {
+                console.log(`[Currency] Using fresh cache for ${base}`);
+                return { rates: cached.rates, isStale: false, lastUpdated: cached.timestamp };
+            }
+
+            // 2. Try to fetch fresh rates
             try {
-                const response = await fetch(`${BASE_URL}/latest?from=${base}`, {
-                    signal: AbortSignal.timeout(5000), // 5 second timeout
-                });
-
+                const response = await fetch(`${BASE_URL}/latest?from=${base}`);
                 if (!response.ok) throw new Error('API request failed');
-
+                
                 const rates: ExchangeRates = await response.json();
-
-                // Save to cache
                 CurrencyService.saveCache(base, rates);
-                console.log(`[Currency] Fetched fresh rates for ${base} from API`);
-                return rates;
+                console.log(`[Currency] Fetched fresh rates for ${base}`);
+                
+                return { rates, isStale: false, lastUpdated: Date.now() };
             } catch (fetchError) {
-                console.warn('[Currency] API fetch failed:', fetchError);
-
-                // Step 3: Use stale cache if available (offline mode)
+                console.warn('[Currency] API fetch failed, falling back to cache if available:', fetchError);
+                
+                // 3. Fallback to stale cache if available
                 if (cached) {
-                    console.log(`[Currency] Using stale cached rates (offline mode, age: ${Math.round((now - cached.timestamp) / 1000 / 60 / 60)} hours)`);
-                    return cached.rates;
+                    console.log(`[Currency] Using stale cache (age: ${Math.round((now - cached.timestamp) / 1000 / 60 / 60)}h)`);
+                    return { rates: cached.rates, isStale: true, lastUpdated: cached.timestamp };
                 }
 
-                // Step 4: Hardcoded fallback
-                console.warn('[Currency] No cache available, using hardcoded fallback rates');
-                return CurrencyService.getFallbackRates(base);
+                // 4. No cache, no API => Fail gracefully
+                console.error('[Currency] No rates available (API failed + No cache)');
+                return { rates: null, isStale: false, lastUpdated: null };
             }
         } catch (error) {
             console.error('[Currency] Unexpected error:', error);
-            return CurrencyService.getFallbackRates(base);
+            return { rates: null, isStale: false, lastUpdated: null };
         }
     },
 
     /**
      * Force refresh rates from API, bypassing cache
      */
-    refreshRates: async (base: string = 'USD'): Promise<ExchangeRates | null> => {
+    refreshRates: async (base: string = 'USD'): Promise<{ rates: ExchangeRates | null; isStale: boolean; lastUpdated: number | null }> => {
         try {
             const response = await fetch(`${BASE_URL}/latest?from=${base}`, {
                 cache: 'no-cache',
@@ -91,57 +89,13 @@ export const CurrencyService = {
             const rates: ExchangeRates = await response.json();
             CurrencyService.saveCache(base, rates);
             console.log('[Currency] Rates refreshed successfully');
-            return rates;
+            return { rates, isStale: false, lastUpdated: Date.now() };
         } catch (error) {
             console.error('[Currency] Refresh failed:', error);
-            return null;
+            return { rates: null, isStale: false, lastUpdated: null };
         }
     },
 
-    /**
-     * Get last updated timestamp
-     */
-    getLastUpdated: (): Date | null => {
-        try {
-            const cacheStr = localStorage.getItem(CACHE_KEY);
-            if (!cacheStr) return null;
-
-            const cache: CachedRates = JSON.parse(cacheStr);
-            return new Date(cache.timestamp);
-        } catch {
-            return null;
-        }
-    },
-
-    /**
-     * Clear cached rates
-     */
-    clearCache: (): void => {
-        localStorage.removeItem(CACHE_KEY);
-        console.log('[Currency] Cache cleared');
-    },
-
-    /**
-     * Get cached rates from localStorage
-     */
-    getCache: (base: string): CachedRates | null => {
-        try {
-            const cacheStr = localStorage.getItem(CACHE_KEY);
-            if (!cacheStr) return null;
-
-            const cache: CachedRates = JSON.parse(cacheStr);
-            if (cache.base !== base) return null;
-
-            return cache;
-        } catch (error) {
-            console.error('[Currency] Error reading cache:', error);
-            return null;
-        }
-    },
-
-    /**
-     * Save rates to localStorage cache
-     */
     saveCache: (base: string, rates: ExchangeRates): void => {
         try {
             const cache: CachedRates = {
@@ -156,54 +110,42 @@ export const CurrencyService = {
     },
 
     /**
-     * Get hardcoded fallback rates
+     * Convert amount between currencies using USD-based rates.
+     * Formula: amount * (rates[to] / rates[from])
+     * Assuming rates object where rates[X] = value of X in Base (USD) -> No, rates[X] is X per 1 USD.
+     * So 1 USD = rates[to] ToCurrency.
+     * 1 USD = rates[from] FromCurrency.
+     * Value in USD = amount / rates[from]
+     * Value in To = ValueInUSD * rates[to]
+     * Result = amount * (rates[to] / rates[from])
      */
-    getFallbackRates: (base: string): ExchangeRates => {
-        const rates = FALLBACK_RATES[base] || FALLBACK_RATES.USD;
-        return {
-            amount: 1,
-            base,
-            date: new Date().toISOString().split('T')[0],
-            rates,
-        };
-    },
-
-    /**
-     * Fetch current exchange rates for a base currency (kept for backward compatibility)
-     * @deprecated Use getCachedOrFetchRates instead
-     */
-    getLatestRates: async (base: string = 'USD'): Promise<ExchangeRates | null> => {
-        return CurrencyService.getCachedOrFetchRates(base);
-    },
-
-    /**
-     * Fetch historical exchange rates for a specific date
-     * @param date Date in YYYY-MM-DD format
-     * @param base Base currency code (e.g. 'USD')
-     */
-    getHistoricalRates: async (date: string, base: string = 'USD'): Promise<ExchangeRates | null> => {
-        try {
-            const response = await fetch(`${BASE_URL}/${date}?from=${base}`);
-            if (!response.ok) throw new Error('Failed to fetch historical rates');
-            return await response.json();
-        } catch (error) {
-            console.error(`Error fetching rates for ${date}:`, error);
-            return null;
-        }
-    },
-
-    /**
-     * Convert amount from one currency to another using latest rates
-     */
-    convert: async (amount: number, from: string, to: string): Promise<number | null> => {
+    convert: (amount: number, from: string, to: string, rates: Record<string, number>): number => {
         if (from === to) return amount;
-        try {
-            const rates = await CurrencyService.getCachedOrFetchRates(from);
-            if (!rates || !rates.rates[to]) return null;
-            return amount * rates.rates[to];
-        } catch (error) {
-            console.error('Conversion error:', error);
-            return null;
+        
+        // Ensure rates exist (1 for base currency if strictly base=USD, but technically rates.USD might be missing if source excludes it, though Frankfurter usually includes it? No, Frankfurter API excludes self)
+        // Check strict existence or handle base
+        const fromRate = from === 'USD' ? 1 : rates[from];
+        const toRate = to === 'USD' ? 1 : rates[to];
+
+        if (fromRate === undefined || toRate === undefined) {
+             console.warn(`[Currency] Missing rate for conversion: ${from} -> ${to}`);
+             // Return original amount to avoid returning 0 or NaN which ruins data display.
+             // Or throw? Requirement says "Show rates unavailable state". 
+             // Ideally we shouldn't call this if rates missing.
+             // Let's return amount but the caller should check `rates` existence.
+             return amount; 
         }
+
+        return amount * (toRate / fromRate);
     },
+    
+    // Explicitly expose last updated for UI
+    getLastUpdated: (): Date | null => {
+         const cacheStr = localStorage.getItem(CACHE_KEY);
+         if (!cacheStr) return null;
+         try {
+             const cache = JSON.parse(cacheStr);
+             return new Date(cache.timestamp);
+         } catch { return null; }
+    }
 };

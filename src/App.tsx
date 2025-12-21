@@ -8,6 +8,9 @@ import SplashScreen from './components/SplashScreen';
 
 import InvoiceTemplate from './components/invoice/InvoiceTemplate';
 
+import { Routes, Route, Navigate } from 'react-router-dom';
+import ResetPassword from './components/auth/ResetPassword';
+
 function App() {
   // Check if we are in "invoice mode" (window opened by Electron for printing)
   const params = new URLSearchParams(window.location.search);
@@ -18,7 +21,11 @@ function App() {
   }
 
   return (
-    <AppContent />
+    <Routes>
+      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/" element={<AppContent />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 

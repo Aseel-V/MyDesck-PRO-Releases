@@ -14,7 +14,6 @@ import {
   Upload,
   RotateCcw,
   RefreshCw,
-  CreditCard,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { resizeImage } from '../lib/imageUtils';
@@ -497,63 +496,57 @@ export default function Settings() {
         {/* Main settings panel with tabs */}
         <div className="glass-panel bg-slate-950/70 border border-slate-800/80 rounded-2xl shadow-xl shadow-slate-950/60 overflow-hidden">
           {/* Tabs */}
-          <div className="border-b border-slate-800/80 bg-slate-950/80 px-3 py-2">
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setActiveTab('profile')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${activeTab === 'profile'
+          <div className="flex items-center gap-1 p-2 border-b border-slate-800/60 overflow-x-auto">
+            <button
+              onClick={() => setActiveTab('profile')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                activeTab === 'profile'
                   ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
                   : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
-                  }`}
-              >
-                <User className="w-4 h-4" />
-                <span>User Profile</span>
-              </button>
+              }`}
+            >
+              <User className="w-4 h-4" />
+              <span>Profile</span>
+            </button>
 
-              <button
-                onClick={() => setActiveTab('business')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${activeTab === 'business'
+            <button
+              onClick={() => setActiveTab('business')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                activeTab === 'business'
                   ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
                   : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
-                  }`}
-              >
-                <Building2 className="w-4 h-4" />
-                <span>Business</span>
-              </button>
+              }`}
+            >
+              <Building2 className="w-4 h-4" />
+              <span>Business</span>
+            </button>
 
-              <button
-                onClick={() => setActiveTab('security')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${activeTab === 'security'
+            <button
+              onClick={() => setActiveTab('security')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                activeTab === 'security'
                   ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
                   : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
-                  }`}
-              >
-                <Key className="w-4 h-4" />
-                <span>Security</span>
-              </button>
+              }`}
+            >
+              <Key className="w-4 h-4" />
+              <span>Security</span>
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('data')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                activeTab === 'data'
+                  ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
+                  : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
+              }`}
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span>Data</span>
+            </button>
 
-              <button
-                onClick={() => setActiveTab('data')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${activeTab === 'data'
-                  ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
-                  : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
-                  }`}
-              >
-                <Download className="w-4 h-4" />
-                <span>Data</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('payments')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${activeTab === 'payments'
-                  ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
-                  : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
-                  }`}
-              >
-                <CreditCard className="w-4 h-4" />
-                <span>Payments</span>
-              </button>
-            </div>
+            {/* Payments Tab Removed */}
+            {/* <button disabled className="opacity-50 cursor-not-allowed ...">Payments</button> */}
           </div>
 
           {/* Content */}
@@ -922,16 +915,8 @@ export default function Settings() {
                 </div>
               </div>
             )}
-
-            {activeTab === 'payments' && (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-bold">Payment Settings</h2>
-                <p className="text-sm text-slate-400">
-                  Here you will configure your payment providers (Stripe, PayPal, etc.). This
-                  section is still under construction.
-                </p>
-              </div>
-            )}
+            
+            {/* Payments tab content disabled */}
           </div>
         </div>
 

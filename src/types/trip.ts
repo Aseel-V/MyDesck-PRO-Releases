@@ -53,6 +53,7 @@ export interface Trip {
 
   // Payment History
   payments: Payment[];
+  payment_date?: string; // One-off payment date
   payment_status: 'paid' | 'partial' | 'unpaid';
   amount_paid: number; // Calculated sum of payments
   amount_due: number;
@@ -88,6 +89,7 @@ export interface TripFormData {
   payments: Payment[];
   payment_status: 'paid' | 'partial' | 'unpaid';
   amount_paid: number;
+  payment_date?: string;
 
   attachments: Attachment[];
 
@@ -117,6 +119,7 @@ export interface TripInsert {
   payments?: Payment[];
   payment_status?: 'paid' | 'partial' | 'unpaid';
   amount_paid?: number;
+  payment_date?: string;
 
   attachments?: Attachment[];
 
@@ -152,6 +155,7 @@ export interface TripUpdate {
   payments?: Payment[];
   payment_status?: 'paid' | 'partial' | 'unpaid';
   amount_paid?: number;
+  payment_date?: string;
 
   attachments?: Attachment[];
 

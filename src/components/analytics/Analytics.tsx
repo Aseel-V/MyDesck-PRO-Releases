@@ -183,22 +183,27 @@ export default function Analytics({
       };
     } else {
       // Client-side calculation from trips prop
-      const totalRevenue = trips.reduce((sum: number, trip: Trip) => sum + (trip.sale_price || 0), 0);
-      const totalProfit = trips.reduce((sum: number, trip: Trip) => sum + (trip.profit || 0), 0);
+      const totalRevenue = trips.reduce((sum: number, trip: Trip) => {
+        return sum + convert(trip.sale_price || 0, trip.currency || currency, currency);
+      }, 0);
+
+      const totalProfit = trips.reduce((sum: number, trip: Trip) => {
+        return sum + convert(trip.profit || 0, trip.currency || currency, currency);
+      }, 0);
+
       const totalTrips = trips.length;
+      
       const totalTravelers = trips.reduce((sum: number, trip: Trip) => sum + (trip.travelers_count || 0), 0);
 
       return {
-        totalRevenue: convert(totalRevenue),
-        totalProfit: convert(totalProfit),
+        totalRevenue,
+        totalProfit,
         totalTrips,
         totalTravelers,
-        averageProfit: totalTrips > 0
-          ? convert(totalProfit / totalTrips)
-          : 0,
+        averageProfit: totalTrips > 0 ? totalProfit / totalTrips : 0,
       };
     }
-  }, [userProfiles, isAdmin, trips, convert]);
+  }, [userProfiles, isAdmin, trips, convert, currency]);
 
   const monthlyData = useMemo(() => {
     if (isAdmin) {
@@ -246,10 +251,14 @@ export default function Analytics({
         const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 
         const existing = monthMap.get(monthKey) || { profit: 0, revenue: 0, travelers: 0 };
+        
+        // Convert amounts to user's preferred currency BEFORE aggregation
+        const tripProfit = convert(trip.profit || 0, trip.currency || currency, currency);
+        const tripRevenue = convert(trip.sale_price || 0, trip.currency || currency, currency);
 
         monthMap.set(monthKey, {
-          profit: existing.profit + (trip.profit || 0),
-          revenue: existing.revenue + (trip.sale_price || 0),
+          profit: existing.profit + tripProfit,
+          revenue: existing.revenue + tripRevenue,
           travelers: existing.travelers + (trip.travelers_count || 0),
         });
       });
@@ -259,12 +268,12 @@ export default function Analytics({
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([month, data]) => ({
           month,
-          profit: convert(data.profit),
-          revenue: convert(data.revenue),
+          profit: data.profit,
+          revenue: data.revenue,
           travelers: data.travelers,
         }));
     }
-  }, [userProfiles, isAdmin, trips, convert]);
+  }, [userProfiles, isAdmin, trips, convert, currency]);
 
   // User-focused derived analytics
   const {
@@ -287,24 +296,31 @@ export default function Analytics({
     }
 
     // Calculate totals from trips
-    const totalRevenue = trips.reduce((sum: number, trip: Trip) => sum + (trip.sale_price || 0), 0);
-    const totalProfit = trips.reduce((sum: number, trip: Trip) => sum + (trip.profit || 0), 0);
+    // Calculate totals from trips (Using user's currency)
+    const totalRevenue = trips.reduce((sum: number, trip: Trip) => {
+        return sum + convert(trip.sale_price || 0, trip.currency || currency, currency);
+    }, 0);
+    
+    const totalProfit = trips.reduce((sum: number, trip: Trip) => {
+        return sum + convert(trip.profit || 0, trip.currency || currency, currency);
+    }, 0);
+    
     const profitMarginPct = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
 
     // Calculate Payment Health
-    const totalCollectedRaw = trips.reduce((sum: number, trip: Trip) => sum + (trip.amount_paid || 0), 0);
-    // Pending is (Sale Price - Amount Paid)
-    const totalPendingRaw = trips.reduce((sum: number, trip: Trip) => {
-      const price = trip.sale_price || 0;
-      const paid = trip.amount_paid || 0;
-      return sum + Math.max(0, price - paid);
+    const totalCollected = trips.reduce((sum: number, trip: Trip) => {
+        return sum + convert(trip.amount_paid || 0, trip.currency || currency, currency);
     }, 0);
 
-    const totalCollected = convert(totalCollectedRaw);
-    const totalPending = convert(totalPendingRaw);
+    const totalPending = trips.reduce((sum: number, trip: Trip) => {
+      const price = trip.sale_price || 0;
+      const paid = trip.amount_paid || 0;
+      const pending = Math.max(0, price - paid);
+      return sum + convert(pending, trip.currency || currency, currency);
+    }, 0);
 
-    const totalDue = totalCollectedRaw + totalPendingRaw;
-    const paymentHealthPct = totalDue > 0 ? (totalCollectedRaw / totalDue) * 100 : 0;
+    const totalDue = totalCollected + totalPending;
+    const paymentHealthPct = totalDue > 0 ? (totalCollected / totalDue) * 100 : 0;
 
     const monthlyProfitOnly = (monthlyData as {
       month: string;
@@ -355,7 +371,7 @@ export default function Analytics({
       monthlyProfitOnly,
       topDestinations,
     };
-  }, [isAdmin, monthlyData, trips, convert]);
+  }, [isAdmin, monthlyData, trips, convert, currency]);
 
   const COLORS = ['#0ea5e9', '#8b5cf6', '#10b981', '#f59e0b', '#f43f5e'];
 
@@ -490,7 +506,7 @@ export default function Analytics({
                 </div>
               </div>
               <div className="text-3xl font-bold mb-2">
-                {format((stats as UserStats).totalRevenue ?? 0)}
+                {format((stats as UserStats).totalRevenue ?? 0, currency)}
               </div>
               <div className="text-slate-400 text-sm">
                 {t('analytics.totalRevenue')}
@@ -507,7 +523,7 @@ export default function Analytics({
                 </div>
               </div>
               <div className="text-3xl font-bold mb-2">
-                {format((stats as UserStats).totalProfit ?? 0)}
+                {format((stats as UserStats).totalProfit ?? 0, currency)}
               </div>
               <div className="text-slate-400 text-sm">
                 {t('analytics.totalProfit')}
@@ -567,7 +583,7 @@ export default function Analytics({
             <span>
               Collected:{' '}
               <span className="text-emerald-400 font-semibold">
-                {format(totalCollected)}
+                {format(totalCollected, currency)}
               </span>
             </span>
             <span>
@@ -578,7 +594,7 @@ export default function Analytics({
                   onOpenTripsWithFilter?.({ pendingOnly: true })
                 }
               >
-                {format(totalPending)}
+                {format(totalPending, currency)}
               </span>
             </span>
           </div>

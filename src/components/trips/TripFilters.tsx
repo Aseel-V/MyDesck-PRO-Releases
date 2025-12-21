@@ -4,8 +4,10 @@ import { useLanguage } from '../../contexts/LanguageContext';
 interface TripFiltersProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
-  statusFilter: string;
-  onStatusFilterChange: (value: string) => void;
+  paymentStatusFilter: string;
+  onPaymentStatusFilterChange: (value: string) => void;
+  tripStatusFilter: string;
+  onTripStatusFilterChange: (value: string) => void;
   yearFilter: string;
   onYearFilterChange: (value: string) => void;
   monthFilter: string;
@@ -19,8 +21,10 @@ interface TripFiltersProps {
 export default function TripFilters({
   searchTerm,
   onSearchChange,
-  statusFilter,
-  onStatusFilterChange,
+  paymentStatusFilter,
+  onPaymentStatusFilterChange,
+  tripStatusFilter,
+  onTripStatusFilterChange,
   yearFilter,
   onYearFilterChange,
   monthFilter,
@@ -114,8 +118,8 @@ export default function TripFilters({
         <div>
           <label className={labelClasses}>{t('trips.paymentStatus')}</label>
           <select
-            value={statusFilter}
-            onChange={(e) => onStatusFilterChange(e.target.value)}
+            value={paymentStatusFilter}
+            onChange={(e) => onPaymentStatusFilterChange(e.target.value)}
             className={baseInputClasses}
           >
             <option value="">{t('trips.allStatuses')}</option>
@@ -129,8 +133,8 @@ export default function TripFilters({
         <div>
           <label className={labelClasses}>{t('trips.status')}</label>
           <select
-            value={statusFilter}
-            onChange={(e) => onStatusFilterChange(e.target.value)}
+            value={tripStatusFilter}
+            onChange={(e) => onTripStatusFilterChange(e.target.value)}
             className={baseInputClasses}
           >
             <option value="">{t('trips.allStatuses')}</option>

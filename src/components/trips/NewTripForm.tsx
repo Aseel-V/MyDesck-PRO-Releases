@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { X, Save, Plus, Trash2, Calendar, User, CreditCard, FileText } from 'lucide-react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { X, Save, FileText, CreditCard } from 'lucide-react';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -32,7 +32,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
 
   const {
     register,
-    control,
+
     handleSubmit,
     watch,
     setValue,
@@ -55,6 +55,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
       payment_status:
         (editTrip?.payment_status as TripFormValues['payment_status']) || 'unpaid',
       amount_paid: editTrip?.amount_paid || 0,
+      payment_date: editTrip?.payment_date || '',
       attachments: editTrip?.attachments || [],
       notes: editTrip?.notes || '',
       status: (editTrip?.status as TripFormValues['status']) || 'active',
@@ -106,7 +107,8 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
       const { data, error } = await supabase
         .from('trips')
         .select('client_name')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(1000);
 
       if (error) throw error;
 
@@ -122,23 +124,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-  const { fields: travelerFields, append: appendTraveler, remove: removeTraveler } =
-    useFieldArray({
-      control,
-      name: 'travelers',
-    });
 
-  const { fields: itineraryFields, append: appendItinerary, remove: removeItinerary } =
-    useFieldArray({
-      control,
-      name: 'itinerary',
-    });
-
-  const { fields: paymentFields, append: appendPayment, remove: removePayment } =
-    useFieldArray({
-      control,
-      name: 'payments',
-    });
 
   const wholesaleCost = watch('wholesale_cost');
   const salePrice = watch('sale_price');
@@ -192,7 +178,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
     setLoading(true);
     try {
       // Auto-update travelers count
-      data.travelers_count = data.travelers.length || data.travelers_count;
+      data.travelers_count = (data.travelers?.length || 0) || data.travelers_count;
 
       // Auto-calculate amount paid from payments array if used
       if (data.payments && data.payments.length > 0) {
@@ -240,8 +226,6 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
 
   const tabs = [
     { id: 'details', label: t('trips.details') || 'Details', icon: FileText },
-    { id: 'travelers', label: t('trips.travelers') || 'Travelers', icon: User },
-    { id: 'itinerary', label: t('trips.itinerary') || 'Itinerary', icon: Calendar },
     { id: 'financials', label: t('trips.financials') || 'Financials', icon: CreditCard },
   ] as const;
 
@@ -346,6 +330,21 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                 </div>
 
                 <div>
+                  <label className={labelClasses}>{t('trips.travelersCount') || 'Travelers Count'} *</label>
+                  <input
+                    type="number"
+                    {...register('travelers_count', { valueAsNumber: true })}
+                    className={cn(baseInputClasses, errors.travelers_count && errorInputClasses)}
+                    min={1}
+                  />
+                  {errors.travelers_count && (
+                    <p className="text-xs text-rose-400 mt-1">
+                      {errors.travelers_count.message as string}
+                    </p>
+                  )}
+                </div>
+
+                <div>
                   <label className={labelClasses}>{t('trips.startDate')} *</label>
                   <input
                     type="date"
@@ -385,155 +384,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
               </div>
             )}
 
-            {/* TRAVELERS TAB */}
-            {activeTab === 'travelers' && (
-              <div className="space-y-4 animate-fadeIn">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-sm font-semibold text-slate-200">Travelers List</h3>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      appendTraveler({
-                        full_name: '',
-                        passport_number: '',
-                        nationality: '',
-                        room_type: 'double',
-                      })
-                    }
-                    className="text-xs flex items-center gap-1 bg-sky-500/10 text-sky-400 px-3 py-1.5 rounded-lg border border-sky-500/20 hover:bg-sky-500/20 transition-colors"
-                  >
-                    <Plus className="w-3.5 h-3.5" /> Add Traveler
-                  </button>
-                </div>
 
-                {travelerFields.map((field, index) => (
-                  <div
-                    key={field.id}
-                    className="p-4 rounded-xl bg-slate-900/50 border border-slate-800/80 relative group"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => removeTraveler(index)}
-                      className="absolute top-2 right-2 p-1.5 text-slate-500 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className={labelClasses}>Full Name</label>
-                        <input
-                          {...register(`travelers.${index}.full_name` as const)}
-                          placeholder="Full Name"
-                          className={baseInputClasses}
-                        />
-                      </div>
-                      <div>
-                        <label className={labelClasses}>Passport Number</label>
-                        <input
-                          {...register(`travelers.${index}.passport_number` as const)}
-                          placeholder="Passport Number"
-                          className={baseInputClasses}
-                        />
-                      </div>
-                      <div>
-                        <label className={labelClasses}>Nationality</label>
-                        <input
-                          {...register(`travelers.${index}.nationality` as const)}
-                          placeholder="Nationality"
-                          className={baseInputClasses}
-                        />
-                      </div>
-                      <div>
-                        <label className={labelClasses}>Room Type</label>
-                        <select
-                          {...register(`travelers.${index}.room_type` as const)}
-                          className={baseInputClasses}
-                        >
-                          <option value="single">Single</option>
-                          <option value="double">Double</option>
-                          <option value="triple">Triple</option>
-                          <option value="suite">Suite</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-
-                {travelerFields.length === 0 && (
-                  <div className="text-center py-8 text-slate-500 text-sm border border-dashed border-slate-800 rounded-xl">
-                    No travelers added yet.
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* ITINERARY TAB */}
-            {activeTab === 'itinerary' && (
-              <div className="space-y-4 animate-fadeIn">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-sm font-semibold text-slate-200">Itinerary</h3>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      appendItinerary({
-                        day: itineraryFields.length + 1,
-                        title: '',
-                        description: '',
-                      })
-                    }
-                    className="text-xs flex items-center gap-1 bg-sky-500/10 text-sky-400 px-3 py-1.5 rounded-lg border border-sky-500/20 hover:bg-sky-500/20 transition-colors"
-                  >
-                    <Plus className="w-3.5 h-3.5" /> Add Day
-                  </button>
-                </div>
-
-                {itineraryFields.map((field, index) => (
-                  <div
-                    key={field.id}
-                    className="p-4 rounded-xl bg-slate-900/50 border border-slate-800/80 relative group"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => removeItinerary(index)}
-                      className="absolute top-2 right-2 p-1.5 text-slate-500 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                    <div className="flex gap-4 items-start">
-                      <div className="w-16 shrink-0">
-                        <label className={labelClasses}>Day</label>
-                        <input
-                          type="number"
-                          {...register(`itinerary.${index}.day` as const, {
-                            valueAsNumber: true,
-                          })}
-                          className={baseInputClasses}
-                        />
-                      </div>
-                      <div className="flex-grow space-y-3">
-                        <div>
-                          <label className={labelClasses}>Title</label>
-                          <input
-                            {...register(`itinerary.${index}.title` as const)}
-                            placeholder="e.g. Arrival & City Tour"
-                            className={baseInputClasses}
-                          />
-                        </div>
-                        <div>
-                          <label className={labelClasses}>Description</label>
-                          <textarea
-                            {...register(`itinerary.${index}.description` as const)}
-                            rows={2}
-                            placeholder="Detailed activities..."
-                            className={cn(baseInputClasses, 'resize-none')}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
 
             {/* FINANCIALS TAB */}
             {activeTab === 'financials' && (
@@ -612,71 +463,35 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                   </div>
                 </div>
 
-                {/* Payments Section */}
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-sm font-semibold text-slate-200">Payments</h3>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        appendPayment({
-                          date: new Date().toISOString().split('T')[0],
-                          amount: 0,
-                          method: 'transfer',
-                        })
-                      }
-                      className="text-xs flex items-center gap-1 bg-emerald-500/10 text-emerald-400 px-3 py-1.5 rounded-lg border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors"
-                    >
-                      <Plus className="w-3.5 h-3.5" /> Add Payment
-                    </button>
-                  </div>
-
-                  {paymentFields.map((field, index) => (
-                    <div
-                      key={field.id}
-                      className="grid grid-cols-12 gap-3 items-end p-3 rounded-xl bg-slate-900/30 border border-slate-800/50"
-                    >
-                      <div className="col-span-4">
-                        <label className={labelClasses}>Date</label>
+                {/* Payment Date & Amount Paid - Simplified Payment */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label className={labelClasses}>
+                            {t('trips.amountPaid')} ({currencySymbol})
+                        </label>
                         <input
-                          type="date"
-                          {...register(`payments.${index}.date` as const)}
-                          className={baseInputClasses}
+                            type="number"
+                            step="0.01"
+                            {...register('amount_paid', { valueAsNumber: true })}
+                            className={cn(baseInputClasses)}
                         />
-                      </div>
-                      <div className="col-span-3">
-                        <label className={labelClasses}>Amount</label>
-                        <input
-                          type="number"
-                          {...register(`payments.${index}.amount` as const, {
-                            valueAsNumber: true,
-                          })}
-                          className={baseInputClasses}
-                        />
-                      </div>
-                      <div className="col-span-4">
-                        <label className={labelClasses}>Method</label>
-                        <select
-                          {...register(`payments.${index}.method` as const)}
-                          className={baseInputClasses}
-                        >
-                          <option value="cash">Cash</option>
-                          <option value="transfer">Transfer</option>
-                          <option value="card">Card</option>
-                          <option value="check">Check</option>
-                        </select>
-                      </div>
-                      <div className="col-span-1 flex justify-center pb-2">
-                        <button
-                          type="button"
-                          onClick={() => removePayment(index)}
-                          className="text-slate-500 hover:text-rose-400 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
                     </div>
-                  ))}
+                    <div>
+                        <label className={labelClasses}>
+                            {t('trips.paymentDate') || 'Payment Date'}
+                        </label>
+                        <input
+                            type="date"
+                            {...register('payment_date')}
+                            className={cn(baseInputClasses)}
+                        />
+                    </div>
+                </div>
+
+                {/* Payments Section (Optional/Advanced) */}
+                <div className="space-y-3 hidden"> 
+                   {/* Hidden for now to simplify based on user request, but kept code if needed or for backward compat if we want to toggle it */}
+                   {/* If we want to fully remove, we can. For now hiding to prevent confusion vs the new simple fields which might not sync perfectly if we keep both visible without logic */}
                 </div>
 
                 {/* Amount Due */}

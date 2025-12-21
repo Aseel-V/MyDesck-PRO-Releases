@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { X, Save } from 'lucide-react';
+import { X, Save, Plus } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { Trip } from '../../types/trip';
+import { Trip, Payment } from '../../types/trip';
 
 interface UpdatePaymentFormProps {
   trip: Trip;
@@ -10,7 +10,8 @@ interface UpdatePaymentFormProps {
   onUpdate: (
     tripId: string,
     amountPaid: number,
-    paymentStatus: 'paid' | 'partial' | 'unpaid'
+    paymentStatus: 'paid' | 'partial' | 'unpaid',
+    payments?: Payment[]
   ) => Promise<void>;
 }
 
@@ -22,52 +23,61 @@ export default function UpdatePaymentForm({
   const { t } = useLanguage();
   const { profile } = useAuth();
 
-  const [amountPaid, setAmountPaid] = useState(trip.amount_paid);
-  const [paymentStatus, setPaymentStatus] = useState<
-    'paid' | 'partial' | 'unpaid'
-  >(trip.payment_status);
+  // State for NEW payment
+  const [amountToAdd, setAmountToAdd] = useState<number>(0);
+  const [paymentDate, setPaymentDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'transfer' | 'card' | 'check'>('transfer');
+
   const [loading, setLoading] = useState(false);
 
   const getCurrencySymbol = (currency: string) => {
     switch (currency) {
-      case 'USD':
-        return '$';
-      case 'EUR':
-        return '€';
-      case 'ILS':
-        return '₪';
-      default:
-        return '$';
+      case 'USD': return '$';
+      case 'EUR': return '€';
+      case 'ILS': return '₪';
+      default: return '$';
     }
   };
 
-  const currencySymbol = getCurrencySymbol(
-    profile?.preferred_currency || 'USD'
-  );
-
-  const total = trip.sale_price || 0;
-  const due = Math.max(0, total - amountPaid);
-  const paidPercent =
-    total > 0 ? Math.min(100, Math.max(0, (amountPaid / total) * 100)) : 0;
-
-  const handleAmountChange = (value: number) => {
-    const safeValue = Number.isNaN(value) ? 0 : value;
-    setAmountPaid(safeValue);
-
-    if (safeValue >= total && total > 0) {
-      setPaymentStatus('paid');
-    } else if (safeValue > 0) {
-      setPaymentStatus('partial');
-    } else {
-      setPaymentStatus('unpaid');
-    }
-  };
+  const currencySymbol = getCurrencySymbol(trip.currency || profile?.preferred_currency || 'USD');
+  const totalSalePrice = trip.sale_price || 0;
+  
+  // Calculate current status (including unsaved new payment for preview?)
+  // No, let's keep it simple: Show current state, then add new payment.
+  const currentPaid = trip.amount_paid || 0;
+  const currentDue = Math.max(0, totalSalePrice - currentPaid);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (amountToAdd <= 0) return;
+
     setLoading(true);
     try {
-      await onUpdate(trip.id, amountPaid, paymentStatus);
+      // 1. Create new payment object
+      const newPayment: Payment = {
+        date: paymentDate,
+        amount: amountToAdd,
+        method: paymentMethod,
+      };
+
+      // 2. Append to existing payments
+      // Ensure existing payments is an array (handle legacy nulls)
+      const existingPayments = Array.isArray(trip.payments) ? trip.payments : [];
+      const updatedPayments = [...existingPayments, newPayment];
+
+      // 3. Recalculate total
+      const newTotalPaid = updatedPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+
+      // 4. Determine status
+      let newStatus: 'paid' | 'partial' | 'unpaid' = 'unpaid';
+      if (newTotalPaid >= totalSalePrice && totalSalePrice > 0) {
+        newStatus = 'paid';
+      } else if (newTotalPaid > 0) {
+        newStatus = 'partial';
+      }
+
+      // 5. Submit
+      await onUpdate(trip.id, newTotalPaid, newStatus, updatedPayments);
       onClose();
     } catch (error) {
       console.error('Failed to update payment:', error);
@@ -78,7 +88,6 @@ export default function UpdatePaymentForm({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-      {/* Glow background */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute -top-32 -right-32 w-72 h-72 bg-emerald-500/20 blur-3xl rounded-full" />
         <div className="absolute -bottom-40 -left-32 w-80 h-80 bg-sky-500/15 blur-3xl rounded-full" />
@@ -104,136 +113,111 @@ export default function UpdatePaymentForm({
             </button>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="px-6 py-5 space-y-5">
-            {/* Summary card */}
-            <div className="rounded-xl border border-sky-500/40 bg-sky-500/5 px-4 py-3 text-sm space-y-2">
-              <div className="flex justify-between">
-                <span className="text-slate-300">{t('trips.salePrice')}</span>
-                <span className="font-semibold text-sky-200">
-                  {currencySymbol}
-                  {total.toFixed(2)}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-300">{t('trips.amountPaid')}</span>
-                <span className="font-semibold text-emerald-200">
-                  {currencySymbol}
-                  {amountPaid.toFixed(2)}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-300">{t('trips.amountDue')}</span>
-                <span
-                  className={`font-semibold ${due <= 0 ? 'text-emerald-300' : 'text-rose-300'
-                    }`}
-                >
-                  {currencySymbol}
-                  {due.toFixed(2)}
-                </span>
-              </div>
+          <form onSubmit={handleSubmit} className="px-6 py-5 space-y-6">
+            {/* Summary Card */}
+            <div className="rounded-xl border border-sky-500/30 bg-sky-500/5 px-4 py-3 space-y-3">
+               <div className="flex justify-between items-center text-sm">
+                  <span className="text-slate-400">{t('trips.amountPaid')}</span>
+                  <span className="text-lg font-semibold text-emerald-300">
+                    {currencySymbol}{currentPaid.toFixed(2)}
+                  </span>
+               </div>
+               <div className="flex justify-between items-center text-sm">
+                  <span className="text-slate-400">{t('trips.amountDue')}</span>
+                  <span className="text-lg font-semibold text-rose-300">
+                    {currencySymbol}{currentDue.toFixed(2)}
+                  </span>
+               </div>
+               <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden mt-1">
+                 <div 
+                    className="h-full bg-emerald-500 rounded-full transition-all"
+                    style={{ width: `${Math.min(100, (currentPaid / (totalSalePrice || 1)) * 100)}%` }}
+                 />
+               </div>
+            </div>
 
-              {/* Progress bar */}
-              <div className="mt-3">
-                <div className="flex justify-between text-[11px] text-slate-400 mb-1">
-                  <span>Payment progress</span>
-                  <span>{paidPercent.toFixed(0)}%</span>
-                </div>
-                <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all ${due <= 0
-                        ? 'bg-emerald-500'
-                        : paidPercent > 0
-                          ? 'bg-sky-500'
-                          : 'bg-slate-600'
-                      }`}
-                    style={{ width: `${paidPercent}%` }}
+            {/* Add New Payment Section */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium text-slate-200 flex items-center gap-2">
+                <Plus className="w-4 h-4 text-emerald-400" />
+                Add New Payment
+              </h3>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <label className="block text-xs font-semibold text-slate-400 mb-1.5">
+                    Amount ({currencySymbol})
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={amountToAdd || ''}
+                    onChange={(e) => setAmountToAdd(parseFloat(e.target.value) || 0)}
+                    className="w-full px-3 py-2.5 rounded-lg bg-slate-950/50 border border-slate-700 text-slate-100 focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 outline-none transition-all"
+                    placeholder="0.00"
+                    autoFocus
                   />
                 </div>
+
+                <div>
+                   <label className="block text-xs font-semibold text-slate-400 mb-1.5">
+                    Date
+                  </label>
+                  <input
+                    type="date"
+                    value={paymentDate}
+                    onChange={(e) => setPaymentDate(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-lg bg-slate-950/50 border border-slate-700 text-slate-100 focus:ring-2 focus:ring-emerald-500/50 outline-none"
+                  />
+                </div>
+
+                <div>
+                   <label className="block text-xs font-semibold text-slate-400 mb-1.5">
+                    Method
+                  </label>
+                  <select
+                    value={paymentMethod}
+                    onChange={(e) => setPaymentMethod(e.target.value as any)}
+                    className="w-full px-3 py-2.5 rounded-lg bg-slate-950/50 border border-slate-700 text-slate-100 focus:ring-2 focus:ring-emerald-500/50 outline-none"
+                  >
+                    <option value="transfer">Transfer</option>
+                    <option value="cash">Cash</option>
+                    <option value="card">Card</option>
+                    <option value="check">Check</option>
+                  </select>
+                </div>
               </div>
             </div>
 
-            {/* Amount input */}
-            <div>
-              <label className="block text-sm font-medium text-slate-200 mb-2">
-                {t('trips.amountPaid')} ({currencySymbol}) *
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                min={0}
-                max={total}
-                value={amountPaid}
-                onChange={(e) =>
-                  handleAmountChange(parseFloat(e.target.value) || 0)
-                }
-                className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-700 text-slate-50 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent text-lg font-semibold"
-                required
-              />
-            </div>
+            {/* Total Preview */}
+             {amountToAdd > 0 && (
+                <div className="py-2 flex justify-between items-center text-sm border-t border-slate-800/50">
+                  <span className="text-slate-400">New Total Will Be:</span>
+                  <span className="font-bold text-emerald-400">
+                    {currencySymbol}{(currentPaid + amountToAdd).toFixed(2)}
+                  </span>
+                </div>
+             )}
 
-            {/* Status select */}
-            <div>
-              <label className="block text-sm font-medium text-slate-200 mb-2">
-                {t('trips.paymentStatus')} *
-              </label>
-              <select
-                value={paymentStatus}
-                onChange={(e) =>
-                  setPaymentStatus(
-                    e.target.value as 'paid' | 'partial' | 'unpaid'
-                  )
-                }
-                className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
-              >
-                <option value="unpaid">
-                  {t('trips.paymentStatuses.unpaid')}
-                </option>
-                <option value="partial">
-                  {t('trips.paymentStatuses.partial')}
-                </option>
-                <option value="paid">
-                  {t('trips.paymentStatuses.paid')}
-                </option>
-              </select>
-            </div>
-
-            {/* Due badge */}
-            <div
-              className={`rounded-xl px-4 py-3 border text-sm flex items-center justify-between ${due <= 0
-                  ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-100'
-                  : 'bg-rose-500/10 border-rose-500/40 text-rose-100'
-                }`}
-            >
-              <span className="font-medium">
-                {due <= 0
-                  ? t('trips.paymentStatuses.paid')
-                  : t('trips.amountDue')}
-              </span>
-              <span className="text-lg font-bold">
-                {currencySymbol}
-                {due.toFixed(2)}
-              </span>
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+            <div className="flex gap-3 pt-2">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-5 py-2.5 rounded-lg border border-slate-700 text-slate-200 hover:bg-slate-800 transition-all text-sm font-medium"
+                className="flex-1 py-2.5 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-800 transition-all text-sm font-medium"
               >
                 {t('trips.cancel')}
               </button>
               <button
                 type="submit"
-                disabled={loading}
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-500 focus:ring-4 focus:ring-emerald-400/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                disabled={loading || amountToAdd <= 0}
+                className="flex-[2] py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_4px_14px_rgba(16,185,129,0.4)] transition-all flex items-center justify-center gap-2"
               >
                 <Save className="w-4 h-4" />
-                <span>{loading ? t('auth.loading') : t('settings.save')}</span>
+                {loading ? t('auth.loading') : 'Add Payment'}
               </button>
             </div>
+
           </form>
         </div>
       </div>

@@ -20,6 +20,11 @@ export interface Database {
           end_date: string
           wholesale_cost: number
           sale_price: number
+          currency: 'USD' | 'EUR' | 'ILS' // Added
+          exchange_rate: number // Added
+          payments: Json[] | null // Added
+          attachments: Json[] | null // Added
+          payment_date: string | null // Added
           profit: number
           profit_percentage: number
           payment_status: 'paid' | 'partial' | 'unpaid'
@@ -40,6 +45,11 @@ export interface Database {
           end_date: string
           wholesale_cost: number
           sale_price: number
+          currency?: 'USD' | 'EUR' | 'ILS' // Added
+          exchange_rate?: number // Added
+          payments?: Json[] | null // Added
+          attachments?: Json[] | null // Added
+          payment_date?: string | null // Added
           payment_status: 'paid' | 'partial' | 'unpaid'
           amount_paid: number
           notes?: string
@@ -56,6 +66,12 @@ export interface Database {
           end_date?: string
           wholesale_cost?: number
           sale_price?: number
+          currency?: 'USD' | 'EUR' | 'ILS' // Added
+          exchange_rate?: number // Added
+          payments?: Json[] | null // Added
+          attachments?: Json[] | null // Added
+          itinerary?: Json[] | null // Added
+          travelers?: Json[] | null // Added
           payment_status?: 'paid' | 'partial' | 'unpaid'
           amount_paid?: number
           notes?: string

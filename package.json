@@ -6,7 +6,7 @@
   "main": "electron.js",
   "homepage": "./",
   "build": {
-    "appId": "com.mydesckpro.app",
+    "appId": "com.mydesck.pro",
     "productName": "MyDesck PRO",
     "directories": {
       "output": "C:\\_mydesck_build"

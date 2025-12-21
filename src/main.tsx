@@ -32,6 +32,10 @@ const persister = createIDBPersister();
 
 import { ErrorBoundary } from './components/ErrorBoundary';
 
+import { HashRouter } from 'react-router-dom';
+
+// ...
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>
@@ -40,7 +44,9 @@ createRoot(document.getElementById('root')!).render(
           <LanguageProvider>
             <ThemeProvider>
               <CurrencyProvider>
-                <App />
+                <HashRouter>
+                  <App />
+                </HashRouter>
               </CurrencyProvider>
             </ThemeProvider>
           </LanguageProvider>
