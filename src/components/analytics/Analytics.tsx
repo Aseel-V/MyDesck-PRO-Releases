@@ -2,7 +2,6 @@ import { useMemo, useState, useEffect } from 'react';
 import {
   BarChart,
   Bar,
-  LineChart,
   Line,
   XAxis,
   YAxis,
@@ -13,6 +12,7 @@ import {
   PieChart,
   Pie,
   Cell,
+  ComposedChart,
 } from 'recharts';
 import {
   TrendingUp,
@@ -48,6 +48,9 @@ interface UserStats {
   totalTrips: number;
   totalTravelers: number;
   averageProfit: number;
+
+  // ✅ include topDestinations here so TS is happy
+  topDestinations: { name: string; value: number }[];
 }
 
 interface AnalyticsProps {
@@ -68,17 +71,10 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
         <p className="text-slate-200 font-semibold mb-2 text-sm">{label}</p>
         {payload.map((entry: any, index: number) => (
           <div key={index} className="flex items-center gap-2 text-xs">
-            <div
-              className="w-2 h-2 rounded-full"
-              style={{ backgroundColor: entry.color }}
-            />
-            <span className="text-slate-400 capitalize">
-              {entry.name}:
-            </span>
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
+            <span className="text-slate-400 capitalize">{entry.name}:</span>
             <span className="text-slate-100 font-medium">
-              {typeof entry.value === 'number'
-                ? entry.value.toLocaleString()
-                : entry.value}
+              {typeof entry.value === 'number' ? entry.value.toLocaleString() : entry.value}
             </span>
           </div>
         ))}
@@ -88,15 +84,88 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   return null;
 };
 
-export default function Analytics({
-  trips,
-  onOpenTripsWithFilter }: AnalyticsProps) {
+export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsProps) {
   const { t } = useLanguage();
   const { isAdmin } = useAuth();
   const { convert, format, currency, isLoading: ratesLoading } = useCurrency();
 
   const [userProfiles, setUserProfiles] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(false);
+
+  /* New Year Filter State for Cash-Basis Analytics */
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
+
+  // ✅ Historical Exchange Rate Locking helper
+  const getHistoricalValue = (amount: number, trip: Trip, targetCurrency: string) => {
+    if (!amount) return 0;
+
+    const tripCurrency = trip.currency || 'USD';
+
+    // 1) Same currency?
+    if (tripCurrency === targetCurrency) return amount;
+
+    // 2) Trip Currency -> USD using HISTORICAL rate
+    // exchange_rate is "Units per 1 USD" (Units/USD)
+    // USD = Amount / exchange_rate
+    const historicalRate = trip.exchange_rate || 1;
+    const usdAmount = amount / historicalRate;
+
+    // 3) USD -> Target Currency using LIVE rate
+    return convert(usdAmount, 'USD', targetCurrency);
+  };
+
+  const getMonthsSinceFirstUser = (profiles: UserProfile[]) => {
+    if (profiles.length === 0) return 1;
+    const firstUser = profiles[profiles.length - 1];
+    const firstDate = new Date(firstUser.created_at);
+    const now = new Date();
+    const months =
+      (now.getFullYear() - firstDate.getFullYear()) * 12 + (now.getMonth() - firstDate.getMonth());
+    return Math.max(1, months + 1);
+  };
+
+  // Derive available years from ALL VALID trips (Cash Basis: based on Effective Date)
+  // "Sold" implies not cancelled.
+  const availableYears = useMemo(() => {
+    if (!trips || trips.length === 0) return [new Date().getFullYear().toString()];
+    
+    const validTrips = trips.filter(t => t.status !== 'cancelled');
+    
+    if (validTrips.length === 0) return [new Date().getFullYear().toString()];
+
+    const years = new Set(
+      validTrips.map((tr) => {
+        const effDate = tr.payment_date || tr.start_date;
+        return new Date(effDate).getFullYear().toString();
+      })
+    );
+    
+    const sortedYears = Array.from(years).sort((a, b) => b.localeCompare(a));
+    return sortedYears.length > 0 ? sortedYears : [new Date().getFullYear().toString()];
+  }, [trips]);
+
+  // Ensure selectedYear is valid when availableYears changes
+  useEffect(() => {
+    if (!availableYears.includes(selectedYear)) {
+      // If currently selected year is not in the list (e.g. became invalid or initial load),
+      // switch to the most recent available year.
+      if (availableYears.length > 0) {
+        setSelectedYear(availableYears[0]);
+      }
+    }
+  }, [availableYears, selectedYear]);
+
+  // STRICT CASH-BASIS FILTERING
+  const filteredTrips = useMemo(() => {
+    if (!trips) return [];
+    return trips.filter((trip) => {
+      // Exclude cancelled trips from analytics entirely
+      if (trip.status === 'cancelled') return false;
+
+      const effDate = trip.payment_date || trip.start_date;
+      return new Date(effDate).getFullYear().toString() === selectedYear;
+    });
+  }, [trips, selectedYear]);
 
   // Fetch user profiles for admin
   useEffect(() => {
@@ -106,21 +175,18 @@ export default function Analytics({
         await fetchUserProfiles();
       }
     };
-
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin]);
 
   const fetchUserProfiles = async () => {
     try {
-      // Use Edge Function instead of direct admin access
       const { data, error } = await supabase.functions.invoke('get-users', {
         body: { page: 1, perPage: 1000 },
       });
-
       if (error) throw error;
 
       if (data && data.users) {
-        // Map the response to UserProfile format expected by the component
         const mappedUsers: UserProfile[] = data.users.map((u: any) => ({
           user_id: u.id,
           email: u.email,
@@ -139,36 +205,16 @@ export default function Analytics({
     }
   };
 
-
-
-  const getMonthsSinceFirstUser = (profiles: UserProfile[]) => {
-    if (profiles.length === 0) return 1;
-    const firstUser = profiles[profiles.length - 1];
-    const firstDate = new Date(firstUser.created_at);
-    const now = new Date();
-    const months =
-      (now.getFullYear() - firstDate.getFullYear()) * 12 +
-      (now.getMonth() - firstDate.getMonth());
-    return Math.max(1, months + 1);
-  };
-
   const stats = useMemo((): AdminStats | UserStats => {
     if (isAdmin) {
       const totalUsers = userProfiles.length;
-      const totalAdmins = userProfiles.filter(
-        (profile) => profile.role === 'admin'
-      ).length;
-      const totalRegularUsers = userProfiles.filter(
-        (profile) => profile.role === 'user'
-      ).length;
+      const totalAdmins = userProfiles.filter((p) => p.role === 'admin').length;
+      const totalRegularUsers = userProfiles.filter((p) => p.role === 'user').length;
 
       const newUsersThisMonth = userProfiles.filter((profile) => {
         const createdDate = new Date(profile.created_at);
         const now = new Date();
-        return (
-          createdDate.getMonth() === now.getMonth() &&
-          createdDate.getFullYear() === now.getFullYear()
-        );
+        return createdDate.getMonth() === now.getMonth() && createdDate.getFullYear() === now.getFullYear();
       }).length;
 
       return {
@@ -176,113 +222,94 @@ export default function Analytics({
         totalAdmins,
         totalRegularUsers,
         newUsersThisMonth,
-        averageUsersPerMonth:
-          totalUsers > 0
-            ? totalUsers / Math.max(1, getMonthsSinceFirstUser(userProfiles))
-            : 0,
-      };
-    } else {
-      // Client-side calculation from trips prop
-      const totalRevenue = trips.reduce((sum: number, trip: Trip) => {
-        return sum + convert(trip.sale_price || 0, trip.currency || currency, currency);
-      }, 0);
-
-      const totalProfit = trips.reduce((sum: number, trip: Trip) => {
-        return sum + convert(trip.profit || 0, trip.currency || currency, currency);
-      }, 0);
-
-      const totalTrips = trips.length;
-      
-      const totalTravelers = trips.reduce((sum: number, trip: Trip) => sum + (trip.travelers_count || 0), 0);
-
-      return {
-        totalRevenue,
-        totalProfit,
-        totalTrips,
-        totalTravelers,
-        averageProfit: totalTrips > 0 ? totalProfit / totalTrips : 0,
+        averageUsersPerMonth: totalUsers > 0 ? totalUsers / Math.max(1, getMonthsSinceFirstUser(userProfiles)) : 0,
       };
     }
-  }, [userProfiles, isAdmin, trips, convert, currency]);
+
+    const tripsToCalc = filteredTrips;
+
+    const totalRevenue = tripsToCalc.reduce((sum, trip) => sum + getHistoricalValue(trip.sale_price || 0, trip, currency), 0);
+    const totalProfit = tripsToCalc.reduce((sum, trip) => sum + getHistoricalValue(trip.profit || 0, trip, currency), 0);
+
+    const totalTrips = tripsToCalc.length;
+    const totalTravelers = tripsToCalc.reduce((sum, trip) => sum + (trip.travelers_count || 0), 0);
+
+    // Top Destinations (by count)
+    const destinationsMap = new Map<string, number>();
+    tripsToCalc.forEach((trip) => {
+      if (!trip.destination) return;
+      destinationsMap.set(trip.destination, (destinationsMap.get(trip.destination) || 0) + 1);
+    });
+
+    const topDestinations = Array.from(destinationsMap.entries())
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5);
+
+    return {
+      totalRevenue,
+      totalProfit,
+      totalTrips,
+      totalTravelers,
+      averageProfit: totalTrips > 0 ? totalProfit / totalTrips : 0,
+      topDestinations,
+    };
+  }, [userProfiles, isAdmin, filteredTrips, currency]);
 
   const monthlyData = useMemo(() => {
     if (isAdmin) {
-      // Admin: user registration trends
-      const monthMap = new Map<
-        string,
-        { users: number; admins: number; regularUsers: number }
-      >();
+      const monthMap = new Map<string, { users: number; admins: number; regularUsers: number }>();
 
       userProfiles.forEach((profile) => {
         const date = new Date(profile.created_at);
-        const monthKey = `${date.getFullYear()}-${String(
-          date.getMonth() + 1
-        ).padStart(2, '0')}`;
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 
-        const existing =
-          monthMap.get(monthKey) || {
-            users: 0,
-            admins: 0,
-            regularUsers: 0,
-          };
+        const existing = monthMap.get(monthKey) || { users: 0, admins: 0, regularUsers: 0 };
 
         monthMap.set(monthKey, {
           users: existing.users + 1,
           admins: existing.admins + (profile.role === 'admin' ? 1 : 0),
-          regularUsers:
-            existing.regularUsers + (profile.role === 'user' ? 1 : 0),
+          regularUsers: existing.regularUsers + (profile.role === 'user' ? 1 : 0),
         });
       });
 
       return Array.from(monthMap.entries())
         .sort(([a], [b]) => a.localeCompare(b))
-        .map(([month, data]) => ({
-          month,
-          users: data.users,
-          admins: data.admins,
-          regularUsers: data.regularUsers,
-        }));
-    } else {
-      // Regular user: Calculate monthly stats from trips
-      const monthMap = new Map<string, { profit: number; revenue: number; travelers: number }>();
-
-      trips.forEach((trip) => {
-        const date = new Date(trip.start_date); // Use start_date for grouping
-        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-
-        const existing = monthMap.get(monthKey) || { profit: 0, revenue: 0, travelers: 0 };
-        
-        // Convert amounts to user's preferred currency BEFORE aggregation
-        const tripProfit = convert(trip.profit || 0, trip.currency || currency, currency);
-        const tripRevenue = convert(trip.sale_price || 0, trip.currency || currency, currency);
-
-        monthMap.set(monthKey, {
-          profit: existing.profit + tripProfit,
-          revenue: existing.revenue + tripRevenue,
-          travelers: existing.travelers + (trip.travelers_count || 0),
-        });
-      });
-
-      // Sort by month and format
-      return Array.from(monthMap.entries())
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([month, data]) => ({
-          month,
-          profit: data.profit,
-          revenue: data.revenue,
-          travelers: data.travelers,
-        }));
+        .map(([month, data]) => ({ month, ...data }));
     }
-  }, [userProfiles, isAdmin, trips, convert, currency]);
 
-  // User-focused derived analytics
+    const monthMap = new Map<string, { profit: number; revenue: number; travelers: number }>();
+
+    filteredTrips.forEach((trip) => {
+      const dateString = trip.payment_date || trip.start_date;
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return;
+
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+
+      const existing = monthMap.get(monthKey) || { profit: 0, revenue: 0, travelers: 0 };
+
+      const tripProfit = getHistoricalValue(trip.profit || 0, trip, currency);
+      const tripRevenue = getHistoricalValue(trip.sale_price || 0, trip, currency);
+
+      monthMap.set(monthKey, {
+        profit: existing.profit + tripProfit,
+        revenue: existing.revenue + tripRevenue,
+        travelers: existing.travelers + (trip.travelers_count || 0),
+      });
+    });
+
+    return Array.from(monthMap.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([month, data]) => ({ month, ...data }));
+  }, [userProfiles, isAdmin, filteredTrips, currency]);
+
   const {
     profitMarginPct,
     profitMarginTrend,
     totalCollected,
     totalPending,
     paymentHealthPct,
-    monthlyProfitOnly,
   } = useMemo(() => {
     if (isAdmin) {
       return {
@@ -291,76 +318,46 @@ export default function Analytics({
         totalCollected: 0,
         totalPending: 0,
         paymentHealthPct: 0,
-        monthlyProfitOnly: [] as { month: string; profit: number }[],
       };
     }
 
-    // Calculate totals from trips
-    // Calculate totals from trips (Using user's currency)
-    const totalRevenue = trips.reduce((sum: number, trip: Trip) => {
-        return sum + convert(trip.sale_price || 0, trip.currency || currency, currency);
-    }, 0);
-    
-    const totalProfit = trips.reduce((sum: number, trip: Trip) => {
-        return sum + convert(trip.profit || 0, trip.currency || currency, currency);
-    }, 0);
-    
+    const tripsToCalc = filteredTrips;
+
+    const totalRevenue = tripsToCalc.reduce((sum, trip) => sum + getHistoricalValue(trip.sale_price || 0, trip, currency), 0);
+    const totalProfit = tripsToCalc.reduce((sum, trip) => sum + getHistoricalValue(trip.profit || 0, trip, currency), 0);
+
     const profitMarginPct = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
 
-    // Calculate Payment Health
-    const totalCollected = trips.reduce((sum: number, trip: Trip) => {
-        return sum + convert(trip.amount_paid || 0, trip.currency || currency, currency);
-    }, 0);
+    const totalCollected = tripsToCalc.reduce(
+      (sum, trip) => sum + getHistoricalValue(trip.amount_paid || 0, trip, currency),
+      0
+    );
 
-    const totalPending = trips.reduce((sum: number, trip: Trip) => {
+    const totalPending = tripsToCalc.reduce((sum, trip) => {
       const price = trip.sale_price || 0;
       const paid = trip.amount_paid || 0;
       const pending = Math.max(0, price - paid);
-      return sum + convert(pending, trip.currency || currency, currency);
+      return sum + getHistoricalValue(pending, trip, currency);
     }, 0);
 
     const totalDue = totalCollected + totalPending;
     const paymentHealthPct = totalDue > 0 ? (totalCollected / totalDue) * 100 : 0;
 
-    const monthlyProfitOnly = (monthlyData as {
-      month: string;
-      profit?: number;
-    }[])
-      .filter((m) => typeof m.profit === 'number')
-      .map((m) => ({
-        month: m.month,
-        profit: Number((m.profit as number).toFixed(2)),
-      }));
-
-    // Trend: last month vs previous
     let profitMarginTrend = 0;
     if (monthlyData.length >= 2) {
       const last = monthlyData[monthlyData.length - 1] as any;
       const prev = monthlyData[monthlyData.length - 2] as any;
+
       const lastRev = last?.revenue || 0;
       const lastProf = last?.profit || 0;
       const prevRev = prev?.revenue || 0;
       const prevProf = prev?.profit || 0;
+
       const lastMargin = lastRev > 0 ? (lastProf / lastRev) * 100 : 0;
       const prevMargin = prevRev > 0 ? (prevProf / prevRev) * 100 : 0;
+
       profitMarginTrend = lastMargin - prevMargin;
     }
-
-    // Top Destinations Logic
-    const destinationsMap = new Map<string, number>();
-    trips.forEach((trip) => {
-      if (trip.destination) {
-        destinationsMap.set(
-          trip.destination,
-          (destinationsMap.get(trip.destination) || 0) + 1
-        );
-      }
-    });
-
-    const topDestinations = Array.from(destinationsMap.entries())
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 5); // Top 5
 
     return {
       profitMarginPct,
@@ -368,10 +365,8 @@ export default function Analytics({
       totalCollected,
       totalPending,
       paymentHealthPct,
-      monthlyProfitOnly,
-      topDestinations,
     };
-  }, [isAdmin, monthlyData, trips, convert, currency]);
+  }, [isAdmin, monthlyData, filteredTrips, currency]);
 
   const COLORS = ['#0ea5e9', '#8b5cf6', '#10b981', '#f59e0b', '#f43f5e'];
 
@@ -406,6 +401,28 @@ export default function Analytics({
             )}
           </p>
         </div>
+
+        {/* Year Selector */}
+        {!isAdmin && (
+          <div className="flex bg-slate-950/90 border border-slate-800/80 rounded-xl p-1 shadow-sm shadow-slate-950/60 overflow-x-auto no-scrollbar max-w-full md:max-w-xs">
+            {availableYears.map((year) => {
+              const isActive = selectedYear === year;
+              return (
+                <button
+                  key={year}
+                  onClick={() => setSelectedYear(year)}
+                  className={`flex-1 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap ${
+                    isActive
+                      ? 'bg-sky-500 text-white shadow-md shadow-sky-900/20'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                  }`}
+                >
+                  {year}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* TOP STATS CARDS */}
@@ -419,9 +436,7 @@ export default function Analytics({
                   <span className="text-xs font-semibold">Total Users</span>
                 </div>
               </div>
-              <div className="text-3xl font-bold mb-2">
-                {(stats as AdminStats).totalUsers}
-              </div>
+              <div className="text-3xl font-bold mb-2">{(stats as AdminStats).totalUsers}</div>
               <div className="text-slate-400 text-sm">All registered users</div>
             </div>
 
@@ -432,9 +447,7 @@ export default function Analytics({
                   <span className="text-xs font-semibold">New Users</span>
                 </div>
               </div>
-              <div className="text-3xl font-bold mb-2">
-                {(stats as AdminStats).newUsersThisMonth}
-              </div>
+              <div className="text-3xl font-bold mb-2">{(stats as AdminStats).newUsersThisMonth}</div>
               <div className="text-slate-400 text-sm">This month</div>
             </div>
 
@@ -445,9 +458,7 @@ export default function Analytics({
                   <span className="text-xs font-semibold">Admins</span>
                 </div>
               </div>
-              <div className="text-3xl font-bold mb-2">
-                {(stats as AdminStats).totalAdmins}
-              </div>
+              <div className="text-3xl font-bold mb-2">{(stats as AdminStats).totalAdmins}</div>
               <div className="text-slate-400 text-sm">Administrators</div>
             </div>
 
@@ -458,9 +469,7 @@ export default function Analytics({
                   <span className="text-xs font-semibold">Regular Users</span>
                 </div>
               </div>
-              <div className="text-3xl font-bold mb-2">
-                {(stats as AdminStats).totalRegularUsers}
-              </div>
+              <div className="text-3xl font-bold mb-2">{(stats as AdminStats).totalRegularUsers}</div>
               <div className="text-slate-400 text-sm">Standard accounts</div>
             </div>
           </>
@@ -470,98 +479,59 @@ export default function Analytics({
             <div className="glass-panel rounded-2xl border border-slate-800/80 bg-slate-950/90 shadow-[0_18px_55px_rgba(15,23,42,0.95)] p-6 text-slate-100 transform transition-all hover:scale-[1.02] md:col-span-2">
               <div className="flex items-center justify-between mb-3">
                 <div className="bg-white/10 rounded-lg px-3 py-1">
-                  <span className="text-xs font-semibold">
-                    Net Profit Margin
-                  </span>
+                  <span className="text-xs font-semibold">Net Profit Margin</span>
                 </div>
-                <div
-                  className={`flex items-center gap-1 text-sm ${profitMarginTrend >= 0
-                    ? 'text-emerald-400'
-                    : 'text-red-400'
-                    }`}
-                >
-                  {profitMarginTrend >= 0 ? (
-                    <ArrowUpRight className="w-4 h-4" />
-                  ) : (
-                    <ArrowDownRight className="w-4 h-4" />
-                  )}
+                <div className={`flex items-center gap-1 text-sm ${profitMarginTrend >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {profitMarginTrend >= 0 ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
                   <span>{Math.abs(profitMarginTrend).toFixed(1)}%</span>
                 </div>
               </div>
-              <div className="text-4xl font-extrabold mb-1">
-                {profitMarginPct.toFixed(1)}%
-              </div>
-              <div className="text-slate-400 text-xs">
-                Shows how efficiently your business converts revenue to profit.
-              </div>
+              <div className="text-4xl font-extrabold mb-1">{profitMarginPct.toFixed(1)}%</div>
+              <div className="text-slate-400 text-xs">Shows how efficiently your business converts revenue to profit.</div>
             </div>
 
             <div className="glass-panel rounded-2xl border border-slate-800/80 bg-slate-950/90 shadow-[0_18px_55px_rgba(15,23,42,0.95)] p-6 text-slate-100 transform transition-all hover:scale-[1.02]">
               <div className="flex items-center justify-between mb-4">
                 <DollarSign className="w-8 h-8 opacity-80" />
                 <div className="bg-white/10 rounded-lg px-3 py-1">
-                  <span className="text-xs font-semibold">
-                    {t('analytics.totalRevenue')}
-                  </span>
+                  <span className="text-xs font-semibold">{t('analytics.totalRevenue')}</span>
                 </div>
               </div>
-              <div className="text-3xl font-bold mb-2">
-                {format((stats as UserStats).totalRevenue ?? 0, currency)}
-              </div>
-              <div className="text-slate-400 text-sm">
-                {t('analytics.totalRevenue')}
-              </div>
+              <div className="text-3xl font-bold mb-2">{format((stats as UserStats).totalRevenue ?? 0, currency)}</div>
+              <div className="text-slate-400 text-sm">{t('analytics.totalRevenue')}</div>
             </div>
 
             <div className="glass-panel rounded-2xl border border-slate-800/80 bg-slate-950/90 shadow-[0_18px_55px_rgba(15,23,42,0.95)] p-6 text-slate-100 transform transition-all hover:scale-[1.02]">
               <div className="flex items-center justify-between mb-4">
                 <TrendingUp className="w-8 h-8 opacity-80" />
                 <div className="bg-white/10 rounded-lg px-3 py-1">
-                  <span className="text-xs font-semibold">
-                    {t('analytics.totalProfit')}
-                  </span>
+                  <span className="text-xs font-semibold">{t('analytics.totalProfit')}</span>
                 </div>
               </div>
-              <div className="text-3xl font-bold mb-2">
-                {format((stats as UserStats).totalProfit ?? 0, currency)}
-              </div>
-              <div className="text-slate-400 text-sm">
-                {t('analytics.totalProfit')}
-              </div>
+              <div className="text-3xl font-bold mb-2">{format((stats as UserStats).totalProfit ?? 0, currency)}</div>
+              <div className="text-slate-400 text-sm">{t('analytics.totalProfit')}</div>
             </div>
 
             <div className="glass-panel rounded-2xl border border-slate-800/80 bg-slate-950/90 shadow-[0_18px_55px_rgba(15,23,42,0.95)] p-6 text-slate-100 transform transition-all hover:scale-[1.02]">
               <div className="flex items-center justify-between mb-4">
                 <MapPin className="w-8 h-8 opacity-80" />
                 <div className="bg-white/10 rounded-lg px-3 py-1">
-                  <span className="text-xs font-semibold">
-                    {t('analytics.totalTrips')}
-                  </span>
+                  <span className="text-xs font-semibold">{t('analytics.totalTrips')}</span>
                 </div>
               </div>
-              <div className="text-3xl font-bold mb-2">
-                {(stats as UserStats).totalTrips}
-              </div>
-              <div className="text-slate-400 text-sm">
-                {t('analytics.totalTrips')}
-              </div>
+              <div className="text-3xl font-bold mb-2">{(stats as UserStats).totalTrips}</div>
+              <div className="text-slate-400 text-sm">{t('analytics.totalTrips')}</div>
             </div>
 
             <div className="glass-panel rounded-2xl border border-slate-800/80 bg-slate-950/90 shadow-[0_18px_55px_rgba(15,23,42,0.95)] p-6 text-slate-100 transform transition-all hover:scale-[1.02]">
               <div className="flex items-center justify-between mb-4">
                 <Users className="w-8 h-8 opacity-80" />
                 <div className="bg-white/10 rounded-lg px-3 py-1">
-                  <span className="text-xs font-semibold">
-                    {t('analytics.totalTravelers')}
-                  </span>
+                  <span className="text-xs font-semibold">{t('analytics.totalTravelers')}</span>
                 </div>
               </div>
-              <div className="text-3xl font-bold mb-2">
-                {(stats as UserStats).totalTravelers ?? 0}
-              </div>
-              <div className="text-slate-400 text-sm">
-                {t('analytics.totalTravelers')}
-              </div>
+              <div className="text-3xl font-bold mb-2">{(stats as UserStats).totalTravelers ?? 0}</div>
+              <div className="text-slate-400 text-sm">{t('analytics.totalTravelers')}</div>
             </div>
           </>
         )}
@@ -571,225 +541,176 @@ export default function Analytics({
       {!isAdmin && (
         <div className="glass-panel rounded-2xl border border-slate-800/80 bg-slate-950/90 shadow-[0_18px_55px_rgba(15,23,42,0.95)] p-6">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-xl font-bold text-slate-100">
-              Payment Health
-            </h3>
-            <AlertTriangle
-              className={`w-5 h-5 ${totalPending > 0 ? 'text-red-400' : 'text-emerald-400'
-                }`}
-            />
+            <h3 className="text-xl font-bold text-slate-100">Payment Health</h3>
+            <AlertTriangle className={`w-5 h-5 ${totalPending > 0 ? 'text-red-400' : 'text-emerald-400'}`} />
           </div>
           <div className="mb-2 flex items-center justify-between text-sm text-slate-300">
             <span>
               Collected:{' '}
-              <span className="text-emerald-400 font-semibold">
-                {format(totalCollected, currency)}
-              </span>
+              <span className="text-emerald-400 font-semibold">{format(totalCollected, currency)}</span>
             </span>
             <span>
               Pending:{' '}
               <span
                 className="text-red-400 font-semibold cursor-pointer hover:underline decoration-red-400/70"
-                onClick={() =>
-                  onOpenTripsWithFilter?.({ pendingOnly: true })
-                }
+                onClick={() => onOpenTripsWithFilter?.({ pendingOnly: true })}
               >
                 {format(totalPending, currency)}
               </span>
             </span>
           </div>
           <div className="w-full h-3 rounded-full bg-slate-800/70 border border-white/10 overflow-hidden">
-            <div
-              className="h-full bg-emerald-500"
-              style={{ width: `${paymentHealthPct.toFixed(0)}%` }}
-            />
+            <div className="h-full bg-emerald-500" style={{ width: `${paymentHealthPct.toFixed(0)}%` }} />
           </div>
           <div className="mt-2 text-xs text-slate-400">
-            Shows Total Collected vs Total Pending to help prioritize
-            collections.
+            Shows Total Collected vs Total Pending to help prioritize collections.
           </div>
         </div>
       )}
 
-      {/* MONTHLY CHART 1 */}
-      <div className="glass-panel rounded-2xl border border-slate-800/80 bg-slate-950/95 shadow-[0_20px_60px_rgba(15,23,42,1)] p-6">
-        <h3 className="text-xl font-bold text-slate-100 mb-6">
-          {isAdmin ? 'User Registration Trends' : 'Monthly Net Profit'}
-        </h3>
-        {monthlyData.length === 0 ? (
-          <div className="flex items-center justify-center h-64 text-slate-400">
-            <div className="text-center">
-              <div className="text-lg font-medium mb-2">No data available</div>
-              <div className="text-sm">
-                {isAdmin
-                  ? 'No user registrations found in the system.'
-                  : 'No trips found. Start adding trips to see analytics here.'}
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-              {isAdmin ? (
-                <LineChart data={monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#0f172a" />
-                  <XAxis
-                    dataKey="month"
-                    stroke="#94a3b8"
-                    tick={{ fill: '#94a3b8' }}
-                  />
-                  <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
-                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="users"
-                    stroke="#3b82f6"
-                    strokeWidth={2}
-                    name="Total Users"
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="admins"
-                    stroke="#8b5cf6"
-                    strokeWidth={2}
-                    name="Admins"
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="regularUsers"
-                    stroke="#10b981"
-                    strokeWidth={2}
-                    name="Regular Users"
-                  />
-                </LineChart>
-              ) : (
-                <BarChart data={monthlyProfitOnly}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#0f172a" />
-                  <XAxis
-                    dataKey="month"
-                    stroke="#94a3b8"
-                    tick={{ fill: '#94a3b8' }}
-                  />
-                  <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
-                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
-                  <Legend />
-                  <Bar
-                    dataKey="profit"
-                    fill="#10b981"
-                    name={t('analytics.profit')}
-                    cursor={onOpenTripsWithFilter ? 'pointer' : 'default'}
-                    onClick={(data: any) => {
-                      const month = data?.payload?.month as string | undefined;
-                      if (month) {
-                        onOpenTripsWithFilter?.({ month, pendingOnly: true });
-                      }
-                    }}
-                  />
-                </BarChart>
-              )}
-            </ResponsiveContainer>
-          </div>
-        )}
-      </div>
-
-      {/* MONTHLY CHART 2 */}
-      <div className="glass-panel rounded-2xl border border-slate-800/80 bg-slate-950/95 shadow-[0_20px_60px_rgba(15,23,42,1)] p-6">
-        <h3 className="text-xl font-bold text-slate-100 mb-6">
-          {isAdmin ? 'User Growth Over Time' : t('analytics.revenuePerMonth')}
-        </h3>
-        {monthlyData.length === 0 ? (
-          <div className="flex items-center justify-center h-64 text-slate-400">
-            <div className="text-center">
-              <div className="text-lg font-medium mb-2">No data available</div>
-              <div className="text-sm">
-                {isAdmin
-                  ? 'No user registrations found in the system.'
-                  : 'No trips found. Start adding trips to see analytics here.'}
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-              {isAdmin ? (
-                <BarChart data={monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#0f172a" />
-                  <XAxis
-                    dataKey="month"
-                    stroke="#94a3b8"
-                    tick={{ fill: '#94a3b8' }}
-                  />
-                  <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
-                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
-                  <Legend />
-                  <Bar
-                    dataKey="users"
-                    fill="#3b82f6"
-                    name="Total Users"
-                  />
-                </BarChart>
-              ) : (
-                <LineChart data={monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#0f172a" />
-                  <XAxis
-                    dataKey="month"
-                    stroke="#94a3b8"
-                    tick={{ fill: '#94a3b8' }}
-                  />
-                  <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
-                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="#3b82f6"
-                    strokeWidth={2}
-                    name={t('analytics.revenue')}
-                  />
-                </LineChart>
-              )}
-            </ResponsiveContainer>
-          </div>
-        )}
-      </div>
-
-      {/* TOP DESTINATIONS PIE CHART */}
-      {!isAdmin && (
-        <div className="glass-panel rounded-2xl border border-slate-800/80 bg-slate-950/95 shadow-[0_20px_60px_rgba(15,23,42,1)] p-6">
+      {/* ANALYTICS CHARTS SECTION */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* CHART 1: REVENUE VS PROFIT (Combo Chart) */}
+        <div className="lg:col-span-2 glass-panel rounded-2xl border border-slate-800/80 bg-slate-950/95 shadow-[0_20px_60px_rgba(15,23,42,1)] p-6">
           <h3 className="text-xl font-bold text-slate-100 mb-6">
-            Top Destinations
+            {isAdmin ? 'User Growth Over Time' : t('analytics.revenuePerMonth')}
           </h3>
-          {(stats as any).topDestinations?.length === 0 ? (
-            <div className="flex items-center justify-center h-64 text-slate-400">
-              No destination data available.
+
+          {monthlyData.length === 0 ? (
+            <div className="flex items-center justify-center h-[300px] text-slate-400">
+              <div className="text-center">
+                <div className="text-lg font-medium mb-2">No data available</div>
+                <div className="text-sm">
+                  {isAdmin ? 'No user registrations found in the system.' : `No trips found for ${selectedYear}.`}
+                </div>
+              </div>
             </div>
           ) : (
-            <div className="h-[300px] w-full flex items-center justify-center">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={(stats as any).topDestinations}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }: { name?: string; percent?: number }) =>
-                      `${name ?? ''} ${((percent || 0) * 100).toFixed(0)}%`
-                    }
-                    outerRadius={100}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {(stats as any).topDestinations?.map((_: any, index: number) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend />
-                </PieChart>
+            <div className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                {isAdmin ? (
+                  <BarChart data={monthlyData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#0f172a" />
+                    <XAxis dataKey="month" stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
+                    <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
+                    <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+                    <Legend />
+                    <Bar dataKey="users" fill="#3b82f6" name="Total Users" />
+                  </BarChart>
+                ) : (
+                  <ComposedChart data={monthlyData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#0f172a" />
+                    <XAxis dataKey="month" stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
+                    <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
+                    <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+                    <Legend />
+                    <Bar dataKey="revenue" fill="#3b82f6" name={t('analytics.revenue')} barSize={20} radius={[4, 4, 0, 0]} />
+                    <Line
+                      type="monotone"
+                      dataKey="profit"
+                      stroke="#10b981"
+                      strokeWidth={3}
+                      dot={{ r: 4, fill: '#10b981', strokeWidth: 2, stroke: '#0f172a' }}
+                      activeDot={{ r: 6 }}
+                      name={t('analytics.profit')}
+                    />
+                  </ComposedChart>
+                )}
               </ResponsiveContainer>
             </div>
           )}
+        </div>
+
+        {/* CHART 2: PAYMENT STATUS (Donut Chart) */}
+        <div className="glass-panel rounded-2xl border border-slate-800/80 bg-slate-950/95 shadow-[0_20px_60px_rgba(15,23,42,1)] p-6">
+          <h3 className="text-xl font-bold text-slate-100 mb-6">
+            {isAdmin ? 'User Distribution' : t('trips.paymentStatus')}
+          </h3>
+
+          {isAdmin ? (
+            <div className="flex items-center justify-center h-[300px] text-slate-400">Admin Distribution Chart</div>
+          ) : (
+            (() => {
+              const statusData = filteredTrips.reduce((acc, trip) => {
+                const status = trip.payment_status || 'unpaid';
+                const amount = getHistoricalValue(trip.sale_price || 0, trip, currency);
+                acc[status] = (acc[status] || 0) + amount;
+                return acc;
+              }, {} as Record<string, number>);
+
+              const pieData = [
+                { name: t('trips.paymentStatuses.paid'), value: statusData['paid'] || 0, color: '#10b981' },
+                { name: t('trips.paymentStatuses.partial'), value: statusData['partial'] || 0, color: '#f59e0b' },
+                { name: t('trips.paymentStatuses.unpaid'), value: statusData['unpaid'] || 0, color: '#ef4444' },
+              ].filter((d) => d.value > 0);
+
+              if (pieData.length === 0) {
+                return <div className="flex items-center justify-center h-[300px] text-slate-400">No payment data for {selectedYear}.</div>;
+              }
+
+              return (
+                <div className="h-[300px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={pieData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {pieData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} stroke="rgba(15,23,42,1)" strokeWidth={2} />
+                        ))}
+                      </Pie>
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              );
+            })()
+          )}
+        </div>
+      </div>
+
+      {/* SECTION: TOP DESTINATIONS */}
+      {!isAdmin && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="glass-panel rounded-2xl border border-slate-800/80 bg-slate-950/95 shadow-[0_20px_60px_rgba(15,23,42,1)] p-6">
+            <h3 className="text-xl font-bold text-slate-100 mb-6">Top Destinations</h3>
+
+            {(stats as UserStats).topDestinations?.length === 0 ? (
+              <div className="flex items-center justify-center h-64 text-slate-400">No destination data available.</div>
+            ) : (
+              <div className="h-[300px] w-full flex items-center justify-center">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={(stats as UserStats).topDestinations}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }: { name?: string; percent?: number }) =>
+                        `${name ?? ''} ${(((percent || 0) * 100) as number).toFixed(0)}%`
+                      }
+                      outerRadius={100}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {(stats as UserStats).topDestinations.map((_, index: number) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

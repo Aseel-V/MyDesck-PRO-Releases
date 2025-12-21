@@ -20,13 +20,11 @@ import NewTripForm from "./trips/NewTripForm";
 import { TripFormData } from "../types/trip";
 import { useTripMutations } from "../hooks/useTripMutations";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
+import NewYearOverlay from "./ui/NewYearOverlay";
 
 type Page = "home" | "trips" | "analytics" | "settings" | "admin";
 
-type TripFilters = {
-  month?: string;
-  pendingOnly?: boolean;
-};
+
 
 type AdminStats = {
   totalUsers: number;
@@ -40,7 +38,6 @@ export default function Dashboard() {
   const { t } = useLanguage();
 
   const [currentPage, setCurrentPage] = useState<Page>("home");
-  const [initialTripFilters, setInitialTripFilters] = useState<TripFilters | null>(null);
   const [selectedTrip, setSelectedTrip] = useState<Trip | undefined>(undefined);
   const [adminStats, setAdminStats] = useState<AdminStats>({
     totalUsers: 0,
@@ -54,9 +51,19 @@ export default function Dashboard() {
   const [editingTrip, setEditingTrip] = useState<Trip | undefined>(undefined);
   const { saveTrip } = useTripMutations();
 
+  // Trip Filters State (Lifted for Persistence)
+  const [tripFilters, setTripFilters] = useState({
+    search: '',
+    paymentStatus: '',
+    tripStatus: '',
+    year: new Date().getFullYear().toString(),
+    month: '',
+    destination: ''
+  });
+
   const handleCreateTrip = () => {
-    setEditingTrip(undefined);
-    setShowNewTripForm(true);
+    setSelectedTrip(undefined);
+    setShowNewTripForm(true); // Assuming setIsNewTripModalOpen is a typo and setShowNewTripForm is intended
   };
 
   const handleEditTrip = (trip: Trip) => {
@@ -100,7 +107,7 @@ export default function Dashboard() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as Trip[];
+      return data as unknown as Trip[];
     },
     enabled: !!user?.id && !isAdmin,
   });
@@ -177,6 +184,9 @@ export default function Dashboard() {
           editTrip={editingTrip}
         />
       )}
+
+      {/* New Year Celebration Overlay */}
+      <NewYearOverlay />
 
       {/* خلفية ناعمة */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -493,7 +503,8 @@ export default function Dashboard() {
           {currentPage === "trips" && !isAdmin && (
             <MotionWrapper key="trips">
               <Trips
-                initialFilters={initialTripFilters || undefined}
+                filters={tripFilters}
+                onFiltersChange={setTripFilters}
                 initialViewTrip={selectedTrip}
                 onEditTrip={handleEditTrip}
                 onCreateTrip={handleCreateTrip}
@@ -505,8 +516,14 @@ export default function Dashboard() {
             <MotionWrapper key="analytics">
               <Analytics
                 trips={trips}
-                onOpenTripsWithFilter={(opts) => {
-                  setInitialTripFilters(opts || null);
+                onOpenTripsWithFilter={(opts: any) => {
+                  if (opts) {
+                    setTripFilters(prev => ({
+                      ...prev,
+                      month: opts.month || prev.month,
+                      paymentStatus: opts.pendingOnly ? 'partial' : prev.paymentStatus
+                    }));
+                  }
                   setCurrentPage("trips");
                 }}
               />

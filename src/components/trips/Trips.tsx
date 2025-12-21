@@ -30,16 +30,28 @@ import { Skeleton } from '../ui/Skeleton';
 import { AnimatePresence, motion } from 'framer-motion';
 
 interface TripsProps {
-  initialFilters?: {
-    month?: string; // format YYYY-MM
-    pendingOnly?: boolean;
+  filters: {
+    search: string;
+    paymentStatus: string;
+    tripStatus: string;
+    year: string;
+    month: string;
+    destination: string;
   };
+  onFiltersChange: React.Dispatch<React.SetStateAction<{
+    search: string;
+    paymentStatus: string;
+    tripStatus: string;
+    year: string;
+    month: string;
+    destination: string;
+  }>>;
   initialViewTrip?: Trip;
   onEditTrip?: (trip: Trip) => void;
   onCreateTrip?: () => void;
 }
 
-export default function Trips({ initialFilters, initialViewTrip, onEditTrip, onCreateTrip }: TripsProps) {
+export default function Trips({ filters, onFiltersChange, initialViewTrip, onEditTrip, onCreateTrip }: TripsProps) {
   const { t } = useLanguage();
   const { user, profile, userProfile } = useAuth();
   const { convert, format, currency, isLoading: isCurrencyLoading } = useCurrency();
@@ -55,43 +67,18 @@ export default function Trips({ initialFilters, initialViewTrip, onEditTrip, onC
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isExportingBatch, setIsExportingBatch] = useState(false);
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const debouncedSearchTerm = useDebounce(searchTerm, 300);
-  const [paymentStatusFilter, setPaymentStatusFilter] = useState('');
-  const [tripStatusFilter, setTripStatusFilter] = useState('');
-  const [yearFilter, setYearFilter] = useState('');
-  const [monthFilter, setMonthFilter] = useState('');
-  const [destinationFilter, setDestinationFilter] = useState('');
+  // Filter setters
+  const setSearchTerm = (val: string) => onFiltersChange(prev => ({ ...prev, search: val }));
+  const setPaymentStatusFilter = (val: string) => onFiltersChange(prev => ({ ...prev, paymentStatus: val }));
+  const setYearFilter = (val: string) => onFiltersChange(prev => ({ ...prev, year: val }));
+  const setMonthFilter = (val: string) => onFiltersChange(prev => ({ ...prev, month: val }));
+  const setDestinationFilter = (val: string) => onFiltersChange(prev => ({ ...prev, destination: val }));
+
+  const debouncedSearchTerm = useDebounce(filters.search, 300);
 
   // Pagination
   const [page, setPage] = useState(1);
   // PAGE_SIZE removed
-
-  // Apply initial filters from Dashboard/Analytics (month and pending)
-  useEffect(() => {
-    if (!initialFilters) return;
-    const { month, pendingOnly } = initialFilters;
-
-    // Reset all filters first
-    setSearchTerm('');
-    setPaymentStatusFilter('');
-    setTripStatusFilter('');
-    setYearFilter('');
-    setMonthFilter('');
-    setDestinationFilter('');
-    setPage(1); // Reset page
-
-    // Then apply incoming filters
-    if (typeof pendingOnly === 'boolean' && pendingOnly) {
-      // Map "Pending" to payment status = partial (חלקי)
-      setPaymentStatusFilter('partial');
-    }
-    if (month && /^\d{4}-\d{2}$/.test(month)) {
-      const [year, m] = month.split('-');
-      setYearFilter(year);
-      setMonthFilter(m);
-    }
-  }, [initialFilters]);
 
   useEffect(() => {
     if (initialViewTrip) {
@@ -100,9 +87,10 @@ export default function Trips({ initialFilters, initialViewTrip, onEditTrip, onC
   }, [initialViewTrip]);
 
   // Reset page when filters change
+  // Reset page when filters change
   useEffect(() => {
-      setPage(1);
-  }, [debouncedSearchTerm, paymentStatusFilter, tripStatusFilter, yearFilter, monthFilter, destinationFilter]);
+    setPage(1);
+  }, [debouncedSearchTerm, filters.paymentStatus, filters.tripStatus, filters.year, filters.month, filters.destination]);
 
   const baseActionBtn =
     'inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium rounded-xl transition-all border-b-2';
@@ -113,8 +101,37 @@ export default function Trips({ initialFilters, initialViewTrip, onEditTrip, onC
     baseActionBtn +
     ' border-transparent text-slate-300 hover:text-slate-50 hover:bg-slate-900/50 hover:border-slate-500/80';
 
-  const { data: { data: trips, count } = { data: [], count: 0 }, isLoading: loading } = useQuery({
-    queryKey: ['trips', user?.id, debouncedSearchTerm, paymentStatusFilter, tripStatusFilter, yearFilter, monthFilter, destinationFilter, page],
+  // Query to get available years based on EFFECTIVE DATE (Cash Basis)
+  const { data: availableYears = [] } = useQuery({
+    queryKey: ['trip-years', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      // Fetch both dates to determine effective year
+      const { data } = await supabase
+        .from('trips')
+        .select('start_date, payment_date')
+        .eq('user_id', user.id);
+      
+      if (!data) return [new Date().getFullYear().toString()];
+
+      const years = new Set(
+        data.map((t) => {
+          // Effective Date Rule: Payment Date OR Start Date
+          const effDate = t.payment_date || t.start_date;
+          return new Date(effDate).getFullYear().toString();
+        })
+      );
+      // Ensure current year is always available
+      years.add(new Date().getFullYear().toString());
+      
+      return Array.from(years).sort((a, b) => b.localeCompare(a));
+    },
+    enabled: !!user?.id,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
+
+  const { data: { data: rawTrips, count } = { data: [], count: 0 }, isLoading: loading } = useQuery({
+    queryKey: ['trips', user?.id, debouncedSearchTerm, filters.paymentStatus, filters.tripStatus, page], // Removed year/month from key as we filter client side
     queryFn: async () => {
       if (!user?.id) return { data: [], count: 0 };
 
@@ -123,51 +140,78 @@ export default function Trips({ initialFilters, initialViewTrip, onEditTrip, onC
         .select('*', { count: 'exact' })
         .eq('user_id', user.id);
 
-      // Apply filters
-      if (debouncedSearchTerm) {
-        query = query.or(`destination.ilike.%${debouncedSearchTerm}%,client_name.ilike.%${debouncedSearchTerm}%,notes.ilike.%${debouncedSearchTerm}%`);
-      }
-
-      if (paymentStatusFilter) {
-        query = query.eq('payment_status', paymentStatusFilter as any);
-      }
-
-      if (tripStatusFilter) {
-        query = query.eq('status', tripStatusFilter as any);
-      }
-
-      if (yearFilter) {
-        const startDate = `${yearFilter}-01-01`;
-        const endDate = `${yearFilter}-12-31`;
-        query = query.gte('start_date', startDate).lte('start_date', endDate);
-      }
-
-      if (monthFilter) {
-        if (yearFilter) {
-          const start = `${yearFilter}-${monthFilter}-01`;
-          // Calculate end of month
-          const end = new Date(parseInt(yearFilter), parseInt(monthFilter), 0).toISOString().split('T')[0];
-          query = query.gte('start_date', start).lte('start_date', end);
-        }
-      }
-
-      if (destinationFilter) {
-        query = query.eq('destination', destinationFilter);
-      }
+      // Apply filters that don't depend on Effective Date logic
+      // We fetch ALL trips (matching search/status) and filter by Year/Month CLIENT-SIDE
+      // This is crucial for "Effective Date" logic (Trip in 2026 paid in 2025 -> shows in 2025)
       
-      // Removed pagination range to show all trips
-      // const from = (page - 1) * PAGE_SIZE;
-      // const to = from + PAGE_SIZE - 1;
-
       const { data, error, count } = await query
         .order('start_date', { ascending: false });
-        // .range(from, to);
 
       if (error) throw error;
       return { data: data as unknown as Trip[], count: count || 0 };
     },
     enabled: !!user?.id,
   });
+
+  // Client-side Cash-Basis Filtering
+  const filteredTrips = useMemo(() => {
+    if (!rawTrips) return [];
+    
+    let filtered = rawTrips;
+
+    // 1. Filter by search term
+    if (debouncedSearchTerm) {
+      const lowerSearch = debouncedSearchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (trip) =>
+          (trip.client_name && trip.client_name.toLowerCase().includes(lowerSearch)) ||
+          (trip.destination && trip.destination.toLowerCase().includes(lowerSearch)) ||
+          (trip.notes && trip.notes.toLowerCase().includes(lowerSearch))
+      );
+    }
+
+    // 2. Filter by Payment Status
+    if (filters.paymentStatus) {
+      if (filters.paymentStatus === 'unpaid') {
+         // Allow 'unpaid' OR null/undefined
+         filtered = filtered.filter(t => !t.payment_status || t.payment_status === 'unpaid');
+      } else {
+         filtered = filtered.filter((trip) => trip.payment_status === filters.paymentStatus);
+      }
+    }
+
+    // 3. Filter by Trip Status
+    if (filters.tripStatus) {
+      filtered = filtered.filter((trip) => trip.status === filters.tripStatus);
+    }
+
+    // 4. Filter by Year (Cash-Basis: Effective Date)
+    if (filters.year) {
+      filtered = filtered.filter(trip => {
+         const effDate = trip.payment_date || trip.start_date;
+         if (!effDate) return false;
+         return new Date(effDate).getFullYear().toString() === filters.year;
+      });
+    }
+
+    // 5. Filter by Month
+    if (filters.month) {
+      filtered = filtered.filter(trip => {
+         const effDate = trip.payment_date || trip.start_date;
+         if (!effDate) return false;
+         const d = new Date(effDate);
+         const m = String(d.getMonth() + 1).padStart(2, '0');
+         return m === filters.month;
+      });
+    }
+
+    // 6. Filter by Destination
+    if (filters.destination) {
+      filtered = filtered.filter((trip) => trip.destination === filters.destination);
+    }
+
+    return filtered;
+  }, [rawTrips, debouncedSearchTerm, filters.paymentStatus, filters.tripStatus, filters.year, filters.month, filters.destination]);
 
   // saveTripMutation moved to useTripMutations hook
   // handleSaveTrip moved to Dashboard
@@ -196,25 +240,15 @@ export default function Trips({ initialFilters, initialViewTrip, onEditTrip, onC
     toggleExport({ id, value });
   };
 
-  const filteredTrips = trips || [];
-  // const totalPages = Math.ceil((count || 0) / PAGE_SIZE);
+  const trips = filteredTrips; // Alias for compatibility with rest of component
+  // count variable will be the total fetched, not filtered. 
+  // We might want to update the displayed count to filteredTrips.length
 
   // saveTripMutation moved to useTripMutations hook
   // handleSaveTrip moved to Dashboard
   // ... (rest of handlers)
 
-  const availableYears = useMemo(() => {
-      // Logic for years needs all data dates or distinct query.
-      // For now, we can hardcode recent years or fetch distinct?
-      // Optimization: hardcode 2023-2030 or similar? 
-      // Or just keep it as is (will only show years from current page).
-      // Let's settle on the pagination fix first.
-    if (!trips) return [];
-    const years = new Set(
-      trips.map((trip) => new Date(trip.start_date).getFullYear().toString())
-    );
-    return Array.from(years).sort((a, b) => b.localeCompare(a));
-  }, [trips]);
+  // availableYears moved to useQuery above
 
   const availableDestinations = useMemo(() => {
     if (!trips) return [];
@@ -240,12 +274,14 @@ export default function Trips({ initialFilters, initialViewTrip, onEditTrip, onC
     
     // Correctly convert each trip's values to the user's display currency before summing
     const totalRevenue = trips.reduce((sum, trip) => {
+      if (trip.status === 'cancelled') return sum;
       const tripCurrency = trip.currency || currency; // Default to user currency if missing
       const price = trip.sale_price || 0;
       return sum + convert(price, tripCurrency, currency);
     }, 0);
 
     const totalProfit = trips.reduce((sum, trip) => {
+       if (trip.status === 'cancelled') return sum;
        const tripCurrency = trip.currency || currency;
        const profit = typeof trip.profit === 'number'
           ? trip.profit
@@ -254,6 +290,7 @@ export default function Trips({ initialFilters, initialViewTrip, onEditTrip, onC
     }, 0);
 
     const unpaidAmount = trips.reduce((sum, trip) => {
+       if (trip.status === 'cancelled') return sum;
        const tripCurrency = trip.currency || currency;
        const due = (trip.sale_price || 0) - (trip.amount_paid || 0);
        const positiveDue = due > 0 ? due : 0;
@@ -534,17 +571,15 @@ export default function Trips({ initialFilters, initialViewTrip, onEditTrip, onC
       {/* Filters */}
       <div className="rounded-2xl bg-slate-950/90 border border-slate-800/80 p-4 shadow-md shadow-slate-950/60">
         <TripFilters
-          searchTerm={searchTerm}
+          searchTerm={filters.search}
           onSearchChange={setSearchTerm}
-          paymentStatusFilter={paymentStatusFilter}
+          paymentStatusFilter={filters.paymentStatus}
           onPaymentStatusFilterChange={setPaymentStatusFilter}
-          tripStatusFilter={tripStatusFilter}
-          onTripStatusFilterChange={setTripStatusFilter}
-          yearFilter={yearFilter}
+          yearFilter={filters.year}
           onYearFilterChange={setYearFilter}
-          monthFilter={monthFilter}
+          monthFilter={filters.month}
           onMonthFilterChange={setMonthFilter}
-          destinationFilter={destinationFilter}
+          destinationFilter={filters.destination}
           onDestinationFilterChange={setDestinationFilter}
           availableYears={availableYears}
           availableDestinations={availableDestinations}

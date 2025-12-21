@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useCurrency } from '../../contexts/CurrencyContext';
 import { Trip, TripFormData } from '../../types/trip';
 import { tripSchema } from '../../lib/schemas';
 import { cn } from '../../lib/utils';
@@ -29,6 +30,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
   const { profile: _profile } = useAuth(); // avoid unused variable warning
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('details');
+  const { rates } = useCurrency();
 
   const {
     register,
@@ -147,6 +149,20 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
     const due = (salePrice || 0) - (amountPaid || 0);
     setAmountDue(due >= 0 ? due : 0);
   }, [salePrice, amountPaid]);
+
+  // Auto-update exchange rate when currency changes
+  useEffect(() => {
+    if (currency && rates && rates[currency]) {
+      // Check if we should update. 
+      // If the user manually changed it, we might not want to overwrite it EXCEPT when they change currency.
+      // The requirement says: "When currency changes, auto-fill...".
+      // So we do it here.
+      // We check if the current value is roughly the same as the old rate to avoid loops if we add dependencies,
+      // but here we just depend on 'currency'.
+      const rate = rates[currency];
+      setValue('exchange_rate', rate);
+    }
+  }, [currency, rates, setValue]);
 
   // Sync payment status with amount paid
   const syncPaymentStatusWithAmount = (paid: number, price: number) => {
@@ -398,15 +414,10 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                       <option value="ILS">ILS (₪)</option>
                     </select>
                   </div>
-                  <div>
-                    <label className={labelClasses}>Exchange Rate</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      {...register('exchange_rate', { valueAsNumber: true })}
-                      className={baseInputClasses}
-                    />
-                  </div>
+                  
+                  
+                  <input type="hidden" {...register('exchange_rate', { valueAsNumber: true })} />
+
                   <div>
                     <label className={labelClasses}>
                       {t('trips.wholesaleCost')} ({currencySymbol})
