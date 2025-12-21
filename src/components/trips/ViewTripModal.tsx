@@ -1,7 +1,7 @@
 import { X } from 'lucide-react';
 import { formatDate } from '../../lib/utils';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { useAuth } from '../../contexts/AuthContext';
+import { useCurrency } from '../../contexts/CurrencyContext';
 import { Trip } from '../../types/trip';
 
 interface ViewTripModalProps {
@@ -11,22 +11,10 @@ interface ViewTripModalProps {
 
 export default function ViewTripModal({ trip, onClose }: ViewTripModalProps) {
   const { t } = useLanguage();
-  const { profile } = useAuth();
 
-  const getCurrencySymbol = (currency: string) => {
-    switch (currency) {
-      case 'USD':
-        return '$';
-      case 'EUR':
-        return '€';
-      case 'ILS':
-        return '₪';
-      default:
-        return '$';
-    }
-  };
+  const { format } = useCurrency();
 
-  const currencySymbol = getCurrencySymbol(profile?.preferred_currency || 'USD');
+
 
 
 
@@ -91,27 +79,31 @@ export default function ViewTripModal({ trip, onClose }: ViewTripModalProps) {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <p className="text-xs text-slate-400 mb-1">{t('trips.wholesaleCost')}</p>
-                <p className="text-sm font-semibold text-slate-100">{currencySymbol}{wholesale.toFixed(2)}</p>
+                <p className="text-sm font-semibold text-slate-100">{format(wholesale, trip.currency || 'USD')}</p>
               </div>
               <div>
                 <p className="text-xs text-slate-400 mb-1">{t('trips.salePrice')}</p>
-                <p className="text-sm font-semibold text-slate-100">{currencySymbol}{sale.toFixed(2)}</p>
+                <p className="text-sm font-semibold text-slate-100">{format(sale, trip.currency || 'USD')}</p>
               </div>
               <div>
                 <p className="text-xs text-slate-400 mb-1">{t('trips.profit')}</p>
-                <p className="text-sm font-semibold text-slate-100">{currencySymbol}{profitValue.toFixed(2)}</p>
+                <p className="text-sm font-semibold text-slate-100">{format(profitValue, trip.currency || 'USD')}</p>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <p className="text-xs text-slate-400 mb-1">{t('trips.paymentDate') || 'Payment Date'}</p>
+              <p className="text-sm font-semibold text-slate-100">{trip.payment_date ? formatDate(trip.payment_date) : '-'}</p>
+            </div>
             <div>
               <p className="text-xs text-slate-400 mb-1">{t('trips.amountPaid')}</p>
-              <p className="text-sm font-semibold text-slate-100">{currencySymbol}{paid.toFixed(2)}</p>
+              <p className="text-sm font-semibold text-slate-100">{format(paid, trip.currency || 'USD')}</p>
             </div>
             <div>
               <p className="text-xs text-slate-400 mb-1">{t('trips.amountDue')}</p>
-              <p className="text-sm font-semibold text-rose-300">{currencySymbol}{amountDue.toFixed(2)}</p>
+              <p className="text-sm font-semibold text-rose-300">{format(amountDue, trip.currency || 'USD')}</p>
             </div>
           </div>
 

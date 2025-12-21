@@ -5,21 +5,20 @@ import {
   Calendar,
   Edit,
   Trash2,
-  CreditCard,
   CheckSquare,
   Square,
   Share2,
 } from 'lucide-react';
-import { formatDateHijri, formatDate } from '../../lib/utils';
+import { formatDate } from '../../lib/utils';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { useAuth } from '../../contexts/AuthContext';
+import { useCurrency } from '../../contexts/CurrencyContext';
 import { Trip } from '../../types/trip';
 
 interface TripCardProps {
   trip: Trip;
   onEdit: (trip: Trip) => void;
   onDelete: (id: string) => void;
-  onUpdatePayment: (trip: Trip) => void;
+
   onToggleExport: (id: string, value: boolean) => void | Promise<void>;
   onView?: (trip: Trip) => void;
 }
@@ -28,12 +27,13 @@ export default function TripCard({
   trip,
   onEdit,
   onDelete,
-  onUpdatePayment,
+
   onToggleExport,
   onView,
 }: TripCardProps) {
   const { t } = useLanguage();
-  const { profile } = useAuth();
+
+  const { format } = useCurrency();
   const [showDetails, setShowDetails] = useState(false);
 
   // PDF state (عشان التبديل يكون فوري في الواجهة)
@@ -45,20 +45,7 @@ export default function TripCard({
     setExportChecked(!!trip.export_to_pdf);
   }, [trip.export_to_pdf]);
 
-  const getCurrencySymbol = (currency: string) => {
-    switch (currency) {
-      case 'USD':
-        return '$';
-      case 'EUR':
-        return '€';
-      case 'ILS':
-        return '₪';
-      default:
-        return '$';
-    }
-  };
 
-  const currencySymbol = getCurrencySymbol(profile?.preferred_currency || 'USD');
 
   const getPaymentStatusColor = (status: string) => {
     switch (status) {
@@ -134,7 +121,7 @@ export default function TripCard({
 
   const handleShare = (e: MouseEvent) => {
     e.stopPropagation();
-    const text = `Trip Details:\nDestination: ${trip.destination}\nClient: ${trip.client_name}\nDates: ${formatDate(trip.start_date)} - ${formatDate(trip.end_date)}\nPrice: ${currencySymbol}${sale.toFixed(2)}\nStatus: ${trip.status}`;
+    const text = `Trip Details:\nDestination: ${trip.destination}\nClient: ${trip.client_name}\nDates: ${formatDate(trip.start_date)} - ${formatDate(trip.end_date)}\nPrice: ${format(sale, trip.currency || 'USD')}\nStatus: ${trip.status}`;
     const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
   };
@@ -213,9 +200,7 @@ export default function TripCard({
             <span className="font-medium">
               {formatDate(trip.start_date)} — {formatDate(trip.end_date)}
             </span>
-            <span className="text-xs text-slate-500">
-              {formatDateHijri(trip.start_date)} — {formatDateHijri(trip.end_date)}
-            </span>
+
           </div>
         </div>
 
@@ -227,8 +212,7 @@ export default function TripCard({
                 {t('trips.wholesaleCost')}
               </p>
               <p className="text-sm font-semibold text-slate-100">
-                {currencySymbol}
-                {wholesale.toFixed(2)}
+                {format(wholesale, trip.currency || 'USD')}
               </p>
             </div>
             <div>
@@ -236,8 +220,7 @@ export default function TripCard({
                 {t('trips.salePrice')}
               </p>
               <p className="text-sm font-semibold text-slate-100">
-                {currencySymbol}
-                {sale.toFixed(2)}
+                {format(sale, trip.currency || 'USD')}
               </p>
             </div>
             <div className="text-right">
@@ -246,8 +229,7 @@ export default function TripCard({
               </p>
               <p className={`text-sm font-bold ${profitColor}`}>
                 {profitSign}
-                {currencySymbol}
-                {Math.abs(profitValue).toFixed(2)}{' '}
+                {format(Math.abs(profitValue), trip.currency || 'USD')}{' '}
                 <span className="text-[11px] text-slate-400">
                   ({profitPercentageDisplay})
                 </span>
@@ -278,8 +260,7 @@ export default function TripCard({
                   {t('trips.amountPaid')}
                 </p>
                 <p className="text-sm font-semibold text-slate-100">
-                  {currencySymbol}
-                  {paid.toFixed(2)}
+                  {format(paid, trip.currency || 'USD')}
                 </p>
               </div>
               <div>
@@ -287,8 +268,7 @@ export default function TripCard({
                   {t('trips.amountDue')}
                 </p>
                 <p className="text-sm font-semibold text-rose-300">
-                  {currencySymbol}
-                  {amountDue.toFixed(2)}
+                  {format(amountDue, trip.currency || 'USD')}
                 </p>
               </div>
             </div>
@@ -309,16 +289,7 @@ export default function TripCard({
 
         {/* actions (ما تفتحش/تسكر التفاصيل) */}
         <div className="flex flex-wrap items-center justify-end gap-2 pt-4 border-t border-slate-800/80">
-          <button
-            onClick={(e) => {
-              stopPropagation(e);
-              onUpdatePayment(trip);
-            }}
-            className="inline-flex items-center justify-center px-3 py-2 rounded-xl bg-emerald-600/85 hover:bg-emerald-500 text-white text-sm font-medium transition-colors"
-            aria-label={t('trips.updatePayment')}
-          >
-            <CreditCard className="w-4 h-4" />
-          </button>
+
 
           <button
             onClick={(e) => {

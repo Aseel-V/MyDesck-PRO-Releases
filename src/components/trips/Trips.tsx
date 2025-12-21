@@ -20,7 +20,7 @@ import { useDebounce } from '../../hooks/useDebounce';
 import { useTripMutations } from '../../hooks/useTripMutations';
 import TripCard from './TripCard';
 import TripFilters from './TripFilters';
-import UpdatePaymentForm from './UpdatePaymentForm';
+
 import PDFExportModal from './PDFExportModal';
 import ViewTripModal from './ViewTripModal';
 import JSZip from 'jszip';
@@ -55,12 +55,12 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
   const { t } = useLanguage();
   const { user, profile, userProfile } = useAuth();
   const { convert, format, currency, isLoading: isCurrencyLoading } = useCurrency();
-  const { deleteTrip, updatePayment, toggleExport } = useTripMutations();
+  const { deleteTrip, toggleExport } = useTripMutations();
 
   // const [showNewTripForm, setShowNewTripForm] = useState(false); // Lifted to Dashboard
-  const [showUpdatePaymentForm, setShowUpdatePaymentForm] = useState(false);
+
   // const [editingTrip, setEditingTrip] = useState<Trip | undefined>(undefined); // Lifted to Dashboard
-  const [paymentTrip, setPaymentTrip] = useState<Trip | undefined>(undefined);
+
   const [viewTrip, setViewTrip] = useState<Trip | undefined>(undefined);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [showPDFExport, setShowPDFExport] = useState(false);
@@ -74,7 +74,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
   const setMonthFilter = (val: string) => onFiltersChange(prev => ({ ...prev, month: val }));
   const setDestinationFilter = (val: string) => onFiltersChange(prev => ({ ...prev, destination: val }));
 
-  const debouncedSearchTerm = useDebounce(filters.search, 300);
+  const debouncedSearchTerm = useDebounce(filters.search, 1000);
 
   // Pagination
   const [page, setPage] = useState(1);
@@ -218,9 +218,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
 
   // updatePaymentMutation moved to useTripMutations hook
 
-  const handleUpdatePayment = async (tripId: string, amountPaid: number, paymentStatus: 'paid' | 'partial' | 'unpaid') => {
-    await updatePayment({ tripId, amountPaid, paymentStatus });
-  };
+
 
   // deleteTripMutation moved to useTripMutations hook
 
@@ -319,10 +317,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
     onEditTrip?.(trip);
   };
 
-  const handleUpdatePaymentClick = (trip: Trip) => {
-    setPaymentTrip(trip);
-    setShowUpdatePaymentForm(true);
-  };
+
 
   const handleViewTrip = (trip: Trip) => {
     setViewTrip(trip);
@@ -333,10 +328,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
   //   setEditingTrip(undefined);
   // };
 
-  const handleCloseUpdatePaymentForm = () => {
-    setShowUpdatePaymentForm(false);
-    setPaymentTrip(undefined);
-  };
+
 
   const handleDownloadAllInvoices = async () => {
     if (!filteredTrips.length || !user || !profile) return;
@@ -623,7 +615,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
                   trip={trip}
                   onEdit={handleEditTrip}
                   onDelete={handleDeleteTrip}
-                  onUpdatePayment={handleUpdatePaymentClick}
+
                   onToggleExport={handleToggleExport}
                   onView={handleViewTrip}
                 />
@@ -699,15 +691,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
 
       {/* NewTripForm removed from here, rendered in Dashboard */}
 
-      {
-        showUpdatePaymentForm && paymentTrip && (
-          <UpdatePaymentForm
-            trip={paymentTrip}
-            onClose={handleCloseUpdatePaymentForm}
-            onUpdate={handleUpdatePayment}
-          />
-        )
-      }
+
 
       {
         viewTrip && (

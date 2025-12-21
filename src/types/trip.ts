@@ -132,6 +132,8 @@ export interface TripInsert {
   amount_due?: number;
 
   export_to_pdf?: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 // Update type for Supabase
@@ -167,4 +169,5 @@ export interface TripUpdate {
   amount_due?: number;
 
   export_to_pdf?: boolean;
+  updated_at?: string;
 }

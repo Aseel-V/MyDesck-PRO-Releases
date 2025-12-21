@@ -484,6 +484,12 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                             type="number"
                             step="0.01"
                             {...register('amount_paid', { valueAsNumber: true })}
+                            onChange={(e) => {
+                                register('amount_paid', { valueAsNumber: true }).onChange(e);
+                                const val = parseFloat(e.target.value);
+                                const finalVal = isNaN(val) ? 0 : val;
+                                syncPaymentStatusWithAmount(finalVal, salePrice || 0);
+                            }}
                             className={cn(baseInputClasses)}
                         />
                     </div>
