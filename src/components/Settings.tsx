@@ -22,12 +22,14 @@ import { CurrencyService } from '../lib/currency';
 type NoticeType = 'success' | 'error' | 'info';
 
 export default function Settings() {
-  const { profile, updateProfile, user, refreshProfile, signOut } = useAuth();
+  const { profile, userProfile, updateProfile, user, refreshProfile, signOut } = useAuth();
   const { t, setLanguage } = useLanguage();
   const { theme, toggleTheme } = useTheme();
 
   const [businessName, setBusinessName] = useState(profile?.business_name || '');
+  const [businessRegNumber, setBusinessRegNumber] = useState(profile?.business_registration_number || '');
   const [logoUrl, setLogoUrl] = useState(profile?.logo_url || '');
+  const [signatureUrl, setSignatureUrl] = useState(profile?.signature_url || '');
   const [currency, setCurrency] = useState<'USD' | 'EUR' | 'ILS'>(
     (profile?.preferred_currency as 'USD' | 'EUR' | 'ILS') || 'USD'
   );
@@ -82,13 +84,24 @@ export default function Settings() {
   }, [user]);
 
   // Sync when profile changes (branding / language / currency)
+  // Sync when profile changes (branding / language / currency)
   useEffect(() => {
     if (!profile) return;
     setBusinessName(profile.business_name || '');
+    setBusinessRegNumber(profile.business_registration_number || '');
     setLogoUrl(profile.logo_url || '');
+    setSignatureUrl(profile.signature_url || '');
     setCurrency((profile.preferred_currency as 'USD' | 'EUR' | 'ILS') || 'USD');
     setLanguageState((profile.preferred_language as 'en' | 'ar' | 'he') || 'en');
   }, [profile]);
+
+  // Sync user details when userProfile changes
+  useEffect(() => {
+    if (userProfile) {
+        setFullName(userProfile.full_name || '');
+        setPhoneNumber(userProfile.phone_number || '');
+    }
+  }, [userProfile]);
 
   // Clear inline success when switching tabs
   useEffect(() => {
@@ -200,6 +213,8 @@ export default function Settings() {
         logo_url: logoUrl || null,
         preferred_currency: currency,
         preferred_language: language,
+        business_registration_number: businessRegNumber || null,
+        signature_url: signatureUrl || null,
       });
 
       setLanguage(language);
@@ -445,6 +460,81 @@ export default function Settings() {
     }
   };
 
+  const handleSignatureUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    if (!user) {
+      showNotice('error', 'User not found');
+      return;
+    }
+
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      showNotice('error', 'File is too large. Max size is 2MB.');
+      return;
+    }
+
+    // Allow transparent images
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+    if (!allowedTypes.includes(file.type)) {
+      showNotice('error', 'Unsupported file type. Use PNG or JPG.');
+      return;
+    }
+
+    setUploading(true);
+
+    const bucketReady = await ensureLogosBucket();
+    // Assuming signatures go to same bucket or a new one. Let's use 'logos' for now or 'signatures' if exists.
+    // Migration for bucket? I'll use 'logos' to avoid permission issues if it exists, or 'signatures' if I create it. 
+    // The ensureLogosBucket ensures 'logos'. I'll stick to 'logos' for simplicity unless instructed.
+    
+    if (!bucketReady) {
+      showNotice('error', 'Storage bucket not ready.');
+      setUploading(false);
+      return;
+    }
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `sig-${user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `business-signatures/${fileName}`; // Separate folder
+
+      // Resize? Signatures might need transparency preserved.
+      // resizeImage util might convert to jpeg if not careful. Let's upload as is for now or use resize if huge.
+      // We will upload directly to preserve transparency (PNG).
+      
+      const { error: uploadError } = await supabase.storage
+        .from('logos') // Reusing logos bucket
+        .upload(filePath, file, {
+          upsert: true,
+          cacheControl: '3600',
+          contentType: file.type,
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage.from('logos').getPublicUrl(filePath);
+      if (!publicUrlData) throw new Error('Could not get public URL');
+
+      const newSigUrl = publicUrlData.publicUrl;
+      setSignatureUrl(newSigUrl);
+
+      // Save immediately or wait? 
+      // handleLogoUpload saves immediately. I'll do the same.
+      await updateProfile({
+        signature_url: newSigUrl,
+      });
+      await refreshProfile();
+
+      showNotice('success', 'Signature uploaded successfully');
+    } catch (error: any) {
+      console.error('Signature upload failed:', error);
+      showNotice('error', error?.message || 'Failed to upload signature.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <div className="animate-fadeIn">
       <div className="max-w-5xl mx-auto space-y-6">
@@ -628,6 +718,55 @@ export default function Settings() {
                       onChange={(e) => setBusinessName(e.target.value)}
                       className="w-full px-4 py-3 rounded-xl bg-slate-900/80 border border-slate-700 text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-200 mb-2">
+                      Business Registration Number / Tax ID (ח.פ / ע.מ)
+                    </label>
+                    <input
+                      type="text"
+                      value={businessRegNumber}
+                      onChange={(e) => setBusinessRegNumber(e.target.value)}
+                      placeholder="e.g. 512345678"
+                      className="w-full px-4 py-3 rounded-xl bg-slate-900/80 border border-slate-700 text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+                    />
+                  </div>
+                  
+                  {/* Signature Upload */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-200 mb-2">
+                       Digital Signature / Stamp (חתימה / חותמת)
+                    </label>
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1">
+                        <label
+                          htmlFor="signature-upload"
+                          className="w-full flex flex-col items-center justify-center px-4 py-6 rounded-xl border-2 border-dashed bg-slate-900/80 border-slate-700 text-slate-400 hover:border-sky-500 hover:text-sky-300 cursor-pointer transition-all"
+                        >
+                          <Upload className="w-8 h-8 mb-2 opacity-50" />
+                          <span className="text-sm font-semibold">Upload Signature Image</span>
+                          <span className="text-xs text-slate-500 mt-1">PNG (Transparent recommended)</span>
+                        </label>
+                        <input
+                          id="signature-upload"
+                          type="file"
+                          accept="image/png, image/jpeg"
+                          onChange={handleSignatureUpload} // Need to implement this function
+                          className="hidden"
+                          disabled={uploading}
+                        />
+                      </div>
+                      {signatureUrl && (
+                        <div className="p-2 bg-white rounded-lg">
+                             <img
+                               src={signatureUrl}
+                               alt="Signature preview"
+                               className="h-12 object-contain"
+                             />
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div>

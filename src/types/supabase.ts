@@ -25,6 +25,8 @@ export interface Database {
           payments: Json[] | null // Added
           attachments: Json[] | null // Added
           payment_date: string | null // Added
+          room_type: string | null // Added
+          board_basis: string | null // Added
           profit: number
           profit_percentage: number
           payment_status: 'paid' | 'partial' | 'unpaid'
@@ -50,6 +52,8 @@ export interface Database {
           payments?: Json[] | null // Added
           attachments?: Json[] | null // Added
           payment_date?: string | null // Added
+          room_type?: string | null // Added
+          board_basis?: string | null // Added
           payment_status: 'paid' | 'partial' | 'unpaid'
           amount_paid: number
           notes?: string
@@ -72,6 +76,8 @@ export interface Database {
           attachments?: Json[] | null // Added
           itinerary?: Json[] | null // Added
           travelers?: Json[] | null // Added
+          room_type?: string | null // Added
+          board_basis?: string | null // Added
           payment_status?: 'paid' | 'partial' | 'unpaid'
           amount_paid?: number
           notes?: string
@@ -141,6 +147,8 @@ export interface Database {
           logo_url: string | null
           preferred_currency: 'USD' | 'EUR' | 'ILS'
           preferred_language: 'en' | 'ar' | 'he'
+          business_registration_number: string | null // Added
+          signature_url: string | null // Added
           created_at: string
           updated_at: string
         }
@@ -151,6 +159,8 @@ export interface Database {
           logo_url?: string | null
           preferred_currency?: 'USD' | 'EUR' | 'ILS'
           preferred_language?: 'en' | 'ar' | 'he'
+          business_registration_number?: string | null // Added
+          signature_url?: string | null // Added
           created_at?: string
           updated_at?: string
         }
@@ -161,6 +171,8 @@ export interface Database {
           logo_url?: string | null
           preferred_currency?: 'USD' | 'EUR' | 'ILS'
           preferred_language?: 'en' | 'ar' | 'he'
+          business_registration_number?: string | null // Added
+          signature_url?: string | null // Added
           created_at?: string
           updated_at?: string
         }

@@ -57,6 +57,17 @@ export function PDFPreviewModal({
                             </div>
                             <div className="flex items-center gap-2">
                                 <button
+                                    onClick={() => {
+                                        // Open WhatsApp with some text. Ideally we'd attach the file but we can't via web URL.
+                                        const text = encodeURIComponent(`Please find attached the document: ${fileName}`);
+                                        window.open(`https://wa.me/?text=${text}`, '_blank');
+                                    }}
+                                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-emerald-100 bg-emerald-600 hover:bg-emerald-500 rounded-lg transition-colors border border-emerald-500/50"
+                                >
+                                    {/* Icon? Using Download icon surrogate or just text. Let's assume Lucide Share2 or MessageCircle. I'll use text for now as I don't want to import new icon if not sure it exists. Download exists. FileText exists. X exists. */}
+                                    <span>WhatsApp</span>
+                                </button>
+                                <button
                                     onClick={onDownload}
                                     className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-500 rounded-lg transition-colors"
                                 >

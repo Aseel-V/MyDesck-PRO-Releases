@@ -137,6 +137,35 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
   const [profitPercentage, setProfitPercentage] = useState(0);
   const [amountDue, setAmountDue] = useState(0);
 
+  // Room Composition State
+  type RoomType = 'Single' | 'Double' | 'Triple' | 'Quad' | 'Suite' | 'Family';
+  const [roomCounts, setRoomCounts] = useState<Record<RoomType, number>>({
+    Single: 0,
+    Double: 0,
+    Triple: 0,
+    Quad: 0,
+    Suite: 0,
+    Family: 0,
+  });
+  
+  // Sync room_type string when counts change
+  useEffect(() => {
+    // Only update if one of the counts is > 0
+    // If all are 0, we don't force overwrite unless we want to clear it (or maybe user wants to type manually?)
+    // User asked "make them option that the user can to not use it".
+    // I will auto-generate the string IF counts > 0.
+    const parts: string[] = [];
+    Object.entries(roomCounts).forEach(([type, count]) => {
+      if (count > 0) parts.push(`${type} x${count}`);
+    });
+    
+    if (parts.length > 0) {
+      const result = parts.join(', ');
+      setValue('room_type', result);
+    }
+    // If parts are empty, we leave it alone (user might have typed manually or cleared it).
+  }, [roomCounts, setValue]);
+
   useEffect(() => {
     const calculatedProfit = (salePrice || 0) - (wholesaleCost || 0);
     const calculatedPercentage =
@@ -201,7 +230,15 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
         data.amount_paid = data.payments.reduce((sum, p) => sum + p.amount, 0);
       }
 
-      await onSave(data as TripFormData);
+      // Sanitize date fields - convert empty strings to null to avoid Postgres "invalid input syntax" error
+      const sanitizedData = {
+        ...data,
+        start_date: data.start_date || null,
+        end_date: data.end_date || null,
+        payment_date: data.payment_date || null,
+      };
+
+      await onSave(sanitizedData as unknown as TripFormData);
 
       // Clear draft on success
       if (!editTrip) {
@@ -358,6 +395,64 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                       {errors.travelers_count.message as string}
                     </p>
                   )}
+                </div>
+
+
+                {/* Room Composition Selector */}
+                <div className="md:col-span-2 space-y-3 bg-slate-900/30 p-4 rounded-xl border border-slate-800/50">
+                   <div className="flex items-center justify-between">
+                        <label className={labelClasses}>הרכב חדרים (אופציונלי) / Room Configuration</label>
+                        {/* Clear button to reset counts */}
+                        <button 
+                             type="button"
+                             onClick={() => setRoomCounts({ Single: 0, Double: 0, Triple: 0, Quad: 0, Suite: 0, Family: 0 })}
+                             className="text-[10px] text-sky-400 hover:text-sky-300"
+                        >
+                            Reset Counts
+                        </button>
+                   </div>
+                   
+                   <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                       {(Object.keys(roomCounts) as RoomType[]).map((type) => (
+                           <div key={type} className="flex flex-col items-center gap-1">
+                               <span className="text-[10px] text-slate-400 uppercase tracking-wider">{type}</span>
+                               <input
+                                   type="number"
+                                   min={0}
+                                   value={roomCounts[type]}
+                                   onChange={(e) => {
+                                       const val = parseInt(e.target.value) || 0;
+                                       setRoomCounts(prev => ({ ...prev, [type]: val }));
+                                   }}
+                                    className="w-full text-center bg-slate-950 border border-slate-700 rounded-lg py-1.5 text-xs text-white focus:ring-1 focus:ring-sky-500"
+                               />
+                           </div>
+                       ))}
+                   </div>
+                   
+                   {/* Manual Override / Final String */}
+                   <div className="mt-2">
+                       <label className="text-[10px] text-slate-500 mb-1 block">Final Text (Editable)</label>
+                       <input
+                         type="text"
+                         {...register('room_type')}
+                         className={cn(baseInputClasses, 'text-xs py-2')}
+                         placeholder="e.g. Single x1, Double x2"
+                       />
+                   </div>
+                </div>
+
+                {/* Board Basis Selector */}
+                <div>
+                   <label className={labelClasses}>בסיס אירוח (אופציונלי) / Board Basis</label>
+                   <select {...register('board_basis')} className={baseInputClasses}>
+                        <option value="">לא צוין / Not Specified</option>
+                        <option value="Room Only">לינה בלבד (Room Only)</option>
+                        <option value="Bed & Breakfast">לינה וארוחת בוקר (B&B)</option>
+                        <option value="Half Board">חצי פנסיון (Half Board)</option>
+                        <option value="Full Board">פנסיון מלא (Full Board)</option>
+                        <option value="All Inclusive">הכל כלול (All Inclusive)</option>
+                   </select>
                 </div>
 
                 <div>

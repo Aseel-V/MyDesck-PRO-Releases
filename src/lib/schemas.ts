@@ -11,6 +11,8 @@ export const tripSchema = z.object({
         room_type: z.enum(['single', 'double', 'triple', 'suite']).optional(),
     })).default([]),
     travelers_count: z.number().min(1, 'At least 1 traveler is required'),
+    room_type: z.string().optional(),
+    board_basis: z.string().optional(),
 
     itinerary: z.array(z.object({
         day: z.number(),

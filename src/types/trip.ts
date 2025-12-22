@@ -58,6 +58,9 @@ export interface Trip {
   amount_paid: number; // Calculated sum of payments
   amount_due: number;
 
+  room_type?: string;
+  board_basis?: string;
+
   // Documents
   attachments: Attachment[];
 
@@ -91,6 +94,9 @@ export interface TripFormData {
   amount_paid: number;
   payment_date?: string;
 
+  room_type?: string;
+  board_basis?: string;
+
   attachments: Attachment[];
 
   notes?: string;
@@ -120,6 +126,8 @@ export interface TripInsert {
   payment_status?: 'paid' | 'partial' | 'unpaid';
   amount_paid?: number;
   payment_date?: string;
+
+  room_type?: string;
 
   attachments?: Attachment[];
 
@@ -158,6 +166,8 @@ export interface TripUpdate {
   payment_status?: 'paid' | 'partial' | 'unpaid';
   amount_paid?: number;
   payment_date?: string;
+
+  room_type?: string;
 
   attachments?: Attachment[];
 
