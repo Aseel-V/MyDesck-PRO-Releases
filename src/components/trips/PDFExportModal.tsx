@@ -18,8 +18,11 @@ export default function PDFExportModal({ trips, onClose }: PDFExportModalProps) 
   const { language } = useLanguage();
   const { profile, user, userProfile } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [userFullName, setUserFullName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  
+  // Initialize state directly from context to avoid "pop-in" delay
+  const [userFullName, setUserFullName] = useState(userProfile?.full_name || '');
+  const [phoneNumber, setPhoneNumber] = useState(userProfile?.phone_number || '');
+
   const [exportType, setExportType] = useState<'single' | 'multiple'>('single');
   const [selectedTripId, setSelectedTripId] = useState(trips[0]?.id || '');
   const [errors, setErrors] = useState<{ fullName?: string; phone?: string }>({});
@@ -27,16 +30,10 @@ export default function PDFExportModal({ trips, onClose }: PDFExportModalProps) 
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [generatingPreview, setGeneratingPreview] = useState(false);
 
-  // Prefill from userProfile (settings) if available; keep editable
+  // Sync if context updates later (e.g. initial load finished)
   useEffect(() => {
-    if (userProfile) {
-      if (!userFullName && userProfile.full_name) {
-        setUserFullName(userProfile.full_name);
-      }
-      if (!phoneNumber && userProfile.phone_number) {
-        setPhoneNumber(userProfile.phone_number);
-      }
-    }
+    if (userProfile?.full_name && !userFullName) setUserFullName(userProfile.full_name);
+    if (userProfile?.phone_number && !phoneNumber) setPhoneNumber(userProfile.phone_number);
   }, [userProfile]);
 
   const labels = {
@@ -151,7 +148,7 @@ export default function PDFExportModal({ trips, onClose }: PDFExportModalProps) 
       if (canExport) {
         generatePreview();
       }
-    }, 1000);
+    }, 500);
     return () => clearTimeout(timer);
   }, [userFullName, phoneNumber, exportType, selectedTripId, canExport]);
 

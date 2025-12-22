@@ -34,20 +34,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   // Prevent loading from hanging forever if a query stalls (never throws)
-  const fetchWithTimeoutOrNull = async <T,>(promise: Promise<T>, ms = 8000): Promise<T | null> => {
+  // Prevent loading from hanging forever if a query stalls (never throws)
+  const fetchWithTimeoutOrNull = async <T,>(promise: Promise<T>, ms = 60000): Promise<T | null> => {
+    const start = Date.now();
     try {
-      return await Promise.race<Promise<T>>([
+      console.log(`[Auth] Starting fetch with timeout: ${ms}ms`);
+      const result = await Promise.race<Promise<T>>([
         promise,
         new Promise<T>((_, reject) => setTimeout(() => reject(new Error('Timed out')), ms)),
       ]);
-    } catch (e) {
-      console.warn('[Auth] fetch timed out or failed -> returning null');
+      console.log(`[Auth] Fetch completed in ${Date.now() - start}ms`);
+      return result;
+    } catch (e: any) {
+      console.warn('[Auth] fetch timed out or failed -> returning null. Error:', e?.message || e);
+      if (e?.message !== 'Timed out') {
+        console.error('[Auth] Detailed error:', e);
+      }
       return null;
     }
   };
 
   const fetchProfile = async (userId: string) => {
     try {
+      console.log('[Auth] fetchProfile calling supabase...');
       const { data, error } = await supabase
         .from('business_profiles')
         .select('*')
@@ -96,8 +105,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (session?.user) {
           console.log('[Auth] fetching profiles for', session.user.id);
           const [profileData, userProfileData] = await Promise.all([
-            fetchWithTimeoutOrNull(fetchProfile(session.user.id), 8000),
-            fetchWithTimeoutOrNull(fetchUserProfile(session.user.id), 8000),
+            fetchWithTimeoutOrNull(fetchProfile(session.user.id), 60000),
+            fetchWithTimeoutOrNull(fetchUserProfile(session.user.id), 60000),
           ]);
           setProfile(profileData);
           setUserProfile(userProfileData);
@@ -130,8 +139,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
         if (session?.user) {
           const [profileData, userProfileData] = await Promise.all([
-            fetchWithTimeoutOrNull(fetchProfile(session.user.id), 8000),
-            fetchWithTimeoutOrNull(fetchUserProfile(session.user.id), 8000),
+            fetchWithTimeoutOrNull(fetchProfile(session.user.id), 60000),
+            fetchWithTimeoutOrNull(fetchUserProfile(session.user.id), 60000),
           ]);
           setProfile(profileData);
           setUserProfile(userProfileData);

@@ -36,7 +36,6 @@ export default function Settings() {
   const [language, setLanguageState] = useState<'en' | 'ar' | 'he'>(
     (profile?.preferred_language as 'en' | 'ar' | 'he') || 'en'
   );
-  // const [darkMode, setDarkMode] = useState(false); // Removed local state
 
   const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -46,9 +45,7 @@ export default function Settings() {
   const [success, setSuccess] = useState(false);
   const [showCurrencyWarning, setShowCurrencyWarning] = useState(false);
   const [pendingCurrency, setPendingCurrency] = useState<'USD' | 'EUR' | 'ILS'>('USD');
-  const [activeTab, setActiveTab] = useState<
-    'profile' | 'business' | 'security' | 'data' | 'payments'
-  >('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'business' | 'security' | 'data' | 'payments'>('profile');
   const [uploading, setUploading] = useState(false);
   const [notice, setNotice] = useState<null | { type: NoticeType; message: string }>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -63,28 +60,11 @@ export default function Settings() {
     }
   };
 
-  const ensureLogosBucket = async (): Promise<boolean> => {
-    try {
-      const { error } = await supabase.functions.invoke('ensure-bucket');
-      if (error) throw error;
-      return true;
-    } catch (error) {
-      console.error('Error ensuring bucket:', error);
-      return false;
-    }
-  };
-
   // Sync dark mode + load profile details
-  useEffect(() => {
-    // Theme is now handled by ThemeContext
-    if (user) {
-      fetchUserProfile();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  // useEffect removed - relying on AuthContext
 
-  // Sync when profile changes (branding / language / currency)
-  // Sync when profile changes (branding / language / currency)
+
+  // Sync when profile changes
   useEffect(() => {
     if (!profile) return;
     setBusinessName(profile.business_name || '');
@@ -98,8 +78,8 @@ export default function Settings() {
   // Sync user details when userProfile changes
   useEffect(() => {
     if (userProfile) {
-        setFullName(userProfile.full_name || '');
-        setPhoneNumber(userProfile.phone_number || '');
+      setFullName(userProfile.full_name || '');
+      setPhoneNumber(userProfile.phone_number || '');
     }
   }, [userProfile]);
 
@@ -114,27 +94,7 @@ export default function Settings() {
     setLastUpdated(updated);
   }, []);
 
-  const fetchUserProfile = async () => {
-    if (!user) return;
 
-    try {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      // PGRST116 = no rows returned
-      if (error && (error as any).code !== 'PGRST116') throw error;
-
-      if (data) {
-        setFullName(data.full_name || '');
-        setPhoneNumber(data.phone_number || '');
-      }
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-    }
-  };
 
   const handleCurrencyChange = (newCurrency: 'USD' | 'EUR' | 'ILS') => {
     if (newCurrency !== currency) {
@@ -147,8 +107,6 @@ export default function Settings() {
     setCurrency(pendingCurrency);
     setShowCurrencyWarning(false);
   };
-
-  // toggleDarkMode is now handled by toggleTheme from context
 
   const handleSaveProfile = async () => {
     if (!user) {
@@ -166,9 +124,7 @@ export default function Settings() {
         .eq('user_id', user.id)
         .maybeSingle();
 
-      if (selectError && (selectError as any).code !== 'PGRST116') {
-        throw selectError;
-      }
+      if (selectError && (selectError as any).code !== 'PGRST116') throw selectError;
 
       if (existingProfile) {
         const { error: updateError } = await supabase
@@ -183,16 +139,12 @@ export default function Settings() {
         if (updateError) throw updateError;
       } else {
         const { error: insertError } = await supabase.from('user_profiles').insert([
-          {
-            user_id: user.id,
-            full_name: fullName,
-            phone_number: phoneNumber,
-          },
+          { user_id: user.id, full_name: fullName, phone_number: phoneNumber },
         ]);
-
         if (insertError) throw insertError;
       }
 
+      await refreshProfile();
       setSuccess(true);
       showNotice('success', 'Profile saved successfully', 2500);
     } catch (error) {
@@ -250,7 +202,6 @@ export default function Settings() {
           .eq('user_id', user.id);
 
         if (error) throw error;
-
         showNotice('success', 'Branding reset to defaults', 2500);
       } catch (error) {
         console.error('Failed to reset branding:', error);
@@ -289,8 +240,7 @@ export default function Settings() {
     setRefreshingRates(true);
     try {
       await CurrencyService.refreshRates('USD');
-      const updated = CurrencyService.getLastUpdated();
-      setLastUpdated(updated);
+      setLastUpdated(CurrencyService.getLastUpdated());
       showNotice('success', 'Exchange rates updated successfully', 2500);
     } catch (error) {
       console.error('Error refreshing rates:', error);
@@ -307,11 +257,7 @@ export default function Settings() {
     }
 
     try {
-      const { data: trips, error } = await supabase
-        .from('trips')
-        .select('*')
-        .eq('user_id', user.id);
-
+      const { data: trips, error } = await supabase.from('trips').select('*').eq('user_id', user.id);
       if (error) throw error;
 
       const exportData = {
@@ -322,9 +268,7 @@ export default function Settings() {
         trips,
       };
 
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], {
-        type: 'application/json',
-      });
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -354,7 +298,6 @@ export default function Settings() {
     reader.onload = async (e) => {
       try {
         const data = JSON.parse(e.target?.result as string);
-
         if (!data.trips || !Array.isArray(data.trips)) {
           showNotice('error', 'Invalid backup file');
           return;
@@ -363,12 +306,7 @@ export default function Settings() {
         if (confirm(`Import ${data.trips.length} trips? This will not delete existing data.`)) {
           for (const trip of data.trips) {
             const { id, user_id, created_at, updated_at, ...tripData } = trip;
-            const { error } = await supabase.from('trips').insert([
-              {
-                ...tripData,
-                user_id: user.id,
-              },
-            ]);
+            const { error } = await supabase.from('trips').insert([{ ...tripData, user_id: user.id }]);
             if (error) throw error;
           }
 
@@ -405,16 +343,6 @@ export default function Settings() {
 
     setUploading(true);
 
-    const bucketReady = await ensureLogosBucket();
-    if (!bucketReady) {
-      showNotice(
-        'error',
-        "Storage bucket 'logos' not found. Create it in Supabase Storage or set VITE_SUPABASE_SERVICE_ROLE_KEY for auto setup."
-      );
-      setUploading(false);
-      return;
-    }
-
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
@@ -423,38 +351,35 @@ export default function Settings() {
       const resizedBlob = await resizeImage(file, 500, 500);
       const resizedFile = new File([resizedBlob], fileName, { type: file.type });
 
-      const { error: uploadError } = await supabase.storage
-        .from('logos')
-        .upload(filePath, resizedFile, {
-          upsert: true,
-          cacheControl: '3600',
-          contentType: file.type || 'image/*',
-        });
+      const { error: uploadError } = await supabase.storage.from('logos').upload(filePath, resizedFile, {
+        upsert: true,
+        cacheControl: '3600',
+        contentType: file.type || 'image/*',
+      });
 
       if (uploadError) {
+        // لو bucket/policy غلط، هذه الرسالة تكون أوضح للمستخدم
         throw uploadError;
       }
 
       const { data: publicUrlData } = supabase.storage.from('logos').getPublicUrl(filePath);
+      const newLogoUrl = publicUrlData?.publicUrl;
 
-      if (!publicUrlData) {
-        throw new Error('Could not get public URL for the uploaded logo.');
-      }
-
-      const newLogoUrl = publicUrlData.publicUrl;
+      if (!newLogoUrl) throw new Error('Could not get public URL for the uploaded logo.');
 
       setLogoUrl(newLogoUrl);
 
-      await updateProfile({
-        logo_url: newLogoUrl,
-      });
+      await updateProfile({ logo_url: newLogoUrl });
       await refreshProfile();
 
       showNotice('success', 'Logo uploaded successfully');
     } catch (error: any) {
       console.error('Logo upload failed:', error);
-      const message = error?.message || 'Failed to upload logo.';
-      showNotice('error', message);
+      showNotice(
+        'error',
+        error?.message ||
+          "Upload failed. Ensure bucket 'logos' exists + SQL policies are applied (Storage.objects)."
+      );
     } finally {
       setUploading(false);
     }
@@ -474,7 +399,6 @@ export default function Settings() {
       return;
     }
 
-    // Allow transparent images
     const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
     if (!allowedTypes.includes(file.type)) {
       showNotice('error', 'Unsupported file type. Use PNG or JPG.');
@@ -483,53 +407,36 @@ export default function Settings() {
 
     setUploading(true);
 
-    const bucketReady = await ensureLogosBucket();
-    // Assuming signatures go to same bucket or a new one. Let's use 'logos' for now or 'signatures' if exists.
-    // Migration for bucket? I'll use 'logos' to avoid permission issues if it exists, or 'signatures' if I create it. 
-    // The ensureLogosBucket ensures 'logos'. I'll stick to 'logos' for simplicity unless instructed.
-    
-    if (!bucketReady) {
-      showNotice('error', 'Storage bucket not ready.');
-      setUploading(false);
-      return;
-    }
-
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `sig-${user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `business-signatures/${fileName}`; // Separate folder
+      const filePath = `business-signatures/${fileName}`;
 
-      // Resize? Signatures might need transparency preserved.
-      // resizeImage util might convert to jpeg if not careful. Let's upload as is for now or use resize if huge.
-      // We will upload directly to preserve transparency (PNG).
-      
-      const { error: uploadError } = await supabase.storage
-        .from('logos') // Reusing logos bucket
-        .upload(filePath, file, {
-          upsert: true,
-          cacheControl: '3600',
-          contentType: file.type,
-        });
+      const { error: uploadError } = await supabase.storage.from('logos').upload(filePath, file, {
+        upsert: true,
+        cacheControl: '3600',
+        contentType: file.type,
+      });
 
       if (uploadError) throw uploadError;
 
       const { data: publicUrlData } = supabase.storage.from('logos').getPublicUrl(filePath);
-      if (!publicUrlData) throw new Error('Could not get public URL');
+      const newSigUrl = publicUrlData?.publicUrl;
+      if (!newSigUrl) throw new Error('Could not get public URL');
 
-      const newSigUrl = publicUrlData.publicUrl;
       setSignatureUrl(newSigUrl);
 
-      // Save immediately or wait? 
-      // handleLogoUpload saves immediately. I'll do the same.
-      await updateProfile({
-        signature_url: newSigUrl,
-      });
+      await updateProfile({ signature_url: newSigUrl });
       await refreshProfile();
 
       showNotice('success', 'Signature uploaded successfully');
     } catch (error: any) {
       console.error('Signature upload failed:', error);
-      showNotice('error', error?.message || 'Failed to upload signature.');
+      showNotice(
+        'error',
+        error?.message ||
+          "Upload failed. Ensure bucket 'logos' exists + SQL policies are applied (Storage.objects)."
+      );
     } finally {
       setUploading(false);
     }
@@ -546,8 +453,8 @@ export default function Settings() {
               (notice.type === 'success'
                 ? 'bg-emerald-500/10 border-emerald-400/40 text-emerald-100'
                 : notice.type === 'error'
-                  ? 'bg-rose-500/10 border-rose-400/40 text-rose-100'
-                  : 'bg-sky-500/10 border-sky-400/40 text-sky-100')
+                ? 'bg-rose-500/10 border-rose-400/40 text-rose-100'
+                : 'bg-sky-500/10 border-sky-400/40 text-sky-100')
             }
           >
             {notice.message}
@@ -557,12 +464,8 @@ export default function Settings() {
         {/* Header card */}
         <div className="glass-panel bg-slate-950/80 border border-slate-800/80 rounded-2xl shadow-xl shadow-slate-950/70 p-6 md:p-7 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.26em] text-sky-400/80 mb-1.5">
-              Settings & Preferences
-            </p>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-50 mb-1">
-              Workspace settings
-            </h1>
+            <p className="text-[11px] uppercase tracking-[0.26em] text-sky-400/80 mb-1.5">Settings & Preferences</p>
+            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-50 mb-1">Workspace settings</h1>
             <p className="text-sm text-slate-300 max-w-xl">
               Manage your profile, branding, security and data tools from one organized place.
             </p>
@@ -570,15 +473,11 @@ export default function Settings() {
           <div className="flex flex-col items-start md:items-end gap-2 text-xs">
             <div className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2">
               <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-              <span className="text-slate-300">
-                {businessName || profile?.business_name || 'MyDesck PRO'}
-              </span>
+              <span className="text-slate-300">{businessName || profile?.business_name || 'MyDesck PRO'}</span>
             </div>
             <div className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2">
               <span className="text-slate-500">Signed in as</span>
-              <span className="text-sky-300 font-medium text-[11px] truncate max-w-[180px]">
-                {email}
-              </span>
+              <span className="text-sky-300 font-medium text-[11px] truncate max-w-[180px]">{email}</span>
             </div>
           </div>
         </div>
@@ -622,7 +521,7 @@ export default function Settings() {
               <Key className="w-4 h-4" />
               <span>Security</span>
             </button>
-            
+
             <button
               onClick={() => setActiveTab('data')}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
@@ -634,9 +533,6 @@ export default function Settings() {
               <RotateCcw className="w-4 h-4" />
               <span>Data</span>
             </button>
-
-            {/* Payments Tab Removed */}
-            {/* <button disabled className="opacity-50 cursor-not-allowed ...">Payments</button> */}
           </div>
 
           {/* Content */}
@@ -647,9 +543,7 @@ export default function Settings() {
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-200 mb-2">
-                      Full Name *
-                    </label>
+                    <label className="block text-sm font-medium text-slate-200 mb-2">Full Name *</label>
                     <input
                       type="text"
                       value={fullName}
@@ -660,9 +554,7 @@ export default function Settings() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-200 mb-2">
-                      Email
-                    </label>
+                    <label className="block text-sm font-medium text-slate-200 mb-2">Email</label>
                     <input
                       type="email"
                       value={email}
@@ -673,9 +565,7 @@ export default function Settings() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-200 mb-2">
-                      Phone Number *
-                    </label>
+                    <label className="block text-sm font-medium text-slate-200 mb-2">Phone Number *</label>
                     <input
                       type="tel"
                       value={phoneNumber}
@@ -709,9 +599,7 @@ export default function Settings() {
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-200 mb-2">
-                      {t('settings.businessName')}
-                    </label>
+                    <label className="block text-sm font-medium text-slate-200 mb-2">{t('settings.businessName')}</label>
                     <input
                       type="text"
                       value={businessName}
@@ -732,11 +620,11 @@ export default function Settings() {
                       className="w-full px-4 py-3 rounded-xl bg-slate-900/80 border border-slate-700 text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
                     />
                   </div>
-                  
+
                   {/* Signature Upload */}
                   <div>
                     <label className="block text-sm font-medium text-slate-200 mb-2">
-                       Digital Signature / Stamp (חתימה / חותמת)
+                      Digital Signature / Stamp (חתימה / חותמת)
                     </label>
                     <div className="flex items-center gap-4">
                       <div className="flex-1">
@@ -752,44 +640,35 @@ export default function Settings() {
                           id="signature-upload"
                           type="file"
                           accept="image/png, image/jpeg"
-                          onChange={handleSignatureUpload} // Need to implement this function
+                          onChange={handleSignatureUpload}
                           className="hidden"
                           disabled={uploading}
                         />
                       </div>
                       {signatureUrl && (
                         <div className="p-2 bg-white rounded-lg">
-                             <img
-                               src={signatureUrl}
-                               alt="Signature preview"
-                               className="h-12 object-contain"
-                             />
+                          <img src={signatureUrl} alt="Signature preview" className="h-12 object-contain" />
                         </div>
                       )}
                     </div>
                   </div>
 
+                  {/* Logo upload */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-200 mb-2">
-                      {t('settings.logoUrl')}
-                    </label>
-                    {/* Logo upload with status and preview */}
+                    <label className="block text-sm font-medium text-slate-200 mb-2">{t('settings.logoUrl')}</label>
                     <div className="flex items-center gap-4">
                       <div className="flex-1">
                         <label
                           htmlFor="logo-upload"
-                          className={`w-full flex flex-col items-center justify-center px-4 py-6 rounded-xl border-2 border-dashed transition-all ${uploading
-                            ? 'bg-slate-900/60 border-slate-800 text-slate-500 cursor-not-allowed'
-                            : 'bg-slate-900/80 border-slate-700 text-slate-400 hover:border-sky-500 hover:text-sky-300 cursor-pointer'
-                            }`}
+                          className={`w-full flex flex-col items-center justify-center px-4 py-6 rounded-xl border-2 border-dashed transition-all ${
+                            uploading
+                              ? 'bg-slate-900/60 border-slate-800 text-slate-500 cursor-not-allowed'
+                              : 'bg-slate-900/80 border-slate-700 text-slate-400 hover:border-sky-500 hover:text-sky-300 cursor-pointer'
+                          }`}
                         >
                           <Upload className={`w-8 h-8 mb-2 ${uploading ? 'animate-pulse' : ''}`} />
-                          <span className="text-sm font-semibold">
-                            {uploading ? 'Uploading...' : 'Click to upload or drag & drop'}
-                          </span>
-                          <span className="text-xs text-slate-500 mt-1">
-                            SVG, PNG, JPG (max 2MB)
-                          </span>
+                          <span className="text-sm font-semibold">{uploading ? 'Uploading...' : 'Click to upload or drag & drop'}</span>
+                          <span className="text-xs text-slate-500 mt-1">SVG, PNG, JPG (max 2MB)</span>
                         </label>
                         <input
                           id="logo-upload"
@@ -809,11 +688,8 @@ export default function Settings() {
                       )}
                     </div>
 
-                    {/* Fallback Text Input */}
                     <div className="mt-4">
-                      <label className="block text-xs font-medium text-slate-400 mb-1">
-                        Or paste image URL (fallback)
-                      </label>
+                      <label className="block text-xs font-medium text-slate-400 mb-1">Or paste image URL (fallback)</label>
                       <input
                         type="text"
                         value={logoUrl}
@@ -825,14 +701,10 @@ export default function Settings() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-200 mb-2">
-                      {t('settings.currency')}
-                    </label>
+                    <label className="block text-sm font-medium text-slate-200 mb-2">{t('settings.currency')}</label>
                     <select
                       value={currency}
-                      onChange={(e) =>
-                        handleCurrencyChange(e.target.value as 'USD' | 'EUR' | 'ILS')
-                      }
+                      onChange={(e) => handleCurrencyChange(e.target.value as 'USD' | 'EUR' | 'ILS')}
                       className="w-full px-4 py-3 rounded-xl bg-slate-900/80 border border-slate-700 text-slate-100 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
                     >
                       <option value="USD">{t('currencies.USD')}</option>
@@ -842,14 +714,10 @@ export default function Settings() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-200 mb-2">
-                      {t('settings.language')}
-                    </label>
+                    <label className="block text-sm font-medium text-slate-200 mb-2">{t('settings.language')}</label>
                     <select
                       value={language}
-                      onChange={(e) =>
-                        setLanguageState(e.target.value as 'en' | 'ar' | 'he')
-                      }
+                      onChange={(e) => setLanguageState(e.target.value as 'en' | 'ar' | 'he')}
                       className="w-full px-4 py-3 rounded-xl bg-slate-900/80 border border-slate-700 text-slate-100 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
                     >
                       <option value="en">{t('languages.en')}</option>
@@ -859,57 +727,39 @@ export default function Settings() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-200 mb-2">
-                      Dark Mode
-                    </label>
+                    <label className="block text-sm font-medium text-slate-200 mb-2">Dark Mode</label>
                     <button
                       onClick={toggleTheme}
                       className="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-900/80 border border-slate-700 hover:bg-slate-800/80 transition-all w-full"
                     >
-                      {theme === 'dark' ? (
-                        <Moon className="w-5 h-5 text-sky-400" />
-                      ) : (
-                        <Sun className="w-5 h-5 text-amber-400" />
-                      )}
-                      <span className="font-medium">
-                        {theme === 'dark' ? 'Dark Mode On' : 'Light Mode On'}
-                      </span>
+                      {theme === 'dark' ? <Moon className="w-5 h-5 text-sky-400" /> : <Sun className="w-5 h-5 text-amber-400" />}
+                      <span className="font-medium">{theme === 'dark' ? 'Dark Mode On' : 'Light Mode On'}</span>
                     </button>
                   </div>
 
                   {/* Exchange Rates Management */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-200 mb-2">
-                      Exchange Rates
-                    </label>
+                    <label className="block text-sm font-medium text-slate-200 mb-2">Exchange Rates</label>
                     <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
                       <div className="flex items-center justify-between gap-4">
                         <div className="flex-1">
-                          <h3 className="font-semibold text-slate-100 text-sm mb-1">
-                            Live Currency Conversion
-                          </h3>
+                          <h3 className="font-semibold text-slate-100 text-sm mb-1">Live Currency Conversion</h3>
                           <p className="text-xs text-slate-400">
                             Last updated:{' '}
                             {lastUpdated ? (
-                              <span className="text-slate-300">
-                                {lastUpdated.toLocaleString()}
-                              </span>
+                              <span className="text-slate-300">{lastUpdated.toLocaleString()}</span>
                             ) : (
                               <span className="text-slate-500">Never</span>
                             )}
                           </p>
-                          <p className="text-xs text-slate-500 mt-1">
-                            Auto-refreshes every 12 hours
-                          </p>
+                          <p className="text-xs text-slate-500 mt-1">Auto-refreshes every 12 hours</p>
                         </div>
                         <button
                           onClick={handleRefreshRates}
                           disabled={refreshingRates}
                           className="flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-600 text-white text-sm font-medium hover:bg-sky-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          <RefreshCw
-                            className={`w-4 h-4 ${refreshingRates ? 'animate-spin' : ''}`}
-                          />
+                          <RefreshCw className={`w-4 h-4 ${refreshingRates ? 'animate-spin' : ''}`} />
                           <span>{refreshingRates ? 'Updating...' : 'Refresh Now'}</span>
                         </button>
                       </div>
@@ -952,9 +802,7 @@ export default function Settings() {
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <h3 className="font-semibold text-slate-100">Change Password</h3>
-                      <p className="text-sm text-slate-400">
-                        Update your account password
-                      </p>
+                      <p className="text-sm text-slate-400">Update your account password</p>
                     </div>
                     <button
                       onClick={handleChangePassword}
@@ -970,9 +818,7 @@ export default function Settings() {
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <h3 className="font-semibold text-slate-100">Sign Out</h3>
-                      <p className="text-sm text-slate-400">
-                        Sign out and return to the login screen
-                      </p>
+                      <p className="text-sm text-slate-400">Sign out and return to the login screen</p>
                     </div>
                     <button
                       onClick={async () => {
@@ -994,9 +840,7 @@ export default function Settings() {
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <h3 className="font-semibold text-slate-100">Refresh Profile</h3>
-                      <p className="text-sm text-slate-400">
-                        Force refresh user profile to get latest role updates
-                      </p>
+                      <p className="text-sm text-slate-400">Force refresh user profile to get latest role updates</p>
                     </div>
                     <button
                       onClick={handleRefreshProfile}
@@ -1019,9 +863,7 @@ export default function Settings() {
                     <div className="flex items-center justify-between gap-4">
                       <div>
                         <h3 className="font-semibold text-slate-100">Export Data</h3>
-                        <p className="text-sm text-slate-400">
-                          Download all your trips as JSON
-                        </p>
+                        <p className="text-sm text-slate-400">Download all your trips as JSON</p>
                       </div>
                       <button
                         onClick={handleExportData}
@@ -1042,20 +884,13 @@ export default function Settings() {
                       <label className="flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-600 text-white text-sm font-medium hover:bg-sky-700 transition-all cursor-pointer">
                         <Upload className="w-4 h-4" />
                         <span>Import</span>
-                        <input
-                          type="file"
-                          accept=".json"
-                          onChange={handleImportData}
-                          className="hidden"
-                        />
+                        <input type="file" accept=".json" onChange={handleImportData} className="hidden" />
                       </label>
                     </div>
                   </div>
                 </div>
               </div>
             )}
-            
-            {/* Payments tab content disabled */}
           </div>
         </div>
 
@@ -1068,9 +903,7 @@ export default function Settings() {
                 <h3 className="text-xl font-bold">{t('settings.currencyWarning')}</h3>
               </div>
 
-              <p className="text-sm text-slate-200">
-                {t('settings.currencyWarningMessage')}
-              </p>
+              <p className="text-sm text-slate-200">{t('settings.currencyWarningMessage')}</p>
 
               <div className="flex gap-3 pt-2">
                 <button
