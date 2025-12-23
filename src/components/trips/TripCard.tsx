@@ -9,7 +9,7 @@ import {
   Square,
   Share2,
 } from 'lucide-react';
-import { formatDate } from '../../lib/utils';
+import { formatDate, generateWhatsAppLink } from '../../lib/utils';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
 import { Trip } from '../../types/trip';
@@ -314,9 +314,19 @@ export default function TripCard({
           </button>
 
           <button
-            onClick={handleShare}
-            className="inline-flex items-center justify-center px-3 py-2 rounded-xl bg-green-600/90 hover:bg-green-500 text-white text-sm font-medium transition-colors"
+            onClick={(e) => {
+              stopPropagation(e);
+              if (trip.client_phone) {
+                 const message = `Hello ${trip.client_name}, here are the details for your trip to ${trip.destination} on ${formatDate(trip.start_date)}. Total price: ${format(trip.sale_price, trip.currency || 'USD')}.`;
+                 const url = generateWhatsAppLink(trip.client_phone, message);
+                 window.open(url, '_blank');
+              } else {
+                 handleShare(e);
+              }
+            }}
+            className={`inline-flex items-center justify-center px-3 py-2 rounded-xl text-white text-sm font-medium transition-colors ${trip.client_phone ? 'bg-green-600/90 hover:bg-green-500' : 'bg-slate-500/90 hover:bg-slate-400'}`}
             aria-label="Share on WhatsApp"
+            title={trip.client_phone ? "Send via WhatsApp" : "Share (No phone number)"}
           >
             <Share2 className="w-4 h-4" />
           </button>

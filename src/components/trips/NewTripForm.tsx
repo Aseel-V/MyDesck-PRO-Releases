@@ -375,6 +375,16 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                 </div>
 
                 <div>
+                  <label className={labelClasses}>{t('trips.clientPhone') || 'Client Phone'}</label>
+                  <input
+                    type="tel"
+                    {...register('client_phone')}
+                    className={baseInputClasses}
+                    placeholder="+1234567890"
+                  />
+                </div>
+
+                <div>
                   <label className={labelClasses}>{t('trips.status')} *</label>
                   <select {...register('status')} className={baseInputClasses}>
                     <option value="active">{t('trips.statuses.active')}</option>

@@ -31,6 +31,7 @@ export interface Trip {
   user_id: string;
   destination: string;
   client_name: string;
+  client_phone?: string;
 
   // Detailed Traveler Management
   travelers: Traveler[];
@@ -75,6 +76,7 @@ export interface Trip {
 export interface TripFormData {
   destination: string;
   client_name: string;
+  client_phone?: string;
 
   travelers: Traveler[];
   travelers_count: number;
@@ -108,6 +110,7 @@ export interface TripInsert {
   user_id: string;
   destination: string;
   client_name: string;
+  client_phone?: string;
 
   travelers?: Traveler[];
   travelers_count?: number;
@@ -148,6 +151,7 @@ export interface TripInsert {
 export interface TripUpdate {
   destination?: string;
   client_name?: string;
+  client_phone?: string;
 
   travelers?: Traveler[];
   travelers_count?: number;

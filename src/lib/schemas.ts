@@ -3,6 +3,7 @@ import { z } from 'zod';
 export const tripSchema = z.object({
     destination: z.string().min(1, 'Destination is required'),
     client_name: z.string().min(1, 'Client name is required'),
+    client_phone: z.string().optional(),
 
     travelers: z.array(z.object({
         full_name: z.string().optional(),

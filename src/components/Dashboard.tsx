@@ -21,6 +21,7 @@ import { TripFormData } from "../types/trip";
 import { useTripMutations } from "../hooks/useTripMutations";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import NewYearOverlay from "./ui/NewYearOverlay";
+import { AlertTriangle, X, ArrowRight } from "lucide-react";
 
 type Page = "home" | "trips" | "analytics" | "settings" | "admin";
 
@@ -60,6 +61,9 @@ export default function Dashboard() {
     month: '',
     destination: ''
   });
+
+  // Alert System State
+  const [dismissedAlerts, setDismissedAlerts] = useState<string[]>([]);
 
   const handleCreateTrip = () => {
     setSelectedTrip(undefined);
@@ -159,6 +163,30 @@ export default function Dashboard() {
   );
   const recentTrips = trips.slice(0, 5);
 
+  // Compute Alerts
+  const alerts = trips.filter(trip => {
+    if (dismissedAlerts.includes(trip.id)) return false;
+
+    // Check payment status
+    if (trip.payment_status === 'paid') return false;
+
+    // Check date (within next 7 days)
+    const tripDate = new Date(trip.start_date);
+    const todayDate = new Date();
+    // Reset time for accurate day comparison
+    todayDate.setHours(0, 0, 0, 0);
+    tripDate.setHours(0, 0, 0, 0);
+
+    const diffTime = tripDate.getTime() - todayDate.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    return diffDays >= 0 && diffDays <= 7;
+  });
+
+  const handleDismissAlert = (tripId: string) => {
+    setDismissedAlerts(prev => [...prev, tripId]);
+  };
+
   const handleNavigate = (page: Page) => {
     setCurrentPage(page);
   };
@@ -201,6 +229,66 @@ export default function Dashboard() {
         <AnimatePresence mode="wait">
           {currentPage === "home" && (
             <MotionWrapper key="home" className="space-y-6">
+              {/* Alerts Section */}
+              {alerts.length > 0 && (
+                <div className="space-y-3">
+                  <h2 className="text-[11px] uppercase tracking-[0.2em] text-slate-400 font-semibold px-1">
+                    Notifications
+                  </h2>
+                  <div className="grid gap-3">
+                    {alerts.map(trip => {
+                      const tripDate = new Date(trip.start_date);
+                      const todayDate = new Date();
+                      todayDate.setHours(0, 0, 0, 0);
+                      tripDate.setHours(0, 0, 0, 0);
+                      const diffTime = tripDate.getTime() - todayDate.getTime();
+                      const daysUntil = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                      return (
+                        <div
+                          key={trip.id}
+                          className="group relative overflow-hidden bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-800/30 rounded-xl p-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between transition-all hover:bg-amber-50 dark:hover:bg-amber-950/30"
+                        >
+                          <div className="flex items-start gap-4">
+                            <div className="p-2.5 rounded-full bg-amber-100/50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 shrink-0">
+                              <AlertTriangle size={20} className="fill-current/20" />
+                            </div>
+                            <div className="space-y-1">
+                              <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                                Payment Reminder
+                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 uppercase tracking-wide">
+                                  {daysUntil === 0 ? 'Today' : `In ${daysUntil} days`}
+                                </span>
+                              </h3>
+                              <p className="text-sm text-slate-600 dark:text-slate-400">
+                                <span className="font-medium text-slate-900 dark:text-slate-200">{trip.client_name}</span>'s trip to <span className="font-medium text-slate-900 dark:text-slate-200">{trip.destination}</span> has a pending {trip.payment_status} payment.
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0 pl-14 sm:pl-0">
+                            <button
+                              onClick={() => handleSelectTrip(trip)}
+                              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-700 dark:text-amber-400 bg-amber-100/50 dark:bg-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-900/50 rounded-lg transition-colors"
+                            >
+                              View Trip
+                              <ArrowRight size={14} />
+                            </button>
+                            <button
+                              onClick={() => handleDismissAlert(trip.id)}
+                              className="p-1.5 text-slate-400 hover:text-slate-500 dark:hover:text-slate-300 rounded-lg hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors"
+                              title="Dismiss"
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Hero / Welcome panel */}
               <div className="glass-panel border border-slate-200/80 bg-white/95 rounded-2xl p-6 sm:p-8 shadow-xl dark:border-slate-800/80 dark:bg-slate-950/95 dark:shadow-[0_22px_75px_rgba(15,23,42,0.98)]">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">

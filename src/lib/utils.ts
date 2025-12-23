@@ -23,3 +23,10 @@ export function formatDate(date: Date | string): string {
         day: 'numeric',
     });
 }
+
+export function generateWhatsAppLink(phone: string, message: string): string {
+    if (!phone) return '';
+    const cleanPhone = phone.replace(/[^\d]/g, '');
+    const encodedMessage = encodeURIComponent(message);
+    return `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
+}
