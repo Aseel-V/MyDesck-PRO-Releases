@@ -82,10 +82,11 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
     'inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium rounded-xl transition-all border-b-2';
   const primaryActionBtn =
     baseActionBtn +
-    ' border-sky-400 text-slate-50 bg-slate-900/80 shadow-[0_4px_14px_rgba(15,23,42,0.8)] hover:bg-slate-900';
+    ' border-sky-400 text-slate-50 bg-slate-900/80 shadow-[0_4px_14px_rgba(15,23,42,0.8)] hover:bg-slate-900 dark:border-sky-400 dark:text-slate-50 dark:bg-slate-900/80 dark:shadow-[0_4px_14px_rgba(15,23,42,0.8)] dark:hover:bg-slate-900 bg-sky-600 shadow-[0_4px_14px_rgba(2,132,199,0.4)] hover:bg-sky-700';
   const secondaryActionBtn =
     baseActionBtn +
-    ' border-transparent text-slate-300 hover:text-slate-50 hover:bg-slate-900/50 hover:border-slate-500/80';
+    ' border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-100/50 hover:border-slate-300 dark:text-slate-300 dark:hover:text-slate-50 dark:hover:bg-slate-900/50 dark:hover:border-slate-500/80';
+
 
   // 1. جلب السنوات المتوفرة باستخدام الدالة الجديدة get_trip_years
   const { data: availableYears = [] } = useQuery({
@@ -344,10 +345,10 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
       {/* Header + actions */}
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-extrabold gradient-title drop-shadow">
+          <h2 className="text-3xl font-extrabold gradient-title drop-shadow dark:drop-shadow-none text-slate-900 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-slate-50 dark:via-sky-100 dark:to-slate-200">
             {t('trips.title')}
           </h2>
-          <p className="text-sm text-slate-300 mt-1">
+          <p className="text-sm text-slate-500 mt-1 dark:text-slate-300">
             {count === 0
               ? 'No trips found'
               : `Showing ${displayTrips.length} of ${filteredTrips.length} trips`}
@@ -360,12 +361,12 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex items-center bg-slate-900/80 rounded-xl p-1 border border-slate-800/80 mr-2">
+          <div className="flex items-center bg-slate-100 rounded-xl p-1 border border-slate-200/80 mr-2 dark:bg-slate-900/80 dark:border-slate-800/80">
             <button
               onClick={() => setViewMode('grid')}
               className={`p-1.5 rounded-lg transition-all ${viewMode === 'grid'
-                ? 'bg-slate-800 text-sky-400 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-white text-sky-600 shadow-sm dark:bg-slate-800 dark:text-sky-400'
+                : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
                 }`}
             >
               <LayoutGrid className="w-4 h-4" />
@@ -373,13 +374,14 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
             <button
               onClick={() => setViewMode('list')}
               className={`p-1.5 rounded-lg transition-all ${viewMode === 'list'
-                ? 'bg-slate-800 text-sky-400 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-white text-sky-600 shadow-sm dark:bg-slate-800 dark:text-sky-400'
+                : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
                 }`}
             >
               <List className="w-4 h-4" />
             </button>
           </div>
+
 
           {filteredTrips.length > 0 && (
             <button
@@ -419,79 +421,79 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
 
       {/* Quick stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className="rounded-2xl bg-slate-950/95 border border-slate-800/90 p-4 flex items-center justify-between shadow-md shadow-slate-950/70">
+        <div className="rounded-2xl bg-white border border-slate-200/90 p-4 flex items-center justify-between shadow-sm dark:bg-slate-950/95 dark:border-slate-800/90 dark:shadow-md dark:shadow-slate-950/70">
           <div>
-            <p className="text-xs uppercase tracking-wide text-slate-400">
+            <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
               {t('trips.stats.totalTrips') ?? 'Total Trips'}
             </p>
-            <p className="text-2xl font-bold text-slate-50">
+            <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">
               {stats.totalTrips}
             </p>
           </div>
-          <div className="p-3 rounded-full bg-sky-500/10 border border-sky-500/40">
-            <BarChart3 className="w-6 h-6 text-sky-400" />
+          <div className="p-3 rounded-full bg-sky-100 border border-sky-200 text-sky-600 dark:bg-sky-500/10 dark:border-sky-500/40 dark:text-sky-400">
+            <BarChart3 className="w-6 h-6" />
           </div>
         </div>
 
-        <div className="rounded-2xl bg-slate-950/95 border border-slate-800/90 p-4 flex items-center justify-between shadow-md shadow-slate-950/70">
+        <div className="rounded-2xl bg-white border border-slate-200/90 p-4 flex items-center justify-between shadow-sm dark:bg-slate-950/95 dark:border-slate-800/90 dark:shadow-md dark:shadow-slate-950/70">
           <div>
-            <p className="text-xs uppercase tracking-wide text-slate-400">
+            <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
               {t('trips.stats.totalRevenue') ?? 'Revenue (Page)'}
             </p>
-            <p className="text-2xl font-bold text-slate-50">
+            <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">
               {format(stats.totalRevenue, currency)}
             </p>
           </div>
-          <div className="p-3 rounded-full bg-indigo-500/10 border border-indigo-500/40">
-            <Landmark className="w-6 h-6 text-indigo-300" />
+          <div className="p-3 rounded-full bg-indigo-100 border border-indigo-200 text-indigo-600 dark:bg-indigo-500/10 dark:border-indigo-500/40 dark:text-indigo-300">
+            <Landmark className="w-6 h-6" />
           </div>
         </div>
 
-        <div className="rounded-2xl bg-slate-950/95 border border-slate-800/90 p-4 flex items-center justify-between shadow-md shadow-slate-950/70">
+        <div className="rounded-2xl bg-white border border-slate-200/90 p-4 flex items-center justify-between shadow-sm dark:bg-slate-950/95 dark:border-slate-800/90 dark:shadow-md dark:shadow-slate-950/70">
           <div>
-            <p className="text-xs uppercase tracking-wide text-slate-400">
+            <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
               {t('trips.stats.totalProfit') ?? 'Profit (Page)'}
             </p>
-            <p className="text-2xl font-bold text-emerald-300">
+            <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-300">
               {format(stats.totalProfit, currency)}
             </p>
           </div>
-          <div className="p-3 rounded-full bg-emerald-500/10 border border-emerald-500/40">
-            <Wallet className="w-6 h-6 text-emerald-400" />
+          <div className="p-3 rounded-full bg-emerald-100 border border-emerald-200 text-emerald-600 dark:bg-emerald-500/10 dark:border-emerald-500/40 dark:text-emerald-400">
+            <Wallet className="w-6 h-6" />
           </div>
         </div>
 
-        <div className="rounded-2xl bg-slate-950/95 border border-slate-800/90 p-4 flex items-center justify-between shadow-md shadow-slate-950/70">
+        <div className="rounded-2xl bg-white border border-slate-200/90 p-4 flex items-center justify-between shadow-sm dark:bg-slate-950/95 dark:border-slate-800/90 dark:shadow-md dark:shadow-slate-950/70">
           <div>
-            <p className="text-xs uppercase tracking-wide text-slate-400">
+            <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
               {t('trips.stats.unpaidAmount') ?? 'Unpaid (Page)'}
             </p>
-            <p className="text-2xl font-bold text-rose-300">
+            <p className="text-2xl font-bold text-rose-600 dark:text-rose-300">
               {format(stats.unpaidAmount, currency)}
             </p>
           </div>
-          <div className="p-3 rounded-full bg-rose-500/10 border border-rose-500/40">
-            <AlertCircle className="w-6 h-6 text-rose-400" />
+          <div className="p-3 rounded-full bg-rose-100 border border-rose-200 text-rose-600 dark:bg-rose-500/10 dark:border-rose-500/40 dark:text-rose-400">
+            <AlertCircle className="w-6 h-6" />
           </div>
         </div>
 
-        <div className="rounded-2xl bg-slate-950/95 border border-slate-800/90 p-4 flex items-center justify-between shadow-md shadow-slate-950/70">
+        <div className="rounded-2xl bg-white border border-slate-200/90 p-4 flex items-center justify-between shadow-sm dark:bg-slate-950/95 dark:border-slate-800/90 dark:shadow-md dark:shadow-slate-950/70">
           <div>
-            <p className="text-xs uppercase tracking-wide text-slate-400">
+            <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
               {t('trips.stats.upcoming') ?? 'Upcoming'}
             </p>
-            <p className="text-2xl font-bold text-sky-200">
+            <p className="text-2xl font-bold text-sky-600 dark:text-sky-200">
               {stats.upcoming}
             </p>
           </div>
-          <div className="p-3 rounded-full bg-indigo-500/10 border border-indigo-500/40">
-            <CalendarCheck2 className="w-6 h-6 text-indigo-300" />
+          <div className="p-3 rounded-full bg-indigo-100 border border-indigo-200 text-indigo-600 dark:bg-indigo-500/10 dark:border-indigo-500/40 dark:text-indigo-300">
+            <CalendarCheck2 className="w-6 h-6" />
           </div>
         </div>
       </div>
 
       {/* Filters: أزرار السنوات ستظهر تلقائياً هنا */}
-      <div className="rounded-2xl bg-slate-950/90 border border-slate-800/80 p-4 shadow-md shadow-slate-950/60">
+      <div className="rounded-2xl bg-white border border-slate-200/80 p-4 shadow-sm dark:bg-slate-950/90 dark:border-slate-800/80 dark:shadow-md dark:shadow-slate-950/60">
         <TripFilters
           searchTerm={filters.search}
           onSearchChange={setSearchTerm}
@@ -511,16 +513,16 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
       {/* List / empty state */}
       <div className="min-h-[400px]">
       {filteredTrips.length === 0 ? (
-        <div className="rounded-2xl bg-slate-950/95 border border-slate-800/90 p-12 text-center shadow-lg shadow-slate-950/70">
+        <div className="rounded-2xl bg-white border border-slate-200/90 p-12 text-center shadow-sm dark:bg-slate-950/95 dark:border-slate-800/90 dark:shadow-lg dark:shadow-slate-950/70">
           <div className="flex justify-center mb-4">
-            <div className="bg-slate-900/80 border border-slate-700/80 p-6 rounded-full">
-              <FileText className="w-12 h-12 text-slate-400" />
+            <div className="bg-slate-100 border border-slate-200/80 p-6 rounded-full dark:bg-slate-900/80 dark:border-slate-700/80">
+              <FileText className="w-12 h-12 text-slate-400 dark:text-slate-400" />
             </div>
           </div>
-          <h3 className="text-xl font-semibold text-slate-100 mb-2">
+          <h3 className="text-xl font-semibold text-slate-900 mb-2 dark:text-slate-100">
             {t('trips.noTrips')}
           </h3>
-          <p className="text-slate-300 mb-6">{t('trips.createFirst')}</p>
+          <p className="text-slate-500 mb-6 dark:text-slate-300">{t('trips.createFirst')}</p>
           <button
             onClick={() => onCreateTrip?.()}
             className={primaryActionBtn}
@@ -554,27 +556,27 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
           </AnimatePresence>
           {filteredTrips.length > 50 && (
              <div className="col-span-full text-center py-6">
-               <span className="text-slate-400 text-sm bg-slate-900/50 px-4 py-2 rounded-full border border-slate-800">
+               <span className="text-slate-500 text-sm bg-slate-100 px-4 py-2 rounded-full border border-slate-200 dark:text-slate-400 dark:bg-slate-900/50 dark:border-slate-800">
                  يتم عرض أول 50 رحلة فقط لضمان السرعة. استخدم البحث للعثور على المزيد.
                </span>
              </div>
           )}
         </motion.div>
       ) : (
-        <div className="glass-panel bg-slate-950/90 border border-slate-800/80 rounded-2xl overflow-hidden shadow-lg shadow-slate-950/70">
+        <div className="glass-panel bg-white/90 border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm dark:bg-slate-950/90 dark:border-slate-800/80 dark:shadow-lg dark:shadow-slate-950/70">
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead>
-                <tr className="bg-slate-900/50 border-b border-slate-800/80 sticky top-0 z-10 backdrop-blur-md">
-                  <th className="text-left py-3 px-4 font-medium text-slate-400">Destination</th>
-                  <th className="text-left py-3 px-4 font-medium text-slate-400">Client</th>
-                  <th className="text-left py-3 px-4 font-medium text-slate-400">Dates</th>
-                  <th className="text-left py-3 px-4 font-medium text-slate-400">Price</th>
-                  <th className="text-left py-3 px-4 font-medium text-slate-400">Status</th>
-                  <th className="text-right py-3 px-4 font-medium text-slate-400">Actions</th>
+                <tr className="bg-slate-50 border-b border-slate-200/80 sticky top-0 z-10 backdrop-blur-md dark:bg-slate-900/50 dark:border-slate-800/80">
+                  <th className="text-left py-3 px-4 font-medium text-slate-500 dark:text-slate-400">Destination</th>
+                  <th className="text-left py-3 px-4 font-medium text-slate-500 dark:text-slate-400">Client</th>
+                  <th className="text-left py-3 px-4 font-medium text-slate-500 dark:text-slate-400">Dates</th>
+                  <th className="text-left py-3 px-4 font-medium text-slate-500 dark:text-slate-400">Price</th>
+                  <th className="text-left py-3 px-4 font-medium text-slate-500 dark:text-slate-400">Status</th>
+                  <th className="text-right py-3 px-4 font-medium text-slate-500 dark:text-slate-400">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/80">
+              <tbody className="divide-y divide-slate-200/80 dark:divide-slate-800/80">
                 <AnimatePresence mode="popLayout">
                   {displayTrips.map((trip) => (
                     <motion.tr
@@ -583,14 +585,14 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="hover:bg-slate-900/30 transition-colors"
+                      className="hover:bg-slate-50 transition-colors dark:hover:bg-slate-900/30"
                     >
-                      <td className="py-3 px-4 text-slate-100 font-medium">{trip.destination}</td>
-                      <td className="py-3 px-4 text-slate-300">{trip.client_name}</td>
-                      <td className="py-3 px-4 text-slate-400">
+                      <td className="py-3 px-4 text-slate-900 font-medium dark:text-slate-100">{trip.destination}</td>
+                      <td className="py-3 px-4 text-slate-600 dark:text-slate-300">{trip.client_name}</td>
+                      <td className="py-3 px-4 text-slate-500 dark:text-slate-400">
                         {formatDate(trip.start_date)}
                       </td>
-                      <td className="py-3 px-4 text-slate-300">
+                      <td className="py-3 px-4 text-slate-600 dark:text-slate-300">
                         {format(trip.sale_price || 0, trip.currency || currency)}
                       </td>
                       <td className="py-3 px-4">
@@ -608,7 +610,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
                       <td className="py-3 px-4 text-right">
                         <button
                           onClick={() => handleViewTrip(trip)}
-                          className="text-sky-400 hover:text-sky-300 font-medium text-xs"
+                          className="text-sky-600 hover:text-sky-500 font-medium text-xs dark:text-sky-400 dark:hover:text-sky-300"
                         >
                           View
                         </button>
@@ -620,8 +622,8 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
             </table>
           </div>
           {filteredTrips.length > 50 && (
-             <div className="p-4 text-center border-t border-slate-800">
-               <span className="text-slate-400 text-sm">
+             <div className="p-4 text-center border-t border-slate-200 dark:border-slate-800">
+               <span className="text-slate-500 text-sm dark:text-slate-400">
                  يتم عرض أول 50 رحلة فقط. استخدم البحث للعثور على المزيد.
                </span>
              </div>

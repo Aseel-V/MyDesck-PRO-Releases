@@ -271,11 +271,12 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
   const amountDueColor = amountDue > 0 ? 'text-rose-300' : 'text-emerald-300';
 
   const baseInputClasses =
-    'w-full text-slate-100 placeholder-slate-400 bg-slate-950/90 border border-slate-800/80 rounded-xl px-3 py-2.5 text-sm ' +
-    'focus:outline-none focus:ring-2 focus:ring-sky-500/80 focus:border-sky-500/80 transition-all shadow-sm shadow-slate-950/70';
+    'w-full text-slate-900 placeholder-slate-400 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm ' +
+    'focus:outline-none focus:ring-2 focus:ring-sky-500/80 focus:border-sky-500/80 transition-all shadow-sm ' +
+    'dark:text-slate-100 dark:bg-slate-950/90 dark:border-slate-800/80 dark:shadow-slate-950/70';
 
   const errorInputClasses = 'border-rose-500/50 focus:ring-rose-500/50 focus:border-rose-500/50';
-  const labelClasses = 'block text-xs font-semibold tracking-wide text-slate-300 mb-2';
+  const labelClasses = 'block text-xs font-semibold tracking-wide text-slate-700 mb-2 dark:text-slate-300';
 
   const tabs = [
     { id: 'details', label: t('trips.details') || 'Details', icon: FileText },
@@ -284,30 +285,30 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
 
   return (
     <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-xl flex items-center justify-center z-50 p-4 animate-fadeIn">
-      <div className="relative max-w-4xl w-full max-h-[90vh] my-6 rounded-2xl bg-slate-950/95 border border-slate-800/80 shadow-[0_22px_65px_rgba(15,23,42,0.95)] overflow-hidden flex flex-col">
+      <div className="relative max-w-4xl w-full max-h-[90vh] my-6 rounded-2xl bg-white border border-slate-200 shadow-2xl overflow-hidden flex flex-col dark:bg-slate-950/95 dark:border-slate-800/80 dark:shadow-[0_22px_65px_rgba(15,23,42,0.95)]">
         {/* gradient line top */}
         <div className="h-[2px] bg-gradient-to-r from-sky-500/70 via-fuchsia-500/50 to-sky-400/70" />
 
         {/* header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800/80 bg-slate-950/95 shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 bg-white/95 shrink-0 dark:border-slate-800/80 dark:bg-slate-950/95">
           <div className="flex flex-col gap-1">
-            <span className="text-[11px] uppercase tracking-[0.25em] text-sky-300/80">
+            <span className="text-[11px] uppercase tracking-[0.25em] text-sky-600/80 dark:text-sky-300/80">
               {editTrip ? t('trips.edit') : t('trips.newTrip')}
             </span>
-            <h2 className="text-lg md:text-xl font-bold text-slate-50">
+            <h2 className="text-lg md:text-xl font-bold text-slate-900 dark:text-slate-50">
               {editTrip ? t('trips.edit') : t('trips.newTrip')}
             </h2>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-full border border-slate-700/80 bg-slate-950/90 hover:bg-slate-800/80 text-slate-300 transition-all"
+            className="p-2 rounded-full border border-slate-200 bg-slate-100 hover:bg-slate-200 text-slate-500 transition-all dark:border-slate-700/80 dark:bg-slate-950/90 dark:hover:bg-slate-800/80 dark:text-slate-300"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-slate-800/80 bg-slate-900/50 shrink-0 overflow-x-auto">
+        <div className="flex border-b border-slate-200 bg-slate-50 shrink-0 overflow-x-auto dark:border-slate-800/80 dark:bg-slate-900/50">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -318,8 +319,8 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                 className={cn(
                   'flex items-center gap-2 px-6 py-3 text-sm font-medium transition-all border-b-2 whitespace-nowrap',
                   isActive
-                    ? 'border-sky-500 text-sky-400 bg-slate-800/50'
-                    : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/30',
+                    ? 'border-sky-500 text-sky-600 bg-white dark:text-sky-400 dark:bg-slate-800/50'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-200/50 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800/30',
                 )}
               >
                 <Icon className="w-4 h-4" />
@@ -399,14 +400,14 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
 
 
                 {/* Room Composition Selector */}
-                <div className="md:col-span-2 space-y-3 bg-slate-900/30 p-4 rounded-xl border border-slate-800/50">
+                <div className="md:col-span-2 space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200 dark:bg-slate-900/30 dark:border-slate-800/50">
                    <div className="flex items-center justify-between">
                         <label className={labelClasses}>הרכב חדרים (אופציונלי) / Room Configuration</label>
                         {/* Clear button to reset counts */}
                         <button 
                              type="button"
                              onClick={() => setRoomCounts({ Single: 0, Double: 0, Triple: 0, Quad: 0, Suite: 0, Family: 0 })}
-                             className="text-[10px] text-sky-400 hover:text-sky-300"
+                             className="text-[10px] text-sky-600 hover:text-sky-500 dark:text-sky-400 dark:hover:text-sky-300"
                         >
                             Reset Counts
                         </button>
@@ -424,7 +425,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                                        const val = parseInt(e.target.value) || 0;
                                        setRoomCounts(prev => ({ ...prev, [type]: val }));
                                    }}
-                                    className="w-full text-center bg-slate-950 border border-slate-700 rounded-lg py-1.5 text-xs text-white focus:ring-1 focus:ring-sky-500"
+                                    className="w-full text-center bg-white border border-slate-300 rounded-lg py-1.5 text-xs text-slate-900 focus:ring-1 focus:ring-sky-500 dark:bg-slate-950 dark:border-slate-700 dark:text-white"
                                />
                            </div>
                        ))}
@@ -432,7 +433,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                    
                    {/* Manual Override / Final String */}
                    <div className="mt-2">
-                       <label className="text-[10px] text-slate-500 mb-1 block">Final Text (Editable)</label>
+                       <label className="text-[10px] text-slate-500 mb-1 block dark:text-slate-500">Final Text (Editable)</label>
                        <input
                          type="text"
                          {...register('room_type')}
@@ -545,10 +546,10 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                 </div>
 
                 {/* Profit Card */}
-                <div className="rounded-2xl border border-slate-800 bg-slate-950/90 px-4 py-3 shadow-inner shadow-slate-950/80">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-950/90 dark:shadow-inner dark:shadow-slate-950/80">
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <p className="text-xs text-slate-400 mb-1 font-medium">
+                      <p className="text-xs text-slate-500 mb-1 font-medium dark:text-slate-400">
                         {t('trips.profit')}
                       </p>
                       <p className={`text-2xl font-bold ${profitColor}`}>
@@ -558,7 +559,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs text-slate-400 mb-1 font-medium">
+                      <p className="text-xs text-slate-500 mb-1 font-medium dark:text-slate-400">
                         {t('trips.profitPercentage')}
                       </p>
                       <p className={`text-2xl font-bold ${profitColor}`}>
@@ -607,9 +608,9 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                 </div>
 
                 {/* Amount Due */}
-                <div className="rounded-2xl border border-slate-800 bg-slate-950/90 px-4 py-3">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/90">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-slate-400">
+                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
                       {t('trips.amountDue')}
                     </p>
                     <p className={`text-xl font-bold ${amountDueColor}`}>
@@ -623,11 +624,11 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
           </div>
 
           {/* Footer */}
-          <div className="flex-shrink-0 flex items-center justify-end gap-3 px-5 py-4 md:px-6 border-t border-slate-800/80 bg-slate-950/95 shrink-0">
+          <div className="flex-shrink-0 flex items-center justify-end gap-3 px-5 py-4 md:px-6 border-t border-slate-200 bg-white/95 shrink-0 dark:border-slate-800/80 dark:bg-slate-950/95">
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-medium border border-slate-600/80 text-slate-200 bg-slate-950/90 hover:bg-slate-900/90 transition-all"
+              className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-medium border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 transition-all dark:border-slate-600/80 dark:text-slate-200 dark:bg-slate-950/90 dark:hover:bg-slate-900/90"
             >
               {t('trips.cancel')}
             </button>

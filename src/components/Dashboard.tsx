@@ -169,7 +169,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 relative">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 relative">
       <Toaster position="top-center" theme="dark" richColors closeButton />
       <CommandPalette
         onNavigate={handleNavigate}
@@ -190,9 +190,9 @@ export default function Dashboard() {
 
       {/* خلفية ناعمة */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -left-32 w-80 h-80 bg-sky-500/18 blur-3xl rounded-full" />
-        <div className="absolute -bottom-40 -right-32 w-96 h-96 bg-fuchsia-500/14 blur-3xl rounded-full" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.08),transparent_60%)]" />
+        <div className="absolute -top-40 -left-32 w-80 h-80 bg-sky-500/18 blur-3xl rounded-full dark:bg-sky-500/18 bg-sky-400/20" />
+        <div className="absolute -bottom-40 -right-32 w-96 h-96 bg-fuchsia-500/14 blur-3xl rounded-full dark:bg-fuchsia-500/14 bg-fuchsia-400/20" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.08),transparent_60%)] dark:bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.08),transparent_60%)]" />
       </div>
 
       <Navbar onNavigate={handleNavigate} currentPage={currentPage} />
@@ -202,19 +202,19 @@ export default function Dashboard() {
           {currentPage === "home" && (
             <MotionWrapper key="home" className="space-y-6">
               {/* Hero / Welcome panel */}
-              <div className="glass-panel border border-slate-800/80 bg-slate-950/95 rounded-2xl p-6 sm:p-8 shadow-[0_22px_75px_rgba(15,23,42,0.98)]">
+              <div className="glass-panel border border-slate-200/80 bg-white/95 rounded-2xl p-6 sm:p-8 shadow-xl dark:border-slate-800/80 dark:bg-slate-950/95 dark:shadow-[0_22px_75px_rgba(15,23,42,0.98)]">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
                   <div className="space-y-2">
                     <p className="text-[11px] uppercase tracking-[0.25em] text-sky-300/80">
                       {isAdmin ? "Admin Overview" : "Dashboard"}
                     </p>
-                    <h1 className="text-3xl sm:text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-slate-50 via-sky-100 to-slate-200 drop-shadow-[0_0_16px_rgba(15,23,42,0.9)]">
+                    <h1 className="text-3xl sm:text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-sky-800 to-slate-700 drop-shadow-sm dark:from-slate-50 dark:via-sky-100 dark:to-slate-200 dark:drop-shadow-[0_0_16px_rgba(15,23,42,0.9)]">
                       {t('dashboard.welcome')},{" "}
                       <span className="whitespace-nowrap">
                         {profile?.business_name || t('appName')}
                       </span>
                     </h1>
-                    <p className="text-slate-300/90 max-w-2xl text-sm sm:text-[15px]">
+                    <p className="text-slate-600/90 max-w-2xl text-sm sm:text-[15px] dark:text-slate-300/90">
                       {isAdmin
                         ? "Manage users and monitor platform growth with a clear overview of the system."
                         : "Track your trips, clients and profit — keep your travel business organized in one smart place."}
@@ -227,21 +227,21 @@ export default function Dashboard() {
                   </div>
 
                   <div className="flex flex-col items-stretch md:items-end gap-3 min-w-[210px]">
-                    <div className="inline-flex items-center justify-between gap-3 rounded-2xl border border-slate-800/80 bg-slate-950/90 px-4 py-2.5 shadow-md shadow-slate-950/80">
+                    <div className="inline-flex items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white/90 px-4 py-2.5 shadow-md shadow-slate-200/80 dark:border-slate-800/80 dark:bg-slate-950/90 dark:shadow-slate-950/80">
                       <span className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
                         {t('dashboard.settings')}
                       </span>
-                      <span className="text-xs text-slate-400/90">MyDesck PRO</span>
+                      <span className="text-xs text-slate-500/90 dark:text-slate-400/90">MyDesck PRO</span>
                     </div>
 
-                    <div className="inline-flex items-center gap-2 rounded-2xl border border-slate-800/80 bg-slate-950/90 px-4 py-2 shadow-md shadow-slate-950/80">
+                    <div className="inline-flex items-center gap-2 rounded-2xl border border-slate-200/80 bg-white/90 px-4 py-2 shadow-md shadow-slate-200/80 dark:border-slate-800/80 dark:bg-slate-950/90 dark:shadow-slate-950/80">
                       <span className="text-[11px] text-slate-400">Currency</span>
                       <span className="text-sm font-semibold text-sky-300">
                         {profile?.preferred_currency || "USD"}
                       </span>
                     </div>
 
-                    <div className="inline-flex items-center gap-2 rounded-2xl border border-slate-800/80 bg-slate-950/90 px-4 py-2 shadow-md shadow-slate-950/80">
+                    <div className="inline-flex items-center gap-2 rounded-2xl border border-slate-200/80 bg-white/90 px-4 py-2 shadow-md shadow-slate-200/80 dark:border-slate-800/80 dark:bg-slate-950/90 dark:shadow-slate-950/80">
                       <span className="text-[11px] text-slate-400">Language</span>
                       <span className="text-sm font-semibold text-sky-300">
                         {t(`languages.${(profile?.preferred_language || "en")}`)}
@@ -294,16 +294,16 @@ export default function Dashboard() {
                     <Skeleton className="h-[140px] w-full rounded-2xl" />
                   ) : (
                     <div
-                      className="glass-panel col-span-1 bg-gradient-to-br from-sky-500/25 via-sky-600/10 to-slate-950/90 border border-sky-500/40 rounded-2xl p-5 shadow-[0_20px_60px_rgba(8,47,73,0.95)] hover:scale-[1.02] transition-transform cursor-pointer"
+                      className="glass-panel col-span-1 bg-gradient-to-br from-sky-500/10 via-sky-600/5 to-white/90 border border-sky-500/30 rounded-2xl p-5 shadow-lg hover:scale-[1.02] transition-transform cursor-pointer dark:from-sky-500/25 dark:via-sky-600/10 dark:to-slate-950/90 dark:border-sky-500/40 dark:shadow-[0_20px_60px_rgba(8,47,73,0.95)]"
                       onClick={() => setCurrentPage("trips")}
                     >
                       <p className="text-xs font-medium text-sky-100/85 mb-1">
                         {t('dashboard.trips')}
                       </p>
-                      <p className="text-3xl font-bold text-slate-50 leading-tight">
+                      <p className="text-3xl font-bold text-slate-900 leading-tight dark:text-slate-50">
                         {totalTrips}
                       </p>
-                      <p className="text-xs text-slate-200/90 mt-2">
+                      <p className="text-xs text-slate-500/90 mt-2 dark:text-slate-200/90">
                         Total trips managed in MyDesck PRO
                       </p>
                     </div>
@@ -313,14 +313,14 @@ export default function Dashboard() {
                   {isLoading ? (
                     <Skeleton className="h-[140px] w-full rounded-2xl" />
                   ) : (
-                    <div className="glass-panel bg-slate-950/90 border border-emerald-500/40 rounded-2xl p-5 shadow-[0_18px_55px_rgba(6,78,59,0.9)]">
+                    <div className="glass-panel bg-white/90 border border-emerald-500/30 rounded-2xl p-5 shadow-lg dark:bg-slate-950/90 dark:border-emerald-500/40 dark:shadow-[0_18px_55px_rgba(6,78,59,0.9)]">
                       <p className="text-xs font-medium text-emerald-200/85 mb-1">
                         Upcoming trips
                       </p>
-                      <p className="text-3xl font-bold text-slate-50 leading-tight">
+                      <p className="text-3xl font-bold text-slate-900 leading-tight dark:text-slate-50">
                         {upcomingTrips}
                       </p>
-                      <p className="text-xs text-slate-200/90 mt-2">
+                      <p className="text-xs text-slate-500/90 mt-2 dark:text-slate-200/90">
                         Starting from today and later
                       </p>
                     </div>
@@ -330,14 +330,14 @@ export default function Dashboard() {
                   {isLoading ? (
                     <Skeleton className="h-[140px] w-full rounded-2xl" />
                   ) : (
-                    <div className="glass-panel bg-slate-950/90 border border-amber-500/40 rounded-2xl p-5 shadow-[0_18px_55px_rgba(120,53,15,0.9)]">
+                    <div className="glass-panel bg-white/90 border border-amber-500/30 rounded-2xl p-5 shadow-lg dark:bg-slate-950/90 dark:border-amber-500/40 dark:shadow-[0_18px_55px_rgba(120,53,15,0.9)]">
                       <p className="text-xs font-medium text-amber-200/85 mb-1">
                         Active clients
                       </p>
-                      <p className="text-3xl font-bold text-slate-50 leading-tight">
+                      <p className="text-3xl font-bold text-slate-900 leading-tight dark:text-slate-50">
                         {uniqueClients}
                       </p>
-                      <p className="text-xs text-slate-200/90 mt-2">
+                      <p className="text-xs text-slate-500/90 mt-2 dark:text-slate-200/90">
                         Unique client names across all trips
                       </p>
                     </div>
@@ -347,14 +347,14 @@ export default function Dashboard() {
                   {isLoading ? (
                     <Skeleton className="h-[140px] w-full rounded-2xl" />
                   ) : (
-                    <div className="glass-panel bg-slate-950/90 border border-fuchsia-500/40 rounded-2xl p-5 shadow-[0_18px_55px_rgba(88,28,135,0.9)]">
+                    <div className="glass-panel bg-white/90 border border-fuchsia-500/30 rounded-2xl p-5 shadow-lg dark:bg-slate-950/90 dark:border-fuchsia-500/40 dark:shadow-[0_18px_55px_rgba(88,28,135,0.9)]">
                       <p className="text-xs font-medium text-fuchsia-200/85 mb-1">
                         Total travelers
                       </p>
-                      <p className="text-3xl font-bold text-slate-50 leading-tight">
+                      <p className="text-3xl font-bold text-slate-900 leading-tight dark:text-slate-50">
                         {totalTravelers}
                       </p>
-                      <p className="text-xs text-slate-200/90 mt-2">
+                      <p className="text-xs text-slate-500/90 mt-2 dark:text-slate-200/90">
                         Sum of travelers in all trips
                       </p>
                     </div>
@@ -365,9 +365,9 @@ export default function Dashboard() {
               {/* Bottom section */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {!isAdmin && (
-                  <div className="glass-panel lg:col-span-2 bg-slate-950/90 border border-slate-800/80 rounded-2xl p-6 shadow-[0_20px_60px_rgba(15,23,42,0.95)]">
+                  <div className="glass-panel lg:col-span-2 bg-white/90 border border-slate-200/80 rounded-2xl p-6 shadow-xl dark:bg-slate-950/90 dark:border-slate-800/80 dark:shadow-[0_20px_60px_rgba(15,23,42,0.95)]">
                     <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-lg font-semibold text-slate-50">
+                      <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
                         Recent trips
                       </h2>
                       <button
@@ -391,7 +391,7 @@ export default function Dashboard() {
                       <div className="overflow-x-auto">
                         <table className="min-w-full text-sm">
                           <thead>
-                            <tr className="text-slate-400 border-b border-slate-800/80">
+                            <tr className="text-slate-500 border-b border-slate-200/80 dark:text-slate-400 dark:border-slate-800/80">
                               <th className="text-left py-2 pr-4 font-medium">
                                 Destination
                               </th>
@@ -413,18 +413,18 @@ export default function Dashboard() {
                             {recentTrips.map((trip) => (
                               <tr
                                 key={trip.id}
-                                className="border-b border-slate-900/70 last:border-0"
+                                className="border-b border-slate-200/70 last:border-0 dark:border-slate-900/70"
                               >
-                                <td className="py-2 pr-4 text-slate-100 whitespace-nowrap">
+                                <td className="py-2 pr-4 text-slate-900 whitespace-nowrap dark:text-slate-100">
                                   {trip.destination}
                                 </td>
-                                <td className="py-2 pr-4 text-slate-300 whitespace-nowrap">
+                                <td className="py-2 pr-4 text-slate-600 whitespace-nowrap dark:text-slate-300">
                                   {trip.client_name}
                                 </td>
-                                <td className="py-2 pr-4 text-slate-300 whitespace-nowrap">
+                                <td className="py-2 pr-4 text-slate-600 whitespace-nowrap dark:text-slate-300">
                                   {trip.start_date}
                                 </td>
-                                <td className="py-2 pr-4 text-slate-300">
+                                <td className="py-2 pr-4 text-slate-600 dark:text-slate-300">
                                   {trip.travelers_count}
                                 </td>
                                 <td className="py-2 pr-4">
@@ -450,8 +450,8 @@ export default function Dashboard() {
 
                 {/* Quick actions / Shortcuts */}
                 <div className="space-y-4">
-                  <div className="glass-panel bg-slate-950/90 border border-slate-800/80 rounded-2xl p-6 shadow-[0_20px_60px_rgba(15,23,42,0.95)]">
-                    <h2 className="text-lg font-semibold text-slate-50 mb-3">
+                  <div className="glass-panel bg-white/90 border border-slate-200/80 rounded-2xl p-6 shadow-xl dark:bg-slate-950/90 dark:border-slate-800/80 dark:shadow-[0_20px_60px_rgba(15,23,42,0.95)]">
+                    <h2 className="text-lg font-semibold text-slate-900 mb-3 dark:text-slate-50">
                       {isAdmin ? "Admin shortcuts" : "Quick actions"}
                     </h2>
                     <p className="text-sm text-slate-400 mb-4">
@@ -486,10 +486,10 @@ export default function Dashboard() {
 
                       <button
                         onClick={() => setCurrentPage("settings")}
-                        className="w-full text-sm font-semibold inline-flex items-center justify-between px-4 py-3 rounded-xl bg-slate-900/95 hover:bg-slate-800 text-slate-100 transition shadow-[0_16px_40px_rgba(15,23,42,0.8)]"
+                        className="w-full text-sm font-semibold inline-flex items-center justify-between px-4 py-3 rounded-xl bg-slate-100/95 hover:bg-slate-200 text-slate-900 transition shadow-sm dark:bg-slate-900/95 dark:hover:bg-slate-800 dark:text-slate-100 dark:shadow-[0_16px_40px_rgba(15,23,42,0.8)]"
                       >
                         <span>Open Settings</span>
-                        <span className="text-xs text-slate-300">
+                        <span className="text-xs text-slate-500 dark:text-slate-300">
                           Branding, language & currency
                         </span>
                       </button>

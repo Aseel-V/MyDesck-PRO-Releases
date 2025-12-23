@@ -85,7 +85,7 @@ export default function TripCard({
 
   const amountDue = Math.max(sale - paid, 0);
   const isProfitPositive = profitValue >= 0;
-  const profitColor = isProfitPositive ? 'text-emerald-400' : 'text-rose-400';
+
   const profitSign = isProfitPositive ? '+' : '';
 
   // الربح كنسبة من سعر البيع
@@ -128,7 +128,7 @@ export default function TripCard({
 
   return (
     <div
-      className="relative rounded-2xl bg-slate-950/95 border border-slate-800/80 shadow-lg shadow-slate-950/70 transition-all duration-200 hover:-translate-y-0.5 hover:border-sky-500/70 hover:shadow-[0_18px_45px_rgba(15,23,42,0.95)] cursor-pointer"
+      className="relative rounded-2xl bg-white border border-slate-200 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-sky-500/70 hover:shadow-md cursor-pointer dark:bg-slate-950/95 dark:border-slate-800/80 dark:shadow-lg dark:shadow-slate-950/70 dark:hover:shadow-[0_18px_45px_rgba(15,23,42,0.95)]"
       onClick={handleCardClick}
       role="button"
     >
@@ -146,14 +146,14 @@ export default function TripCard({
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0 space-y-1.5">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-900/90 border border-sky-500/60 shadow-sm shadow-sky-900/70">
-                <MapPin className="w-4 h-4 text-sky-300" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 border border-sky-200 shadow-sm text-sky-600 dark:bg-slate-900/90 dark:border-sky-500/60 dark:shadow-sky-900/70 dark:text-sky-300">
+                <MapPin className="w-4 h-4" />
               </div>
-              <h3 className="text-base md:text-lg font-semibold text-slate-50 truncate">
+              <h3 className="text-base md:text-lg font-semibold text-slate-900 truncate dark:text-slate-50">
                 {trip.destination}
               </h3>
             </div>
-            <p className="text-sm text-slate-300 font-medium truncate">
+            <p className="text-sm text-slate-500 font-medium truncate dark:text-slate-300">
               {trip.client_name}
             </p>
           </div>
@@ -161,15 +161,15 @@ export default function TripCard({
           {/* PDF toggle */}
           <button
             onClick={handleExportClick}
-            className="px-2.5 py-2 rounded-xl border border-slate-700 bg-slate-950/95 hover:bg-slate-900/95 hover:border-sky-400 text-slate-200 transition-all flex flex-col items-center gap-1"
+            className="px-2.5 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-sky-400 text-slate-600 transition-all flex flex-col items-center gap-1 dark:border-slate-700 dark:bg-slate-950/95 dark:hover:bg-slate-900/95 dark:text-slate-200"
             title={t('trips.exportToPdf')}
           >
             {exportChecked ? (
-              <CheckSquare className="w-4 h-4 md:w-5 md:h-5 text-sky-400" />
+              <CheckSquare className="w-4 h-4 md:w-5 md:h-5 text-sky-500 dark:text-sky-400" />
             ) : (
-              <Square className="w-4 h-4 md:w-5 md:h-5 text-slate-500" />
+              <Square className="w-4 h-4 md:w-5 md:h-5 text-slate-400 dark:text-slate-500" />
             )}
-            <span className="text-[10px] uppercase tracking-[0.22em] text-slate-400">
+            <span className="text-[10px] uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
               PDF
             </span>
           </button>
@@ -177,7 +177,7 @@ export default function TripCard({
 
         {/* status + travelers */}
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-slate-300 text-sm">
+          <div className="flex items-center gap-2 text-slate-500 text-sm dark:text-slate-300">
             <Users className="w-4 h-4" />
             <span>
               {trip.travelers_count} {t('trips.travelers')}
@@ -194,7 +194,7 @@ export default function TripCard({
         </div>
 
         {/* dates */}
-        <div className="flex flex-wrap items-center gap-2 text-slate-300 text-sm">
+        <div className="flex flex-wrap items-center gap-2 text-slate-500 text-sm dark:text-slate-300">
           <Calendar className="w-4 h-4" />
           <div className="flex flex-col">
             <span className="font-medium">
@@ -205,32 +205,32 @@ export default function TripCard({
         </div>
 
         {/* money strip */}
-        <div className="rounded-2xl border border-slate-800 bg-slate-950/90 px-4 py-3 md:px-5 md:py-4 shadow-inner shadow-slate-950/70">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50/50 px-4 py-3 md:px-5 md:py-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/90 dark:shadow-inner dark:shadow-slate-950/70">
           <div className="grid grid-cols-3 gap-4 items-center">
             <div>
-              <p className="text-[11px] text-slate-400 mb-1">
+              <p className="text-[11px] text-slate-500 mb-1 dark:text-slate-400">
                 {t('trips.wholesaleCost')}
               </p>
-              <p className="text-sm font-semibold text-slate-100">
+              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                 {format(wholesale, trip.currency || 'USD')}
               </p>
             </div>
             <div>
-              <p className="text-[11px] text-slate-400 mb-1">
+              <p className="text-[11px] text-slate-500 mb-1 dark:text-slate-400">
                 {t('trips.salePrice')}
               </p>
-              <p className="text-sm font-semibold text-slate-100">
+              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                 {format(sale, trip.currency || 'USD')}
               </p>
             </div>
             <div className="text-right">
-              <p className="text-[11px] text-slate-400 mb-1">
+              <p className="text-[11px] text-slate-500 mb-1 dark:text-slate-400">
                 {t('trips.profit')}
               </p>
-              <p className={`text-sm font-bold ${profitColor}`}>
+              <p className={`text-sm font-bold ${isProfitPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                 {profitSign}
                 {format(Math.abs(profitValue), trip.currency || 'USD')}{' '}
-                <span className="text-[11px] text-slate-400">
+                <span className="text-[11px] text-slate-500 dark:text-slate-400">
                   ({profitPercentageDisplay})
                 </span>
               </p>
@@ -239,9 +239,9 @@ export default function TripCard({
         </div>
 
         {/* payment */}
-        <div className="pt-3 border-t border-slate-800/80">
+        <div className="pt-3 border-t border-slate-200/80 dark:border-slate-800/80">
           <div className="flex items-center justify-between gap-3 mb-2">
-            <span className="text-sm font-medium text-slate-200">
+            <span className="text-sm font-medium text-slate-600 dark:text-slate-200">
               {t('trips.paymentStatus')}
             </span>
             <span
@@ -256,18 +256,18 @@ export default function TripCard({
           {trip.payment_status !== 'paid' && (
             <div className="grid grid-cols-2 gap-4 mt-2">
               <div>
-                <p className="text-[11px] text-slate-400 mb-1">
+                <p className="text-[11px] text-slate-500 mb-1 dark:text-slate-400">
                   {t('trips.amountPaid')}
                 </p>
-                <p className="text-sm font-semibold text-slate-100">
+                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                   {format(paid, trip.currency || 'USD')}
                 </p>
               </div>
               <div>
-                <p className="text-[11px] text-slate-400 mb-1">
+                <p className="text-[11px] text-slate-500 mb-1 dark:text-slate-400">
                   {t('trips.amountDue')}
                 </p>
-                <p className="text-sm font-semibold text-rose-300">
+                <p className="text-sm font-semibold text-rose-600 dark:text-rose-300">
                   {format(amountDue, trip.currency || 'USD')}
                 </p>
               </div>
@@ -277,18 +277,18 @@ export default function TripCard({
 
         {/* notes preview عندما التفاصيل مغلقة */}
         {trip.notes && !showDetails && (
-          <div className="pt-3 border-t border-slate-800/80">
-            <p className="text-[11px] text-slate-400 mb-2">
+          <div className="pt-3 border-t border-slate-200/80 dark:border-slate-800/80">
+            <p className="text-[11px] text-slate-500 mb-2 dark:text-slate-400">
               {t('trips.notes')}
             </p>
-            <p className="text-sm text-slate-100 bg-slate-950/90 border border-slate-800 px-3 py-2.5 rounded-xl line-clamp-3">
+            <p className="text-sm text-slate-600 bg-slate-50 border border-slate-200 px-3 py-2.5 rounded-xl line-clamp-3 dark:text-slate-100 dark:bg-slate-950/90 dark:border-slate-800">
               {trip.notes}
             </p>
           </div>
         )}
 
         {/* actions (ما تفتحش/تسكر التفاصيل) */}
-        <div className="flex flex-wrap items-center justify-end gap-2 pt-4 border-t border-slate-800/80">
+        <div className="flex flex-wrap items-center justify-end gap-2 pt-4 border-t border-slate-200/80 dark:border-slate-800/80">
 
 
           <button
@@ -296,7 +296,7 @@ export default function TripCard({
               stopPropagation(e);
               onEdit(trip);
             }}
-            className="inline-flex items-center justify-center px-3 py-2 rounded-xl bg-amber-400/95 hover:bg-amber-300 text-slate-900 text-sm font-medium transition-colors"
+            className="inline-flex items-center justify-center px-3 py-2 rounded-xl bg-amber-400/90 hover:bg-amber-300 text-slate-900 text-sm font-medium transition-colors border border-amber-400/20"
             aria-label={t('trips.edit')}
           >
             <Edit className="w-4 h-4" />
@@ -326,8 +326,8 @@ export default function TripCard({
       {/* details (full notes) */}
       {showDetails && trip.notes && (
         <div className="relative px-5 md:px-6 pb-5 pt-0 animate-fadeIn">
-          <div className="bg-slate-950/95 border border-slate-800 rounded-2xl p-4 mt-1">
-            <p className="text-sm text-slate-100 whitespace-pre-wrap">
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 mt-1 dark:bg-slate-950/95 dark:border-slate-800">
+            <p className="text-sm text-slate-600 whitespace-pre-wrap dark:text-slate-100">
               {trip.notes}
             </p>
           </div>

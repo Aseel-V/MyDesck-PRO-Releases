@@ -36,9 +36,10 @@ export default function Register({ onSwitchToLogin, variant = 'full' }: Register
   };
 
   const baseInputClasses =
-    'w-full text-slate-100 placeholder-slate-400 bg-slate-950/80 border border-slate-800/80 ' +
-    'rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400/80 ' +
-    'focus:border-emerald-400/80 transition-all shadow-sm shadow-slate-950/70';
+    'w-full text-slate-900 placeholder-slate-400 bg-slate-50 border border-slate-200 ' +
+    'rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/80 ' +
+    'focus:border-emerald-500/80 transition-all shadow-sm ' +
+    'dark:text-slate-100 dark:bg-slate-950/80 dark:border-slate-800/80 dark:focus:ring-emerald-400/80 dark:focus:border-emerald-400/80 dark:shadow-slate-950/70';
 
   const inputClass =
     variant === 'modal'
@@ -48,7 +49,7 @@ export default function Register({ onSwitchToLogin, variant = 'full' }: Register
   const outerWrapperClass =
     variant === 'modal'
       ? 'w-full relative'
-      : 'min-h-screen relative flex items-center justify-center px-4 py-10 bg-slate-950';
+      : 'min-h-screen relative flex items-center justify-center px-4 py-10 bg-slate-50 dark:bg-slate-950';
 
   const backdropEnabled = variant === 'full';
 
@@ -69,22 +70,22 @@ export default function Register({ onSwitchToLogin, variant = 'full' }: Register
         <div
           className={
             variant === 'modal'
-              ? 'glass-panel rounded-2xl border border-slate-800/80 bg-slate-950/95 shadow-2xl shadow-slate-950/80 grid md:grid-cols-[1.3fr,1fr] gap-6 p-6 items-start'
-              : 'glass-panel rounded-3xl border border-white/10 bg-slate-950/95 shadow-[0_22px_65px_rgba(15,23,42,0.95)] grid md:grid-cols-[1.3fr,1fr] gap-8 md:gap-10 p-7 md:p-10 items-start animate-scaleIn'
+              ? 'glass-panel rounded-2xl border border-slate-200 bg-white shadow-2xl grid md:grid-cols-[1.3fr,1fr] gap-6 p-6 items-start dark:border-slate-800/80 dark:bg-slate-950/95 dark:shadow-slate-950/80'
+              : 'glass-panel rounded-3xl border border-slate-200 bg-white/95 shadow-2xl grid md:grid-cols-[1.3fr,1fr] gap-8 md:gap-10 p-7 md:p-10 items-start animate-scaleIn dark:border-white/10 dark:bg-slate-950/95 dark:shadow-[0_22px_65px_rgba(15,23,42,0.95)]'
           }
         >
           {/* Left – form */}
           <div className="space-y-6">
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <div className="bg-emerald-500/15 border border-emerald-400/40 p-3 rounded-2xl shadow-md shadow-emerald-900/40">
-                  <UserPlus className="w-7 h-7 text-emerald-300" />
+                <div className="bg-emerald-100 border border-emerald-200 p-3 rounded-2xl shadow-sm dark:bg-emerald-500/15 dark:border-emerald-400/40 dark:shadow-emerald-900/40">
+                  <UserPlus className="w-7 h-7 text-emerald-600 dark:text-emerald-300" />
                 </div>
                 <div>
-                  <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold gradient-title">
+                  <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-900 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-emerald-400 dark:via-sky-400 dark:to-emerald-400">
                     {t('auth.register')}
                   </h2>
-                  <p className="text-sm md:text-base text-slate-300/90 max-w-md">
+                  <p className="text-sm md:text-base text-slate-500 max-w-md dark:text-slate-300/90">
                     Create your secure workspace and start managing your business in minutes.
                   </p>
                 </div>
@@ -106,7 +107,7 @@ export default function Register({ onSwitchToLogin, variant = 'full' }: Register
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Email */}
               <div>
-                <label className="block text-xs font-semibold text-slate-200 mb-2">
+                <label className="block text-xs font-semibold text-slate-700 mb-2 dark:text-slate-200">
                   {t('auth.email')}
                 </label>
                 <input
@@ -120,7 +121,7 @@ export default function Register({ onSwitchToLogin, variant = 'full' }: Register
 
               {/* Password */}
               <div>
-                <label className="block text-xs font-semibold text-slate-200 mb-2">
+                <label className="block text-xs font-semibold text-slate-700 mb-2 dark:text-slate-200">
                   {t('auth.password')}
                 </label>
                 <input
@@ -130,14 +131,14 @@ export default function Register({ onSwitchToLogin, variant = 'full' }: Register
                   className={inputClass}
                   required
                 />
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-slate-500 mt-1 dark:text-slate-400">
                   • Minimum 6 characters recommended for better security.
                 </p>
               </div>
 
               {/* Business name */}
               <div>
-                <label className="block text-xs font-semibold text-slate-200 mb-2">
+                <label className="block text-xs font-semibold text-slate-700 mb-2 dark:text-slate-200">
                   {t('auth.businessName')}
                 </label>
                 <input
@@ -151,7 +152,7 @@ export default function Register({ onSwitchToLogin, variant = 'full' }: Register
 
               {/* Logo URL */}
               <div>
-                <label className="block text-xs font-semibold text-slate-200 mb-2">
+                <label className="block text-xs font-semibold text-slate-700 mb-2 dark:text-slate-200">
                   {t('auth.businessLogo')}
                 </label>
                 <input
@@ -159,11 +160,11 @@ export default function Register({ onSwitchToLogin, variant = 'full' }: Register
                   value={logoUrl}
                   onChange={(e) => setLogoUrl(e.target.value)}
                   placeholder={t('auth.logoPlaceholder')}
-                  className={`${inputClass} placeholder-slate-500`}
+                  className={`${inputClass} placeholder-slate-400 dark:placeholder-slate-500`}
                 />
                 {logoUrl && (
                   <div className="mt-3 flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-xl bg-slate-950/80 border border-slate-700 flex items-center justify-center overflow-hidden">
+                    <div className="h-12 w-12 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden dark:bg-slate-950/80 dark:border-slate-700">
                       <img
                         src={logoUrl}
                         alt="Logo preview"
@@ -183,7 +184,7 @@ export default function Register({ onSwitchToLogin, variant = 'full' }: Register
               {/* Currency & Language – two columns on md+ */}
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-200 mb-2">
+                  <label className="block text-xs font-semibold text-slate-700 mb-2 dark:text-slate-200">
                     {t('auth.preferredCurrency')}
                   </label>
                   <select
@@ -198,7 +199,7 @@ export default function Register({ onSwitchToLogin, variant = 'full' }: Register
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-200 mb-2">
+                  <label className="block text-xs font-semibold text-slate-700 mb-2 dark:text-slate-200">
                     {t('auth.preferredLanguage')}
                   </label>
                   <select
@@ -224,12 +225,12 @@ export default function Register({ onSwitchToLogin, variant = 'full' }: Register
               </button>
             </form>
 
-            <div className="text-center text-xs md:text-sm text-slate-300 pt-2">
+            <div className="text-center text-xs md:text-sm text-slate-500 pt-2 dark:text-slate-300">
               {t('auth.haveAccount')}{' '}
               <button
                 type="button"
                 onClick={onSwitchToLogin}
-                className="font-semibold text-emerald-300 hover:text-emerald-200 hover:underline"
+                className="font-semibold text-emerald-600 hover:text-emerald-700 hover:underline dark:text-emerald-300 dark:hover:text-emerald-200"
               >
                 {t('auth.clickHere')}
               </button>
@@ -237,46 +238,46 @@ export default function Register({ onSwitchToLogin, variant = 'full' }: Register
           </div>
 
           {/* Right – highlight / marketing side */}
-          <div className="hidden md:flex flex-col justify-between gap-6 border-l border-slate-800/70 pl-6">
+          <div className="hidden md:flex flex-col justify-between gap-6 border-l border-slate-200 pl-6 dark:border-slate-800/70">
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-slate-100">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
                 Smart onboarding
               </h3>
-              <p className="text-sm text-slate-300">
+              <p className="text-sm text-slate-600 dark:text-slate-300">
                 Set your business name, logo, currency, and language from day one.
                 Everything is tailored to your workflow.
               </p>
 
-              <div className="space-y-3 text-sm text-slate-300">
+              <div className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
                 <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-2xl bg-emerald-500/15 border border-emerald-400/40 flex items-center justify-center">
-                    <span className="text-xs font-bold text-emerald-300">1</span>
+                  <div className="h-9 w-9 rounded-2xl bg-emerald-100 border border-emerald-200 flex items-center justify-center dark:bg-emerald-500/15 dark:border-emerald-400/40">
+                    <span className="text-xs font-bold text-emerald-600 dark:text-emerald-300">1</span>
                   </div>
                   <span>Register your account securely.</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-2xl bg-sky-500/15 border border-sky-400/40 flex items-center justify-center">
-                    <span className="text-xs font-bold text-sky-300">2</span>
+                  <div className="h-9 w-9 rounded-2xl bg-sky-100 border border-sky-200 flex items-center justify-center dark:bg-sky-500/15 dark:border-sky-400/40">
+                    <span className="text-xs font-bold text-sky-600 dark:text-sky-300">2</span>
                   </div>
                   <span>Connect your brand – name and logo.</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-2xl bg-violet-500/15 border border-violet-400/40 flex items-center justify-center">
-                    <span className="text-xs font-bold text-violet-300">3</span>
+                  <div className="h-9 w-9 rounded-2xl bg-violet-100 border border-violet-200 flex items-center justify-center dark:bg-violet-500/15 dark:border-violet-400/40">
+                    <span className="text-xs font-bold text-violet-600 dark:text-violet-300">3</span>
                   </div>
                   <span>Start managing trips and invoices instantly.</span>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-emerald-500/35 bg-gradient-to-br from-emerald-500/10 via-slate-900/70 to-slate-950/95 p-4 shadow-lg shadow-emerald-900/40">
-              <p className="text-[11px] uppercase tracking-[0.22em] text-emerald-300 mb-2">
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-4 shadow-sm dark:border-emerald-500/35 dark:bg-gradient-to-br dark:from-emerald-500/10 dark:via-slate-900/70 dark:to-slate-950/95 dark:shadow-emerald-900/40">
+              <p className="text-[11px] uppercase tracking-[0.22em] text-emerald-600 mb-2 dark:text-emerald-300">
                 LIVE PREVIEW
               </p>
-              <div className="rounded-xl border border-slate-700/80 bg-slate-950/90 px-4 py-3 flex items-center justify-between gap-3">
+              <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 flex items-center justify-between gap-3 dark:border-slate-700/80 dark:bg-slate-950/90">
                 <div>
-                  <p className="text-xs text-slate-400">Workspace status</p>
-                  <p className="text-sm font-semibold text-slate-100">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Workspace status</p>
+                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                     Ready when you are
                   </p>
                 </div>

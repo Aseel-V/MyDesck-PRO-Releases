@@ -2,9 +2,9 @@
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
-import { Trip } from '../../types/trip';
-import { Users, MapPin, TrendingUp, ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { Users, MapPin, TrendingUp, ChevronLeft, ChevronRight, Search, UserPlus, X } from 'lucide-react';
 import { useDebounce } from '../../hooks/useDebounce';
+import CreateUserForm from './CreateUserForm'; // استيراد النموذج
 
 interface UserWithProfile {
   id: string;
@@ -14,6 +14,11 @@ interface UserWithProfile {
   business_name: string;
   role: string;
   created_at: string;
+}
+
+interface BusinessOption {
+  id: string;
+  name: string;
 }
 
 const PAGE_SIZE = 10;
@@ -26,20 +31,17 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState<UserWithProfile[]>([]);
   const [totalUsers, setTotalUsers] = useState(0);
   const [userPage, setUserPage] = useState(1);
-
-  const [trips, setTrips] = useState<Trip[]>([]);
-  const [totalTrips, setTotalTrips] = useState(0);
-  const [tripPage, setTripPage] = useState(1);
+  
+  // Create User Modal State
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [businesses, setBusinesses] = useState<BusinessOption[]>([]);
 
   // Search State
   const [userSearch, setUserSearch] = useState('');
   const debouncedUserSearch = useDebounce(userSearch, 500);
 
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-
   // Loading State
   const [loadingUsers, setLoadingUsers] = useState(true);
-  const [loadingTrips, setLoadingTrips] = useState(false);
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalTrips: 0,
@@ -50,6 +52,7 @@ export default function AdminDashboard() {
   // Fetch Stats (Once)
   useEffect(() => {
     fetchGlobalStats();
+    fetchBusinesses(); // جلب قائمة الشركات عند التحميل
   }, []);
 
   // Fetch Users when page or search changes
@@ -57,18 +60,10 @@ export default function AdminDashboard() {
     fetchUsers();
   }, [userPage, debouncedUserSearch]);
 
-  // Fetch Trips when page or selected user changes
-  useEffect(() => {
-    fetchTrips();
-  }, [tripPage, selectedUserId]);
-
   const fetchGlobalStats = async () => {
     try {
-      // Optimize: Use head: true for counts to avoid fetching data
       const { count: userCount } = await supabase.from('user_profiles').select('id', { count: 'exact', head: true });
       const { count: tripCount } = await supabase.from('trips').select('id', { count: 'exact', head: true });
-
-      // For revenue/profit, fetch only necessary columns
       const { data: financialData } = await supabase.from('trips').select('sale_price, profit');
 
       const totalRevenue = financialData?.reduce((sum, t) => sum + (t.sale_price || 0), 0) || 0;
@@ -85,10 +80,25 @@ export default function AdminDashboard() {
     }
   };
 
+  // دالة لجلب قائمة الشركات لاستخدامها في نموذج الإنشاء
+  const fetchBusinesses = async () => {
+    try {
+      const { data } = await supabase
+        .from('business_profiles')
+        .select('id, business_name')
+        .order('business_name');
+      
+      if (data) {
+        setBusinesses(data.map(b => ({ id: b.id, name: b.business_name })));
+      }
+    } catch (error) {
+      console.error('Error fetching businesses:', error);
+    }
+  };
+
   const fetchUsers = async () => {
     setLoadingUsers(true);
     try {
-      // Optimize: Fetch only needed columns
       let query = supabase
         .from('user_profiles')
         .select('id, email, full_name, phone_number, role, created_at', { count: 'exact' });
@@ -106,7 +116,6 @@ export default function AdminDashboard() {
 
       if (error) throw error;
 
-      // Fetch business profiles for these users
       const userIds = userProfiles?.map(u => u.id) || [];
       const { data: businessProfiles } = await supabase
         .from('business_profiles')
@@ -136,38 +145,6 @@ export default function AdminDashboard() {
     }
   };
 
-  const fetchTrips = async () => {
-    setLoadingTrips(true);
-    try {
-      // Optimize: Fetch only needed columns
-      // Note: We need all columns for the table rendering? 
-      // The table uses: destination, client_name, start_date, end_date, sale_price, profit, payment_status, status
-      let query = supabase
-        .from('trips')
-        .select('id, user_id, destination, client_name, start_date, end_date, sale_price, profit, payment_status, status', { count: 'exact' });
-
-      if (selectedUserId) {
-        query = query.eq('user_id', selectedUserId);
-      }
-
-      const from = (tripPage - 1) * PAGE_SIZE;
-      const to = from + PAGE_SIZE - 1;
-
-      const { data, count, error } = await query
-        .range(from, to)
-        .order('start_date', { ascending: false });
-
-      if (error) throw error;
-
-      setTrips((data as Trip[]) || []);
-      setTotalTrips(count || 0);
-    } catch (error) {
-      console.error('Error fetching trips:', error);
-    } finally {
-      setLoadingTrips(false);
-    }
-  };
-
   const getCurrencySymbol = (currency: string) => {
     switch (currency) {
       case 'USD': return '$';
@@ -178,16 +155,31 @@ export default function AdminDashboard() {
   };
 
   const currencySymbol = getCurrencySymbol(profile?.preferred_currency || 'USD');
-
   const totalUserPages = Math.ceil(totalUsers / PAGE_SIZE);
-  const totalTripPages = Math.ceil(totalTrips / PAGE_SIZE);
 
   return (
     <div className="space-y-6 animate-fadeIn pb-10">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold text-gray-900">{t('admin.dashboardTitle')}</h2>
-        <div className="bg-red-100 text-red-700 px-4 py-2 rounded-lg border border-red-300 font-semibold">
-          {t('admin.adminAccess')}
+      
+      {/* Header & Actions */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-50">{t('admin.dashboardTitle')}</h2>
+          <p className="text-sm text-slate-500 mt-1 dark:text-slate-400">Manage users and view platform statistics</p>
+        </div>
+        
+        <div className="flex items-center gap-3">
+          <div className="bg-red-100 text-red-700 px-4 py-2 rounded-lg border border-red-300 font-semibold text-sm">
+            {t('admin.adminAccess')}
+          </div>
+          
+          {/* Create User Button */}
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm font-medium"
+          >
+            <UserPlus className="w-4 h-4" />
+            <span>Create User</span>
+          </button>
         </div>
       </div>
 
@@ -231,74 +223,71 @@ export default function AdminDashboard() {
       </div>
 
       {/* Users Table */}
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
-        <div className="p-6 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <h3 className="text-xl font-bold text-gray-900">{t('admin.allUsers')}</h3>
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200 dark:bg-slate-950/70 dark:border-slate-800">
+        <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">{t('admin.allUsers')}</h3>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
             <input
               type="text"
-              placeholder="Search users..."
+              placeholder={t('admin.searchPlaceholder') || 'Search users...'}
               value={userSearch}
               onChange={(e) => {
                 setUserSearch(e.target.value);
-                setUserPage(1); // Reset to first page on search
+                setUserPage(1);
               }}
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm w-full sm:w-64"
+              className="pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm w-full sm:w-64 dark:bg-slate-900/50 dark:border-slate-700 dark:text-slate-100 dark:placeholder-slate-500"
             />
           </div>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-slate-50 dark:bg-slate-900/50">
               <tr>
-                <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-start text-xs font-medium text-slate-500 uppercase tracking-wider dark:text-slate-400">
                   {t('admin.table.email')}
                 </th>
-                <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-start text-xs font-medium text-slate-500 uppercase tracking-wider dark:text-slate-400">
                   {t('admin.table.fullName')}
                 </th>
-                <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-start text-xs font-medium text-slate-500 uppercase tracking-wider dark:text-slate-400">
                   {t('admin.table.businessName')}
                 </th>
-                <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-start text-xs font-medium text-slate-500 uppercase tracking-wider dark:text-slate-400">
                   {t('admin.table.phone')}
                 </th>
-                <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-start text-xs font-medium text-slate-500 uppercase tracking-wider dark:text-slate-400">
                   {t('admin.table.role')}
-                </th>
-                <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('admin.table.actions')}
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-slate-200 dark:bg-slate-950/70 dark:divide-slate-800">
               {loadingUsers ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-10 text-center text-gray-500">
-                    Loading users...
+                  <td colSpan={5} className="px-6 py-10 text-center text-gray-500">
+                    {t('admin.loadingUsers')}
                   </td>
                 </tr>
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-10 text-center text-gray-500">
-                    No users found
+                  <td colSpan={5} className="px-6 py-10 text-center text-gray-500">
+                    {t('admin.noUsers')}
                   </td>
                 </tr>
               ) : (
                 users.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <tr key={user.id} className="hover:bg-slate-50 transition-colors dark:hover:bg-slate-900/50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-slate-200">
                       {user.email}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-slate-200">
                       {user.full_name}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-slate-200">
                       {user.business_name}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-slate-200">
                       {user.phone_number}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -311,17 +300,6 @@ export default function AdminDashboard() {
                         {user.role === 'admin' ? t('admin.roles.admin') : t('admin.roles.user')}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <button
-                        onClick={() => {
-                          setSelectedUserId(user.id);
-                          setTripPage(1);
-                        }}
-                        className="text-blue-600 hover:text-blue-800 font-medium"
-                      >
-                        {t('admin.userTrips')}
-                      </button>
-                    </td>
                   </tr>
                 ))
               )}
@@ -330,9 +308,13 @@ export default function AdminDashboard() {
         </div>
 
         {/* User Pagination */}
-        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-          <div className="text-sm text-gray-500">
-            Showing {Math.min((userPage - 1) * PAGE_SIZE + 1, totalUsers)} to {Math.min(userPage * PAGE_SIZE, totalUsers)} of {totalUsers} users
+        <div className="px-6 py-4 border-t border-slate-200 flex items-center justify-between dark:border-slate-800">
+          <div className="text-sm text-slate-500 dark:text-slate-400">
+            {t('admin.paginationUsers', {
+              start: Math.min((userPage - 1) * PAGE_SIZE + 1, totalUsers),
+              end: Math.min(userPage * PAGE_SIZE, totalUsers),
+              total: totalUsers
+            })}
           </div>
           <div className="flex gap-2">
             <button
@@ -353,142 +335,38 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Trips Table */}
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
-        <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-          <h3 className="text-xl font-bold text-gray-900">
-            {selectedUserId ? t('admin.userTrips') : t('admin.showAllTrips')}
-          </h3>
-          {selectedUserId && (
-            <button
-              onClick={() => {
-                setSelectedUserId(null);
-                setTripPage(1);
-              }}
-              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all text-sm font-medium"
-            >
-              {t('admin.showAllTrips')}
-            </button>
-          )}
+      {/* Create User Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-200 animate-scaleIn dark:bg-slate-900 dark:border-slate-800">
+            <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800">
+              <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2 dark:text-white">
+                <UserPlus className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+                Create New Account
+              </h3>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="text-slate-400 hover:text-slate-600 transition-colors dark:hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 max-h-[80vh] overflow-y-auto">
+              <CreateUserForm 
+                onClose={() => setShowCreateModal(false)}
+                onSuccess={() => {
+                  setShowCreateModal(false);
+                  fetchUsers(); // Refresh list after creation
+                  fetchGlobalStats(); // Refresh stats
+                }}
+                existingBusinesses={businesses}
+              />
+            </div>
+          </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('admin.table.destination')}
-                </th>
-                <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('admin.table.client')}
-                </th>
-                <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('admin.table.dates')}
-                </th>
-                <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('admin.table.salePrice')}
-                </th>
-                <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('admin.table.profit')}
-                </th>
-                <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('admin.table.paymentStatus')}
-                </th>
-                <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('admin.table.status')}
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {loadingTrips ? (
-                <tr>
-                  <td colSpan={7} className="px-6 py-10 text-center text-gray-500">
-                    Loading trips...
-                  </td>
-                </tr>
-              ) : trips.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-6 py-10 text-center text-gray-500">
-                    No trips found
-                  </td>
-                </tr>
-              ) : (
-                trips.map((trip) => (
-                  <tr key={trip.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {trip.destination}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {trip.client_name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {new Date(trip.start_date).toLocaleDateString()} -{' '}
-                      {new Date(trip.end_date).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {currencySymbol}{trip.sale_price.toFixed(2)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <span
-                        className={`font-semibold ${trip.profit >= 0 ? 'text-green-700' : 'text-red-700'
-                          }`}
-                      >
-                        {trip.profit >= 0 ? '+' : ''}{currencySymbol}{trip.profit.toFixed(2)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 text-xs font-semibold rounded-full ${trip.payment_status === 'paid'
-                          ? 'bg-green-100 text-green-800'
-                          : trip.payment_status === 'partial'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-red-100 text-red-800'
-                          }`}
-                      >
-                        {trip.payment_status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 text-xs font-semibold rounded-full ${trip.status === 'active'
-                          ? 'bg-blue-100 text-blue-800'
-                          : trip.status === 'completed'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-gray-100 text-gray-800'
-                          }`}
-                      >
-                        {trip.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+      )}
 
-        {/* Trip Pagination */}
-        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-          <div className="text-sm text-gray-500">
-            Showing {Math.min((tripPage - 1) * PAGE_SIZE + 1, totalTrips)} to {Math.min(tripPage * PAGE_SIZE, totalTrips)} of {totalTrips} trips
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setTripPage(p => Math.max(1, p - 1))}
-              disabled={tripPage === 1 || loadingTrips}
-              className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setTripPage(p => Math.min(totalTripPages, p + 1))}
-              disabled={tripPage === totalTripPages || loadingTrips}
-              className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

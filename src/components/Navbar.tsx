@@ -43,31 +43,36 @@ export default function Navbar({ onNavigate, currentPage }: NavbarProps) {
   const baseNavBtn =
     'inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium rounded-xl transition-all border-b-2';
   const activeNavBtn =
-    'border-sky-400 text-slate-50 bg-slate-900/80 shadow-[0_4px_14px_rgba(15,23,42,0.8)]';
+    'border-sky-400 text-slate-900 bg-slate-100/80 shadow-[0_4px_14px_rgba(148,163,184,0.4)] dark:text-slate-50 dark:bg-slate-900/80 dark:shadow-[0_4px_14px_rgba(15,23,42,0.8)]';
   const inactiveNavBtn =
-    'border-transparent text-slate-300 hover:text-slate-50 hover:bg-slate-900/50 hover:border-slate-500/80';
+    'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-100/50 hover:border-slate-300 dark:text-slate-300 dark:hover:text-slate-50 dark:hover:bg-slate-900/50 dark:hover:border-slate-500/80';
+
 
   // Mobile buttons (نفس الروح لكن داخل قائمة)
   const mobileBaseBtn =
     'w-full flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border';
   const mobileActiveNavBtn =
-    'bg-slate-900/95 border-sky-400 text-slate-50 shadow-sm shadow-sky-900/70';
+    'bg-slate-100/95 border-sky-400 text-slate-900 shadow-sm shadow-sky-200/70 dark:bg-slate-900/95 dark:text-slate-50 dark:shadow-sky-900/70';
   const mobileInactiveNavBtn =
-    'bg-slate-900/80 border-slate-700 text-slate-100 hover:border-sky-400/70 hover:bg-slate-900';
+    'bg-white/80 border-slate-200 text-slate-600 hover:border-sky-400/70 hover:bg-slate-50 dark:bg-slate-900/80 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-900';
+
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50" dir={direction}>
       {/* Top nav bar */}
-      <div className="bg-slate-950/85 backdrop-blur-xl border-b border-slate-900/70 shadow-lg shadow-slate-950/60">
+      <div className="bg-white/90 border-slate-200/70 shadow-lg shadow-slate-200/60 dark:bg-slate-950/85 backdrop-blur-xl dark:border-slate-900/70 dark:shadow-slate-950/60">
+
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
           {/* Brand */}
           <div className="flex items-center gap-3 min-w-0">
-            <div className="flex items-center gap-3 rounded-xl bg-slate-950/95 border border-slate-800/90 px-3 py-1 shadow-md shadow-sky-900/50">
+            <div className="flex items-center gap-3 rounded-xl bg-white/95 border border-slate-200/90 shadow-md shadow-sky-100/50 dark:bg-slate-950/95 dark:border-slate-800/90 dark:shadow-sky-900/50 px-3 py-1">
+
               {/* Logo badge */}
               <div className="relative flex h-10 w-10 md:h-11 md:w-11 items-center justify-center">
                 <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-sky-400 via-fuchsia-500 to-sky-300 opacity-85 blur-[0.5px]" />
-                <div className="relative h-8 w-8 md:h-9 md:w-9 rounded-full bg-slate-950 border border-slate-700/85 shadow-md shadow-sky-900/70 flex items-center justify-center overflow-hidden">
-                  <div className="pointer-events-none absolute inset-0 rounded-full bg-gradient-to-t from-slate-950 via-slate-900/35 to-white/18 opacity-90" />
+                <div className="relative h-8 w-8 md:h-9 md:w-9 rounded-full bg-slate-50 border border-slate-200/85 shadow-md shadow-sky-100/70 flex items-center justify-center overflow-hidden dark:bg-slate-950 dark:border-slate-700/85 dark:shadow-sky-900/70">
+                  <div className="pointer-events-none absolute inset-0 rounded-full bg-gradient-to-t from-slate-50 via-slate-100/35 to-white/18 opacity-90 dark:from-slate-950 dark:via-slate-900/35" />
+
                   <img
                     src={displayLogoUrl || (LogoPng as unknown as string)}
                     alt="Logo"
@@ -81,11 +86,12 @@ export default function Navbar({ onNavigate, currentPage }: NavbarProps) {
 
               {/* Business name */}
               <div className="flex flex-col min-w-0">
-                <span className="text-[9px] md:text-[10px] font-semibold tracking-[0.22em] uppercase text-sky-300/85">
+                <span className="text-[9px] md:text-[10px] font-semibold tracking-[0.22em] uppercase text-sky-600/85 dark:text-sky-300/85">
                   MyDesk Pro
                 </span>
                 <span
-                  className="text-[1rem] md:text-[1.15rem] font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-50 via-sky-100 to-slate-200 drop-shadow-[0_0_6px_rgba(15,23,42,0.9)] truncate max-w-[210px] sm:max-w-[260px]"
+                  className="text-[1rem] md:text-[1.15rem] font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-sky-800 to-slate-700 drop-shadow-sm dark:from-slate-50 dark:via-sky-100 dark:to-slate-200 dark:drop-shadow-[0_0_6px_rgba(15,23,42,0.9)] truncate max-w-[210px] sm:max-w-[260px]"
+
                   title={displayName}
                 >
                   {displayName}
@@ -155,7 +161,7 @@ export default function Navbar({ onNavigate, currentPage }: NavbarProps) {
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-xl text-slate-400 hover:text-sky-400 hover:bg-slate-900/50 transition-colors"
+              className="p-2 rounded-xl text-slate-500 hover:text-sky-600 hover:bg-slate-100/50 transition-colors dark:text-slate-400 dark:hover:text-sky-400 dark:hover:bg-slate-900/50"
               title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
               {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
@@ -188,7 +194,7 @@ export default function Navbar({ onNavigate, currentPage }: NavbarProps) {
           <div className="md:hidden">
             <button
               type="button"
-              className="p-2 rounded-xl border border-slate-800/80 bg-slate-900/80 hover:bg-slate-900/95 text-slate-100 transition-all"
+              className="p-2 rounded-xl border border-slate-200/80 bg-slate-100/80 hover:bg-slate-200/95 text-slate-700 transition-all dark:border-slate-800/80 dark:bg-slate-900/80 dark:hover:bg-slate-900/95 dark:text-slate-100"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Toggle menu"
             >
@@ -207,9 +213,10 @@ export default function Navbar({ onNavigate, currentPage }: NavbarProps) {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-slate-950/98 backdrop-blur-xl border-b border-slate-900/85">
+        <div className="md:hidden bg-white/98 backdrop-blur-xl border-b border-slate-200/85 dark:bg-slate-950/98 dark:border-slate-900/85">
           <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-3">
-            <div className="glass-panel rounded-2xl p-2 space-y-1 border border-slate-800/80 bg-slate-950/80">
+            <div className="glass-panel rounded-2xl p-2 space-y-1 border border-slate-200/80 bg-white/80 dark:border-slate-800/80 dark:bg-slate-950/80">
+
               <button
                 type="button"
                 onClick={() => handleNavigate('home')}
@@ -280,7 +287,8 @@ export default function Navbar({ onNavigate, currentPage }: NavbarProps) {
               </button>
 
               {isElectron && (
-                <div className="pt-2 border-t border-slate-800/80 mt-1.5">
+                <div className="pt-2 border-t border-slate-200/80 mt-1.5 dark:border-slate-800/80">
+
                   <button
                     type="button"
                     onClick={() => {

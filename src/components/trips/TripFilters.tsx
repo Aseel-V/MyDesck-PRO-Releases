@@ -86,16 +86,17 @@ export default function TripFilters({
 
   // نفس روح التصميم الداكن في الـ navbar / Trips
   const baseInputClasses =
-    'w-full px-3 py-2.5 rounded-xl bg-slate-950/90 border border-slate-800/80 text-sm text-slate-100 placeholder-slate-400 ' +
-    'focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500/70 transition-all shadow-sm shadow-slate-950/60';
+    'w-full px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-sm text-slate-900 placeholder-slate-400 ' +
+    'focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500/70 transition-all shadow-sm ' +
+    'dark:bg-slate-950/90 dark:border-slate-800/80 dark:text-slate-100 dark:placeholder-slate-400 dark:shadow-slate-950/60';
 
   const labelClasses =
-    'block text-xs font-semibold tracking-wide text-slate-300 mb-2';
+    'block text-xs font-semibold tracking-wide text-slate-500 mb-2 dark:text-slate-300';
 
   return (
     <div className="space-y-4">
       {/* Search */}
-      <div className="rounded-2xl bg-slate-950/95 border border-slate-800/90 px-3.5 py-2.5 shadow-md shadow-slate-950/60">
+      <div className="rounded-2xl bg-white border border-slate-200 px-3.5 py-2.5 shadow-sm dark:bg-slate-950/95 dark:border-slate-800/90 dark:shadow-md dark:shadow-slate-950/60">
         <div className="relative">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 pointer-events-none" />
           <input
@@ -130,7 +131,7 @@ export default function TripFilters({
         {/* Year Selector - Segmented Control */}
         <div className="sm:col-span-2 lg:col-span-1">
           <label className={labelClasses}>{t('analytics.year')}</label>
-          <div className="flex bg-slate-950/90 border border-slate-800/80 rounded-xl p-1 shadow-sm shadow-slate-950/60 overflow-x-auto no-scrollbar">
+          <div className="flex bg-slate-100 border border-slate-200 rounded-xl p-1 shadow-sm overflow-x-auto no-scrollbar dark:bg-slate-950/90 dark:border-slate-800/80 dark:shadow-slate-950/60">
              {availableYears.map((year) => {
                const isActive = yearFilter === year;
                return (
@@ -139,8 +140,8 @@ export default function TripFilters({
                    onClick={() => onYearFilterChange(year)}
                    className={`flex-1 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap ${
                      isActive
-                       ? 'bg-sky-500 text-white shadow-md shadow-sky-900/20'
-                       : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                       ? 'bg-sky-500 text-white shadow-md shadow-sky-500/20'
+                       : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800/50'
                    }`}
                  >
                    {year}

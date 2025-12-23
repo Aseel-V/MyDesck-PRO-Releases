@@ -38,7 +38,7 @@ export function CommandPalette({ onNavigate, onSelectTrip, onCreateTrip }: Comma
         .eq('user_id', user.id)
         .order('start_date', { ascending: false });
       if (error) throw error;
-      return data as Trip[];
+      return data as unknown as Trip[];
     },
     enabled: !!user?.id && !isAdmin && open, // Only fetch when open
   });
@@ -68,21 +68,22 @@ export function CommandPalette({ onNavigate, onSelectTrip, onCreateTrip }: Comma
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm"
+            className="fixed inset-0 bg-slate-200/60 backdrop-blur-sm dark:bg-slate-950/60"
             onClick={() => setOpen(false)}
           />
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: -20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -20 }}
-            className="relative w-full max-w-lg overflow-hidden rounded-xl border border-slate-800 bg-slate-900/90 shadow-2xl backdrop-blur-xl"
+            className="relative w-full max-w-lg overflow-hidden rounded-xl border border-slate-200 bg-white/90 shadow-2xl backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/90"
           >
+
             <Command label="Command Menu" className="w-full">
-              <div className="flex items-center border-b border-slate-800 px-3" cmdk-input-wrapper="">
-                <Search className="mr-2 h-4 w-4 shrink-0 opacity-50 text-slate-400" />
+              <div className="flex items-center border-b border-slate-200 px-3 dark:border-slate-800" cmdk-input-wrapper="">
+                <Search className="mr-2 h-4 w-4 shrink-0 opacity-50 text-slate-500 dark:text-slate-400" />
                 <Command.Input
                   placeholder={t('search', 'Type a command or search...')}
-                  className="flex h-12 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-slate-500 text-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex h-12 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-slate-400 text-slate-900 disabled:cursor-not-allowed disabled:opacity-50 dark:placeholder:text-slate-500 dark:text-slate-100"
                 />
               </div>
               <Command.List className="max-h-[300px] overflow-y-auto overflow-x-hidden p-2">

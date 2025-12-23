@@ -53,6 +53,10 @@ export const translations = {
       close: 'Close',
       exitSafely: 'Exit safely',
       closeApp: 'Close App',
+      lightMode: 'Light Mode',
+      darkMode: 'Dark Mode',
+      switchToLight: 'Switch to Light Mode',
+      switchToDark: 'Switch to Dark Mode',
     },
 
     admin: {
@@ -65,6 +69,13 @@ export const translations = {
       allUsers: 'All Users',
       userTrips: 'User Trips',
       showAllTrips: 'Show All Trips',
+      searchPlaceholder: 'Search users...',
+      loadingUsers: 'Loading users...',
+      noUsers: 'No users found',
+      loadingTrips: 'Loading trips...',
+      noTrips: 'No trips found',
+      paginationUsers: 'Showing {{start}} to {{end}} of {{total}} users',
+      paginationTrips: 'Showing {{start}} to {{end}} of {{total}} trips',
       table: {
         email: 'Email',
         fullName: 'Full Name',
@@ -264,6 +275,10 @@ export const translations = {
       close: 'إغلاق',
       exitSafely: 'خروج آمن',
       closeApp: 'إغلاق التطبيق',
+      lightMode: 'الوضع النهاري',
+      darkMode: 'الوضع الليلي',
+      switchToLight: 'التبديل إلى الوضع النهاري',
+      switchToDark: 'التبديل إلى الوضع الليلي',
     },
 
     admin: {
@@ -276,6 +291,13 @@ export const translations = {
       allUsers: 'جميع المستخدمين',
       userTrips: 'رحلات المستخدم',
       showAllTrips: 'عرض كل الرحلات',
+      searchPlaceholder: 'بحث عن مستخدمين...',
+      loadingUsers: 'جاري تحميل المستخدمين...',
+      noUsers: 'لم يتم العثور على مستخدمين',
+      loadingTrips: 'جاري تحميل الرحلات...',
+      noTrips: 'لم يتم العثور على رحلات',
+      paginationUsers: 'عرض {{start}} إلى {{end}} من أصل {{total}} مستخدم',
+      paginationTrips: 'عرض {{start}} إلى {{end}} من أصل {{total}} رحلة',
       table: {
         email: 'البريد الإلكتروني',
         fullName: 'الاسم الكامل',
@@ -475,6 +497,10 @@ export const translations = {
       close: 'סגור',
       exitSafely: 'יציאה בטוחה',
       closeApp: 'סגור אפליקציה',
+      lightMode: 'מצב יום',
+      darkMode: 'מצב לילה',
+      switchToLight: 'עבור למצב יום',
+      switchToDark: 'עבור למצב לילה',
     },
 
     admin: {
@@ -487,6 +513,13 @@ export const translations = {
       allUsers: 'כל המשתמשים',
       userTrips: 'טיולי משתמש',
       showAllTrips: 'הצג את כל הטיולים',
+      searchPlaceholder: 'חפש משתמשים...',
+      loadingUsers: 'טוען משתמשים...',
+      noUsers: 'לא נמצאו משתמשים',
+      loadingTrips: 'טוען טיולים...',
+      noTrips: 'לא נמצאו טיולים',
+      paginationUsers: 'מציג {{start}} עד {{end}} מתוך {{total}} משתמשים',
+      paginationTrips: 'מציג {{start}} עד {{end}} מתוך {{total}} טיולים',
       table: {
         email: 'אימייל',
         fullName: 'שם מלא',

@@ -31,12 +31,13 @@ export default function Login() {
   };
 
   const baseInputClasses =
-    'w-full text-slate-100 placeholder-slate-400 bg-slate-950/80 border border-slate-800/80 rounded-xl px-3 py-2.5 text-sm ' +
-    'focus:outline-none focus:ring-2 focus:ring-sky-500/80 focus:border-sky-500/80 transition-all shadow-sm shadow-slate-950/70';
+    'w-full text-slate-900 placeholder-slate-400 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm ' +
+    'focus:outline-none focus:ring-2 focus:ring-sky-500/80 focus:border-sky-500/80 transition-all shadow-sm ' +
+    'dark:text-slate-100 dark:bg-slate-950/80 dark:border-slate-800/80 dark:shadow-slate-950/70';
 
   if (view === 'forgot-password') {
     return (
-      <div className="min-h-screen relative flex items-center justify-center bg-slate-950 px-4 py-10">
+      <div className="min-h-screen relative flex items-center justify-center bg-slate-50 px-4 py-10 dark:bg-slate-950">
          {/* Background elements */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
             <div className="absolute -top-32 -left-32 w-80 h-80 bg-sky-500/20 blur-3xl rounded-full" />
@@ -49,7 +50,7 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center bg-slate-950 px-4 py-10">
+    <div className="min-h-screen relative flex items-center justify-center bg-slate-50 px-4 py-10 dark:bg-slate-950">
       {/* Search for 'isElectron' button and keep it... */}
       {isElectron && (
         <div className="absolute top-4 right-4 z-20">
@@ -74,47 +75,47 @@ export default function Login() {
 
       {/* Main Card */}
       <div className="w-full max-w-4xl relative z-10">
-        <div className="rounded-3xl overflow-hidden border border-slate-800/80 bg-slate-950/95 shadow-[0_24px_80px_rgba(0,0,0,0.8)] glass-panel animate-scaleIn">
+        <div className="rounded-3xl overflow-hidden border border-slate-200 bg-white/95 shadow-2xl glass-panel animate-scaleIn dark:border-slate-800/80 dark:bg-slate-950/95 dark:shadow-[0_24px_80px_rgba(0,0,0,0.8)]">
           {/* Top Line */}
           <div className="h-[2px] bg-gradient-to-r from-sky-500/70 via-fuchsia-500/60 to-sky-400/70" />
 
           <div className="grid lg:grid-cols-[1.1fr,1fr]">
             {/* Left Part - Welcome */}
-            <div className="relative px-8 py-10 md:px-10 md:py-12 bg-gradient-to-br from-slate-950 via-slate-900/80 to-slate-950">
+            <div className="relative px-8 py-10 md:px-10 md:py-12 bg-slate-50 dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-900/80 dark:to-slate-950">
               <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute -top-20 right-0 w-56 h-56 bg-sky-400/18 blur-3xl rounded-full" />
                 <div className="absolute bottom-0 -left-10 w-64 h-64 bg-fuchsia-500/14 blur-3xl rounded-full" />
               </div>
 
               <div className="relative space-y-6">
-                <div className="inline-flex items-center gap-2 rounded-full border border-slate-700/80 bg-slate-900/70 px-3 py-1 text-xs font-medium text-sky-100 backdrop-blur">
+                <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/70 px-3 py-1 text-xs font-medium text-sky-600 backdrop-blur dark:border-slate-700/80 dark:bg-slate-900/70 dark:text-sky-100">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   {t('auth.secureAccess', 'Secure access portal')}
                 </div>
 
                 <div className="space-y-3">
-                  <h1 className="text-3xl md:text-4xl font-extrabold gradient-title leading-tight">
+                  <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-sky-400 dark:via-fuchsia-400 dark:to-sky-400">
                     {t('auth.welcomeBack', 'Welcome back')}
                   </h1>
-                  <p className="text-sm md:text-base text-slate-300/90 max-w-md">
+                  <p className="text-sm md:text-base text-slate-500 max-w-md dark:text-slate-300/90">
                     {t('auth.loginSubtitle', 'Sign in to manage your trips, clients and finances from one smart dashboard.')}
                   </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 text-xs md:text-sm">
-                  <div className="rounded-2xl border border-slate-800/80 bg-slate-950/70 px-4 py-3 backdrop-blur-sm shadow-inner shadow-slate-950/80">
-                    <div className="text-slate-100 font-medium">
+                  <div className="rounded-2xl border border-slate-200 bg-white/50 px-4 py-3 backdrop-blur-sm shadow-sm dark:border-slate-800/80 dark:bg-slate-950/70 dark:shadow-inner dark:shadow-slate-950/80">
+                    <div className="text-slate-700 font-medium dark:text-slate-100">
                       {t('auth.featureRealtime', 'Real-time updates')}
                     </div>
-                    <div className="text-slate-400 mt-1">
+                    <div className="text-slate-500 mt-1 dark:text-slate-400">
                       {t('auth.featureRealtimeDesc', 'See your latest trips, payments and analytics instantly.')}
                     </div>
                   </div>
-                  <div className="rounded-2xl border border-slate-800/80 bg-slate-950/70 px-4 py-3 backdrop-blur-sm shadow-inner shadow-slate-950/80">
-                    <div className="text-slate-100 font-medium">
+                  <div className="rounded-2xl border border-slate-200 bg-white/50 px-4 py-3 backdrop-blur-sm shadow-sm dark:border-slate-800/80 dark:bg-slate-950/70 dark:shadow-inner dark:shadow-slate-950/80">
+                    <div className="text-slate-700 font-medium dark:text-slate-100">
                       {t('auth.featureSecurity', 'Secure & encrypted')}
                     </div>
-                    <div className="text-slate-400 mt-1">
+                    <div className="text-slate-500 mt-1 dark:text-slate-400">
                       {t('auth.featureSecurityDesc', 'Your data is protected with modern security standards.')}
                     </div>
                   </div>
@@ -131,7 +132,7 @@ export default function Login() {
             </div>
 
             {/* Right Part - Login Form */}
-            <div className="relative bg-slate-950/90 px-6 py-8 md:px-8 md:py-10">
+            <div className="relative bg-white px-6 py-8 md:px-8 md:py-10 dark:bg-slate-950/90">
               <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-40 bg-sky-400/12 blur-3xl rounded-full" />
               </div>
@@ -139,14 +140,14 @@ export default function Login() {
               <div className="relative space-y-6">
                 <div className="text-center space-y-3">
                   <div className="flex justify-center">
-                    <div className="bg-slate-900/90 border border-slate-700/80 p-3 rounded-2xl shadow-lg shadow-sky-900/40">
-                      <LogIn className="w-7 h-7 text-sky-400" />
+                    <div className="bg-slate-100 border border-slate-200 p-3 rounded-2xl shadow-sm dark:bg-slate-900/90 dark:border-slate-700/80 dark:shadow-sky-900/40">
+                      <LogIn className="w-7 h-7 text-sky-600 dark:text-sky-400" />
                     </div>
                   </div>
-                  <h2 className="text-2xl font-semibold text-white">
+                  <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
                     {t('auth.login')}
                   </h2>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     {t('auth.loginHint', 'Enter your credentials to continue')}
                   </p>
                 </div>
@@ -161,7 +162,7 @@ export default function Login() {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   {/* Email */}
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-medium text-slate-200">
+                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-200">
                       {t('auth.email')}
                     </label>
                     <div className="relative">
@@ -181,13 +182,13 @@ export default function Login() {
                   {/* Password */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <label className="block text-xs font-medium text-slate-200">
+                      <label className="block text-xs font-medium text-slate-700 dark:text-slate-200">
                         {t('auth.password')}
                       </label>
                       <button
                         type="button"
                         onClick={() => setView('forgot-password')}
-                        className="text-[11px] text-sky-300/80 hover:text-sky-200 transition-colors"
+                        className="text-[11px] text-sky-600 hover:text-sky-700 transition-colors dark:text-sky-300/80 dark:hover:text-sky-200"
                       >
                         {t('auth.forgotPassword', 'Forgot password?')}
                       </button>

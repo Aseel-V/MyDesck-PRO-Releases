@@ -75,13 +75,13 @@ interface CustomTooltipProps {
 const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     return (
-      <div className="glass-panel bg-slate-950/90 border border-slate-700/50 p-4 rounded-xl shadow-2xl backdrop-blur-md">
-        <p className="text-slate-200 font-semibold mb-2 text-sm">{label}</p>
+      <div className="glass-panel bg-white/95 border border-slate-200 p-4 rounded-xl shadow-xl backdrop-blur-md dark:bg-slate-950/90 dark:border-slate-700/50 dark:shadow-2xl">
+        <p className="text-slate-700 font-semibold mb-2 text-sm dark:text-slate-200">{label}</p>
         {payload.map((entry: any, index: number) => (
           <div key={index} className="flex items-center gap-2 text-xs">
             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
-            <span className="text-slate-400 capitalize">{entry.name}:</span>
-            <span className="text-slate-100 font-medium">
+            <span className="text-slate-500 capitalize dark:text-slate-400">{entry.name}:</span>
+            <span className="text-slate-900 font-medium dark:text-slate-100">
               {typeof entry.value === 'number' ? entry.value.toLocaleString() : entry.value}
             </span>
           </div>
@@ -405,22 +405,22 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
   }
 
   return (
-    <div className="space-y-6 animate-fadeIn">
+      <div className="space-y-6 animate-fadeIn">
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.3em] text-sky-300/80 mb-1">
+          <p className="text-[11px] uppercase tracking-[0.3em] text-sky-600/80 mb-1 dark:text-sky-300/80">
             {isAdmin ? 'Platform Insights' : 'Business Insights'}
           </p>
-          <h2 className="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-slate-50 via-sky-100 to-slate-200 drop-shadow-[0_0_16px_rgba(15,23,42,0.9)]">
+          <h2 className="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-sky-800 to-slate-700 drop-shadow-sm dark:from-slate-50 dark:via-sky-100 dark:to-slate-200 dark:drop-shadow-[0_0_16px_rgba(15,23,42,0.9)]">
             {isAdmin ? 'Admin Analytics' : t('analytics.title')}
           </h2>
-          <p className="text-slate-400 mt-1 text-sm">
+          <p className="text-slate-500 mt-1 text-sm dark:text-slate-400">
             {isAdmin
               ? 'Track user growth, admin distribution, and overall platform activity.'
               : 'Follow your trips, profit, payments health, and destinations performance.'}
             {currency !== 'USD' && !isAdmin && (
-              <span className="ml-2 text-xs text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-full border border-sky-500/20">
+              <span className="ml-2 text-xs text-sky-500 bg-sky-100 px-2 py-0.5 rounded-full border border-sky-200 dark:text-sky-400 dark:bg-sky-500/10 dark:border-sky-500/20">
                 Converted to {currency}
                 {ratesLoading && <span className="ml-1 animate-pulse">...</span>}
               </span>
@@ -430,7 +430,7 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
 
         {/* Year Selector */}
         {!isAdmin && (
-          <div className="flex bg-slate-950/90 border border-slate-800/80 rounded-xl p-1 shadow-sm shadow-slate-950/60 overflow-x-auto no-scrollbar max-w-full md:max-w-xs">
+          <div className="flex bg-slate-100 border border-slate-200 rounded-xl p-1 shadow-sm overflow-x-auto no-scrollbar max-w-full md:max-w-xs dark:bg-slate-950/90 dark:border-slate-800/80 dark:shadow-slate-950/60">
             {availableYears.map((year) => {
               const isActive = selectedYear === year;
               return (
@@ -439,8 +439,8 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
                   onClick={() => setSelectedYear(year)}
                   className={`flex-1 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap ${
                     isActive
-                      ? 'bg-sky-500 text-white shadow-md shadow-sky-900/20'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                      ? 'bg-sky-500 text-white shadow-md shadow-sky-500/20'
+                      : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800/50'
                   }`}
                 >
                   {year}
@@ -455,109 +455,109 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {isAdmin ? (
           <>
-            <div className="glass-panel rounded-2xl border border-slate-800/80 bg-slate-950/90 shadow-[0_18px_55px_rgba(15,23,42,0.95)] p-6 text-slate-100 transform transition-all hover:scale-[1.02]">
+            <div className="glass-panel rounded-2xl border border-slate-200 bg-white shadow-sm p-6 text-slate-900 transform transition-all hover:scale-[1.02] dark:border-slate-800/80 dark:bg-slate-950/90 dark:shadow-[0_18px_55px_rgba(15,23,42,0.95)] dark:text-slate-100">
               <div className="flex items-center justify-between mb-4">
                 <Users className="w-8 h-8 opacity-80" />
-                <div className="bg-white/10 rounded-lg px-3 py-1">
+                <div className="bg-slate-100 rounded-lg px-3 py-1 dark:bg-white/10">
                   <span className="text-xs font-semibold">Total Users</span>
                 </div>
               </div>
               <div className="text-3xl font-bold mb-2">{(stats as AdminStats).totalUsers}</div>
-              <div className="text-slate-400 text-sm">All registered users</div>
+              <div className="text-slate-500 text-sm dark:text-slate-400">All registered users</div>
             </div>
 
-            <div className="glass-panel rounded-2xl border border-slate-800/80 bg-slate-950/90 shadow-[0_18px_55px_rgba(15,23,42,0.95)] p-6 text-slate-100 transform transition-all hover:scale-[1.02]">
+            <div className="glass-panel rounded-2xl border border-slate-200 bg-white shadow-sm p-6 text-slate-900 transform transition-all hover:scale-[1.02] dark:border-slate-800/80 dark:bg-slate-950/90 dark:shadow-[0_18px_55px_rgba(15,23,42,0.95)] dark:text-slate-100">
               <div className="flex items-center justify-between mb-4">
                 <UserPlus className="w-8 h-8 opacity-80" />
-                <div className="bg-white/10 rounded-lg px-3 py-1">
+                <div className="bg-slate-100 rounded-lg px-3 py-1 dark:bg-white/10">
                   <span className="text-xs font-semibold">New Users</span>
                 </div>
               </div>
               <div className="text-3xl font-bold mb-2">{(stats as AdminStats).newUsersThisMonth}</div>
-              <div className="text-slate-400 text-sm">This month</div>
+              <div className="text-slate-500 text-sm dark:text-slate-400">This month</div>
             </div>
 
-            <div className="glass-panel rounded-2xl border border-slate-800/80 bg-slate-950/90 shadow-[0_18px_55px_rgba(15,23,42,0.95)] p-6 text-slate-100 transform transition-all hover:scale-[1.02]">
+            <div className="glass-panel rounded-2xl border border-slate-200 bg-white shadow-sm p-6 text-slate-900 transform transition-all hover:scale-[1.02] dark:border-slate-800/80 dark:bg-slate-950/90 dark:shadow-[0_18px_55px_rgba(15,23,42,0.95)] dark:text-slate-100">
               <div className="flex items-center justify-between mb-4">
                 <Shield className="w-8 h-8 opacity-80" />
-                <div className="bg-white/10 rounded-lg px-3 py-1">
+                <div className="bg-slate-100 rounded-lg px-3 py-1 dark:bg-white/10">
                   <span className="text-xs font-semibold">Admins</span>
                 </div>
               </div>
               <div className="text-3xl font-bold mb-2">{(stats as AdminStats).totalAdmins}</div>
-              <div className="text-slate-400 text-sm">Administrators</div>
+              <div className="text-slate-500 text-sm dark:text-slate-400">Administrators</div>
             </div>
 
-            <div className="glass-panel rounded-2xl border border-slate-800/80 bg-slate-950/90 shadow-[0_18px_55px_rgba(15,23,42,0.95)] p-6 text-slate-100 transform transition-all hover:scale-[1.02]">
+            <div className="glass-panel rounded-2xl border border-slate-200 bg-white shadow-sm p-6 text-slate-900 transform transition-all hover:scale-[1.02] dark:border-slate-800/80 dark:bg-slate-950/90 dark:shadow-[0_18px_55px_rgba(15,23,42,0.95)] dark:text-slate-100">
               <div className="flex items-center justify-between mb-4">
                 <Users className="w-8 h-8 opacity-80" />
-                <div className="bg-white/10 rounded-lg px-3 py-1">
+                <div className="bg-slate-100 rounded-lg px-3 py-1 dark:bg-white/10">
                   <span className="text-xs font-semibold">Regular Users</span>
                 </div>
               </div>
               <div className="text-3xl font-bold mb-2">{(stats as AdminStats).totalRegularUsers}</div>
-              <div className="text-slate-400 text-sm">Standard accounts</div>
+              <div className="text-slate-500 text-sm dark:text-slate-400">Standard accounts</div>
             </div>
           </>
         ) : (
           <>
             {/* Profit Margin KPI */}
-            <div className="glass-panel rounded-2xl border border-slate-800/80 bg-slate-950/90 shadow-[0_18px_55px_rgba(15,23,42,0.95)] p-6 text-slate-100 transform transition-all hover:scale-[1.02] md:col-span-2">
+            <div className="glass-panel rounded-2xl border border-slate-200 bg-white shadow-sm p-6 text-slate-900 transform transition-all hover:scale-[1.02] md:col-span-2 dark:border-slate-800/80 dark:bg-slate-950/90 dark:shadow-[0_18px_55px_rgba(15,23,42,0.95)] dark:text-slate-100">
               <div className="flex items-center justify-between mb-3">
-                <div className="bg-white/10 rounded-lg px-3 py-1">
+                <div className="bg-slate-100 rounded-lg px-3 py-1 dark:bg-white/10">
                   <span className="text-xs font-semibold">Net Profit Margin</span>
                 </div>
-                <div className={`flex items-center gap-1 text-sm ${profitMarginTrend >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                <div className={`flex items-center gap-1 text-sm ${profitMarginTrend >= 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}>
                   {profitMarginTrend >= 0 ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
                   <span>{Math.abs(profitMarginTrend).toFixed(1)}%</span>
                 </div>
               </div>
               <div className="text-4xl font-extrabold mb-1">{profitMarginPct.toFixed(1)}%</div>
-              <div className="text-slate-400 text-xs">Shows how efficiently your business converts revenue to profit.</div>
+              <div className="text-slate-500 text-xs dark:text-slate-400">Shows how efficiently your business converts revenue to profit.</div>
             </div>
 
-            <div className="glass-panel rounded-2xl border border-slate-800/80 bg-slate-950/90 shadow-[0_18px_55px_rgba(15,23,42,0.95)] p-6 text-slate-100 transform transition-all hover:scale-[1.02]">
+            <div className="glass-panel rounded-2xl border border-slate-200 bg-white shadow-sm p-6 text-slate-900 transform transition-all hover:scale-[1.02] dark:border-slate-800/80 dark:bg-slate-950/90 dark:shadow-[0_18px_55px_rgba(15,23,42,0.95)] dark:text-slate-100">
               <div className="flex items-center justify-between mb-4">
                 <DollarSign className="w-8 h-8 opacity-80" />
-                <div className="bg-white/10 rounded-lg px-3 py-1">
+                <div className="bg-slate-100 rounded-lg px-3 py-1 dark:bg-white/10">
                   <span className="text-xs font-semibold">{t('analytics.totalRevenue')}</span>
                 </div>
               </div>
               <div className="text-3xl font-bold mb-2">{format((stats as UserStats).totalRevenue ?? 0, currency)}</div>
-              <div className="text-slate-400 text-sm">{t('analytics.totalRevenue')}</div>
+              <div className="text-slate-500 text-sm dark:text-slate-400">{t('analytics.totalRevenue')}</div>
             </div>
 
-            <div className="glass-panel rounded-2xl border border-slate-800/80 bg-slate-950/90 shadow-[0_18px_55px_rgba(15,23,42,0.95)] p-6 text-slate-100 transform transition-all hover:scale-[1.02]">
+            <div className="glass-panel rounded-2xl border border-slate-200 bg-white shadow-sm p-6 text-slate-900 transform transition-all hover:scale-[1.02] dark:border-slate-800/80 dark:bg-slate-950/90 dark:shadow-[0_18px_55px_rgba(15,23,42,0.95)] dark:text-slate-100">
               <div className="flex items-center justify-between mb-4">
                 <TrendingUp className="w-8 h-8 opacity-80" />
-                <div className="bg-white/10 rounded-lg px-3 py-1">
+                <div className="bg-slate-100 rounded-lg px-3 py-1 dark:bg-white/10">
                   <span className="text-xs font-semibold">{t('analytics.totalProfit')}</span>
                 </div>
               </div>
               <div className="text-3xl font-bold mb-2">{format((stats as UserStats).totalProfit ?? 0, currency)}</div>
-              <div className="text-slate-400 text-sm">{t('analytics.totalProfit')}</div>
+              <div className="text-slate-500 text-sm dark:text-slate-400">{t('analytics.totalProfit')}</div>
             </div>
 
-            <div className="glass-panel rounded-2xl border border-slate-800/80 bg-slate-950/90 shadow-[0_18px_55px_rgba(15,23,42,0.95)] p-6 text-slate-100 transform transition-all hover:scale-[1.02]">
+            <div className="glass-panel rounded-2xl border border-slate-200 bg-white shadow-sm p-6 text-slate-900 transform transition-all hover:scale-[1.02] dark:border-slate-800/80 dark:bg-slate-950/90 dark:shadow-[0_18px_55px_rgba(15,23,42,0.95)] dark:text-slate-100">
               <div className="flex items-center justify-between mb-4">
                 <MapPin className="w-8 h-8 opacity-80" />
-                <div className="bg-white/10 rounded-lg px-3 py-1">
+                <div className="bg-slate-100 rounded-lg px-3 py-1 dark:bg-white/10">
                   <span className="text-xs font-semibold">{t('analytics.totalTrips')}</span>
                 </div>
               </div>
               <div className="text-3xl font-bold mb-2">{(stats as UserStats).totalTrips}</div>
-              <div className="text-slate-400 text-sm">{t('analytics.totalTrips')}</div>
+              <div className="text-slate-500 text-sm dark:text-slate-400">{t('analytics.totalTrips')}</div>
             </div>
 
-            <div className="glass-panel rounded-2xl border border-slate-800/80 bg-slate-950/90 shadow-[0_18px_55px_rgba(15,23,42,0.95)] p-6 text-slate-100 transform transition-all hover:scale-[1.02]">
+            <div className="glass-panel rounded-2xl border border-slate-200 bg-white shadow-sm p-6 text-slate-900 transform transition-all hover:scale-[1.02] dark:border-slate-800/80 dark:bg-slate-950/90 dark:shadow-[0_18px_55px_rgba(15,23,42,0.95)] dark:text-slate-100">
               <div className="flex items-center justify-between mb-4">
                 <Users className="w-8 h-8 opacity-80" />
-                <div className="bg-white/10 rounded-lg px-3 py-1">
+                <div className="bg-slate-100 rounded-lg px-3 py-1 dark:bg-white/10">
                   <span className="text-xs font-semibold">{t('analytics.totalTravelers')}</span>
                 </div>
               </div>
               <div className="text-3xl font-bold mb-2">{(stats as UserStats).totalTravelers ?? 0}</div>
-              <div className="text-slate-400 text-sm">{t('analytics.totalTravelers')}</div>
+              <div className="text-slate-500 text-sm dark:text-slate-400">{t('analytics.totalTravelers')}</div>
             </div>
           </>
         )}
@@ -565,30 +565,30 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
 
       {/* PAYMENT HEALTH */}
       {!isAdmin && (
-        <div className="glass-panel rounded-2xl border border-slate-800/80 bg-slate-950/90 shadow-[0_18px_55px_rgba(15,23,42,0.95)] p-6">
+        <div className="glass-panel rounded-2xl border border-slate-200 bg-white shadow-sm p-6 dark:border-slate-800/80 dark:bg-slate-950/90 dark:shadow-[0_18px_55px_rgba(15,23,42,0.95)]">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-xl font-bold text-slate-100">Payment Health</h3>
-            <AlertTriangle className={`w-5 h-5 ${totalPending > 0 ? 'text-red-400' : 'text-emerald-400'}`} />
+            <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">Payment Health</h3>
+            <AlertTriangle className={`w-5 h-5 ${totalPending > 0 ? 'text-red-500 dark:text-red-400' : 'text-emerald-500 dark:text-emerald-400'}`} />
           </div>
-          <div className="mb-2 flex items-center justify-between text-sm text-slate-300">
+          <div className="mb-2 flex items-center justify-between text-sm text-slate-600 dark:text-slate-300">
             <span>
               Collected:{' '}
-              <span className="text-emerald-400 font-semibold">{format(totalCollected, currency)}</span>
+              <span className="text-emerald-500 font-semibold dark:text-emerald-400">{format(totalCollected, currency)}</span>
             </span>
             <span>
               Pending:{' '}
               <span
-                className="text-red-400 font-semibold cursor-pointer hover:underline decoration-red-400/70"
+                className="text-red-500 font-semibold cursor-pointer hover:underline decoration-red-400/70 dark:text-red-400"
                 onClick={() => onOpenTripsWithFilter?.({ pendingOnly: true })}
               >
                 {format(totalPending, currency)}
               </span>
             </span>
           </div>
-          <div className="w-full h-3 rounded-full bg-slate-800/70 border border-white/10 overflow-hidden">
+          <div className="w-full h-3 rounded-full bg-slate-100 border border-slate-200 overflow-hidden dark:bg-slate-800/70 dark:border-white/10">
             <div className="h-full bg-emerald-500" style={{ width: `${paymentHealthPct.toFixed(0)}%` }} />
           </div>
-          <div className="mt-2 text-xs text-slate-400">
+          <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
             Shows Total Collected vs Total Pending to help prioritize collections.
           </div>
         </div>
@@ -597,13 +597,13 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
       {/* ANALYTICS CHARTS SECTION */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* CHART 1: REVENUE VS PROFIT (Combo Chart) */}
-        <div className="lg:col-span-2 glass-panel rounded-2xl border border-slate-800/80 bg-slate-950/95 shadow-[0_20px_60px_rgba(15,23,42,1)] p-6">
-          <h3 className="text-xl font-bold text-slate-100 mb-6">
+        <div className="lg:col-span-2 glass-panel rounded-2xl border border-slate-200 bg-white shadow-sm p-6 dark:border-slate-800/80 dark:bg-slate-950/95 dark:shadow-[0_20px_60px_rgba(15,23,42,1)]">
+          <h3 className="text-xl font-bold text-slate-900 mb-6 dark:text-slate-100">
             {isAdmin ? 'User Growth Over Time' : t('analytics.revenuePerMonth')}
           </h3>
 
           {monthlyData.length === 0 ? (
-            <div className="flex items-center justify-center h-[300px] text-slate-400">
+            <div className="flex items-center justify-center h-[300px] text-slate-400 dark:text-slate-500">
               <div className="text-center">
                 <div className="text-lg font-medium mb-2">No data available</div>
                 <div className="text-sm">
@@ -616,7 +616,7 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
               <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={100}>
                 {isAdmin ? (
                   <BarChart data={monthlyData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#0f172a" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" className="dark:stroke-slate-800" />
                     <XAxis dataKey="month" stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
                     <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
                     <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
@@ -625,7 +625,7 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
                   </BarChart>
                 ) : (
                   <ComposedChart data={monthlyData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#0f172a" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" className="dark:stroke-slate-800" />
                     <XAxis dataKey="month" stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
                     <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
                     <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
@@ -636,7 +636,7 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
                       dataKey="profit"
                       stroke="#10b981"
                       strokeWidth={3}
-                      dot={{ r: 4, fill: '#10b981', strokeWidth: 2, stroke: '#0f172a' }}
+                      dot={{ r: 4, fill: '#10b981', strokeWidth: 2, stroke: '#e2e8f0' }}
                       activeDot={{ r: 6 }}
                       name={t('analytics.profit')}
                     />
@@ -648,8 +648,8 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
         </div>
 
         {/* CHART 2: PAYMENT STATUS (Donut Chart) */}
-        <div className="glass-panel rounded-2xl border border-slate-800/80 bg-slate-950/95 shadow-[0_20px_60px_rgba(15,23,42,1)] p-6">
-          <h3 className="text-xl font-bold text-slate-100 mb-6">
+        <div className="glass-panel rounded-2xl border border-slate-200 bg-white shadow-sm p-6 dark:border-slate-800/80 dark:bg-slate-950/95 dark:shadow-[0_20px_60px_rgba(15,23,42,1)]">
+          <h3 className="text-xl font-bold text-slate-900 mb-6 dark:text-slate-100">
             {isAdmin ? 'User Distribution' : t('trips.paymentStatus')}
           </h3>
 
@@ -671,7 +671,7 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
               ].filter((d) => d.value > 0);
 
               if (pieData.length === 0) {
-                return <div className="flex items-center justify-center h-[300px] text-slate-400">No payment data for {selectedYear}.</div>;
+                return <div className="flex items-center justify-center h-[300px] text-slate-400 dark:text-slate-500">No payment data for {selectedYear}.</div>;
               }
 
               return (
@@ -705,11 +705,11 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
       {/* SECTION: TOP DESTINATIONS */}
       {!isAdmin && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="glass-panel rounded-2xl border border-slate-800/80 bg-slate-950/95 shadow-[0_20px_60px_rgba(15,23,42,1)] p-6">
-            <h3 className="text-xl font-bold text-slate-100 mb-6">Top Destinations</h3>
+          <div className="glass-panel rounded-2xl border border-slate-200 bg-white shadow-sm p-6 dark:border-slate-800/80 dark:bg-slate-950/95 dark:shadow-[0_20px_60px_rgba(15,23,42,1)]">
+            <h3 className="text-xl font-bold text-slate-900 mb-6 dark:text-slate-100">Top Destinations</h3>
 
             {(stats as UserStats).topDestinations?.length === 0 ? (
-              <div className="flex items-center justify-center h-64 text-slate-400">No destination data available.</div>
+              <div className="flex items-center justify-center h-64 text-slate-400 dark:text-slate-500">No destination data available.</div>
             ) : (
               <div className="h-[300px] w-full flex items-center justify-center">
                 <ResponsiveContainer width="100%" height="100%">
@@ -742,16 +742,16 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
 
        {/* YEARLY PERFORMANCE HISTORY TABLE */}
        {!isAdmin && (
-        <div className="glass-panel rounded-2xl border border-slate-800/80 bg-slate-950/95 shadow-[0_20px_60px_rgba(15,23,42,1)] p-6 overflow-hidden">
-          <h3 className="text-xl font-bold text-slate-100 mb-6 flex items-center gap-2">
-             <TrendingUp className="w-5 h-5 text-sky-400" />
+        <div className="glass-panel rounded-2xl border border-slate-200 bg-white shadow-sm p-6 overflow-hidden dark:border-slate-800/80 dark:bg-slate-950/95 dark:shadow-[0_20px_60px_rgba(15,23,42,1)]">
+          <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2 dark:text-slate-100">
+             <TrendingUp className="w-5 h-5 text-sky-600 dark:text-sky-400" />
              Yearly Performance History
           </h3>
           
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+              <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-800 text-slate-400 text-sm uppercase tracking-wider">
+                <tr className="border-b border-slate-200 text-slate-500 text-sm uppercase tracking-wider dark:border-slate-800 dark:text-slate-400">
                   <th className="pb-3 pl-2">Year</th>
                   <th className="pb-3">Trips</th>
                   <th className="pb-3">Revenue</th>
@@ -759,7 +759,7 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
                   <th className="pb-3 pr-2 text-right">Growth</th>
                 </tr>
               </thead>
-              <tbody className="text-slate-200">
+              <tbody className="text-slate-700 dark:text-slate-200">
                 {yearlyStats.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="py-8 text-center text-slate-500 italic">
@@ -773,20 +773,20 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
                      const isNegative = stat.profit_growth_percentage < 0;
                      
                      return (
-                      <tr key={stat.year} className="group hover:bg-white/5 transition-colors border-b border-slate-800/50 last:border-0">
-                        <td className="py-4 pl-2 font-mono text-sky-300 font-semibold">{stat.year}</td>
-                        <td className="py-4 font-medium">{stat.total_trips}</td>
-                        <td className="py-4 text-slate-300">
+                      <tr key={stat.year} className="group hover:bg-slate-50 transition-colors border-b border-slate-200/50 last:border-0 dark:hover:bg-white/5 dark:border-slate-800/50">
+                        <td className="py-4 pl-2 font-mono text-sky-600 font-semibold dark:text-sky-300">{stat.year}</td>
+                        <td className="py-4 font-medium text-slate-700 dark:text-slate-200">{stat.total_trips}</td>
+                        <td className="py-4 text-slate-600 dark:text-slate-300">
                           {format(convert(stat.total_revenue, 'USD', currency), currency)}
                         </td>
-                        <td className="py-4 font-semibold text-emerald-400">
+                        <td className="py-4 font-semibold text-emerald-600 dark:text-emerald-400">
                           {format(convert(stat.total_profit, 'USD', currency), currency)}
                         </td>
                         <td className="py-4 pr-2 text-right">
                           <div className={`inline-flex items-center gap-1 text-sm font-medium px-2 py-1 rounded-full border ${
-                            isPositive ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 
-                            isNegative ? 'bg-red-500/10 text-red-400 border-red-500/20' : 
-                            'bg-slate-800 text-slate-400 border-slate-700'
+                            isPositive ? 'bg-emerald-100 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20' : 
+                            isNegative ? 'bg-red-100 text-red-600 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20' : 
+                            'bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
                           }`}>
                             {isPositive && <ArrowUpRight className="w-3 h-3" />}
                             {isNegative && <ArrowDownRight className="w-3 h-3" />}

@@ -74,19 +74,19 @@ export default function CreateUserForm({ onClose, onSuccess, existingBusinesses 
         }
     };
 
-    const inputClass = "w-full px-4 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all";
-    const labelClass = "block text-xs font-semibold text-slate-300 mb-1.5";
+    const inputClass = "w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all dark:bg-slate-900/80 dark:border-slate-700 dark:text-slate-100 dark:placeholder-slate-500";
+    const labelClass = "block text-xs font-semibold text-slate-700 mb-1.5 dark:text-slate-300";
 
     return (
         <div className="space-y-6">
             {/* Mode Toggle */}
-            <div className="flex p-1 bg-slate-900/80 rounded-xl border border-slate-800">
+            <div className="flex p-1 bg-slate-100 rounded-xl border border-slate-200 dark:bg-slate-900/80 dark:border-slate-800">
                 <button
                     type="button"
                     onClick={() => setMode('new_business')}
                     className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all ${mode === 'new_business'
                             ? 'bg-sky-600 text-white shadow-lg shadow-sky-900/50'
-                            : 'text-slate-400 hover:text-slate-200'
+                            : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
                         }`}
                 >
                     <Building2 className="w-4 h-4" />
@@ -97,7 +97,7 @@ export default function CreateUserForm({ onClose, onSuccess, existingBusinesses 
                     onClick={() => setMode('staff')}
                     className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all ${mode === 'staff'
                             ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/50'
-                            : 'text-slate-400 hover:text-slate-200'
+                            : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
                         }`}
                 >
                     <User className="w-4 h-4" />
@@ -170,7 +170,7 @@ export default function CreateUserForm({ onClose, onSuccess, existingBusinesses 
                     </select>
                 </div>
 
-                <div className="h-px bg-slate-800/80 my-4" />
+                <div className="h-px bg-slate-200 my-4 dark:bg-slate-800/80" />
 
                 {mode === 'new_business' ? (
                     <div className="space-y-4 animate-fadeIn">
@@ -238,7 +238,7 @@ export default function CreateUserForm({ onClose, onSuccess, existingBusinesses 
                                     </option>
                                 ))}
                             </select>
-                            <p className="text-xs text-slate-500 mt-1">
+                            <p className="text-xs text-slate-500 mt-1 dark:text-slate-500">
                                 The user will be added as staff to this business.
                             </p>
                         </div>
@@ -249,7 +249,7 @@ export default function CreateUserForm({ onClose, onSuccess, existingBusinesses 
                     <button
                         type="button"
                         onClick={onClose}
-                        className="flex-1 py-2.5 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-800 transition-all"
+                        className="flex-1 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-100 transition-all dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                     >
                         Cancel
                     </button>

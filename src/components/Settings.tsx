@@ -462,36 +462,36 @@ export default function Settings() {
         )}
 
         {/* Header card */}
-        <div className="glass-panel bg-slate-950/80 border border-slate-800/80 rounded-2xl shadow-xl shadow-slate-950/70 p-6 md:p-7 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="glass-panel bg-white/95 border border-slate-200 rounded-2xl shadow-xl p-6 md:p-7 flex flex-col md:flex-row md:items-center md:justify-between gap-4 dark:bg-slate-950/80 dark:border-slate-800/80 dark:shadow-slate-950/70">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.26em] text-sky-400/80 mb-1.5">Settings & Preferences</p>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-50 mb-1">Workspace settings</h1>
-            <p className="text-sm text-slate-300 max-w-xl">
+            <p className="text-[11px] uppercase tracking-[0.26em] text-sky-600/80 mb-1.5 dark:text-sky-400/80">Settings & Preferences</p>
+            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-1 dark:text-slate-50">Workspace settings</h1>
+            <p className="text-sm text-slate-500 max-w-xl dark:text-slate-300">
               Manage your profile, branding, security and data tools from one organized place.
             </p>
           </div>
           <div className="flex flex-col items-start md:items-end gap-2 text-xs">
-            <div className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2">
+            <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-900/80">
               <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-              <span className="text-slate-300">{businessName || profile?.business_name || 'MyDesck PRO'}</span>
+              <span className="text-slate-700 dark:text-slate-300">{businessName || profile?.business_name || 'MyDesck PRO'}</span>
             </div>
-            <div className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2">
+            <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-900/80">
               <span className="text-slate-500">Signed in as</span>
-              <span className="text-sky-300 font-medium text-[11px] truncate max-w-[180px]">{email}</span>
+              <span className="text-sky-600 font-medium text-[11px] truncate max-w-[180px] dark:text-sky-300">{email}</span>
             </div>
           </div>
         </div>
 
         {/* Main settings panel with tabs */}
-        <div className="glass-panel bg-slate-950/70 border border-slate-800/80 rounded-2xl shadow-xl shadow-slate-950/60 overflow-hidden">
+        <div className="glass-panel bg-white/95 border border-slate-200 rounded-2xl shadow-xl overflow-hidden dark:bg-slate-950/70 dark:border-slate-800/80 dark:shadow-slate-950/60">
           {/* Tabs */}
           <div className="flex items-center gap-1 p-2 border-b border-slate-800/60 overflow-x-auto">
             <button
               onClick={() => setActiveTab('profile')}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                 activeTab === 'profile'
-                  ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
-                  : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
+                  ? 'bg-sky-500/15 text-sky-700 border border-sky-500/30 shadow-sm dark:bg-sky-500/15 dark:text-sky-200 dark:border-sky-500/60 dark:shadow-sky-900/60'
+                  : 'text-slate-500 hover:bg-slate-100 border border-transparent dark:text-slate-300 dark:hover:bg-slate-900/70'
               }`}
             >
               <User className="w-4 h-4" />
@@ -502,8 +502,8 @@ export default function Settings() {
               onClick={() => setActiveTab('business')}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                 activeTab === 'business'
-                  ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
-                  : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
+                  ? 'bg-sky-500/15 text-sky-700 border border-sky-500/30 shadow-sm dark:bg-sky-500/15 dark:text-sky-200 dark:border-sky-500/60 dark:shadow-sky-900/60'
+                  : 'text-slate-500 hover:bg-slate-100 border border-transparent dark:text-slate-300 dark:hover:bg-slate-900/70'
               }`}
             >
               <Building2 className="w-4 h-4" />
@@ -514,8 +514,8 @@ export default function Settings() {
               onClick={() => setActiveTab('security')}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                 activeTab === 'security'
-                  ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
-                  : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
+                  ? 'bg-sky-500/15 text-sky-700 border border-sky-500/30 shadow-sm dark:bg-sky-500/15 dark:text-sky-200 dark:border-sky-500/60 dark:shadow-sky-900/60'
+                  : 'text-slate-500 hover:bg-slate-100 border border-transparent dark:text-slate-300 dark:hover:bg-slate-900/70'
               }`}
             >
               <Key className="w-4 h-4" />
@@ -526,8 +526,8 @@ export default function Settings() {
               onClick={() => setActiveTab('data')}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                 activeTab === 'data'
-                  ? 'bg-sky-500/15 text-sky-200 border border-sky-500/60 shadow-sm shadow-sky-900/60'
-                  : 'text-slate-300 hover:bg-slate-900/70 border border-transparent'
+                  ? 'bg-sky-500/15 text-sky-700 border border-sky-500/30 shadow-sm dark:bg-sky-500/15 dark:text-sky-200 dark:border-sky-500/60 dark:shadow-sky-900/60'
+                  : 'text-slate-500 hover:bg-slate-100 border border-transparent dark:text-slate-300 dark:hover:bg-slate-900/70'
               }`}
             >
               <RotateCcw className="w-4 h-4" />
@@ -536,42 +536,42 @@ export default function Settings() {
           </div>
 
           {/* Content */}
-          <div className="p-6 md:p-8 text-slate-100">
+          <div className="p-6 md:p-8 text-slate-900 dark:text-slate-100">
             {activeTab === 'profile' && (
               <div className="space-y-6">
                 <h2 className="text-2xl font-bold">User Profile</h2>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-200 mb-2">Full Name *</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-200">Full Name *</label>
                     <input
                       type="text"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       placeholder="Enter your full name"
-                      className="w-full px-4 py-3 rounded-xl bg-slate-900/80 border border-slate-700 text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all dark:bg-slate-900/80 dark:border-slate-700 dark:text-slate-100 dark:placeholder-slate-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-200 mb-2">Email</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-200">Email</label>
                     <input
                       type="email"
                       value={email}
                       disabled
-                      className="w-full px-4 py-3 rounded-xl bg-slate-900/60 border border-slate-700 text-slate-500 cursor-not-allowed"
+                      className="w-full px-4 py-3 rounded-xl bg-slate-100 border border-slate-200 text-slate-500 cursor-not-allowed dark:bg-slate-900/60 dark:border-slate-700 dark:text-slate-500"
                     />
                     <p className="text-xs text-slate-500 mt-1">Email cannot be changed</p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-200 mb-2">Phone Number *</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-200">Phone Number *</label>
                     <input
                       type="tel"
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
                       placeholder="+1 234 567 8900"
-                      className="w-full px-4 py-3 rounded-xl bg-slate-900/80 border border-slate-700 text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all dark:bg-slate-900/80 dark:border-slate-700 dark:text-slate-100 dark:placeholder-slate-500"
                     />
                   </div>
                 </div>
@@ -599,17 +599,17 @@ export default function Settings() {
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-200 mb-2">{t('settings.businessName')}</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-200">{t('settings.businessName')}</label>
                     <input
                       type="text"
                       value={businessName}
                       onChange={(e) => setBusinessName(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl bg-slate-900/80 border border-slate-700 text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all dark:bg-slate-900/80 dark:border-slate-700 dark:text-slate-100 dark:placeholder-slate-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-200 mb-2">
+                    <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-200">
                       Business Registration Number / Tax ID (ח.פ / ע.מ)
                     </label>
                     <input
@@ -617,20 +617,20 @@ export default function Settings() {
                       value={businessRegNumber}
                       onChange={(e) => setBusinessRegNumber(e.target.value)}
                       placeholder="e.g. 512345678"
-                      className="w-full px-4 py-3 rounded-xl bg-slate-900/80 border border-slate-700 text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all dark:bg-slate-900/80 dark:border-slate-700 dark:text-slate-100 dark:placeholder-slate-500"
                     />
                   </div>
 
                   {/* Signature Upload */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-200 mb-2">
+                    <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-200">
                       Digital Signature / Stamp (חתימה / חותמת)
                     </label>
                     <div className="flex items-center gap-4">
                       <div className="flex-1">
                         <label
                           htmlFor="signature-upload"
-                          className="w-full flex flex-col items-center justify-center px-4 py-6 rounded-xl border-2 border-dashed bg-slate-900/80 border-slate-700 text-slate-400 hover:border-sky-500 hover:text-sky-300 cursor-pointer transition-all"
+                          className="w-full flex flex-col items-center justify-center px-4 py-6 rounded-xl border-2 border-dashed bg-slate-50 border-slate-300 text-slate-500 hover:border-sky-500 hover:text-sky-600 cursor-pointer transition-all dark:bg-slate-900/80 dark:border-slate-700 dark:text-slate-400 dark:hover:text-sky-300"
                         >
                           <Upload className="w-8 h-8 mb-2 opacity-50" />
                           <span className="text-sm font-semibold">Upload Signature Image</span>
@@ -655,15 +655,15 @@ export default function Settings() {
 
                   {/* Logo upload */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-200 mb-2">{t('settings.logoUrl')}</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-200">{t('settings.logoUrl')}</label>
                     <div className="flex items-center gap-4">
                       <div className="flex-1">
                         <label
                           htmlFor="logo-upload"
                           className={`w-full flex flex-col items-center justify-center px-4 py-6 rounded-xl border-2 border-dashed transition-all ${
                             uploading
-                              ? 'bg-slate-900/60 border-slate-800 text-slate-500 cursor-not-allowed'
-                              : 'bg-slate-900/80 border-slate-700 text-slate-400 hover:border-sky-500 hover:text-sky-300 cursor-pointer'
+                              ? 'bg-slate-100 border-slate-300 text-slate-400 cursor-not-allowed dark:bg-slate-900/60 dark:border-slate-800 dark:text-slate-500'
+                              : 'bg-slate-50 border-slate-300 text-slate-500 hover:border-sky-500 hover:text-sky-600 cursor-pointer dark:bg-slate-900/80 dark:border-slate-700 dark:text-slate-400 dark:hover:text-sky-300'
                           }`}
                         >
                           <Upload className={`w-8 h-8 mb-2 ${uploading ? 'animate-pulse' : ''}`} />
@@ -689,23 +689,23 @@ export default function Settings() {
                     </div>
 
                     <div className="mt-4">
-                      <label className="block text-xs font-medium text-slate-400 mb-1">Or paste image URL (fallback)</label>
+                      <label className="block text-xs font-medium text-slate-500 mb-1 dark:text-slate-400">Or paste image URL (fallback)</label>
                       <input
                         type="text"
                         value={logoUrl}
                         onChange={(e) => setLogoUrl(e.target.value)}
                         placeholder={t('auth.logoPlaceholder')}
-                        className="w-full px-3 py-2 rounded-lg bg-slate-800/70 border border-slate-700 text-slate-200 placeholder-slate-500 text-sm focus:ring-1 focus:ring-sky-500 focus:border-transparent transition-all"
+                        className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:ring-1 focus:ring-sky-500 focus:border-transparent transition-all dark:bg-slate-800/70 dark:border-slate-700 dark:text-slate-200 dark:placeholder-slate-500"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-200 mb-2">{t('settings.currency')}</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-200">{t('settings.currency')}</label>
                     <select
                       value={currency}
                       onChange={(e) => handleCurrencyChange(e.target.value as 'USD' | 'EUR' | 'ILS')}
-                      className="w-full px-4 py-3 rounded-xl bg-slate-900/80 border border-slate-700 text-slate-100 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all dark:bg-slate-900/80 dark:border-slate-700 dark:text-slate-100"
                     >
                       <option value="USD">{t('currencies.USD')}</option>
                       <option value="EUR">{t('currencies.EUR')}</option>
@@ -714,11 +714,11 @@ export default function Settings() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-200 mb-2">{t('settings.language')}</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-200">{t('settings.language')}</label>
                     <select
                       value={language}
                       onChange={(e) => setLanguageState(e.target.value as 'en' | 'ar' | 'he')}
-                      className="w-full px-4 py-3 rounded-xl bg-slate-900/80 border border-slate-700 text-slate-100 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all dark:bg-slate-900/80 dark:border-slate-700 dark:text-slate-100"
                     >
                       <option value="en">{t('languages.en')}</option>
                       <option value="ar">{t('languages.ar')}</option>
@@ -727,24 +727,24 @@ export default function Settings() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-200 mb-2">Dark Mode</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-200">Dark Mode</label>
                     <button
                       onClick={toggleTheme}
-                      className="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-900/80 border border-slate-700 hover:bg-slate-800/80 transition-all w-full"
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-all w-full dark:bg-slate-900/80 dark:border-slate-700 dark:hover:bg-slate-800/80"
                     >
-                      {theme === 'dark' ? <Moon className="w-5 h-5 text-sky-400" /> : <Sun className="w-5 h-5 text-amber-400" />}
-                      <span className="font-medium">{theme === 'dark' ? 'Dark Mode On' : 'Light Mode On'}</span>
+                      {theme === 'dark' ? <Moon className="w-5 h-5 text-sky-400" /> : <Sun className="w-5 h-5 text-amber-500" />}
+                      <span className="font-medium text-slate-900 dark:text-slate-100">{theme === 'dark' ? 'Dark Mode On' : 'Light Mode On'}</span>
                     </button>
                   </div>
 
                   {/* Exchange Rates Management */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-200 mb-2">Exchange Rates</label>
-                    <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
+                    <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-200">Exchange Rates</label>
+                    <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/70">
                       <div className="flex items-center justify-between gap-4">
                         <div className="flex-1">
-                          <h3 className="font-semibold text-slate-100 text-sm mb-1">Live Currency Conversion</h3>
-                          <p className="text-xs text-slate-400">
+                          <h3 className="font-semibold text-slate-900 text-sm mb-1 dark:text-slate-100">Live Currency Conversion</h3>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
                             Last updated:{' '}
                             {lastUpdated ? (
                               <span className="text-slate-300">{lastUpdated.toLocaleString()}</span>
@@ -785,7 +785,7 @@ export default function Settings() {
 
                   <button
                     onClick={handleResetBranding}
-                    className="flex-1 flex items-center justify-center gap-2 bg-slate-800 text-slate-100 py-3 rounded-xl font-semibold hover:bg-slate-700 transition-all"
+                    className="flex-1 flex items-center justify-center gap-2 bg-slate-100 text-slate-700 py-3 rounded-xl font-semibold hover:bg-slate-200 transition-all dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
                   >
                     <RotateCcw className="w-5 h-5" />
                     <span>Reset Branding</span>
@@ -798,11 +798,11 @@ export default function Settings() {
               <div className="space-y-4">
                 <h2 className="text-2xl font-bold mb-2">Security</h2>
 
-                <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
+                <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/70">
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <h3 className="font-semibold text-slate-100">Change Password</h3>
-                      <p className="text-sm text-slate-400">Update your account password</p>
+                      <h3 className="font-semibold text-slate-900 dark:text-slate-100">Change Password</h3>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">Update your account password</p>
                     </div>
                     <button
                       onClick={handleChangePassword}
@@ -814,11 +814,11 @@ export default function Settings() {
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
+                <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/70">
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <h3 className="font-semibold text-slate-100">Sign Out</h3>
-                      <p className="text-sm text-slate-400">Sign out and return to the login screen</p>
+                      <h3 className="font-semibold text-slate-900 dark:text-slate-100">Sign Out</h3>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">Sign out and return to the login screen</p>
                     </div>
                     <button
                       onClick={async () => {
@@ -828,7 +828,7 @@ export default function Settings() {
                           console.error(e);
                         }
                       }}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-700 text-white text-sm font-medium hover:bg-slate-600 transition-all"
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-200 text-slate-700 text-sm font-medium hover:bg-slate-300 transition-all dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600"
                     >
                       <RotateCcw className="w-4 h-4" />
                       <span>Sign Out</span>
@@ -836,11 +836,11 @@ export default function Settings() {
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
+                <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/70">
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <h3 className="font-semibold text-slate-100">Refresh Profile</h3>
-                      <p className="text-sm text-slate-400">Force refresh user profile to get latest role updates</p>
+                      <h3 className="font-semibold text-slate-900 dark:text-slate-100">Refresh Profile</h3>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">Force refresh user profile to get latest role updates</p>
                     </div>
                     <button
                       onClick={handleRefreshProfile}
@@ -859,11 +859,11 @@ export default function Settings() {
                 <h2 className="text-2xl font-bold">Data Management</h2>
 
                 <div className="space-y-4">
-                  <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/70">
                     <div className="flex items-center justify-between gap-4">
                       <div>
-                        <h3 className="font-semibold text-slate-100">Export Data</h3>
-                        <p className="text-sm text-slate-400">Download all your trips as JSON</p>
+                        <h3 className="font-semibold text-slate-900 dark:text-slate-100">Export Data</h3>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Download all your trips as JSON</p>
                       </div>
                       <button
                         onClick={handleExportData}
@@ -875,11 +875,11 @@ export default function Settings() {
                     </div>
                   </div>
 
-                  <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/70">
                     <div className="flex items-center justify-between gap-4">
                       <div>
-                        <h3 className="font-semibold text-slate-100">Import Data</h3>
-                        <p className="text-sm text-slate-400">Restore from a backup file</p>
+                        <h3 className="font-semibold text-slate-900 dark:text-slate-100">Import Data</h3>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Restore from a backup file</p>
                       </div>
                       <label className="flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-600 text-white text-sm font-medium hover:bg-sky-700 transition-all cursor-pointer">
                         <Upload className="w-4 h-4" />
