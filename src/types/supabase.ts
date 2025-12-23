@@ -252,6 +252,39 @@ export interface Database {
           count: number
         }[]
       }
+      get_trips_by_year: {
+        Args: {
+          year_input: string
+        }
+        Returns: {
+          id: string
+          user_id: string
+          destination: string
+          client_name: string
+          travelers_count: number
+          start_date: string
+          end_date: string
+          wholesale_cost: number
+          sale_price: number
+          currency: string
+          exchange_rate: number
+          payments: Json[] | null
+          attachments: Json[] | null
+          payment_date: string | null
+          room_type: string | null
+          board_basis: string | null
+          profit: number
+          profit_percentage: number
+          payment_status: string
+          amount_paid: number
+          amount_due: number
+          notes: string
+          status: string
+          export_to_pdf: boolean
+          created_at: string
+          updated_at: string
+        }[]
+      }
     }
 
     Enums: {

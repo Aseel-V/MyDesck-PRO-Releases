@@ -51,6 +51,16 @@ export default function InvoiceTemplate() {
         };
     }, []);
 
+    useEffect(() => {
+        if (!loading && trip && profile) {
+            // Signal to Electron that we are ready to print
+            // We use a small timeout to ensure the DOM has fully painted the new state
+            setTimeout(() => {
+                window.electronAPI?.invoiceReady?.();
+            }, 500);
+        }
+    }, [loading, trip, profile]);
+
     if (loading) return (
         <div className="min-h-screen flex items-center justify-center bg-white">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>

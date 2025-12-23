@@ -6,5 +6,6 @@ interface Window {
         printToPDF: (data: any) => Promise<Uint8Array>;
         onInvoiceData: (callback: (data: any) => void) => void;
         removeInvoiceDataListeners: () => void;
+        invoiceReady: () => void;
     };
 }

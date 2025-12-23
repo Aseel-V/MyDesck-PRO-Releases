@@ -4,5 +4,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   quitApp: () => ipcRenderer.send('quit-app'),
   printToPDF: (data) => ipcRenderer.invoke('print-to-pdf', data),
   onInvoiceData: (callback) => ipcRenderer.on('invoice-data', (_, data) => callback(data)),
-  removeInvoiceDataListeners: () => ipcRenderer.removeAllListeners('invoice-data')
+  removeInvoiceDataListeners: () => ipcRenderer.removeAllListeners('invoice-data'),
+  invoiceReady: () => ipcRenderer.send('invoice-ready')
 });

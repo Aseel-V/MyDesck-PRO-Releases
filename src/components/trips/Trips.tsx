@@ -131,24 +131,26 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
   });
 
   const { data: { data: rawTrips, count } = { data: [], count: 0 }, isLoading: loading } = useQuery({
-    queryKey: ['trips', user?.id, debouncedSearchTerm, filters.paymentStatus, filters.tripStatus, page], // Removed year/month from key as we filter client side
+    queryKey: ['trips', user?.id, debouncedSearchTerm, filters.paymentStatus, filters.tripStatus, filters.year, page],
     queryFn: async () => {
       if (!user?.id) return { data: [], count: 0 };
 
-      let query = supabase
-        .from('trips')
-        .select('*', { count: 'exact' })
-        .eq('user_id', user.id);
+      // Ensure we have a year to filter by for performance
+      const yearToFetch = filters.year || new Date().getFullYear().toString();
 
-      // Apply filters that don't depend on Effective Date logic
-      // We fetch ALL trips (matching search/status) and filter by Year/Month CLIENT-SIDE
-      // This is crucial for "Effective Date" logic (Trip in 2026 paid in 2025 -> shows in 2025)
-      
-      const { data, error, count } = await query
-        .order('start_date', { ascending: false });
+      const { data, error } = await supabase
+        .rpc('get_trips_by_year', { year_input: yearToFetch });
 
       if (error) throw error;
-      return { data: data as unknown as Trip[], count: count || 0 };
+
+      // The RPC returns filtered data. We can still apply client-side search/status filtering if needed,
+      // but the heavy lifting of date filtering is done server-side.
+      // Note: The RPC returns all columns.
+      
+      // Client-side filtering for other fields (Search, Status) is handled in the useMemo below,
+      // so we just return the data here.
+      
+      return { data: data as unknown as Trip[], count: data?.length || 0 };
     },
     enabled: !!user?.id,
   });

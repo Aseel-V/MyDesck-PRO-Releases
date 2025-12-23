@@ -3,6 +3,10 @@ declare global {
   interface Window {
     electronAPI?: {
       quitApp: () => void | Promise<void>;
+      printToPDF: (data: any) => Promise<Uint8Array<ArrayBufferLike>>;
+      onInvoiceData: (callback: (data: any) => void) => void;
+      removeInvoiceDataListeners: () => void;
+      invoiceReady: () => void;
     };
   }
 }

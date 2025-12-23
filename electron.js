@@ -104,14 +104,31 @@ ipcMain.handle('print-to-pdf', async (event, data) => {
     // HOWEVER, for simplicity and speed in this "fix", we will just send it.
     // A more robust way is pdfWindow.webContents.send('invoice-data', data)
     
-    // We need to ensure the renderer is listening. 
-    // We can wrap it in a small timeout or wait for an event? 
-    // Let's rely on the fact loadURL finishes when the page is loaded.
-    
+    // Wait for renderer to signal it's ready (fonts loaded, state set)
+    const readyPromise = new Promise((resolve) => {
+      const timeout = setTimeout(() => {
+        console.log('Timeout waiting for invoice-ready, attempting to print anyway...');
+        resolve(); 
+      }, 5000); // 5s safety
+
+      const onReady = (event) => {
+        // Ensure the signal comes from OUR pdf window
+        if (event.sender.id === pdfWindow.webContents.id) {
+          clearTimeout(timeout);
+          ipcMain.removeListener('invoice-ready', onReady);
+          resolve(); 
+        }
+      };
+
+      ipcMain.on('invoice-ready', onReady);
+      
+      // If the window is closed/comp destroyed before ready, we should cleanup.
+      // But we have a finally block cleaning up window which will trigger.
+    });
+
     pdfWindow.webContents.send('invoice-data', data);
 
-    // Give it a moment to render (React effect)
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await readyPromise;
 
     const pdfData = await pdfWindow.webContents.printToPDF({
       printBackground: true,
