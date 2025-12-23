@@ -11,310 +11,253 @@ import {
   MapPin,
   BarChart3,
   Menu,
-  X,
   Shield,
   Moon,
   Sun,
+  Search,
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { twMerge } from 'tailwind-merge';
 
 interface NavbarProps {
   onNavigate: (page: 'home' | 'trips' | 'analytics' | 'settings' | 'admin') => void;
   currentPage: 'home' | 'trips' | 'analytics' | 'settings' | 'admin';
+  onOpenSearch: () => void;
 }
 
-export default function Navbar({ onNavigate, currentPage }: NavbarProps) {
+export default function Navbar({ onNavigate, currentPage, onOpenSearch }: NavbarProps) {
   const { isAdmin } = useAuth();
   const { t, direction } = useLanguage();
   const { theme, toggleTheme } = useTheme();
   const { displayLogoUrl, displayName } = useBranding();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const isElectron =
-    typeof window !== 'undefined' && !!window.electronAPI;
+  const isElectron = typeof window !== 'undefined' && !!window.electronAPI;
 
   const handleNavigate = (page: NavbarProps['currentPage']) => {
     onNavigate(page);
     setMobileMenuOpen(false);
   };
 
-  const isActive = (page: NavbarProps['currentPage']) => currentPage === page;
-
-  // Desktop buttons: مباشرة على البار بدون كرت خلفي
-  const baseNavBtn =
-    'inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium rounded-xl transition-all border-b-2';
-  const activeNavBtn =
-    'border-sky-400 text-slate-900 bg-slate-100/80 shadow-[0_4px_14px_rgba(148,163,184,0.4)] dark:text-slate-50 dark:bg-slate-900/80 dark:shadow-[0_4px_14px_rgba(15,23,42,0.8)]';
-  const inactiveNavBtn =
-    'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-100/50 hover:border-slate-300 dark:text-slate-300 dark:hover:text-slate-50 dark:hover:bg-slate-900/50 dark:hover:border-slate-500/80';
-
-
-  // Mobile buttons (نفس الروح لكن داخل قائمة)
-  const mobileBaseBtn =
-    'w-full flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border';
-  const mobileActiveNavBtn =
-    'bg-slate-100/95 border-sky-400 text-slate-900 shadow-sm shadow-sky-200/70 dark:bg-slate-900/95 dark:text-slate-50 dark:shadow-sky-900/70';
-  const mobileInactiveNavBtn =
-    'bg-white/80 border-slate-200 text-slate-600 hover:border-sky-400/70 hover:bg-slate-50 dark:bg-slate-900/80 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-900';
-
+  // Nav Items Configuration
+  const navItems = [
+    { id: 'home', icon: Home, label: t('dashboard.home') },
+    { id: 'trips', icon: MapPin, label: t('dashboard.trips'), hidden: isAdmin },
+    { id: 'analytics', icon: BarChart3, label: t('dashboard.analytics') },
+    { id: 'settings', icon: Settings, label: t('dashboard.settings') },
+    { id: 'admin', icon: Shield, label: t('navbar.admin'), hidden: !isAdmin },
+  ].filter(item => !item.hidden) as { id: NavbarProps['currentPage']; icon: any; label: string }[];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50" dir={direction}>
-      {/* Top nav bar */}
-      <div className="bg-white/90 border-slate-200/70 shadow-lg shadow-slate-200/60 dark:bg-slate-950/85 backdrop-blur-xl dark:border-slate-900/70 dark:shadow-slate-950/60">
-
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
-          {/* Brand */}
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="flex items-center gap-3 rounded-xl bg-white/95 border border-slate-200/90 shadow-md shadow-sky-100/50 dark:bg-slate-950/95 dark:border-slate-800/90 dark:shadow-sky-900/50 px-3 py-1">
-
-              {/* Logo badge */}
-              <div className="relative flex h-10 w-10 md:h-11 md:w-11 items-center justify-center">
-                <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-sky-400 via-fuchsia-500 to-sky-300 opacity-85 blur-[0.5px]" />
-                <div className="relative h-8 w-8 md:h-9 md:w-9 rounded-full bg-slate-50 border border-slate-200/85 shadow-md shadow-sky-100/70 flex items-center justify-center overflow-hidden dark:bg-slate-950 dark:border-slate-700/85 dark:shadow-sky-900/70">
-                  <div className="pointer-events-none absolute inset-0 rounded-full bg-gradient-to-t from-slate-50 via-slate-100/35 to-white/18 opacity-90 dark:from-slate-950 dark:via-slate-900/35" />
-
-                  <img
-                    src={displayLogoUrl || (LogoPng as unknown as string)}
-                    alt="Logo"
-                    className="relative z-10 h-5 w-5 md:h-6 md:w-6 object-contain"
-                    onError={(e) => {
-                      e.currentTarget.src = LogoPng as unknown as string;
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Business name */}
-              <div className="flex flex-col min-w-0">
-                <span className="text-[9px] md:text-[10px] font-semibold tracking-[0.22em] uppercase text-sky-600/85 dark:text-sky-300/85">
-                  MyDesk Pro
-                </span>
-                <span
-                  className="text-[1rem] md:text-[1.15rem] font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-sky-800 to-slate-700 drop-shadow-sm dark:from-slate-50 dark:via-sky-100 dark:to-slate-200 dark:drop-shadow-[0_0_6px_rgba(15,23,42,0.9)] truncate max-w-[210px] sm:max-w-[260px]"
-
-                  title={displayName}
-                >
-                  {displayName}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Desktop nav – buttons مباشرة على البار */}
-          <div className="hidden md:flex items-center gap-4">
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => handleNavigate('home')}
-                className={`${baseNavBtn} ${isActive('home') ? activeNavBtn : inactiveNavBtn
-                  }`}
-              >
-                <Home className="w-4 h-4" />
-                <span>{t('dashboard.home')}</span>
-              </button>
-
-              {!isAdmin && (
-                <button
-                  type="button"
-                  onClick={() => handleNavigate('trips')}
-                  className={`${baseNavBtn} ${isActive('trips') ? activeNavBtn : inactiveNavBtn
-                    }`}
-                >
-                  <MapPin className="w-4 h-4" />
-                  <span>{t('dashboard.trips')}</span>
-                </button>
-              )}
-
-              <button
-                type="button"
-                onClick={() => handleNavigate('analytics')}
-                className={`${baseNavBtn} ${isActive('analytics') ? activeNavBtn : inactiveNavBtn
-                  }`}
-              >
-                <BarChart3 className="w-4 h-4" />
-                <span>{t('dashboard.analytics')}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleNavigate('settings')}
-                className={`${baseNavBtn} ${isActive('settings') ? activeNavBtn : inactiveNavBtn
-                  }`}
-              >
-                <Settings className="w-4 h-4" />
-                <span>{t('dashboard.settings')}</span>
-              </button>
-
-              {isAdmin && (
-                <button
-                  type="button"
-                  onClick={() => handleNavigate('admin')}
-                  className={`${baseNavBtn} ${isActive('admin') ? activeNavBtn : inactiveNavBtn
-                    }`}
-                >
-                  <Shield className="w-4 h-4 text-sky-200" />
-                  <span>{t('navbar.admin')}</span>
-                </button>
-              )}
-            </div>
-
-            {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-xl text-slate-500 hover:text-sky-600 hover:bg-slate-100/50 transition-colors dark:text-slate-400 dark:hover:text-sky-400 dark:hover:bg-slate-900/50"
-              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+    <nav className="fixed top-0 left-0 right-0 z-50 flex flex-col items-center pointer-events-none" dir={direction}>
+      
+      {/* === DESKTOP FLOATING DOCK === */}
+      <div className="hidden md:flex mt-6 pointer-events-auto">
+        <motion.div 
+          initial={{ y: -50, opacity: 0, scale: 0.95 }}
+          animate={{ y: 0, opacity: 1, scale: 1 }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          className="relative flex items-center gap-2 p-2 rounded-full border border-white/20 bg-white/70 dark:bg-slate-900/60 backdrop-blur-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.3)] ring-1 ring-white/20 dark:ring-white/10"
+        >
+          {/* Logo Section */}
+          <div className="flex items-center gap-3 pl-3 pr-2">
+            <motion.div 
+              whileHover={{ rotate: 10, scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="relative h-9 w-9 rounded-full overflow-hidden bg-white shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10 p-0.5 cursor-pointer"
+              onClick={() => handleNavigate('home')}
             >
-              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            </button>
+               <img
+                  src={displayLogoUrl || (LogoPng as unknown as string)}
+                  alt="Logo"
+                  className="h-full w-full object-contain rounded-full"
+                  onError={(e) => { e.currentTarget.src = LogoPng as unknown as string; }}
+                />
+            </motion.div>
+             <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-sky-800 to-slate-700 dark:from-white dark:to-slate-300 hidden lg:block tracking-tight">
+               {displayName || 'MyDesck'}
+             </span>
+             <div className="h-5 w-px bg-slate-200/60 dark:bg-slate-700/60 mx-1" />
+          </div>
 
-            {/* Electron close button */}
-            {isElectron && (
-              <>
-                <div className="h-6 w-px bg-slate-800/80" />
+          {/* Navigation Tabs */}
+          <div className="flex items-center gap-1">
+            {navItems.map((item) => {
+              const isActive = currentPage === item.id;
+              return (
                 <button
-                  type="button"
-                  onClick={() => window.electronAPI?.quitApp()}
-                  className="group flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-[11px] font-medium text-white bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-400 hover:to-rose-500 border border-red-500/70 transition-all shadow-md shadow-red-900/50"
+                  key={item.id}
+                  onClick={() => handleNavigate(item.id)}
+                  className={twMerge(
+                    "relative px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-300 z-10 flex items-center gap-2.5 outline-none focus:ring-2 focus:ring-sky-500/20",
+                    isActive ? "text-slate-900 dark:text-white" : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                  )}
                 >
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-700/85 group-hover:bg-red-600/95">
-                    <LogOut className="w-3 h-3" />
-                  </span>
-                  <span className="flex flex-col leading-tight text-left">
-                    <span className="text-[10px] font-semibold">{t('navbar.close')}</span>
-                    <span className="text-[9px] text-red-100/85">
-                      {t('navbar.exitSafely')}
-                    </span>
-                  </span>
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeTab"
+                      className="absolute inset-0 bg-white dark:bg-slate-800 rounded-full -z-10 shadow-sm ring-1 ring-black/5 dark:ring-white/5"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+                  {/* Hover effect for non-active items */}
+                  {!isActive && (
+                    <div className="absolute inset-0 rounded-full bg-slate-100/50 dark:bg-slate-800/50 opacity-0 hover:opacity-100 transition-opacity -z-10" />
+                  )}
+                  
+                  <item.icon className={twMerge("w-4 h-4 transition-transform duration-300", isActive ? "scale-110 stroke-[2.5px]" : "stroke-2")} />
+                  <span>{item.label}</span>
                 </button>
-              </>
-            )}
+              );
+            })}
           </div>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden">
-            <button
-              type="button"
-              className="p-2 rounded-xl border border-slate-200/80 bg-slate-100/80 hover:bg-slate-200/95 text-slate-700 transition-all dark:border-slate-800/80 dark:bg-slate-900/80 dark:hover:bg-slate-900/95 dark:text-slate-100"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label="Toggle menu"
-            >
-              {mobileMenuOpen ? (
-                <X className="w-5 h-5" />
-              ) : (
-                <Menu className="w-5 h-5" />
-              )}
-            </button>
-          </div>
-        </div>
+          <div className="h-5 w-px bg-slate-200/60 dark:bg-slate-700/60 mx-2" />
 
-        {/* Gradient line under navbar */}
-        <div className="h-[2px] bg-gradient-to-r from-sky-500/60 via-fuchsia-500/45 to-sky-400/60 opacity-80" />
+          {/* Utilities Section */}
+          <div className="flex items-center gap-1.5 pr-1.5">
+             {/* Search Trigger */}
+             <motion.button
+               whileHover={{ scale: 1.05 }}
+               whileTap={{ scale: 0.95 }}
+               onClick={onOpenSearch}
+               className="p-2.5 rounded-full text-slate-500 hover:bg-slate-100 hover:text-sky-600 transition-colors dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-sky-400 relative group"
+               title="Search (Ctrl+K)"
+             >
+               <Search className="w-4 h-4 text-inherit" />
+             </motion.button>
+
+             {/* Theme Toggle */}
+             <motion.button
+               whileHover={{ scale: 1.05, rotate: 15 }}
+               whileTap={{ scale: 0.95, rotate: -15 }}
+               onClick={toggleTheme}
+               className="p-2.5 rounded-full text-slate-500 hover:bg-slate-100 hover:text-amber-500 transition-colors dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-amber-400"
+             >
+               {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+             </motion.button>
+
+             {/* Electron Close */}
+             {isElectron && (
+                <motion.button
+                   whileHover={{ scale: 1.05 }}
+                   whileTap={{ scale: 0.95 }}
+                   onClick={() => window.electronAPI?.quitApp()}
+                   className="ml-1 p-2.5 rounded-full text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
+                   title={t('navbar.closeApp')}
+                >
+                   <LogOut className="w-4 h-4" />
+                </motion.button>
+             )}
+          </div>
+
+        </motion.div>
       </div>
 
-      {/* Mobile menu */}
-      {mobileMenuOpen && (
-        <div className="md:hidden bg-white/98 backdrop-blur-xl border-b border-slate-200/85 dark:bg-slate-950/98 dark:border-slate-900/85">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-3">
-            <div className="glass-panel rounded-2xl p-2 space-y-1 border border-slate-200/80 bg-white/80 dark:border-slate-800/80 dark:bg-slate-950/80">
+      {/* === MOBILE TOP BAR (Glassmorphism) === */}
+      <div className="md:hidden w-full pointer-events-auto">
+        <div className="bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 px-4 h-16 flex items-center justify-between shadow-sm sticky top-0 z-50">
+           
+           {/* Logo */}
+           <div className="flex items-center gap-2.5">
+              <img
+                src={displayLogoUrl || (LogoPng as unknown as string)}
+                alt="Logo"
+                className="h-8 w-8 object-contain"
+                onError={(e) => { e.currentTarget.src = LogoPng as unknown as string; }}
+              />
+              <span className="font-bold text-lg bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 truncate max-w-[150px]">
+                {displayName || 'MyDesck'}
+              </span>
+           </div>
 
-              <button
-                type="button"
-                onClick={() => handleNavigate('home')}
-                className={`${mobileBaseBtn} ${isActive('home') ? mobileActiveNavBtn : mobileInactiveNavBtn
-                  }`}
-              >
-                <Home className="w-4 h-4" />
-                <span>{t('dashboard.home')}</span>
-              </button>
-
-              {!isAdmin && (
-                <button
-                  type="button"
-                  onClick={() => handleNavigate('trips')}
-                  className={`${mobileBaseBtn} ${isActive('trips') ? mobileActiveNavBtn : mobileInactiveNavBtn
-                    }`}
-                >
-                  <MapPin className="w-4 h-4" />
-                  <span>{t('dashboard.trips')}</span>
-                </button>
-              )}
-
-              <button
-                type="button"
-                onClick={() => handleNavigate('analytics')}
-                className={`${mobileBaseBtn} ${isActive('analytics')
-                  ? mobileActiveNavBtn
-                  : mobileInactiveNavBtn
-                  }`}
-              >
-                <BarChart3 className="w-4 h-4" />
-                <span>{t('dashboard.analytics')}</span>
-              </button>
-
-              {isAdmin && (
-                <button
-                  type="button"
-                  onClick={() => handleNavigate('admin')}
-                  className={`${mobileBaseBtn} ${isActive('admin') ? mobileActiveNavBtn : mobileInactiveNavBtn
-                    }`}
-                >
-                  <Shield className="w-4 h-4 text-sky-200" />
-                  <span>{t('navbar.admin')}</span>
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => handleNavigate('settings')}
-                className={`${mobileBaseBtn} ${isActive('settings')
-                  ? mobileActiveNavBtn
-                  : mobileInactiveNavBtn
-                  }`}
-              >
-                <Settings className="w-4 h-4" />
-                <span>{t('dashboard.settings')}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  toggleTheme();
-                  setMobileMenuOpen(false);
-                }}
-                className={`${mobileBaseBtn} ${mobileInactiveNavBtn}`}
-              >
-                {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
-              </button>
-
-              {isElectron && (
-                <div className="pt-2 border-t border-slate-200/80 mt-1.5 dark:border-slate-800/80">
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      window.electronAPI?.quitApp();
-                    }}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-2xl text-sm font-medium transition-all text-white bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-400 hover:to-rose-500 border border-red-500/70 shadow-md shadow-red-900/40"
-                  >
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-700/90">
-                      <LogOut className="w-4 h-4" />
-                    </span>
-                    <span className="flex flex-col leading-tight text-center">
-                      <span className="text-[11px] font-semibold">
-                        {t('navbar.closeApp')}
-                      </span>
-                      <span className="text-[10px] text-red-100/85">
-                        {t('navbar.exitSafely')}
-                      </span>
-                    </span>
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
+           {/* Mobile Actions */}
+           <div className="flex items-center gap-3">
+             <motion.button
+               whileTap={{ scale: 0.9 }}
+               onClick={onOpenSearch}
+               className="p-2.5 rounded-xl bg-slate-100/50 dark:bg-slate-900/50 text-slate-600 dark:text-slate-300 backdrop-blur-md"
+             >
+               <Search className="w-5 h-5" />
+             </motion.button>
+             <motion.button
+               whileTap={{ scale: 0.9 }}
+               onClick={() => setMobileMenuOpen(true)}
+               className="p-2.5 rounded-xl bg-slate-100/50 dark:bg-slate-900/50 text-slate-600 dark:text-slate-300 backdrop-blur-md"
+             >
+               <Menu className="w-5 h-5" />
+             </motion.button>
+           </div>
         </div>
-      )}
+
+        {/* Mobile Menu Dropdown */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <>
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setMobileMenuOpen(false)}
+                className="fixed inset-0 bg-slate-950/40 backdrop-blur-[2px] z-40"
+              />
+              
+              {/* Drawer */}
+              <motion.div
+                 initial={{ y: -20, opacity: 0, scale: 0.95 }}
+                 animate={{ y: 0, opacity: 1, scale: 1 }}
+                 exit={{ y: -20, opacity: 0, scale: 0.95 }}
+                 transition={{ type: "spring", bounce: 0.3 }}
+                 className="absolute top-20 left-4 right-4 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl rounded-3xl shadow-2xl ring-1 ring-slate-900/10 dark:ring-white/10 overflow-hidden"
+              >
+                 <div className="p-3 space-y-1.5">
+                    {navItems.map((item) => (
+                       <motion.button
+                         key={item.id}
+                         whileTap={{ scale: 0.98 }}
+                         onClick={() => handleNavigate(item.id)}
+                         className={twMerge(
+                           "flex items-center gap-3.5 w-full p-3.5 rounded-2xl text-[15px] font-medium transition-all",
+                           currentPage === item.id 
+                             ? "bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400 shadow-sm" 
+                             : "text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800/50"
+                         )}
+                       >
+                         <item.icon className={twMerge("w-5 h-5", currentPage === item.id && "stroke-[2.5px]")} />
+                         {item.label}
+                       </motion.button>
+                    ))}
+                    
+                    <div className="h-px bg-slate-200/50 dark:bg-slate-700/50 my-2 mx-4" />
+                    
+                    <motion.button
+                       whileTap={{ scale: 0.98 }}
+                       onClick={toggleTheme}
+                       className="flex items-center gap-3.5 w-full p-3.5 rounded-2xl text-[15px] font-medium text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800/50"
+                    >
+                       {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                       {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+                    </motion.button>
+
+                    {isElectron && (
+                       <motion.button
+                         whileTap={{ scale: 0.98 }}
+                         onClick={() => { window.electronAPI?.quitApp(); }}
+                         className="flex items-center gap-3.5 w-full p-3.5 rounded-2xl text-[15px] font-medium text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-900/20"
+                       >
+                         <LogOut className="w-5 h-5" />
+                         {t('navbar.closeApp')}
+                       </motion.button>
+                    )}
+                 </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      </div>
+
     </nav>
   );
 }
+

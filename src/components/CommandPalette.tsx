@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+
 import { Command } from 'cmdk';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -18,13 +18,14 @@ import { supabase } from '@/lib/supabase';
 import { Trip } from '@/types/trip';
 
 interface CommandPaletteProps {
+  isOpen: boolean;
+  onClose: () => void;
   onNavigate?: (page: 'home' | 'trips' | 'analytics' | 'settings' | 'admin') => void;
   onSelectTrip?: (trip: Trip) => void;
   onCreateTrip?: () => void;
 }
 
-export function CommandPalette({ onNavigate, onSelectTrip, onCreateTrip }: CommandPaletteProps) {
-  const [open, setOpen] = useState(false);
+export function CommandPalette({ isOpen, onClose, onNavigate, onSelectTrip, onCreateTrip }: CommandPaletteProps) {
   const { t, language, setLanguage } = useLanguage();
   const { signOut, isAdmin, user } = useAuth();
 
@@ -40,36 +41,24 @@ export function CommandPalette({ onNavigate, onSelectTrip, onCreateTrip }: Comma
       if (error) throw error;
       return data as unknown as Trip[];
     },
-    enabled: !!user?.id && !isAdmin && open, // Only fetch when open
+    enabled: !!user?.id && !isAdmin && isOpen,
   });
 
-  useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        setOpen((open) => !open);
-      }
-    };
-
-    document.addEventListener('keydown', down);
-    return () => document.removeEventListener('keydown', down);
-  }, []);
-
   const runCommand = (command: () => void) => {
-    setOpen(false);
+    onClose();
     command();
   };
 
   return (
     <AnimatePresence>
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-[20vh] px-4">
+      {isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[20vh] px-4">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-slate-200/60 backdrop-blur-sm dark:bg-slate-950/60"
-            onClick={() => setOpen(false)}
+            onClick={onClose}
           />
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: -20 }}

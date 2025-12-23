@@ -75,7 +75,17 @@ export default function Dashboard() {
     setShowNewTripForm(true);
   };
 
+  // Command Palette State
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+
+  // Keyboard Shortcuts
   useKeyboardShortcuts([
+    {
+      key: 'k',
+      ctrlKey: true,
+      action: () => setIsCommandPaletteOpen((prev) => !prev),
+      preventDefault: true,
+    },
     {
       key: 'n',
       ctrlKey: true,
@@ -200,6 +210,8 @@ export default function Dashboard() {
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 relative">
       <Toaster position="top-center" theme="dark" richColors closeButton />
       <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
         onNavigate={handleNavigate}
         onSelectTrip={handleSelectTrip}
         onCreateTrip={handleCreateTrip}
@@ -223,7 +235,11 @@ export default function Dashboard() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.08),transparent_60%)] dark:bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.08),transparent_60%)]" />
       </div>
 
-      <Navbar onNavigate={handleNavigate} currentPage={currentPage} />
+      <Navbar 
+        onNavigate={handleNavigate} 
+        currentPage={currentPage} 
+        onOpenSearch={() => setIsCommandPaletteOpen(true)}
+      />
 
       <main className="relative z-10 flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-10 space-y-6">
         <AnimatePresence mode="wait">
@@ -233,7 +249,7 @@ export default function Dashboard() {
               {alerts.length > 0 && (
                 <div className="space-y-3">
                   <h2 className="text-[11px] uppercase tracking-[0.2em] text-slate-400 font-semibold px-1">
-                    Notifications
+                    {t('notifications.title') || 'Notifications'}
                   </h2>
                   <div className="grid gap-3">
                     {alerts.map(trip => {
@@ -243,6 +259,15 @@ export default function Dashboard() {
                       tripDate.setHours(0, 0, 0, 0);
                       const diffTime = tripDate.getTime() - todayDate.getTime();
                       const daysUntil = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                      const statusLabel = trip.payment_status === 'partial' 
+                        ? (t('trips.paymentStatuses.partial') || 'partial')
+                        : (t('trips.paymentStatuses.unpaid') || 'unpaid');
+
+                      const message = t('notifications.paymentDueMessage', "{{clientName}}'s trip to {{destination}} has a pending {{status}} payment.")
+                        .replace('{{clientName}}', trip.client_name)
+                        .replace('{{destination}}', trip.destination)
+                        .replace('{{status}}', statusLabel);
 
                       return (
                         <div
@@ -255,13 +280,15 @@ export default function Dashboard() {
                             </div>
                             <div className="space-y-1">
                               <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                                Payment Reminder
+                                {t('notifications.paymentReminder') || 'Payment Reminder'}
                                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 uppercase tracking-wide">
-                                  {daysUntil === 0 ? 'Today' : `In ${daysUntil} days`}
+                                  {daysUntil === 0 
+                                    ? (t('notifications.today') || 'Today') 
+                                    : (t('notifications.inDays')?.replace('{{count}}', daysUntil.toString()) || `In ${daysUntil} days`)}
                                 </span>
                               </h3>
                               <p className="text-sm text-slate-600 dark:text-slate-400">
-                                <span className="font-medium text-slate-900 dark:text-slate-200">{trip.client_name}</span>'s trip to <span className="font-medium text-slate-900 dark:text-slate-200">{trip.destination}</span> has a pending {trip.payment_status} payment.
+                                {message}
                               </p>
                             </div>
                           </div>
@@ -271,7 +298,7 @@ export default function Dashboard() {
                               onClick={() => handleSelectTrip(trip)}
                               className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-700 dark:text-amber-400 bg-amber-100/50 dark:bg-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-900/50 rounded-lg transition-colors"
                             >
-                              View Trip
+                              {t('notifications.viewTrip') || 'View Trip'}
                               <ArrowRight size={14} />
                             </button>
                             <button

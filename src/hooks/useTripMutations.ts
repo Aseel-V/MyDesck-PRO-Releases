@@ -2,11 +2,13 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { TripFormData } from '../types/trip';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { toast } from 'sonner';
 
 export function useTripMutations() {
     const { user } = useAuth();
     const queryClient = useQueryClient();
+    const { t } = useLanguage();
 
     const saveTripMutation = useMutation({
         mutationFn: async ({ formData, editTripId }: { formData: TripFormData; editTripId?: string }) => {
@@ -15,23 +17,23 @@ export function useTripMutations() {
             if (editTripId) {
                 const { error } = await supabase
                     .from('trips')
-                    .update({ ...formData, updated_at: new Date().toISOString() })
+                    .update({ ...(formData as any), updated_at: new Date().toISOString() })
                     .eq('id', editTripId);
                 if (error) throw error;
             } else {
                 const { error } = await supabase
                     .from('trips')
-                    .insert([{ ...formData, user_id: user.id }]);
+                    .insert([{ ...(formData as any), user_id: user.id }]);
                 if (error) throw error;
             }
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['trips'] });
-            toast.success('Trip saved successfully');
+            toast.success(t('notifications.tripSaved') || 'Trip saved successfully');
         },
         onError: (error: any) => {
             console.error('Error saving trip:', error);
-            toast.error('Failed to save trip');
+            toast.error(t('notifications.tripSaveError') || 'Failed to save trip');
         }
     });
 
@@ -42,11 +44,11 @@ export function useTripMutations() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['trips'] });
-            toast.success('Trip deleted');
+            toast.success(t('notifications.tripDeleted') || 'Trip deleted');
         },
         onError: (error: any) => {
             console.error('Error deleting trip:', error);
-            toast.error('Failed to delete trip');
+            toast.error(t('notifications.tripDeleteError') || 'Failed to delete trip');
         }
     });
 
@@ -57,7 +59,7 @@ export function useTripMutations() {
                 .update({
                     amount_paid: amountPaid,
                     payment_status: paymentStatus,
-                    payments: payments, // Update the payments history/array
+                    payments: payments as any, // Update the payments history/array
                     updated_at: new Date().toISOString(),
                 })
                 .eq('id', tripId);
@@ -65,11 +67,11 @@ export function useTripMutations() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['trips'] });
-            toast.success('Payment updated');
+            toast.success(t('notifications.paymentUpdated') || 'Payment updated');
         },
         onError: (error: any) => {
             console.error('Error updating payment:', error);
-            toast.error('Failed to update payment');
+            toast.error(t('notifications.paymentUpdateError') || 'Failed to update payment');
         }
     });
 
@@ -86,7 +88,7 @@ export function useTripMutations() {
         },
         onError: (error: any) => {
             console.error('Error toggling export:', error);
-            toast.error('Failed to update export status');
+            toast.error(t('notifications.exportStatusError') || 'Failed to update export status');
         }
     });
 

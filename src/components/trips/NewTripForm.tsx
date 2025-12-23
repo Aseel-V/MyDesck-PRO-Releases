@@ -91,7 +91,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
             Object.keys(parsed).forEach((key) => {
               setValue(key as any, parsed[key]);
             });
-            toast.info(t('trips.draftRestored', 'Draft restored'));
+            toast.info(t('notifications.draftRestored') || 'Draft restored');
           }
         } catch (e) {
           console.error('Failed to parse draft', e);

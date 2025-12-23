@@ -4,9 +4,11 @@ import { supabase } from '../../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 export default function ResetPassword() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -19,12 +21,12 @@ export default function ResetPassword() {
     setError(null);
 
     if (password !== confirmPassword) {
-        setError('Passwords do not match');
+        setError(t('notifications.passwordMismatch') || 'Passwords do not match');
         return;
     }
     
     if (password.length < 6) {
-        setError('Password must be at least 6 characters');
+        setError(t('notifications.passwordLength') || 'Password must be at least 6 characters');
         return;
     }
 
@@ -37,10 +39,10 @@ export default function ResetPassword() {
 
       if (error) throw error;
       
-      toast.success('Password updated successfully');
+      toast.success(t('notifications.passwordUpdated') || 'Password updated successfully');
       navigate('/');
     } catch (err: any) {
-      setError(err.message || 'Failed to update password');
+      setError(err.message || t('notifications.passwordUpdateError') || 'Failed to update password');
     } finally {
       setLoading(false);
     }
