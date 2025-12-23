@@ -586,8 +586,8 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
               </div>
             </div>
           ) : (
-            <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+            <div className="h-[300px] w-full" style={{ position: 'relative' }}>
+              <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={100}>
                 {isAdmin ? (
                   <BarChart data={monthlyData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#0f172a" />

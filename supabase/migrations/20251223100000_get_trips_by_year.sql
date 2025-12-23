@@ -1,3 +1,5 @@
+DROP FUNCTION IF EXISTS get_trips_by_year(text);
+
 CREATE OR REPLACE FUNCTION get_trips_by_year(year_input text)
 RETURNS TABLE (
   id uuid,
@@ -21,6 +23,7 @@ RETURNS TABLE (
   updated_at timestamptz,
   currency text,
   exchange_rate numeric,
+  payments jsonb,
   attachments jsonb,
   payment_date date,
   room_type text,

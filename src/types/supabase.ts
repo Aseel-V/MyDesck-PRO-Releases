@@ -27,6 +27,8 @@ export interface Database {
           payment_date: string | null // Added
           room_type: string | null // Added
           board_basis: string | null // Added
+          itinerary: Json[] | null // Added
+          travelers: Json[] | null // Added
           profit: number
           profit_percentage: number
           payment_status: 'paid' | 'partial' | 'unpaid'
@@ -54,6 +56,8 @@ export interface Database {
           payment_date?: string | null // Added
           room_type?: string | null // Added
           board_basis?: string | null // Added
+          itinerary?: Json[] | null // Added
+          travelers?: Json[] | null // Added
           payment_status: 'paid' | 'partial' | 'unpaid'
           amount_paid: number
           notes?: string
@@ -273,6 +277,8 @@ export interface Database {
           payment_date: string | null
           room_type: string | null
           board_basis: string | null
+          itinerary: Json[] | null
+          travelers: Json[] | null
           profit: number
           profit_percentage: number
           payment_status: string
@@ -283,6 +289,12 @@ export interface Database {
           export_to_pdf: boolean
           created_at: string
           updated_at: string
+        }[]
+      }
+      get_trip_years: {
+        Args: Record<string, never>
+        Returns: {
+          year: string
         }[]
       }
     }

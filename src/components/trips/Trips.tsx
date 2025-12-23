@@ -57,10 +57,6 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
   const { convert, format, currency, isLoading: isCurrencyLoading } = useCurrency();
   const { deleteTrip, toggleExport } = useTripMutations();
 
-  // const [showNewTripForm, setShowNewTripForm] = useState(false); // Lifted to Dashboard
-
-  // const [editingTrip, setEditingTrip] = useState<Trip | undefined>(undefined); // Lifted to Dashboard
-
   const [viewTrip, setViewTrip] = useState<Trip | undefined>(undefined);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [showPDFExport, setShowPDFExport] = useState(false);
@@ -76,21 +72,11 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
 
   const debouncedSearchTerm = useDebounce(filters.search, 1000);
 
-  // Pagination
-  const [page, setPage] = useState(1);
-  // PAGE_SIZE removed
-
   useEffect(() => {
     if (initialViewTrip) {
       setViewTrip(initialViewTrip);
     }
   }, [initialViewTrip]);
-
-  // Reset page when filters change
-  // Reset page when filters change
-  useEffect(() => {
-    setPage(1);
-  }, [debouncedSearchTerm, filters.paymentStatus, filters.tripStatus, filters.year, filters.month, filters.destination]);
 
   const baseActionBtn =
     'inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium rounded-xl transition-all border-b-2';
@@ -101,67 +87,61 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
     baseActionBtn +
     ' border-transparent text-slate-300 hover:text-slate-50 hover:bg-slate-900/50 hover:border-slate-500/80';
 
-  // Query to get available years based on EFFECTIVE DATE (Cash Basis)
+  // 1. جلب السنوات المتوفرة باستخدام الدالة الجديدة get_trip_years
   const { data: availableYears = [] } = useQuery({
     queryKey: ['trip-years', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
-      // Fetch both dates to determine effective year
-      const { data } = await supabase
-        .from('trips')
-        .select('start_date, payment_date')
-        .eq('user_id', user.id);
       
-      if (!data) return [new Date().getFullYear().toString()];
-
-      const years = new Set(
-        data.map((t) => {
-          // Effective Date Rule: Payment Date OR Start Date
-          const effDate = t.payment_date || t.start_date;
-          return new Date(effDate).getFullYear().toString();
-        })
-      );
-      // Ensure current year is always available
-      years.add(new Date().getFullYear().toString());
+      const { data, error } = await supabase.rpc('get_trip_years');
       
-      return Array.from(years).sort((a, b) => b.localeCompare(a));
+      if (error) {
+        console.error('Error fetching years:', error);
+        return [new Date().getFullYear().toString()];
+      }
+      
+      // نستخرج مصفوفة السنوات من النتيجة
+      const years = (data as any[]).map(item => item.year);
+      
+      // نضمن وجود السنة الحالية
+      const currentYear = new Date().getFullYear().toString();
+      if (!years.includes(currentYear)) {
+        years.unshift(currentYear);
+      }
+      
+      // ترتيب تنازلي
+      return years.sort((a: string, b: string) => b.localeCompare(a));
     },
     enabled: !!user?.id,
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    staleTime: 1000 * 60 * 5, 
   });
 
+  // 2. جلب الرحلات للسنة المحددة باستخدام get_trips_by_year
   const { data: { data: rawTrips, count } = { data: [], count: 0 }, isLoading: loading } = useQuery({
-    queryKey: ['trips', user?.id, debouncedSearchTerm, filters.paymentStatus, filters.tripStatus, filters.year, page],
+    queryKey: ['trips', user?.id, debouncedSearchTerm, filters.paymentStatus, filters.tripStatus, filters.year],
     queryFn: async () => {
       if (!user?.id) return { data: [], count: 0 };
 
-      // Ensure we have a year to filter by for performance
+      // استخدم السنة من الفلتر أو السنة الحالية
       const yearToFetch = filters.year || new Date().getFullYear().toString();
 
+      // استدعاء الدالة (RPC) التي أنشأناها في SQL
       const { data, error } = await supabase
         .rpc('get_trips_by_year', { year_input: yearToFetch });
 
       if (error) throw error;
-
-      // The RPC returns filtered data. We can still apply client-side search/status filtering if needed,
-      // but the heavy lifting of date filtering is done server-side.
-      // Note: The RPC returns all columns.
-      
-      // Client-side filtering for other fields (Search, Status) is handled in the useMemo below,
-      // so we just return the data here.
       
       return { data: data as unknown as Trip[], count: data?.length || 0 };
     },
     enabled: !!user?.id,
   });
 
-  // Client-side Cash-Basis Filtering
+  // 3. فلترة البيانات في المتصفح (بحث، حالة، شهر)
   const filteredTrips = useMemo(() => {
     if (!rawTrips) return [];
     
     let filtered = rawTrips;
 
-    // 1. Filter by search term
     if (debouncedSearchTerm) {
       const lowerSearch = debouncedSearchTerm.toLowerCase();
       filtered = filtered.filter(
@@ -172,31 +152,18 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
       );
     }
 
-    // 2. Filter by Payment Status
     if (filters.paymentStatus) {
       if (filters.paymentStatus === 'unpaid') {
-         // Allow 'unpaid' OR null/undefined
          filtered = filtered.filter(t => !t.payment_status || t.payment_status === 'unpaid');
       } else {
          filtered = filtered.filter((trip) => trip.payment_status === filters.paymentStatus);
       }
     }
 
-    // 3. Filter by Trip Status
     if (filters.tripStatus) {
       filtered = filtered.filter((trip) => trip.status === filters.tripStatus);
     }
 
-    // 4. Filter by Year (Cash-Basis: Effective Date)
-    if (filters.year) {
-      filtered = filtered.filter(trip => {
-         const effDate = trip.payment_date || trip.start_date;
-         if (!effDate) return false;
-         return new Date(effDate).getFullYear().toString() === filters.year;
-      });
-    }
-
-    // 5. Filter by Month
     if (filters.month) {
       filtered = filtered.filter(trip => {
          const effDate = trip.payment_date || trip.start_date;
@@ -207,22 +174,12 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
       });
     }
 
-    // 6. Filter by Destination
     if (filters.destination) {
       filtered = filtered.filter((trip) => trip.destination === filters.destination);
     }
 
     return filtered;
   }, [rawTrips, debouncedSearchTerm, filters.paymentStatus, filters.tripStatus, filters.year, filters.month, filters.destination]);
-
-  // saveTripMutation moved to useTripMutations hook
-  // handleSaveTrip moved to Dashboard
-
-  // updatePaymentMutation moved to useTripMutations hook
-
-
-
-  // deleteTripMutation moved to useTripMutations hook
 
   const handleDeleteTrip = (id: string) => {
     if (deleteConfirm !== id) {
@@ -234,21 +191,11 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
     setDeleteConfirm(null);
   };
 
-  // toggleExportMutation moved to useTripMutations hook
-
   const handleToggleExport = (id: string, value: boolean) => {
     toggleExport({ id, value });
   };
 
-  const trips = filteredTrips; // Alias for compatibility with rest of component
-  // count variable will be the total fetched, not filtered. 
-  // We might want to update the displayed count to filteredTrips.length
-
-  // saveTripMutation moved to useTripMutations hook
-  // handleSaveTrip moved to Dashboard
-  // ... (rest of handlers)
-
-  // availableYears moved to useQuery above
+  const trips = filteredTrips;
 
   const availableDestinations = useMemo(() => {
     if (!trips) return [];
@@ -261,21 +208,14 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
     [trips]
   );
   
-  // ... (Stats calculation on current page)
-  
-  // Separate query for Stats (No Pagination)
-  
-
   const stats = useMemo(() => {
     if (!trips || trips.length === 0) return { totalTrips: 0, totalRevenue: 0, totalProfit: 0, unpaidAmount: 0, upcoming: 0 };
     
-    // Since we now load ALL trips, totalTrips is just length. count is also fine.
     const totalTrips = count || 0; 
     
-    // Correctly convert each trip's values to the user's display currency before summing
     const totalRevenue = trips.reduce((sum, trip) => {
       if (trip.status === 'cancelled') return sum;
-      const tripCurrency = trip.currency || currency; // Default to user currency if missing
+      const tripCurrency = trip.currency || currency; 
       const price = trip.sale_price || 0;
       return sum + convert(price, tripCurrency, currency);
     }, 0);
@@ -314,23 +254,12 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
   }, [trips, count, convert, currency]);
 
   const handleEditTrip = (trip: Trip) => {
-    // setEditingTrip(trip);
-    // setShowNewTripForm(true);
     onEditTrip?.(trip);
   };
-
-
 
   const handleViewTrip = (trip: Trip) => {
     setViewTrip(trip);
   };
-
-  // const handleCloseNewTripForm = () => {
-  //   setShowNewTripForm(false);
-  //   setEditingTrip(undefined);
-  // };
-
-
 
   const handleDownloadAllInvoices = async () => {
     if (!filteredTrips.length || !user || !profile) return;
@@ -392,15 +321,12 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
             <Skeleton className="h-10 w-32 rounded-xl" />
           </div>
         </div>
-
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {[...Array(5)].map((_, i) => (
             <Skeleton key={i} className="h-24 w-full rounded-2xl" />
           ))}
         </div>
-
         <Skeleton className="h-20 w-full rounded-2xl" />
-
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(6)].map((_, i) => (
             <Skeleton key={i} className="h-[280px] w-full rounded-2xl" />
@@ -409,6 +335,9 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
       </div>
     );
   }
+
+  // عرض أول 50 رحلة فقط لمنع التعليق
+  const displayTrips = filteredTrips.slice(0, 50);
 
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -421,7 +350,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
           <p className="text-sm text-slate-300 mt-1">
             {count === 0
               ? 'No trips found'
-              : `Showing ${filteredTrips.length} of ${count} trips`}
+              : `Showing ${displayTrips.length} of ${filteredTrips.length} trips`}
             {currency !== 'USD' && (
               <span className="ml-2 text-xs text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-full border border-sky-500/20">
                 {currency} {isCurrencyLoading && '...'}
@@ -452,7 +381,6 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
             </button>
           </div>
 
-          {/* Batch Download Button */}
           {filteredTrips.length > 0 && (
             <button
               onClick={handleDownloadAllInvoices}
@@ -562,7 +490,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Filters: أزرار السنوات ستظهر تلقائياً هنا */}
       <div className="rounded-2xl bg-slate-950/90 border border-slate-800/80 p-4 shadow-md shadow-slate-950/60">
         <TripFilters
           searchTerm={filters.search}
@@ -604,7 +532,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
       ) : viewMode === 'grid' ? (
         <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <AnimatePresence mode="popLayout">
-            {filteredTrips.map((trip) => (
+            {displayTrips.map((trip) => (
               <motion.div
                 layout
                 key={trip.id}
@@ -624,6 +552,13 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
               </motion.div>
             ))}
           </AnimatePresence>
+          {filteredTrips.length > 50 && (
+             <div className="col-span-full text-center py-6">
+               <span className="text-slate-400 text-sm bg-slate-900/50 px-4 py-2 rounded-full border border-slate-800">
+                 يتم عرض أول 50 رحلة فقط لضمان السرعة. استخدم البحث للعثور على المزيد.
+               </span>
+             </div>
+          )}
         </motion.div>
       ) : (
         <div className="glass-panel bg-slate-950/90 border border-slate-800/80 rounded-2xl overflow-hidden shadow-lg shadow-slate-950/70">
@@ -641,7 +576,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
               </thead>
               <tbody className="divide-y divide-slate-800/80">
                 <AnimatePresence mode="popLayout">
-                  {filteredTrips.map((trip) => (
+                  {displayTrips.map((trip) => (
                     <motion.tr
                       layout
                       key={trip.id}
@@ -684,16 +619,16 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
               </tbody>
             </table>
           </div>
+          {filteredTrips.length > 50 && (
+             <div className="p-4 text-center border-t border-slate-800">
+               <span className="text-slate-400 text-sm">
+                 يتم عرض أول 50 رحلة فقط. استخدم البحث للعثور على المزيد.
+               </span>
+             </div>
+          )}
         </div>
       )}
       </div>
-
-      {/* Pagination Controls */}
-
-
-      {/* NewTripForm removed from here, rendered in Dashboard */}
-
-
 
       {
         viewTrip && (
