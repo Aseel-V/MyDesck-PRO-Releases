@@ -88,6 +88,7 @@ export const translations = {
 
     trips: {
       title: 'Trip Management',
+      viewTrip: 'Trip Details',
       newTrip: 'New Trip',
       details: 'Details',
       financials: 'Financials',
@@ -298,6 +299,7 @@ export const translations = {
 
     trips: {
       title: 'إدارة الرحلات',
+      viewTrip: 'تفاصيل الرحلة',
       newTrip: 'رحلة جديدة',
       details: 'التفاصيل',
       financials: 'المالية',
@@ -508,6 +510,7 @@ export const translations = {
 
     trips: {
       title: 'ניהול טיולים',
+      viewTrip: 'פרטי הטיול',
       newTrip: 'טיול חדש',
       details: 'פרטים',
       financials: 'פיננסים',

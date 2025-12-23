@@ -1,4 +1,14 @@
-import { X } from 'lucide-react';
+import { useState } from 'react';
+import { 
+  X, 
+  Users, 
+  Calendar, 
+  CreditCard, 
+  FileText, 
+  Paperclip, 
+  MapPin, 
+  DollarSign,
+} from 'lucide-react';
 import { formatDate } from '../../lib/utils';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
@@ -11,118 +21,316 @@ interface ViewTripModalProps {
 
 export default function ViewTripModal({ trip, onClose }: ViewTripModalProps) {
   const { t } = useLanguage();
-
   const { format } = useCurrency();
-
-
-
-
+  const [activeTab, setActiveTab] = useState<'details' | 'travelers' | 'itinerary' | 'payments' | 'files'>('details');
 
   const wholesale = trip.wholesale_cost ?? 0;
   const sale = trip.sale_price ?? 0;
   const paid = trip.amount_paid ?? 0;
-  const profitValue =
-    typeof trip.profit === 'number' ? trip.profit : sale - wholesale;
+  const profitValue = typeof trip.profit === 'number' ? trip.profit : sale - wholesale;
   const amountDue = Math.max(sale - paid, 0);
+
+  const tabs = [
+    { id: 'details', label: t('trips.details') || 'Details', icon: FileText },
+    { id: 'travelers', label: t('trips.travelers') || 'Travelers', icon: Users },
+    { id: 'itinerary', label: t('trips.itinerary') || 'Itinerary', icon: Calendar },
+    { id: 'payments', label: t('trips.payments') || 'Payments', icon: CreditCard },
+    { id: 'files', label: t('trips.attachments') || 'Files', icon: Paperclip },
+  ] as const;
 
   return (
     <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-xl flex items-center justify-center z-50 p-4 animate-fadeIn">
-      <div className="relative max-w-2xl w-full max-h-[90vh] my-6 rounded-2xl bg-slate-950/95 border border-slate-800/80 shadow-[0_22px_65px_rgba(15,23,42,0.95)] overflow-hidden">
-        <div className="h-[2px] bg-gradient-to-r from-sky-500/70 via-fuchsia-500/50 to-sky-400/70" />
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800/80 bg-slate-950/95">
-          <div className="flex flex-col gap-1">
-            <span className="text-[11px] uppercase tracking-[0.25em] text-sky-300/80">
-              View Trip
-            </span>
-            <h2 className="text-lg md:text-xl font-bold text-slate-50">
-              {trip.destination} — {trip.client_name}
-            </h2>
+      <div className="relative max-w-4xl w-full max-h-[90vh] flex flex-col rounded-2xl bg-slate-950/95 border border-slate-800/80 shadow-[0_22px_65px_rgba(15,23,42,0.95)] overflow-hidden">
+        
+        {/* Header */}
+        <div className="flex-none">
+          <div className="h-[2px] bg-gradient-to-r from-sky-500/70 via-fuchsia-500/50 to-sky-400/70" />
+          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800/80 bg-slate-950/95">
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-3">
+                <span className="text-[11px] uppercase tracking-[0.25em] text-sky-300/80">
+                  {t('trips.viewTrip')}
+                </span>
+                <span className={`px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded-full border ${
+                  trip.status === 'completed' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' :
+                  trip.status === 'cancelled' ? 'bg-rose-500/10 border-rose-500/30 text-rose-400' :
+                  'bg-sky-500/10 border-sky-500/30 text-sky-400'
+                }`}>
+                  {trip.status}
+                </span>
+              </div>
+              <h2 className="text-xl md:text-2xl font-bold text-slate-50 flex items-center gap-2">
+                {trip.destination} 
+                <span className="text-slate-600">—</span>
+                <span className="text-slate-300 font-medium">{trip.client_name}</span>
+              </h2>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-full border border-slate-700/80 bg-slate-950/90 hover:bg-slate-800/80 text-slate-300 transition-all"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-full border border-slate-700/80 bg-slate-950/90 hover:bg-slate-800/80 text-slate-300 transition-all"
-            aria-label={t('trips.cancel')}
-          >
-            <X className="w-4 h-4" />
-          </button>
+
+          {/* Tabs Navigation */}
+          <div className="flex items-center gap-1 px-6 border-b border-slate-800/80 bg-slate-950/50 overflow-x-auto">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? 'border-sky-500 text-sky-400'
+                    : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                }`}
+              >
+                <tab.icon className="w-4 h-4" />
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="px-5 py-4 md:px-6 md:py-5 space-y-5 overflow-y-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p className="text-xs text-slate-400 mb-1">{t('trips.destination')}</p>
-              <p className="text-sm font-semibold text-slate-100">{trip.destination}</p>
-            </div>
-            <div>
-              <p className="text-xs text-slate-400 mb-1">{t('trips.clientName')}</p>
-              <p className="text-sm font-semibold text-slate-100">{trip.client_name}</p>
-            </div>
-            <div>
-              <p className="text-xs text-slate-400 mb-1">{t('trips.startDate')}</p>
-              <p className="text-sm font-semibold text-slate-100">{formatDate(trip.start_date)}</p>
-            </div>
-            <div>
-              <p className="text-xs text-slate-400 mb-1">{t('trips.endDate')}</p>
-              <p className="text-sm font-semibold text-slate-100">{formatDate(trip.end_date)}</p>
-            </div>
-            <div>
-              <p className="text-xs text-slate-400 mb-1">{t('trips.travelers')}</p>
-              <p className="text-sm font-semibold text-slate-100">{trip.travelers_count}</p>
-            </div>
-            <div>
-              <p className="text-xs text-slate-400 mb-1">{t('trips.paymentStatus')}</p>
-              <p className="text-sm font-semibold text-slate-100">{t(`trips.paymentStatuses.${trip.payment_status}`)}</p>
-            </div>
-          </div>
+        {/* Content Area */}
+        <div className="flex-1 overflow-y-auto p-6 bg-slate-950/30">
+          
+          {/* 1. General Details Tab */}
+          {activeTab === 'details' && (
+            <div className="space-y-6 animate-fadeIn">
+              {/* Key Info Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-800/60">
+                  <div className="flex items-center gap-3 mb-2 text-slate-400">
+                    <Calendar className="w-4 h-4" />
+                    <span className="text-xs uppercase tracking-wider font-semibold">Duration</span>
+                  </div>
+                  <p className="text-slate-100 font-medium">{formatDate(trip.start_date)}</p>
+                  <p className="text-slate-500 text-sm">to {formatDate(trip.end_date)}</p>
+                </div>
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-950/90 px-4 py-3 md:px-5 md:py-4 shadow-inner shadow-slate-950/80">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <p className="text-xs text-slate-400 mb-1">{t('trips.wholesaleCost')}</p>
-                <p className="text-sm font-semibold text-slate-100">{format(wholesale, trip.currency || 'USD')}</p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-400 mb-1">{t('trips.salePrice')}</p>
-                <p className="text-sm font-semibold text-slate-100">{format(sale, trip.currency || 'USD')}</p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-400 mb-1">{t('trips.profit')}</p>
-                <p className="text-sm font-semibold text-slate-100">{format(profitValue, trip.currency || 'USD')}</p>
-              </div>
-            </div>
-          </div>
+                {(trip.room_type || trip.board_basis) && (
+                  <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-800/60">
+                    <div className="flex items-center gap-3 mb-2 text-slate-400">
+                      <MapPin className="w-4 h-4" />
+                      <span className="text-xs uppercase tracking-wider font-semibold">Accommodation</span>
+                    </div>
+                    <p className="text-slate-100 font-medium">{trip.room_type || 'Not specified'}</p>
+                    <p className="text-slate-500 text-sm">{trip.board_basis || 'Room Only'}</p>
+                  </div>
+                )}
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <p className="text-xs text-slate-400 mb-1">{t('trips.paymentDate') || 'Payment Date'}</p>
-              <p className="text-sm font-semibold text-slate-100">{trip.payment_date ? formatDate(trip.payment_date) : '-'}</p>
-            </div>
-            <div>
-              <p className="text-xs text-slate-400 mb-1">{t('trips.amountPaid')}</p>
-              <p className="text-sm font-semibold text-slate-100">{format(paid, trip.currency || 'USD')}</p>
-            </div>
-            <div>
-              <p className="text-xs text-slate-400 mb-1">{t('trips.amountDue')}</p>
-              <p className="text-sm font-semibold text-rose-300">{format(amountDue, trip.currency || 'USD')}</p>
-            </div>
-          </div>
+                {trip.travelers_count > 0 && (
+                  <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-800/60">
+                    <div className="flex items-center gap-3 mb-2 text-slate-400">
+                      <Users className="w-4 h-4" />
+                      <span className="text-xs uppercase tracking-wider font-semibold">Travelers</span>
+                    </div>
+                    <p className="text-slate-100 font-medium">{trip.travelers_count} People</p>
+                    <p className="text-slate-500 text-sm">{trip.travelers?.length ? 'See travelers tab' : 'No details added'}</p>
+                  </div>
+                )}
+              </div>
 
-          {trip.notes && (
-            <div>
-              <p className="text-xs text-slate-400 mb-1">{t('trips.notes')}</p>
-              <p className="text-sm text-slate-100 whitespace-pre-wrap bg-slate-950/90 border border-slate-800 px-3 py-2.5 rounded-xl">
-                {trip.notes}
-              </p>
+              {/* Financial Summary */}
+              {(sale > 0 || wholesale > 0 || paid > 0) && (
+                <div className="rounded-2xl border border-slate-800 bg-slate-900/20 overflow-hidden">
+                  <div className="px-5 py-3 border-b border-slate-800 bg-slate-900/80">
+                    <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
+                      <DollarSign className="w-4 h-4 text-emerald-400" />
+                      Financial Overview
+                    </h3>
+                  </div>
+                  <div className="p-5 grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <div>
+                      <p className="text-xs text-slate-500 mb-1 uppercase">Wholesale Cost</p>
+                      <p className="text-lg font-semibold text-slate-300">{format(wholesale, trip.currency)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500 mb-1 uppercase">Sale Price</p>
+                      <p className="text-lg font-semibold text-sky-300">{format(sale, trip.currency)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500 mb-1 uppercase">Total Profit</p>
+                      <p className="text-lg font-semibold text-emerald-400">{format(profitValue, trip.currency)}</p>
+                    </div>
+                     <div>
+                      <p className="text-xs text-slate-500 mb-1 uppercase">Amount Due</p>
+                      <p className={`text-lg font-bold ${amountDue > 0 ? 'text-rose-400' : 'text-slate-400'}`}>
+                        {format(amountDue, trip.currency)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Notes */}
+              {trip.notes && (
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-slate-300">Notes & Requirements</h3>
+                  <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 text-slate-300 text-sm whitespace-pre-wrap leading-relaxed">
+                    {trip.notes}
+                  </div>
+                </div>
+              )}
             </div>
           )}
-        </div>
 
-        <div className="flex items-center justify-end px-5 py-4 md:px-6 border-t border-slate-800/80 bg-slate-950/95">
+          {/* 2. Travelers Tab */}
+          {activeTab === 'travelers' && (
+            <div className="space-y-4 animate-fadeIn">
+              {trip.travelers && trip.travelers.length > 0 ? (
+                <div className="rounded-xl border border-slate-800 overflow-hidden">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-slate-900/80 text-slate-400">
+                      <tr>
+                        <th className="px-4 py-3 font-medium">Full Name</th>
+                        <th className="px-4 py-3 font-medium">Passport No.</th>
+                        <th className="px-4 py-3 font-medium">Nationality</th>
+                        <th className="px-4 py-3 font-medium">Room Type</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800 bg-slate-900/30">
+                      {trip.travelers.map((traveler, idx) => (
+                        <tr key={idx} className="hover:bg-slate-800/30 transition-colors">
+                          <td className="px-4 py-3 text-slate-200 font-medium">{traveler.full_name}</td>
+                          <td className="px-4 py-3 text-slate-400 font-mono">{traveler.passport_number || '-'}</td>
+                          <td className="px-4 py-3 text-slate-400">{traveler.nationality || '-'}</td>
+                          <td className="px-4 py-3 text-slate-400">{traveler.room_type || '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-slate-500">
+                  <Users className="w-12 h-12 mb-3 opacity-20" />
+                  <p>No detailed traveler information recorded.</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 3. Itinerary Tab */}
+          {activeTab === 'itinerary' && (
+            <div className="space-y-6 animate-fadeIn relative">
+              {trip.itinerary && trip.itinerary.length > 0 ? (
+                <div className="relative border-l-2 border-slate-800 ml-4 space-y-8 py-2">
+                  {trip.itinerary.map((item, idx) => (
+                    <div key={idx} className="relative pl-8">
+                      <span className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-slate-950 border-2 border-sky-500" />
+                      <div className="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-2">
+                        <h4 className="text-base font-bold text-slate-100">Day {item.day}</h4>
+                        {item.date && (
+                          <span className="text-xs text-sky-400 font-medium px-2 py-0.5 rounded-full bg-sky-500/10 border border-sky-500/20">
+                            {formatDate(item.date)}
+                          </span>
+                        )}
+                      </div>
+                      <h5 className="text-sm font-semibold text-slate-200 mb-1">{item.title}</h5>
+                      <p className="text-sm text-slate-400 leading-relaxed">{item.description}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-slate-500">
+                  <MapPin className="w-12 h-12 mb-3 opacity-20" />
+                  <p>No itinerary details available.</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 4. Payments Tab */}
+          {activeTab === 'payments' && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                 <div className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5">
+                    <p className="text-xs text-emerald-400 uppercase tracking-wider mb-1">Total Paid</p>
+                    <p className="text-xl font-bold text-emerald-100">{format(paid, trip.currency)}</p>
+                 </div>
+                 <div className="p-4 rounded-xl border border-rose-500/20 bg-rose-500/5">
+                    <p className="text-xs text-rose-400 uppercase tracking-wider mb-1">Remaining Due</p>
+                    <p className="text-xl font-bold text-rose-100">{format(amountDue, trip.currency)}</p>
+                 </div>
+                 <div className="p-4 rounded-xl border border-slate-700 bg-slate-800/50">
+                    <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Payment Status</p>
+                    <p className="text-xl font-bold text-slate-200 capitalize">{trip.payment_status}</p>
+                 </div>
+              </div>
+
+              {trip.payments && trip.payments.length > 0 ? (
+                <div className="rounded-xl border border-slate-800 overflow-hidden">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-slate-900/80 text-slate-400">
+                      <tr>
+                        <th className="px-4 py-3 font-medium">Date</th>
+                        <th className="px-4 py-3 font-medium">Amount</th>
+                        <th className="px-4 py-3 font-medium">Method</th>
+                        <th className="px-4 py-3 font-medium">Receipt ID</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800 bg-slate-900/30">
+                      {trip.payments.map((payment, idx) => (
+                        <tr key={idx} className="hover:bg-slate-800/30 transition-colors">
+                          <td className="px-4 py-3 text-slate-300">{formatDate(payment.date)}</td>
+                          <td className="px-4 py-3 text-emerald-400 font-medium">{format(payment.amount, trip.currency)}</td>
+                          <td className="px-4 py-3 text-slate-400 capitalize">{payment.method}</td>
+                          <td className="px-4 py-3 text-slate-500 font-mono text-xs">{payment.receipt_id || '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-center py-8 border border-dashed border-slate-800 rounded-xl">
+                  <p className="text-slate-500 text-sm">No payment history recorded.</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 5. Files Tab */}
+          {activeTab === 'files' && (
+            <div className="space-y-4 animate-fadeIn">
+              {trip.attachments && trip.attachments.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {trip.attachments.map((file, idx) => (
+                    <a 
+                      key={idx}
+                      href={file.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-4 rounded-xl border border-slate-800 bg-slate-900/50 hover:bg-slate-800 hover:border-sky-500/30 hover:shadow-lg hover:shadow-sky-500/10 transition-all group"
+                    >
+                      <div className="p-2.5 rounded-lg bg-slate-800 group-hover:bg-sky-500/20 group-hover:text-sky-400 text-slate-400 transition-colors">
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-slate-200 truncate group-hover:text-sky-300">{file.file_name}</p>
+                        <p className="text-xs text-slate-500 uppercase tracking-wider">{file.type}</p>
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-slate-500">
+                  <Paperclip className="w-12 h-12 mb-3 opacity-20" />
+                  <p>No files attached to this trip.</p>
+                </div>
+              )}
+            </div>
+          )}
+
+        </div>
+        
+        {/* Footer */}
+        <div className="flex-none p-4 md:px-6 border-t border-slate-800/80 bg-slate-950/95 flex justify-end">
           <button
             onClick={onClose}
-            className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-medium border border-slate-600/80 text-slate-200 bg-slate-950/90 hover:bg-slate-900/90 transition-all"
+            className="px-6 py-2.5 rounded-xl text-sm font-medium border border-slate-700 hover:bg-slate-800 text-slate-200 transition-colors"
           >
-            {t('trips.cancel')}
+            {t('trips.close') || 'Close'}
           </button>
         </div>
       </div>

@@ -53,6 +53,14 @@ interface UserStats {
   topDestinations: { name: string; value: number }[];
 }
 
+interface YearlyStats {
+  year: string;
+  total_trips: number;
+  total_revenue: number;
+  total_profit: number;
+  profit_growth_percentage: number;
+}
+
 interface AnalyticsProps {
   trips: Trip[];
   onOpenTripsWithFilter?: (options: { month?: string; pendingOnly?: boolean }) => void;
@@ -91,6 +99,7 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
 
   const [userProfiles, setUserProfiles] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(false);
+  const [yearlyStats, setYearlyStats] = useState<YearlyStats[]>([]);
 
   /* New Year Filter State for Cash-Basis Analytics */
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
@@ -204,6 +213,23 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
       setLoading(false);
     }
   };
+
+  const fetchYearlyStats = async () => {
+    try {
+      // Cast request to any to bypass strict literal check for new RPC
+      const { data, error } = await supabase.rpc('get_yearly_stats_overview' as any);
+      if (error) throw error;
+      if (data) setYearlyStats(data as YearlyStats[]);
+    } catch (error) {
+       console.error('Error fetching yearly stats:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (!isAdmin) {
+      fetchYearlyStats();
+    }
+  }, [isAdmin]);
 
   const stats = useMemo((): AdminStats | UserStats => {
     if (isAdmin) {
@@ -713,6 +739,70 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
           </div>
         </div>
       )}
+
+       {/* YEARLY PERFORMANCE HISTORY TABLE */}
+       {!isAdmin && (
+        <div className="glass-panel rounded-2xl border border-slate-800/80 bg-slate-950/95 shadow-[0_20px_60px_rgba(15,23,42,1)] p-6 overflow-hidden">
+          <h3 className="text-xl font-bold text-slate-100 mb-6 flex items-center gap-2">
+             <TrendingUp className="w-5 h-5 text-sky-400" />
+             Yearly Performance History
+          </h3>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-slate-800 text-slate-400 text-sm uppercase tracking-wider">
+                  <th className="pb-3 pl-2">Year</th>
+                  <th className="pb-3">Trips</th>
+                  <th className="pb-3">Revenue</th>
+                  <th className="pb-3">Profit</th>
+                  <th className="pb-3 pr-2 text-right">Growth</th>
+                </tr>
+              </thead>
+              <tbody className="text-slate-200">
+                {yearlyStats.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-slate-500 italic">
+                      No history available yet.
+                    </td>
+                  </tr>
+                ) : (
+                  yearlyStats.map((stat) => {
+                     // Check "Growth" specifically for Profit
+                     const isPositive = stat.profit_growth_percentage > 0;
+                     const isNegative = stat.profit_growth_percentage < 0;
+                     
+                     return (
+                      <tr key={stat.year} className="group hover:bg-white/5 transition-colors border-b border-slate-800/50 last:border-0">
+                        <td className="py-4 pl-2 font-mono text-sky-300 font-semibold">{stat.year}</td>
+                        <td className="py-4 font-medium">{stat.total_trips}</td>
+                        <td className="py-4 text-slate-300">
+                          {format(convert(stat.total_revenue, 'USD', currency), currency)}
+                        </td>
+                        <td className="py-4 font-semibold text-emerald-400">
+                          {format(convert(stat.total_profit, 'USD', currency), currency)}
+                        </td>
+                        <td className="py-4 pr-2 text-right">
+                          <div className={`inline-flex items-center gap-1 text-sm font-medium px-2 py-1 rounded-full border ${
+                            isPositive ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 
+                            isNegative ? 'bg-red-500/10 text-red-400 border-red-500/20' : 
+                            'bg-slate-800 text-slate-400 border-slate-700'
+                          }`}>
+                            {isPositive && <ArrowUpRight className="w-3 h-3" />}
+                            {isNegative && <ArrowDownRight className="w-3 h-3" />}
+                            {stat.profit_growth_percentage > 0 ? '+' : ''}{stat.profit_growth_percentage}%
+                          </div>
+                        </td>
+                      </tr>
+                     );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
