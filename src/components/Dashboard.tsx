@@ -31,8 +31,16 @@ type AdminStats = {
   totalUsers: number;
   totalAdmins: number;
   totalRegularUsers: number;
+
   newUsersThisMonth: number;
 };
+
+// Local interface for stats calculation
+interface StatsUserProfile {
+  role: string;
+  created_at: string;
+  [key: string]: unknown;
+}
 
 export default function Dashboard() {
   const { profile, user, isAdmin } = useAuth();
@@ -132,13 +140,13 @@ export default function Dashboard() {
       const { data, error } = await supabase.from("user_profiles").select("*");
       if (error) throw error;
 
-      const users = data || [];
+      const users = (data || []) as StatsUserProfile[];
       const totalUsers = users.length;
-      const totalAdmins = users.filter((p: any) => p.role === "admin").length;
-      const totalRegularUsers = users.filter((p: any) => p.role === "user").length;
+      const totalAdmins = users.filter((p) => p.role === "admin").length;
+      const totalRegularUsers = users.filter((p) => p.role === "user").length;
 
       const now = new Date();
-      const newUsersThisMonth = users.filter((p: any) => {
+      const newUsersThisMonth = users.filter((p) => {
         const d = new Date(p.created_at);
         return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
       }).length;
@@ -631,7 +639,7 @@ export default function Dashboard() {
             <MotionWrapper key="analytics">
               <Analytics
                 trips={trips}
-                onOpenTripsWithFilter={(opts: any) => {
+                onOpenTripsWithFilter={(opts: { month?: string; pendingOnly?: boolean }) => {
                   if (opts) {
                     setTripFilters(prev => ({
                       ...prev,

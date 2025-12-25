@@ -5,10 +5,17 @@ import { useAuth } from '../contexts/AuthContext';
 import { Skeleton } from '../components/ui/Skeleton';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
+interface AnalyticsData {
+    wallet_balance: { available: number; pending: number };
+    sales_chart_data: { name: string; value: number }[];
+    top_selling_trips: { name: string; revenue: number }[];
+    top_tippers: { name: string; amount: number }[];
+}
+
 export default function GuideWallet() {
     const { user } = useAuth();
 
-    const { data: analytics, isLoading } = useQuery({
+    const { data: analytics, isLoading } = useQuery<AnalyticsData>({
         queryKey: ['guide-analytics', user?.id],
         queryFn: async () => {
             // In a real scenario, we call the Edge Function
@@ -80,7 +87,7 @@ export default function GuideWallet() {
                 <div className="glass-panel bg-slate-950/90 border border-slate-800 rounded-2xl p-6">
                     <h3 className="text-lg font-semibold text-white mb-4">Top Selling Trips</h3>
                     <div className="space-y-3">
-                        {analytics?.top_selling_trips?.map((trip: any, i: number) => (
+                        {analytics?.top_selling_trips?.map((trip, i) => (
                             <div key={i} className="flex justify-between items-center p-3 bg-slate-900/50 rounded-lg">
                                 <span className="text-slate-200">{trip.name}</span>
                                 <span className="text-emerald-400 font-medium">+${trip.revenue}</span>
@@ -91,7 +98,7 @@ export default function GuideWallet() {
                 <div className="glass-panel bg-slate-950/90 border border-slate-800 rounded-2xl p-6">
                     <h3 className="text-lg font-semibold text-white mb-4">Top Tippers</h3>
                     <div className="space-y-3">
-                        {analytics?.top_tippers?.map((tipper: any, i: number) => (
+                        {analytics?.top_tippers?.map((tipper, i) => (
                             <div key={i} className="flex justify-between items-center p-3 bg-slate-900/50 rounded-lg">
                                 <span className="text-slate-200">{tipper.name}</span>
                                 <span className="text-sky-400 font-medium">${tipper.amount}</span>

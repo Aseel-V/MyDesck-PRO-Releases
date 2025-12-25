@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { formatDate } from '../../lib/utils';
 import { X, Download, FileText } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -13,6 +13,64 @@ interface PDFExportModalProps {
   trips: Trip[];
   onClose: () => void;
 }
+
+const labels = {
+  en: {
+    title: 'Export to PDF',
+    fullName: 'Your Full Name',
+    phoneNumber: 'Phone Number',
+    exportType: 'Export Type',
+    singleTrip: 'Single Trip',
+    multipleTrips: 'Multiple Trips with Summary',
+    selectTrip: 'Select Trip',
+    tripsToExport: 'Trips to Export',
+    cancel: 'Cancel',
+    export: 'Export PDF',
+    requiredFullName: 'Please enter your full name',
+    requiredPhone: 'Please enter phone number',
+    invalidPhone: 'Please enter a valid phone number',
+    pdfError: 'Error generating PDF',
+  },
+  ar: {
+    title: 'تصدير إلى PDF',
+    fullName: 'اسمك الكامل',
+    phoneNumber: 'رقم الهاتف',
+    exportType: 'نوع التصدير',
+    singleTrip: 'رحلة واحدة',
+    multipleTrips: 'رحلات متعددة مع الملخص',
+    selectTrip: 'اختر رحلة',
+    tripsToExport: 'الرحلات للتصدير',
+    cancel: 'إلغاء',
+    export: 'تصدير PDF',
+    requiredFullName: 'الرجاء إدخال الاسم الكامل',
+    requiredPhone: 'الرجاء إدخال رقم الهاتف',
+    invalidPhone: 'الرجاء إدخال رقم هاتف صالح',
+    pdfError: 'خطأ في إنشاء PDF',
+  },
+  he: {
+    title: 'ייצוא ל-PDF',
+    fullName: 'שמך המלא',
+    phoneNumber: 'מספר טלפון',
+    exportType: 'סוג ייצוא',
+    singleTrip: 'טיול בודד',
+    multipleTrips: 'טיולים מרובים עם סיכום',
+    selectTrip: 'בחר טיול',
+    tripsToExport: 'טיולים לייצוא',
+    cancel: 'ביטול',
+    export: 'ייצא PDF',
+    requiredFullName: 'נא להזין שם מלא',
+    requiredPhone: 'נא להזין מספר טלפון',
+    invalidPhone: 'יש להזין מספר טלפון תקין',
+    pdfError: 'שגיאה ביצירת PDF',
+  },
+} as const;
+
+const isPhoneValid = (v: string) => {
+  const s = v.trim();
+  if (!s) return false;
+  // Basic phone validation: digits with optional +, spaces, dashes, parentheses
+  return /^\+?[0-9\s\-()]{6,}$/.test(s);
+};
 
 export default function PDFExportModal({ trips, onClose }: PDFExportModalProps) {
   const { language } = useLanguage();
@@ -34,88 +92,30 @@ export default function PDFExportModal({ trips, onClose }: PDFExportModalProps) 
   useEffect(() => {
     if (userProfile?.full_name && !userFullName) setUserFullName(userProfile.full_name);
     if (userProfile?.phone_number && !phoneNumber) setPhoneNumber(userProfile.phone_number);
-  }, [userProfile]);
-
-  const labels = {
-    en: {
-      title: 'Export to PDF',
-      fullName: 'Your Full Name',
-      phoneNumber: 'Phone Number',
-      exportType: 'Export Type',
-      singleTrip: 'Single Trip',
-      multipleTrips: 'Multiple Trips with Summary',
-      selectTrip: 'Select Trip',
-      tripsToExport: 'Trips to Export',
-      cancel: 'Cancel',
-      export: 'Export PDF',
-      requiredFullName: 'Please enter your full name',
-      requiredPhone: 'Please enter phone number',
-      invalidPhone: 'Please enter a valid phone number',
-      pdfError: 'Error generating PDF',
-    },
-    ar: {
-      title: 'تصدير إلى PDF',
-      fullName: 'اسمك الكامل',
-      phoneNumber: 'رقم الهاتف',
-      exportType: 'نوع التصدير',
-      singleTrip: 'رحلة واحدة',
-      multipleTrips: 'رحلات متعددة مع الملخص',
-      selectTrip: 'اختر رحلة',
-      tripsToExport: 'الرحلات للتصدير',
-      cancel: 'إلغاء',
-      export: 'تصدير PDF',
-      requiredFullName: 'الرجاء إدخال الاسم الكامل',
-      requiredPhone: 'الرجاء إدخال رقم الهاتف',
-      invalidPhone: 'الرجاء إدخال رقم هاتف صالح',
-      pdfError: 'خطأ في إنشاء PDF',
-    },
-    he: {
-      title: 'ייצוא ל-PDF',
-      fullName: 'שמך המלא',
-      phoneNumber: 'מספר טלפון',
-      exportType: 'סוג ייצוא',
-      singleTrip: 'טיול בודד',
-      multipleTrips: 'טיולים מרובים עם סיכום',
-      selectTrip: 'בחר טיול',
-      tripsToExport: 'טיולים לייצוא',
-      cancel: 'ביטול',
-      export: 'ייצא PDF',
-      requiredFullName: 'נא להזין שם מלא',
-      requiredPhone: 'נא להזין מספר טלפון',
-      invalidPhone: 'יש להזין מספר טלפון תקין',
-      pdfError: 'שגיאה ביצירת PDF',
-    },
-  } as const;
+  }, [userProfile, userFullName, phoneNumber]);
 
   const text = useMemo(() => labels[language as keyof typeof labels], [language]);
 
-  const isPhoneValid = (v: string) => {
-    const s = v.trim();
-    if (!s) return false;
-    // Basic phone validation: digits with optional +, spaces, dashes, parentheses
-    return /^\+?[0-9\s\-()]{6,}$/.test(s);
-  };
-
-  const validate = () => {
+  const validate = useCallback(() => {
     const newErrors: { fullName?: string; phone?: string } = {};
     if (!userFullName.trim()) newErrors.fullName = text.requiredFullName;
     if (!phoneNumber.trim()) newErrors.phone = text.requiredPhone;
     else if (!isPhoneValid(phoneNumber)) newErrors.phone = text.invalidPhone;
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  }, [userFullName, phoneNumber, text]);
 
   const canExport = useMemo(() => {
     return !!userFullName.trim() && isPhoneValid(phoneNumber) && !loading;
   }, [userFullName, phoneNumber, loading]);
 
-  const generatePreview = async () => {
+  const generatePreview = useCallback(async () => {
     if (!profile || !user || !validate()) return;
     setGeneratingPreview(true);
     try {
       let pdfBytes: Uint8Array;
       if (exportType === 'single') {
-        const trip = trips.find((t) => t.id === selectedTripId);
+        const trip = trips.find((t: Trip) => t.id === selectedTripId);
         if (!trip) return;
         pdfBytes = await generateSingleTripPDF({
           profile,
@@ -141,7 +141,7 @@ export default function PDFExportModal({ trips, onClose }: PDFExportModalProps) 
     } finally {
       setGeneratingPreview(false);
     }
-  };
+  }, [profile, user, validate, exportType, trips, selectedTripId, userFullName, phoneNumber, language]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -150,7 +150,7 @@ export default function PDFExportModal({ trips, onClose }: PDFExportModalProps) 
       }
     }, 500);
     return () => clearTimeout(timer);
-  }, [userFullName, phoneNumber, exportType, selectedTripId, canExport]);
+  }, [canExport, generatePreview]);
 
   const handleExport = async () => {
     if (!profile || !user) return;
@@ -164,7 +164,7 @@ export default function PDFExportModal({ trips, onClose }: PDFExportModalProps) 
       let filename: string;
 
       if (exportType === 'single') {
-        const trip = trips.find((t) => t.id === selectedTripId);
+        const trip = trips.find((t: Trip) => t.id === selectedTripId);
         if (!trip) throw new Error('Trip not found');
 
         pdfBytes = await generateSingleTripPDF({
@@ -350,7 +350,7 @@ export default function PDFExportModal({ trips, onClose }: PDFExportModalProps) 
                     onChange={(e) => setSelectedTripId(e.target.value)}
                     className="w-full px-4 py-3 rounded-lg bg-slate-900/70 border border-slate-800 text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
                   >
-                    {trips.map((trip) => (
+                    {trips.map((trip: Trip) => (
                       <option key={trip.id} value={trip.id} className="bg-slate-900 text-slate-100">
                         {trip.destination} - {trip.client_name} ({formatDate(trip.start_date)})
                       </option>
@@ -365,7 +365,7 @@ export default function PDFExportModal({ trips, onClose }: PDFExportModalProps) 
                     {text.tripsToExport}:
                   </p>
                   <ul className="space-y-1">
-                    {trips.map((trip) => (
+                    {trips.map((trip: Trip) => (
                       <li
                         key={trip.id}
                         className="text-sm text-slate-400 flex items-center gap-2"

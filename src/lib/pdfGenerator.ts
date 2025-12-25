@@ -58,13 +58,14 @@ const generatePDF = async (mode: PdfMode, options: PDFOptions): Promise<Uint8Arr
     qrCode: qrCodeDataUrl,
     profile: {
       ...profile,
-      email: (profile as any).email ?? undefined,
+      email: (profile as Record<string, unknown>).email ?? undefined,
       phone_number: phoneNumber,
     },
   };
 
   try {
-    const pdfBytes = await window.electronAPI.printToPDF(payload);
+    const pdfBytes = await window.electronAPI?.printToPDF(payload);
+    if (!pdfBytes) throw new Error('Failed to generate PDF');
     return pdfBytes;
   } catch (error) {
     console.error('Error generating PDF:', error);

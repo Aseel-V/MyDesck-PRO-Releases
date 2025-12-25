@@ -15,6 +15,7 @@ import {
   Moon,
   Sun,
   Search,
+  LucideIcon,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { twMerge } from 'tailwind-merge';
@@ -46,7 +47,7 @@ export default function Navbar({ onNavigate, currentPage, onOpenSearch }: Navbar
     { id: 'analytics', icon: BarChart3, label: t('dashboard.analytics') },
     { id: 'settings', icon: Settings, label: t('dashboard.settings') },
     { id: 'admin', icon: Shield, label: t('navbar.admin'), hidden: !isAdmin },
-  ].filter(item => !item.hidden) as { id: NavbarProps['currentPage']; icon: any; label: string }[];
+  ].filter(item => !item.hidden) as { id: NavbarProps['currentPage']; icon: LucideIcon; label: string }[];
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 flex flex-col items-center pointer-events-none" dir={direction}>

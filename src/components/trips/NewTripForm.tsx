@@ -100,7 +100,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
           // Ideally, we should check if the draft is empty or meaningful.
           if (parsed.destination || parsed.client_name) {
             Object.keys(parsed).forEach((key) => {
-              setValue(key as any, parsed[key]);
+              setValue(key as keyof TripFormValues, parsed[key]);
             });
             toast.info(t('notifications.draftRestored') || 'Draft restored');
           }
@@ -127,7 +127,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
 
       // Deduplicate by client_name
       const unique = new Map();
-      data?.forEach((item: any) => {
+      data?.forEach((item: { client_name: string }) => {
         if (item.client_name && !unique.has(item.client_name)) {
           unique.set(item.client_name, item);
         }
@@ -194,21 +194,22 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
          try {
              // Example format "Single x1, Double x2"
              const items = editTrip.room_type.split(', ');
-             const newCounts = { ...roomCounts };
-             let found = false;
-             
-             items.forEach(item => {
-                 const [type, countStr] = item.split(' x');
-                 if (type && countStr && type in newCounts) {
-                     newCounts[type as RoomType] = parseInt(countStr) || 0;
-                     found = true;
-                 }
-             });
-             
-             if (found) setRoomCounts(newCounts);
-         } catch (e) {
-             console.log("Could not parse room type string, relying on manual input");
-         }
+              setRoomCounts(prevCounts => {
+                  const newCounts = { ...prevCounts };
+                  let found = false;
+                  
+                  items.forEach(item => {
+                      const [type, countStr] = item.split(' x');
+                      if (type && countStr && type in newCounts) {
+                          newCounts[type as RoomType] = parseInt(countStr) || 0;
+                          found = true;
+                      }
+                  });
+                  return found ? newCounts : prevCounts;
+              });
+          } catch {
+              console.log("Could not parse room type string, relying on manual input");
+          }
      }
 
      // 2. Load Original Financial Values (if they exist)
@@ -219,8 +220,8 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
          if (editTrip.sale_original_amount !== undefined && editTrip.sale_original_amount !== null) {
              setValue('sale_price', editTrip.sale_original_amount);
          }
-     }
-  }, []); // Run ONCE on mount
+      }
+   }, [editTrip, setValue]); // Run ONCE on mount or when editTrip changes
   
   // Sync room_type string when counts change
   useEffect(() => {
@@ -512,7 +513,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                     }}
                   />
                   <datalist id="client-names">
-                    {distinctClients.map((c: any, i: number) => (
+                    {distinctClients.map((c: { client_name: string }, i: number) => (
                       <option key={i} value={c.client_name} />
                     ))}
                   </datalist>

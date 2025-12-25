@@ -197,7 +197,7 @@ export default function UpdatePaymentForm({
                   </label>
                   <select
                     value={paymentMethod}
-                    onChange={(e) => setPaymentMethod(e.target.value as any)}
+                    onChange={(e) => setPaymentMethod(e.target.value as 'cash' | 'transfer' | 'card' | 'check')}
                     className="w-full px-3 py-2.5 rounded-lg bg-slate-950/50 border border-slate-700 text-slate-100 focus:ring-2 focus:ring-emerald-500/50 outline-none"
                   >
                     <option value="transfer">Transfer</option>

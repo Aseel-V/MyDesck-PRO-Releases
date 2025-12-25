@@ -40,13 +40,14 @@ export default function CreateUserForm({ onClose, onSuccess, existingBusinesses 
         setLoading(true);
 
         try {
-            const payload: any = {
+
+            const payload = {
                 email,
                 password,
                 fullName,
                 phoneNumber,
                 role,
-            };
+            } as Record<string, unknown>;
 
             if (mode === 'new_business') {
                 payload.businessName = businessName;
@@ -66,9 +67,10 @@ export default function CreateUserForm({ onClose, onSuccess, existingBusinesses 
             if (data?.error) throw new Error(data.error);
 
             onSuccess();
-        } catch (err: any) {
+        } catch (err) {
             console.error('Error creating user:', err);
-            setError(err.message || 'Failed to create user');
+            const message = err instanceof Error ? err.message : 'Failed to create user';
+            setError(message);
         } finally {
             setLoading(false);
         }
@@ -211,7 +213,7 @@ export default function CreateUserForm({ onClose, onSuccess, existingBusinesses 
                                 <label className={labelClass}>Language</label>
                                 <select
                                     value={language}
-                                    onChange={(e) => setLanguage(e.target.value as any)}
+                                    onChange={(e) => setLanguage(e.target.value as 'en' | 'ar' | 'he')}
                                     className={inputClass}
                                 >
                                     <option value="en">English</option>

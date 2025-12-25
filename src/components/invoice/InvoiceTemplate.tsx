@@ -4,7 +4,14 @@ import { BusinessProfile } from '../../lib/supabase';
 
 interface ExtendedProfile extends BusinessProfile {
     email?: string;
+
     phone_number?: string;
+}
+
+interface InvoiceData {
+    trip: Trip;
+    profile: ExtendedProfile;
+    userFullName?: string;
 }
 
 export default function InvoiceTemplate() {
@@ -14,15 +21,16 @@ export default function InvoiceTemplate() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const handleInvoiceData = (data: any) => {
+        const handleInvoiceData = (data: unknown) => {
             try {
-                const parsed = typeof data === 'string' ? JSON.parse(data) : data;
+                const parsed = (typeof data === 'string' ? JSON.parse(data) : data) as InvoiceData;
                 setTrip(parsed.trip);
                 setProfile(parsed.profile);
                 setUserFullName(parsed.userFullName || '');
                 setLoading(false);
-            } catch (e) {
-                console.error('Failed to parse invoice data', e);
+                setLoading(false);
+            } catch {
+                console.error('Failed to parse invoice data');
                 setLoading(false);
             }
         };
@@ -39,7 +47,10 @@ export default function InvoiceTemplate() {
                      setTrip(decoded.trip);
                      setProfile(decoded.profile);
                      setUserFullName(decoded.userFullName || '');
-                 } catch (e) { }
+                     setUserFullName(decoded.userFullName || '');
+                 } catch { 
+                    // Ignore parse errors
+                 }
              }
              setLoading(false);
         }

@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import {
   BarChart,
   Bar,
@@ -30,9 +30,28 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
 import { Trip } from '../../types/trip';
 import { supabase } from '../../lib/supabase';
-import type { Database } from '../../types/supabase';
 
-type UserProfile = Database['public']['Tables']['user_profiles']['Row'];
+interface APIUserProfile {
+  id: string;
+  email: string;
+  full_name: string;
+  phone_number: string;
+  role: 'user' | 'admin';
+  created_at: string;
+  business_name?: string;
+}
+
+
+// Local interface matching what we map manually
+interface UserProfile {
+  user_id: string;
+  email: string | null;
+  full_name: string | null;
+  phone_number: string | null;
+  role: 'user' | 'admin';
+  created_at: string;
+  business_name?: string | null;
+}
 
 interface AdminStats {
   totalUsers: number;
@@ -68,7 +87,7 @@ interface AnalyticsProps {
 
 interface CustomTooltipProps {
   active?: boolean;
-  payload?: any[];
+  payload?: { name: string; value: number | string; color: string }[];
   label?: string;
 }
 
@@ -77,7 +96,7 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
     return (
       <div className="glass-panel bg-white/95 border border-slate-200 p-4 rounded-xl shadow-xl backdrop-blur-md dark:bg-slate-950/90 dark:border-slate-700/50 dark:shadow-2xl">
         <p className="text-slate-700 font-semibold mb-2 text-sm dark:text-slate-200">{label}</p>
-        {payload.map((entry: any, index: number) => (
+        {payload.map((entry, index: number) => (
           <div key={index} className="flex items-center gap-2 text-xs">
             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
             <span className="text-slate-500 capitalize dark:text-slate-400">{entry.name}:</span>
@@ -105,7 +124,7 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
 
   // ✅ Historical Exchange Rate Locking helper
-  const getHistoricalValue = (amount: number, trip: Trip, targetCurrency: string) => {
+  const getHistoricalValue = useCallback((amount: number, trip: Trip, targetCurrency: string) => {
     if (!amount) return 0;
 
     const tripCurrency = trip.currency || 'USD';
@@ -121,7 +140,7 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
 
     // 3) USD -> Target Currency using LIVE rate
     return convert(usdAmount, 'USD', targetCurrency);
-  };
+  }, [convert]);
 
   const getMonthsSinceFirstUser = (profiles: UserProfile[]) => {
     if (profiles.length === 0) return 1;
@@ -185,7 +204,6 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
       }
     };
     loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin]);
 
   const fetchUserProfiles = async () => {
@@ -196,7 +214,7 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
       if (error) throw error;
 
       if (data && data.users) {
-        const mappedUsers: UserProfile[] = data.users.map((u: any) => ({
+        const mappedUsers: UserProfile[] = (data.users as APIUserProfile[]).map((u) => ({
           user_id: u.id,
           email: u.email,
           full_name: u.full_name,
@@ -216,8 +234,9 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
 
   const fetchYearlyStats = async () => {
     try {
-      // Cast request to any to bypass strict literal check for new RPC
-      const { data, error } = await supabase.rpc('get_yearly_stats_overview' as any);
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore: RPC function not yet in types
+      const { data, error } = await supabase.rpc('get_yearly_stats_overview');
       if (error) throw error;
       if (data) setYearlyStats(data as YearlyStats[]);
     } catch (error) {
@@ -280,7 +299,7 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
       averageProfit: totalTrips > 0 ? totalProfit / totalTrips : 0,
       topDestinations,
     };
-  }, [userProfiles, isAdmin, filteredTrips, currency]);
+  }, [userProfiles, isAdmin, filteredTrips, currency, getHistoricalValue]);
 
   const monthlyData = useMemo(() => {
     if (isAdmin) {
@@ -328,7 +347,7 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
     return Array.from(monthMap.entries())
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([month, data]) => ({ month, ...data }));
-  }, [userProfiles, isAdmin, filteredTrips, currency]);
+  }, [userProfiles, isAdmin, filteredTrips, currency, getHistoricalValue]);
 
   const {
     profitMarginPct,
@@ -371,8 +390,8 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
 
     let profitMarginTrend = 0;
     if (monthlyData.length >= 2) {
-      const last = monthlyData[monthlyData.length - 1] as any;
-      const prev = monthlyData[monthlyData.length - 2] as any;
+      const last = monthlyData[monthlyData.length - 1] as { revenue: number, profit: number };
+      const prev = monthlyData[monthlyData.length - 2] as { revenue: number, profit: number };
 
       const lastRev = last?.revenue || 0;
       const lastProf = last?.profit || 0;
@@ -392,7 +411,7 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
       totalPending,
       paymentHealthPct,
     };
-  }, [isAdmin, monthlyData, filteredTrips, currency]);
+  }, [isAdmin, monthlyData, filteredTrips, currency, getHistoricalValue]);
 
   const COLORS = ['#0ea5e9', '#8b5cf6', '#10b981', '#f59e0b', '#f43f5e'];
 

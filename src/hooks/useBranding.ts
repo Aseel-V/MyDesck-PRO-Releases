@@ -4,7 +4,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 
 export function useBranding() {
   const { profile } = useAuth();
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
 
   return useMemo(() => {
     let displayLogoUrl = profile?.logo_url || '/vite.svg';
@@ -21,5 +21,5 @@ export function useBranding() {
       displayName,
       hasCustomBranding: !!(profile?.logo_url || profile?.business_name),
     };
-  }, [profile, language]); // <— FIXED
+  }, [profile, t]); // <— FIXED
 }

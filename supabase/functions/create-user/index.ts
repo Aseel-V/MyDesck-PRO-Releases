@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -65,7 +65,18 @@ serve(async (req: Request): Promise<Response> => {
             logoUrl,
             currency = "USD",
             language = "en",
-        } = await req.json();
+        } = await req.json() as {
+            email?: string;
+            password?: string;
+            fullName?: string;
+            phoneNumber?: string;
+            businessName?: string;
+            businessId?: string;
+            role?: string;
+            logoUrl?: string;
+            currency?: string;
+            language?: string;
+        };
 
         if (!email || !password) {
             throw new Error("Email and password are required");
@@ -135,7 +146,7 @@ serve(async (req: Request): Promise<Response> => {
         // Assuming user_profiles has business_id or we rely on business_profiles.user_id for owners.
         // For staff, we really need user_profiles.business_id.
 
-        const userProfileData: any = {
+        const userProfileData: Record<string, unknown> = {
             user_id: userId,
             full_name: fullName,
             phone_number: phoneNumber,
@@ -178,8 +189,10 @@ serve(async (req: Request): Promise<Response> => {
                 status: 200,
             }
         );
-    } catch (error: any) {
-        return new Response(JSON.stringify({ error: error.message }), {
+
+    } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        return new Response(JSON.stringify({ error: message }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
             status: 400,
         });

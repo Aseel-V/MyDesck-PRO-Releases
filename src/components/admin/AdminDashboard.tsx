@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -13,6 +13,15 @@ interface UserWithProfile {
   phone_number: string;
   business_name: string;
   role: string;
+  created_at: string;
+}
+
+interface AdminUserProfile {
+  id: string;
+  email?: string | null;
+  full_name?: string | null;
+  phone_number?: string | null;
+  role?: string;
   created_at: string;
 }
 
@@ -49,6 +58,56 @@ export default function AdminDashboard() {
     totalProfit: 0
   });
 
+  // Fetch Users Function
+  const fetchUsers = useCallback(async () => {
+    setLoadingUsers(true);
+    try {
+      let query = supabase
+        .from('user_profiles')
+        .select('id, email, full_name, phone_number, role, created_at', { count: 'exact' });
+
+      if (debouncedUserSearch) {
+        query = query.or(`email.ilike.%${debouncedUserSearch}%,full_name.ilike.%${debouncedUserSearch}%`);
+      }
+
+      const from = (userPage - 1) * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+
+      const { data: userProfiles, count, error } = await query
+        .range(from, to)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const userIds = userProfiles?.map((u: { id: string }) => u.id) || [];
+      const { data: businessProfiles } = await supabase
+        .from('business_profiles')
+        .select('user_id, business_name')
+        .in('user_id', userIds);
+
+      const businessMap = new Map(
+        businessProfiles?.map((bp: { user_id: string; business_name: string }) => [bp.user_id, bp.business_name]) || []
+      );
+
+      const combinedUsers: UserWithProfile[] = (userProfiles || []).map((up: AdminUserProfile) => ({
+        id: up.id,
+        email: up.email || 'No email',
+        full_name: up.full_name || 'No name',
+        phone_number: up.phone_number || 'No phone',
+        business_name: businessMap.get(up.id) || 'No business',
+        role: up.role || 'user',
+        created_at: up.created_at
+      }));
+
+      setUsers(combinedUsers);
+      setTotalUsers(count || 0);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    } finally {
+      setLoadingUsers(false);
+    }
+  }, [debouncedUserSearch, userPage]);
+
   // Fetch Stats (Once)
   useEffect(() => {
     fetchGlobalStats();
@@ -58,7 +117,7 @@ export default function AdminDashboard() {
   // Fetch Users when page or search changes
   useEffect(() => {
     fetchUsers();
-  }, [userPage, debouncedUserSearch]);
+  }, [fetchUsers]);
 
   const fetchGlobalStats = async () => {
     try {
@@ -96,54 +155,7 @@ export default function AdminDashboard() {
     }
   };
 
-  const fetchUsers = async () => {
-    setLoadingUsers(true);
-    try {
-      let query = supabase
-        .from('user_profiles')
-        .select('id, email, full_name, phone_number, role, created_at', { count: 'exact' });
 
-      if (debouncedUserSearch) {
-        query = query.or(`email.ilike.%${debouncedUserSearch}%,full_name.ilike.%${debouncedUserSearch}%`);
-      }
-
-      const from = (userPage - 1) * PAGE_SIZE;
-      const to = from + PAGE_SIZE - 1;
-
-      const { data: userProfiles, count, error } = await query
-        .range(from, to)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      const userIds = userProfiles?.map(u => u.id) || [];
-      const { data: businessProfiles } = await supabase
-        .from('business_profiles')
-        .select('user_id, business_name')
-        .in('user_id', userIds);
-
-      const businessMap = new Map(
-        businessProfiles?.map((bp) => [bp.user_id, bp.business_name]) || []
-      );
-
-      const combinedUsers: UserWithProfile[] = (userProfiles || []).map((up) => ({
-        id: up.id,
-        email: up.email || 'No email',
-        full_name: up.full_name || 'No name',
-        phone_number: up.phone_number || 'No phone',
-        business_name: businessMap.get(up.id) || 'No business',
-        role: up.role || 'user',
-        created_at: up.created_at
-      }));
-
-      setUsers(combinedUsers);
-      setTotalUsers(count || 0);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-    } finally {
-      setLoadingUsers(false);
-    }
-  };
 
   const getCurrencySymbol = (currency: string) => {
     switch (currency) {

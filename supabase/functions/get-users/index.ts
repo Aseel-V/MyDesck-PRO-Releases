@@ -1,7 +1,7 @@
-// @ts-nocheck
+
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient, User } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -106,25 +106,27 @@ serve(async (req: Request): Promise<Response> => {
     if (businessError) throw businessError;
 
     // بناء Maps للربط السريع
-    const profileMap = new Map(
-      (profiles ?? []).map((p: any) => [p.user_id, p])
-    );
-    const businessMap = new Map(
-      (businessProfiles ?? []).map((b: any) => [b.user_id, b])
-    );
+    interface LocalUserProfile { user_id: string; full_name?: string; phone_number?: string; role?: string; }
+    interface LocalBusinessProfile { user_id: string; id: string; business_name?: string; }
 
-    const combinedUsers = authUsers.map((authUser: any) => {
-      const profile = profileMap.get(authUser.id) ?? {};
-      const business = businessMap.get(authUser.id) ?? {};
+    const profileMap = new Map<string, LocalUserProfile>();
+    (profiles as unknown as LocalUserProfile[] ?? []).forEach(p => profileMap.set(p.user_id, p));
+
+    const businessMap = new Map<string, LocalBusinessProfile>();
+    (businessProfiles as unknown as LocalBusinessProfile[] ?? []).forEach(b => businessMap.set(b.user_id, b));
+
+    const combinedUsers = authUsers.map((authUser: User) => {
+      const profile = profileMap.get(authUser.id);
+      const business = businessMap.get(authUser.id);
 
       return {
         id: authUser.id,
         email: authUser.email,
-        full_name: profile.full_name || "—",
-        phone_number: profile.phone_number || "—",
-        business_name: business.business_name || "—",
-        business_id: business.id || null,
-        role: profile.role || "user",
+        full_name: profile?.full_name || "—",
+        phone_number: profile?.phone_number || "—",
+        business_name: business?.business_name || "—",
+        business_id: business?.id || null,
+        role: profile?.role || "user",
         created_at: authUser.created_at,
       };
     });
@@ -133,11 +135,8 @@ serve(async (req: Request): Promise<Response> => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
-  } catch (error: any) {
-    const message =
-      error && typeof error.message === "string"
-        ? error.message
-        : "Unknown error";
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
 
     return new Response(JSON.stringify({ error: message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

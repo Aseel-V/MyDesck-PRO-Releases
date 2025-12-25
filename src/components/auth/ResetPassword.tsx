@@ -41,8 +41,9 @@ export default function ResetPassword() {
       
       toast.success(t('notifications.passwordUpdated') || 'Password updated successfully');
       navigate('/');
-    } catch (err: any) {
-      setError(err.message || t('notifications.passwordUpdateError') || 'Failed to update password');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to update password';
+      setError(message);
     } finally {
       setLoading(false);
     }

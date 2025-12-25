@@ -83,7 +83,7 @@ export default function TripCard({
     setExportChecked(newValue);
     try {
       await onToggleExport(trip.id, newValue);
-    } catch (err) {
+    } catch {
       setExportChecked(!newValue);
     }
   };

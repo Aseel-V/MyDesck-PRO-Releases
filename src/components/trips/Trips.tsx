@@ -102,7 +102,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
       }
       
       // نستخرج مصفوفة السنوات من النتيجة
-      const years = (data as any[]).map(item => item.year);
+      const years = (data as { year: string }[]).map(item => item.year);
       
       // نضمن وجود السنة الحالية
       const currentYear = new Date().getFullYear().toString();
@@ -185,7 +185,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
     }
 
     return filtered;
-  }, [rawTrips, debouncedSearchTerm, filters.paymentStatus, filters.tripStatus, filters.year, filters.month, filters.destination]);
+  }, [rawTrips, debouncedSearchTerm, filters.paymentStatus, filters.tripStatus, filters.month, filters.destination]);
 
   const handleDeleteTrip = (id: string) => {
     if (deleteConfirm !== id) {
@@ -307,7 +307,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
         });
 
         // Footer / Totals
-        const finalY = (doc as any).lastAutoTable.finalY + 10;
+        const finalY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
         doc.setFontSize(10);
         doc.text(`Total Revenue: ${format(stats.totalRevenue, currency)}`, 14, finalY);
         doc.text(`Total Profit: ${format(stats.totalProfit, currency)}`, 14, finalY + 6);

@@ -2,12 +2,14 @@ import { createContext, useContext, useEffect, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from './AuthContext';
 
-// Define Language type based on supported languages
-export type Language = 'en' | 'ar' | 'he';
+import { Language } from '../types/language';
+
+export type { Language };
 
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   t: (key: string, options?: any) => string;
   direction: 'ltr' | 'rtl';
 }
@@ -61,6 +63,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useLanguage() {
   const context = useContext(LanguageContext);
   if (context === undefined) {

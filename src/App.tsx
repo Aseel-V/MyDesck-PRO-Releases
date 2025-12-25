@@ -1,5 +1,5 @@
 // src/App.tsx
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import { useLanguage } from './contexts/LanguageContext';
 import Login from './components/Login';
@@ -13,14 +13,6 @@ import ResetPassword from './components/auth/ResetPassword';
 import UpdateModal from './components/UpdateModal';
 
 function App() {
-  // Check if we are in "invoice mode" (window opened by Electron for printing)
-  const params = new URLSearchParams(window.location.search);
-  const isInvoice = params.get('invoice') === 'true';
-
-  if (isInvoice) {
-    return <InvoiceTemplate />;
-  }
-
   const [updateState, setUpdateState] = useState<{
     status: 'idle' | 'downloading' | 'downloaded' | 'error';
     progress: number;
@@ -29,17 +21,17 @@ function App() {
   }>({ status: 'idle', progress: 0 });
 
   useEffect(() => {
-    const api = (window as any).electronAPI;
+    const api = window.electronAPI;
     if (!api) return;
 
     // Listeners
-    const onAvailable = (info: any) => {
+    const onAvailable = (info: { version: string; [key: string]: unknown }) => {
       setUpdateState(prev => ({ ...prev, status: 'downloading', version: info.version, progress: 0 }));
     };
-    const onProgress = (info: any) => {
+    const onProgress = (info: { percent: number; [key: string]: unknown }) => {
       setUpdateState(prev => ({ ...prev, status: 'downloading', progress: info.percent }));
     };
-    const onDownloaded = (info: any) => {
+    const onDownloaded = (info: { version: string; [key: string]: unknown }) => {
       setUpdateState(prev => ({ ...prev, status: 'downloaded', version: info.version }));
     };
     const onError = (err: string) => {
@@ -58,14 +50,22 @@ function App() {
 
   const handleSkip = () => {
     setUpdateState(prev => ({ ...prev, status: 'idle' }));
-    (window as any).electronAPI?.unlockApp();
+    window.electronAPI?.unlockApp();
   };
+
+  // Check if we are in "invoice mode" (window opened by Electron for printing)
+  const params = new URLSearchParams(window.location.search);
+  const isInvoice = params.get('invoice') === 'true';
+
+  if (isInvoice) {
+    return <InvoiceTemplate />;
+  }
 
   return (
     <>
       {updateState.status !== 'idle' && (
         <UpdateModal 
-          status={updateState.status as any}
+          status={updateState.status}
           progress={updateState.progress}
           version={updateState.version}
           error={updateState.error}

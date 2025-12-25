@@ -1,4 +1,4 @@
-import { useState, useEffect, ChangeEvent } from 'react';
+import { useState, useEffect, ChangeEvent, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -16,6 +16,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { PostgrestError } from '@supabase/supabase-js';
 import { resizeImage } from '../lib/imageUtils';
 import { CurrencyService } from '../lib/currency';
 
@@ -50,13 +51,14 @@ export default function Settings() {
   const [notice, setNotice] = useState<null | { type: NoticeType; message: string }>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [refreshingRates, setRefreshingRates] = useState(false);
+  const noticeTimeoutRef = useRef<number | null>(null);
 
   // Simple toast helper
   const showNotice = (type: NoticeType, message: string, timeout = 3500) => {
     setNotice({ type, message });
     if (timeout > 0) {
-      window.clearTimeout((showNotice as any)._t);
-      (showNotice as any)._t = window.setTimeout(() => setNotice(null), timeout);
+      if (noticeTimeoutRef.current) window.clearTimeout(noticeTimeoutRef.current);
+      noticeTimeoutRef.current = window.setTimeout(() => setNotice(null), timeout);
     }
   };
 
@@ -124,7 +126,7 @@ export default function Settings() {
         .eq('user_id', user.id)
         .maybeSingle();
 
-      if (selectError && (selectError as any).code !== 'PGRST116') throw selectError;
+      if (selectError && (selectError as PostgrestError).code !== 'PGRST116') throw selectError;
 
       if (existingProfile) {
         const { error: updateError } = await supabase
@@ -305,7 +307,8 @@ export default function Settings() {
 
         if (confirm(`Import ${data.trips.length} trips? This will not delete existing data.`)) {
           for (const trip of data.trips) {
-            const { id, user_id, created_at, updated_at, ...tripData } = trip;
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { id: _id, user_id: _uid, created_at: _ca, updated_at: _ua, ...tripData } = trip;
             const { error } = await supabase.from('trips').insert([{ ...tripData, user_id: user.id }]);
             if (error) throw error;
           }
@@ -373,13 +376,10 @@ export default function Settings() {
       await refreshProfile();
 
       showNotice('success', 'Logo uploaded successfully');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Logo upload failed:', error);
-      showNotice(
-        'error',
-        error?.message ||
-          "Upload failed. Ensure bucket 'logos' exists + SQL policies are applied (Storage.objects)."
-      );
+      const message = error instanceof Error ? error.message : "Upload failed. Ensure bucket 'logos' exists";
+      showNotice('error', message);
     } finally {
       setUploading(false);
     }
@@ -430,13 +430,10 @@ export default function Settings() {
       await refreshProfile();
 
       showNotice('success', 'Signature uploaded successfully');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Signature upload failed:', error);
-      showNotice(
-        'error',
-        error?.message ||
-          "Upload failed. Ensure bucket 'logos' exists + SQL policies are applied (Storage.objects)."
-      );
+      const message = error instanceof Error ? error.message : "Upload failed. Ensure bucket 'logos' exists";
+      showNotice('error', message);
     } finally {
       setUploading(false);
     }

@@ -29,15 +29,15 @@ const UpdateModal: React.FC<UpdateModalProps> = ({ status, progress, version, er
   }, []);
 
   const handleRetry = () => {
-    (window as any).electronAPI?.retryUpdate();
+    window.electronAPI?.retryUpdate();
   };
 
   const handleRestart = () => {
-    (window as any).electronAPI?.restartApp();
+    window.electronAPI?.restartApp();
   };
 
   const handleOpenRelease = () => {
-    (window as any).electronAPI?.openExternal('https://github.com/Aseel-V/MyDesck-PRO/releases');
+    window.electronAPI?.openExternal('https://github.com/Aseel-V/MyDesck-PRO/releases');
   };
 
   return (

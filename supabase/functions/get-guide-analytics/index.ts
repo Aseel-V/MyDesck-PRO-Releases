@@ -21,7 +21,7 @@ serve(async (req: Request) => {
         const { data: { user }, error: userError } = await supabase.auth.getUser()
         if (userError || !user) throw new Error('Unauthorized')
 
-        const { guide_id, date_range: _date_range } = await req.json()
+        const { guide_id } = await req.json()
 
         // Ensure the user is requesting their own data or is an admin
         if (user.id !== guide_id) {
@@ -48,8 +48,13 @@ serve(async (req: Request) => {
 
         // Calculate Analytics
         // 1. Total Earnings (Day, Month, Year) - Simplified
-        // deno-lint-ignore no-explicit-any
-        const totalEarnings = transactions?.reduce((acc: number, txn: any) => {
+        interface Transaction {
+            type: string;
+            status: string;
+            amount: number;
+        }
+
+        const totalEarnings = transactions?.reduce((acc: number, txn: Transaction) => {
             if (txn.type === 'booking' && txn.status === 'completed') {
                 return acc + Number(txn.amount)
             }

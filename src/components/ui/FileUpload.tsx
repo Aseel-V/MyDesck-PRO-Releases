@@ -48,7 +48,7 @@ export function FileUpload({ onUploadComplete, folderName }: FileUploadProps) {
       onUploadComplete({
         file_name: file.name,
         url: publicUrl,
-        type: type as any
+        type: type as Attachment['type']
       });
       
       toast.success('File uploaded successfully');
