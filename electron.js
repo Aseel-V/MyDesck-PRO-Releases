@@ -2,7 +2,8 @@ import { app, BrowserWindow, ipcMain, Menu, globalShortcut, shell } from 'electr
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
-import { autoUpdater } from 'electron-updater';
+import electronUpdater from 'electron-updater';
+const { autoUpdater } = electronUpdater;
 
 const isDev = process.env.NODE_ENV === 'development';
 
