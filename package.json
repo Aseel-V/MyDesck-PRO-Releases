@@ -46,7 +46,7 @@
     "publish": {
       "provider": "github",
       "owner": "Aseel-V",
-      "repo": "MyDesck-PRO"
+      "repo": "MyDesck-PRO-Releases"
     }
   },
   "scripts": {
