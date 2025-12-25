@@ -10,7 +10,7 @@
     "appId": "com.mydesck.pro",
     "productName": "MyDesck PRO",
     "directories": {
-      "output": "C:\\_mydesck_build"
+      "output": "dist_electron"
     },
     "files": [
       "dist/**/*",
