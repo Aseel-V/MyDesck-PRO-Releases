@@ -6,9 +6,10 @@ interface UpdateModalProps {
   progress: number;
   version?: string;
   error?: string;
+  onSkip?: () => void;
 }
 
-const UpdateModal: React.FC<UpdateModalProps> = ({ status, progress, version, error }) => {
+const UpdateModal: React.FC<UpdateModalProps> = ({ status, progress, version, error, onSkip }) => {
   
   useEffect(() => {
     // Strict Input Lockdown
@@ -124,6 +125,16 @@ const UpdateModal: React.FC<UpdateModalProps> = ({ status, progress, version, er
                      >
                        <ExternalLink className="w-3 h-3" />
                        View Releases on GitHub
+                     </button>
+                  </div>
+                  
+                  {/* Emergency Skip */}
+                  <div className="pt-2 text-center">
+                    <button 
+                       onClick={onSkip}
+                       className="text-[10px] text-gray-500 hover:text-gray-300 underline transition-colors"
+                     >
+                       Skip Update (Emergency Access)
                      </button>
                   </div>
                </div>

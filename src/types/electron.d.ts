@@ -15,6 +15,7 @@ declare global {
       startDownload: () => void;
       retryUpdate: () => void;
       restartApp: () => void;
+      unlockApp: () => void;
       openExternal: (url: string) => void;
       removeAllUpdateListeners: () => void;
     };

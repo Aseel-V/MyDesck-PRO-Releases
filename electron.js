@@ -93,6 +93,20 @@ function enforceLockdown() {
   }
 }
 
+function liftLockdown() {
+  // 1. Clear lock file
+  clearUpdateLock();
+  
+  // 2. Unregister blockers
+  if (!isDev) {
+    globalShortcut.unregister('CommandOrControl+R');
+    globalShortcut.unregister('CommandOrControl+Shift+R');
+    globalShortcut.unregister('CommandOrControl+Shift+I');
+    globalShortcut.unregister('F11');
+    globalShortcut.unregister('F5');
+  }
+}
+
 function setupAutoUpdater(mainWindow) {
   // Configuration
   autoUpdater.autoDownload = false;
@@ -244,6 +258,10 @@ ipcMain.on('retry_update', () => {
 
 ipcMain.on('restart_app', () => {
   autoUpdater.quitAndInstall();
+});
+
+ipcMain.on('unlock_app', () => {
+  liftLockdown();
 });
 
 ipcMain.on('open_external', (event, url) => {

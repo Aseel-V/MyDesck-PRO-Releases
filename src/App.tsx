@@ -56,6 +56,11 @@ function App() {
     };
   }, []);
 
+  const handleSkip = () => {
+    setUpdateState(prev => ({ ...prev, status: 'idle' }));
+    (window as any).electronAPI?.unlockApp();
+  };
+
   return (
     <>
       {updateState.status !== 'idle' && (
@@ -64,6 +69,7 @@ function App() {
           progress={updateState.progress}
           version={updateState.version}
           error={updateState.error}
+          onSkip={handleSkip}
         />
       )}
       <Routes>

@@ -16,6 +16,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   startDownload: () => ipcRenderer.send('download_update'),
   retryUpdate: () => ipcRenderer.send('retry_update'),
   restartApp: () => ipcRenderer.send('restart_app'),
+  unlockApp: () => ipcRenderer.send('unlock_app'),
   openExternal: (url) => ipcRenderer.send('open_external', url),
 
   removeAllUpdateListeners: () => {
