@@ -10,6 +10,7 @@ import InvoiceTemplate from './components/invoice/InvoiceTemplate';
 
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ResetPassword from './components/auth/ResetPassword';
+import UpdateModal from './components/UpdateModal';
 
 function App() {
   // Check if we are in "invoice mode" (window opened by Electron for printing)
@@ -20,12 +21,57 @@ function App() {
     return <InvoiceTemplate />;
   }
 
+  const [updateState, setUpdateState] = useState<{
+    status: 'idle' | 'downloading' | 'downloaded' | 'error';
+    progress: number;
+    version?: string;
+    error?: string;
+  }>({ status: 'idle', progress: 0 });
+
+  useEffect(() => {
+    const api = (window as any).electronAPI;
+    if (!api) return;
+
+    // Listeners
+    const onAvailable = (info: any) => {
+      setUpdateState(prev => ({ ...prev, status: 'downloading', version: info.version, progress: 0 }));
+    };
+    const onProgress = (info: any) => {
+      setUpdateState(prev => ({ ...prev, status: 'downloading', progress: info.percent }));
+    };
+    const onDownloaded = (info: any) => {
+      setUpdateState(prev => ({ ...prev, status: 'downloaded', version: info.version }));
+    };
+    const onError = (err: string) => {
+      setUpdateState(prev => ({ ...prev, status: 'error', error: err }));
+    };
+
+    api.onUpdateAvailable(onAvailable);
+    api.onUpdateProgress(onProgress);
+    api.onUpdateDownloaded(onDownloaded);
+    api.onUpdateError(onError);
+
+    return () => {
+      api.removeAllUpdateListeners();
+    };
+  }, []);
+
   return (
-    <Routes>
-      <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/" element={<AppContent />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <>
+      {updateState.status !== 'idle' && (
+        <UpdateModal 
+          status={updateState.status as any}
+          progress={updateState.progress}
+          version={updateState.version}
+          error={updateState.error}
+        />
+      )}
+      <Routes>
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/" element={<AppContent />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
   );
 }
 

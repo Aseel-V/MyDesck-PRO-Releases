@@ -7,6 +7,16 @@ declare global {
       onInvoiceData: (callback: (data: any) => void) => void;
       removeInvoiceDataListeners: () => void;
       invoiceReady: () => void;
+      // Auto-Update API
+      onUpdateAvailable: (callback: (info: any) => void) => void;
+      onUpdateProgress: (callback: (progress: any) => void) => void;
+      onUpdateDownloaded: (callback: (info: any) => void) => void;
+      onUpdateError: (callback: (err: string) => void) => void;
+      startDownload: () => void;
+      retryUpdate: () => void;
+      restartApp: () => void;
+      openExternal: (url: string) => void;
+      removeAllUpdateListeners: () => void;
     };
   }
 }
