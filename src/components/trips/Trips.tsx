@@ -143,12 +143,16 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
     
     let filtered = rawTrips;
 
+    // Filter out archived trips by default unless searching specifically (optional, but strictly hiding for now)
+    filtered = filtered.filter(t => t.status !== 'archived');
+
     if (debouncedSearchTerm) {
       const lowerSearch = debouncedSearchTerm.toLowerCase();
       filtered = filtered.filter(
         (trip) =>
           (trip.client_name && trip.client_name.toLowerCase().includes(lowerSearch)) ||
           (trip.destination && trip.destination.toLowerCase().includes(lowerSearch)) ||
+          (trip.client_phone && trip.client_phone.includes(lowerSearch)) || 
           (trip.notes && trip.notes.toLowerCase().includes(lowerSearch))
       );
     }
@@ -167,6 +171,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
 
     if (filters.month) {
       filtered = filtered.filter(trip => {
+         // Priority: Payment Date -> Start Date
          const effDate = trip.payment_date || trip.start_date;
          if (!effDate) return false;
          const d = new Date(effDate);
@@ -260,6 +265,57 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
 
   const handleViewTrip = (trip: Trip) => {
     setViewTrip(trip);
+  };
+
+
+
+  // PDF Export Logic
+  const handleExportPDF = async () => {
+    try {
+        const { jsPDF } = await import('jspdf');
+        const { default: autoTable } = await import('jspdf-autotable');
+        
+        const doc = new jsPDF();
+        
+        // Title
+        doc.setFontSize(18);
+        doc.text(`Financial Summary - ${filters.month || 'All Months'} ${filters.year || new Date().getFullYear()}`, 14, 22);
+        
+        // Table Data
+        const tableData = filteredTrips.map(t => {
+            const sale = t.sale_price || 0;
+            const cost = t.wholesale_cost || 0;
+            const profit = sale - cost;
+            // Convert everything to Main Currency (View) for consistency in PDF
+            const tripCurr = t.currency || 'USD';
+            
+            return [
+                t.destination,
+                t.client_name,
+                format(convert(sale, tripCurr, currency), currency),
+                format(convert(cost, tripCurr, currency), currency),
+                format(convert(profit, tripCurr, currency), currency),
+                t.payment_status
+            ];
+        });
+
+        // Generate Table
+        autoTable(doc, {
+            head: [['Destination', 'Client', 'Sale', 'Cost', 'Profit', 'Status']],
+            body: tableData,
+            startY: 30,
+        });
+
+        // Footer / Totals
+        const finalY = (doc as any).lastAutoTable.finalY + 10;
+        doc.setFontSize(10);
+        doc.text(`Total Revenue: ${format(stats.totalRevenue, currency)}`, 14, finalY);
+        doc.text(`Total Profit: ${format(stats.totalProfit, currency)}`, 14, finalY + 6);
+        
+        doc.save('trips_summary.pdf');
+    } catch (e) {
+        console.error("Export failed", e);
+    }
   };
 
   const handleDownloadAllInvoices = async () => {
@@ -408,6 +464,16 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
               </span>
             </button>
           )}
+
+          <button
+              onClick={handleExportPDF}
+              className={secondaryActionBtn}
+          >
+              <FileText className="w-5 h-5" />
+              <span>
+                Export PDF
+              </span>
+          </button>
 
           <button
             onClick={() => onCreateTrip?.()}

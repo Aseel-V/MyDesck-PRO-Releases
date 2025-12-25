@@ -30,6 +30,12 @@ export const tripSchema = z.object({
     wholesale_cost: z.number().min(0, 'Cost cannot be negative'),
     sale_price: z.number().min(0, 'Price cannot be negative'),
 
+    // Stored Original Values
+    wholesale_original_amount: z.number().optional(),
+    wholesale_currency: z.string().optional(),
+    sale_original_amount: z.number().optional(),
+    sale_currency: z.string().optional(),
+
     payments: z.array(z.object({
         date: z.string(),
         amount: z.number().min(0),

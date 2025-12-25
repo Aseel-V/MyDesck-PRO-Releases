@@ -35,7 +35,7 @@ export interface Database {
           amount_paid: number
           amount_due: number
           notes: string
-          status: 'active' | 'completed' | 'cancelled'
+          status: 'active' | 'completed' | 'cancelled' | 'archived'
           export_to_pdf: boolean
           created_at: string
           updated_at: string
@@ -61,7 +61,7 @@ export interface Database {
           payment_status: 'paid' | 'partial' | 'unpaid'
           amount_paid: number
           notes?: string
-          status: 'active' | 'completed' | 'cancelled'
+          status: 'active' | 'completed' | 'cancelled' | 'archived'
           export_to_pdf?: boolean
         }
         Update: {
@@ -85,7 +85,7 @@ export interface Database {
           payment_status?: 'paid' | 'partial' | 'unpaid'
           amount_paid?: number
           notes?: string
-          status?: 'active' | 'completed' | 'cancelled'
+          status?: 'active' | 'completed' | 'cancelled' | 'archived'
           export_to_pdf?: boolean
           updated_at?: string
         }

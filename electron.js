@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+
 const isDev = process.env.NODE_ENV === 'development';
 
 // __dirname replacement for ESM
@@ -96,24 +97,26 @@ ipcMain.handle('print-to-pdf', async (event, data) => {
     await pdfWindow.loadURL(invoiceUrl);
 
     // 2. Send data via IPC once loaded
-    // We wait a brief moment or ensuring dom-ready to be safe, 
-    // but loadURL awaits the load event.
-    // Sending immediately after loadURL usually works if renderer is ready.
-    // For robustness, we can use executeJavaScript or just send.
-    // But better: wait for renderer to say "I am ready".
-    // HOWEVER, for simplicity and speed in this "fix", we will just send it.
-    // A more robust way is pdfWindow.webContents.send('invoice-data', data)
-    
-    // Wait for renderer to signal it's ready (fonts loaded, state set)
-    const readyPromise = new Promise((resolve) => {
+    // Capture ID immediately to avoid accessing destroyed object later
+    const pdfWindowId = pdfWindow.webContents.id;
+
+    // Wait for renderer to signal it's ready
+    const readyPromise = new Promise((resolve, reject) => {
+      let onReady; // Define reference first
+
       const timeout = setTimeout(() => {
         console.log('Timeout waiting for invoice-ready, attempting to print anyway...');
+        // FIX: Remove listener on timeout to prevent memory leaks and accessing destroyed objects
+        ipcMain.removeListener('invoice-ready', onReady);
         resolve(); 
-      }, 5000); // 5s safety
+      }, 5000); 
 
-      const onReady = (event) => {
-        // Ensure the signal comes from OUR pdf window
-        if (event.sender.id === pdfWindow.webContents.id) {
+      onReady = (event) => {
+        // FIX: Check if sender exists and is not destroyed
+        if (!event.sender || event.sender.isDestroyed()) return;
+
+        // Use ID comparison which is safe
+        if (event.sender.id === pdfWindowId) {
           clearTimeout(timeout);
           ipcMain.removeListener('invoice-ready', onReady);
           resolve(); 
@@ -121,14 +124,17 @@ ipcMain.handle('print-to-pdf', async (event, data) => {
       };
 
       ipcMain.on('invoice-ready', onReady);
-      
-      // If the window is closed/comp destroyed before ready, we should cleanup.
-      // But we have a finally block cleaning up window which will trigger.
     });
 
-    pdfWindow.webContents.send('invoice-data', data);
+    if (!pdfWindow.isDestroyed()) {
+        pdfWindow.webContents.send('invoice-data', data);
+    }
 
     await readyPromise;
+
+    if (pdfWindow.isDestroyed()) {
+        throw new Error('PDF Window was closed prematurely');
+    }
 
     const pdfData = await pdfWindow.webContents.printToPDF({
       printBackground: true,
@@ -146,8 +152,13 @@ ipcMain.handle('print-to-pdf', async (event, data) => {
     console.error('Failed to generate PDF', error);
     throw error;
   } finally {
-    if (!pdfWindow.isDestroyed()) {
-        pdfWindow.close();
+    // Safe cleanup
+    try {
+        if (pdfWindow && !pdfWindow.isDestroyed()) {
+            pdfWindow.close();
+        }
+    } catch (e) {
+        console.error('Error closing PDF window', e);
     }
   }
 });

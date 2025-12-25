@@ -23,6 +23,7 @@ interface TripCardProps {
   onDelete: (id: string) => void;
   onToggleExport: (id: string, value: boolean) => void | Promise<void>;
   onView?: (trip: Trip) => void;
+  isUrgent?: boolean;
 }
 
 export default function TripCard({
@@ -31,8 +32,9 @@ export default function TripCard({
   onDelete,
   onToggleExport,
   onView,
+  isUrgent,
 }: TripCardProps) {
-  const { t, direction, language } = useLanguage(); // Added language
+  const { t, direction, language } = useLanguage();
   const { format } = useCurrency();
   const [showDetails, setShowDetails] = useState(false);
   const [exportChecked, setExportChecked] = useState<boolean>(!!trip.export_to_pdf);
@@ -88,7 +90,6 @@ export default function TripCard({
 
   const handleShare = (e: MouseEvent) => {
     e.stopPropagation();
-    // Translate the message content
     const msgTemplate = t('trips.shareMessage', { 
         destination: trip.destination, 
         date: formatDate(trip.start_date),
@@ -102,7 +103,6 @@ export default function TripCard({
   const FirstLetter = trip.destination.charAt(0).toUpperCase();
   const actionBtnClass = "w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95";
 
-  // Helper to format date with current locale
   const formatLocDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-EG' : 'en-US', {
         day: 'numeric', month: 'short', year: 'numeric'
@@ -119,13 +119,26 @@ export default function TripCard({
       className="group relative w-full"
       onClick={handleCardClick}
       role="button"
-      dir={direction} // Force direction on the card
+      dir={direction}
     >
-      <div className="flex flex-col w-full bg-white dark:bg-slate-950 rounded-[2rem] shadow-sm ring-1 ring-slate-200 dark:ring-slate-800 overflow-hidden hover:shadow-xl transition-all duration-300">
+      <div className={twMerge(
+          "flex flex-col w-full bg-white dark:bg-slate-950 rounded-[2rem] shadow-sm overflow-hidden hover:shadow-xl transition-all duration-300",
+          isUrgent 
+            ? "ring-2 ring-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.3)] dark:ring-rose-500 dark:shadow-[0_0_20px_rgba(244,63,94,0.2)]" 
+            : "ring-1 ring-slate-200 dark:ring-slate-800"
+      )}>
         
+        {/* Urgent Badge */}
+        {isUrgent && (
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-rose-500 text-white text-[10px] uppercase font-bold px-3 py-1 rounded-b-lg shadow-md z-20 flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" />
+                <span>Payment Overdue</span>
+            </div>
+        )}
+
         {/* === Top Section === */}
         <div className="p-5 pb-0 relative">
-             {/* Background Decoration - flipped for RTL using logical properties if needed, but absolute positioning needs care */}
+             {/* Background Decoration */}
              <div className="absolute top-0 right-0 rtl:left-0 rtl:right-auto w-40 h-40 bg-gradient-to-br from-sky-400/10 to-purple-400/10 blur-3xl rounded-full pointer-events-none -mr-10 -mt-10 rtl:-ml-10 rtl:-mr-0" />
 
             {/* Header */}
@@ -174,7 +187,6 @@ export default function TripCard({
                              {formatLocDate(trip.start_date)}
                         </p>
                     </div>
-                    {/* Arrow flips automatically in RTL if using Lucide, but let's ensure it */}
                     <div className="px-2 text-slate-300 dark:text-slate-700">
                          <ArrowRight className={twMerge("w-4 h-4", isRtl && "rotate-180")} />
                     </div>
@@ -281,7 +293,7 @@ export default function TripCard({
 
         {/* === MINIMALIST FOOTER === */}
         <div className="px-5 py-3 bg-slate-50/50 dark:bg-slate-900/30 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            {/* Last Updated - using a simple date format */}
+            {/* Last Updated */}
             <span className="text-[10px] text-slate-400 font-medium">
                {formatLocDate(trip.updated_at || trip.created_at)}
             </span>
@@ -314,7 +326,6 @@ export default function TripCard({
                     onClick={(e) => {
                         stopPropagation(e);
                         if (trip.client_phone) {
-                            // Logic handled in handleShare or here
                             const msgTemplate = `Hello ${trip.client_name}, trip details for ${trip.destination}...`;
                             const url = generateWhatsAppLink(trip.client_phone, msgTemplate);
                             window.open(url, '_blank');

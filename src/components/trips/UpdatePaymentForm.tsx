@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { X, Save, Plus } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useCurrency } from '../../contexts/CurrencyContext';
 import { Trip, Payment } from '../../types/trip';
 
 interface UpdatePaymentFormProps {
@@ -22,8 +23,11 @@ export default function UpdatePaymentForm({
 }: UpdatePaymentFormProps) {
   const { t } = useLanguage();
   const { profile } = useAuth();
-
+  const { convert } = useCurrency();
+  const tripCurrency = trip.currency || profile?.preferred_currency || 'USD';
+  
   // State for NEW payment
+  const [inputCurrency, setInputCurrency] = useState<string>(tripCurrency);
   const [amountToAdd, setAmountToAdd] = useState<number>(0);
   const [paymentDate, setPaymentDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'transfer' | 'card' | 'check'>('transfer');
@@ -39,7 +43,7 @@ export default function UpdatePaymentForm({
     }
   };
 
-  const currencySymbol = getCurrencySymbol(trip.currency || profile?.preferred_currency || 'USD');
+  const currencySymbol = getCurrencySymbol(tripCurrency);
   const totalSalePrice = trip.sale_price || 0;
   
   // Calculate current status (including unsaved new payment for preview?)
@@ -54,9 +58,13 @@ export default function UpdatePaymentForm({
     setLoading(true);
     try {
       // 1. Create new payment object
+      // 1. Convert amount to Trip Currency
+      const amountInTripCurrency = convert(amountToAdd, inputCurrency, tripCurrency);
+
+      // 2. Create new payment object
       const newPayment: Payment = {
         date: paymentDate,
-        amount: amountToAdd,
+        amount: parseFloat(amountInTripCurrency.toFixed(2)),
         method: paymentMethod,
       };
 
@@ -146,18 +154,29 @@ export default function UpdatePaymentForm({
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <label className="block text-xs font-semibold text-slate-400 mb-1.5">
-                    Amount ({currencySymbol})
+                    Amount
                   </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={amountToAdd || ''}
-                    onChange={(e) => setAmountToAdd(parseFloat(e.target.value) || 0)}
-                    className="w-full px-3 py-2.5 rounded-lg bg-slate-950/50 border border-slate-700 text-slate-100 focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 outline-none transition-all"
-                    placeholder="0.00"
-                    autoFocus
-                  />
+                  <div className="flex gap-2">
+                      <select
+                        value={inputCurrency}
+                        onChange={(e) => setInputCurrency(e.target.value)}
+                         className="w-24 bg-slate-950/50 border border-slate-700 rounded-lg px-2 text-sm focus:ring-2 focus:ring-emerald-500/50 outline-none text-slate-100"
+                      >
+                         <option value="USD">USD</option>
+                         <option value="EUR">EUR</option>
+                         <option value="ILS">ILS</option>
+                      </select>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={amountToAdd || ''}
+                        onChange={(e) => setAmountToAdd(parseFloat(e.target.value) || 0)}
+                        className="flex-1 px-3 py-2.5 rounded-lg bg-slate-950/50 border border-slate-700 text-slate-100 focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 outline-none transition-all"
+                        placeholder="0.00"
+                        autoFocus
+                      />
+                  </div>
                 </div>
 
                 <div>
@@ -195,7 +214,8 @@ export default function UpdatePaymentForm({
                 <div className="py-2 flex justify-between items-center text-sm border-t border-slate-800/50">
                   <span className="text-slate-400">New Total Will Be:</span>
                   <span className="font-bold text-emerald-400">
-                    {currencySymbol}{(currentPaid + amountToAdd).toFixed(2)}
+                    {currencySymbol}
+                    {(currentPaid + convert(amountToAdd, inputCurrency, tripCurrency)).toFixed(2)}
                   </span>
                 </div>
              )}

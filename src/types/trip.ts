@@ -62,11 +62,22 @@ export interface Trip {
   room_type?: string;
   board_basis?: string;
 
+  // Multi-Currency Storage (Original Input Preservation)
+  wholesale_original_amount?: number;
+  wholesale_currency?: string;
+  sale_original_amount?: number;
+  sale_currency?: string;
+
   // Documents
   attachments: Attachment[];
 
+  // Checklist
+  checklist_flight: boolean;
+  checklist_hotel: boolean;
+  checklist_payment: boolean;
+
   notes: string;
-  status: 'active' | 'completed' | 'cancelled';
+  status: 'active' | 'completed' | 'cancelled' | 'archived';
   export_to_pdf: boolean;
   created_at: string;
   updated_at: string;

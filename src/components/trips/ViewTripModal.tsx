@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from 'react'; // Added useState
 import { 
   X, 
   Users, 
@@ -8,35 +8,53 @@ import {
   Paperclip, 
   MapPin, 
   DollarSign,
+
+  Archive,
+  Loader2
 } from 'lucide-react';
 import { formatDate } from '../../lib/utils';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
 import { Trip } from '../../types/trip';
+import { supabase } from '../../lib/supabase'; // Import supabase
+import { toast } from 'sonner';
 
 interface ViewTripModalProps {
   trip: Trip;
   onClose: () => void;
+  onUpdate?: () => void; // Callback to refresh list
 }
 
-export default function ViewTripModal({ trip, onClose }: ViewTripModalProps) {
+export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: ViewTripModalProps) {
   const { t } = useLanguage();
   const { format } = useCurrency();
-  const [activeTab, setActiveTab] = useState<'details' | 'travelers' | 'itinerary' | 'payments' | 'files'>('details');
+  const [trip] = useState(initialTrip);
+  const [updating, setUpdating] = useState(false);
 
+
+
+  const handleArchive = async () => {
+      if(!confirm('Are you sure you want to archive this trip? It will be hidden from the main list.')) return;
+      
+      setUpdating(true);
+      const { error } = await supabase.from('trips').update({ status: 'archived' }).eq('id', trip.id);
+      
+      if (error) {
+          toast.error('Failed to archive trip');
+          setUpdating(false);
+      } else {
+          toast.success('Trip archived');
+          onClose();
+          if(onUpdate) onUpdate();
+      }
+  };
+
+  // ... (calcs)
   const wholesale = trip.wholesale_cost ?? 0;
   const sale = trip.sale_price ?? 0;
   const paid = trip.amount_paid ?? 0;
   const profitValue = typeof trip.profit === 'number' ? trip.profit : sale - wholesale;
   const amountDue = Math.max(sale - paid, 0);
-
-  const tabs = [
-    { id: 'details', label: t('trips.details') || 'Details', icon: FileText },
-    { id: 'travelers', label: t('trips.travelers') || 'Travelers', icon: Users },
-    { id: 'itinerary', label: t('trips.itinerary') || 'Itinerary', icon: Calendar },
-    { id: 'payments', label: t('trips.payments') || 'Payments', icon: CreditCard },
-    { id: 'files', label: t('trips.attachments') || 'Files', icon: Paperclip },
-  ] as const;
 
   return (
     <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-xl flex items-center justify-center z-50 p-4 animate-fadeIn">
@@ -54,6 +72,7 @@ export default function ViewTripModal({ trip, onClose }: ViewTripModalProps) {
                 <span className={`px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded-full border ${
                   trip.status === 'completed' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' :
                   trip.status === 'cancelled' ? 'bg-rose-500/10 border-rose-500/30 text-rose-400' :
+                  trip.status === 'archived' ? 'bg-slate-500/10 border-slate-500/30 text-slate-400' :
                   'bg-sky-500/10 border-sky-500/30 text-sky-400'
                 }`}>
                   {trip.status}
@@ -65,121 +84,104 @@ export default function ViewTripModal({ trip, onClose }: ViewTripModalProps) {
                 <span className="text-slate-500 font-medium dark:text-slate-300">{trip.client_name}</span>
               </h2>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-full border border-slate-200 bg-slate-100 hover:bg-slate-200 text-slate-500 transition-all dark:border-slate-700/80 dark:bg-slate-950/90 dark:hover:bg-slate-800/80 dark:text-slate-300"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Tabs Navigation */}
-          <div className="flex items-center gap-1 px-6 border-b border-slate-200 bg-slate-50 overflow-x-auto dark:border-slate-800/80 dark:bg-slate-950/50">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? 'border-sky-500 text-sky-600 dark:text-sky-400'
-                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:border-slate-700'
-                }`}
-              >
-                <tab.icon className="w-4 h-4" />
-                {tab.label}
-              </button>
-            ))}
+            <div className="flex items-center gap-2">
+                {trip.status !== 'archived' && (
+                    <button
+                        onClick={handleArchive}
+                        disabled={updating}
+                        className="p-2 rounded-full text-slate-400 hover:bg-amber-50 hover:text-amber-600 transition-colors"
+                        title="Archive Trip (Soft Delete)"
+                    >
+                        {updating ? <Loader2 className="w-5 h-5 animate-spin"/> : <Archive className="w-5 h-5" />}
+                    </button>
+                )}
+                <button
+                onClick={onClose}
+                className="p-2 rounded-full border border-slate-200 bg-slate-100 hover:bg-slate-200 text-slate-500 transition-all dark:border-slate-700/80 dark:bg-slate-950/90 dark:hover:bg-slate-800/80 dark:text-slate-300"
+                >
+                <X className="w-5 h-5" />
+                </button>
+            </div>
           </div>
         </div>
 
-        {/* Content Area */}
-        <div className="flex-1 overflow-y-auto p-6 bg-white dark:bg-slate-950/30">
+        {/* Content Area - Single Scrollable View */}
+        <div className="flex-1 overflow-y-auto p-6 bg-white dark:bg-slate-950/30 space-y-8">
           
-          {/* 1. General Details Tab */}
-          {activeTab === 'details' && (
-            <div className="space-y-6 animate-fadeIn">
-              {/* Key Info Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 dark:bg-slate-900/50 dark:border-slate-800/60">
-                  <div className="flex items-center gap-3 mb-2 text-slate-500 dark:text-slate-400">
-                    <Calendar className="w-4 h-4" />
-                    <span className="text-xs uppercase tracking-wider font-semibold">Duration</span>
-                  </div>
-                  <p className="text-slate-900 font-medium dark:text-slate-100">{formatDate(trip.start_date)}</p>
-                  <p className="text-slate-500 text-sm">to {formatDate(trip.end_date)}</p>
-                </div>
 
-                {(trip.room_type || trip.board_basis) && (
-                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 dark:bg-slate-900/50 dark:border-slate-800/60">
-                    <div className="flex items-center gap-3 mb-2 text-slate-500 dark:text-slate-400">
-                      <MapPin className="w-4 h-4" />
-                      <span className="text-xs uppercase tracking-wider font-semibold">Accommodation</span>
-                    </div>
-                    <p className="text-slate-900 font-medium dark:text-slate-100">{trip.room_type || 'Not specified'}</p>
-                    <p className="text-slate-500 text-sm">{trip.board_basis || 'Room Only'}</p>
-                  </div>
-                )}
 
-                {trip.travelers_count > 0 && (
-                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 dark:bg-slate-900/50 dark:border-slate-800/60">
-                    <div className="flex items-center gap-3 mb-2 text-slate-500 dark:text-slate-400">
-                      <Users className="w-4 h-4" />
-                      <span className="text-xs uppercase tracking-wider font-semibold">Travelers</span>
-                    </div>
-                    <p className="text-slate-900 font-medium dark:text-slate-100">{trip.travelers_count} People</p>
-                    <p className="text-slate-500 text-sm">{trip.travelers?.length ? 'See travelers tab' : 'No details added'}</p>
-                  </div>
-                )}
+          {/* 1. Key Info Grid */}
+          <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 animate-fadeIn">
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 dark:bg-slate-900/50 dark:border-slate-800/60">
+              <div className="flex items-center gap-3 mb-2 text-slate-500 dark:text-slate-400">
+                <Calendar className="w-4 h-4" />
+                <span className="text-xs uppercase tracking-wider font-semibold">Duration</span>
               </div>
-
-              {/* Financial Summary */}
-              {(sale > 0 || wholesale > 0 || paid > 0) && (
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 overflow-hidden dark:border-slate-800 dark:bg-slate-900/20">
-                  <div className="px-5 py-3 border-b border-slate-200 bg-slate-100 dark:border-slate-800 dark:bg-slate-900/80">
-                    <h3 className="text-sm font-bold text-slate-700 flex items-center gap-2 dark:text-slate-200">
-                      <DollarSign className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
-                      Financial Overview
-                    </h3>
-                  </div>
-                  <div className="p-5 grid grid-cols-2 md:grid-cols-4 gap-6">
-                    <div>
-                      <p className="text-xs text-slate-500 mb-1 uppercase">Wholesale Cost</p>
-                      <p className="text-lg font-semibold text-slate-700 dark:text-slate-300">{format(wholesale, trip.currency)}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-500 mb-1 uppercase">Sale Price</p>
-                      <p className="text-lg font-semibold text-sky-600 dark:text-sky-300">{format(sale, trip.currency)}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-500 mb-1 uppercase">Total Profit</p>
-                      <p className="text-lg font-semibold text-emerald-600 dark:text-emerald-400">{format(profitValue, trip.currency)}</p>
-                    </div>
-                     <div>
-                      <p className="text-xs text-slate-500 mb-1 uppercase">Amount Due</p>
-                      <p className={`text-lg font-bold ${amountDue > 0 ? 'text-rose-500 dark:text-rose-400' : 'text-slate-400'}`}>
-                        {format(amountDue, trip.currency)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Notes */}
-              {trip.notes && (
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">Notes & Requirements</h3>
-                  <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-slate-600 text-sm whitespace-pre-wrap leading-relaxed dark:bg-amber-500/5 dark:border-amber-500/20 dark:text-slate-300">
-                    {trip.notes}
-                  </div>
-                </div>
-              )}
+              <p className="text-slate-900 font-medium dark:text-slate-100">{formatDate(trip.start_date)}</p>
+              <p className="text-slate-500 text-sm">to {formatDate(trip.end_date)}</p>
             </div>
+
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 dark:bg-slate-900/50 dark:border-slate-800/60">
+              <div className="flex items-center gap-3 mb-2 text-slate-500 dark:text-slate-400">
+                <MapPin className="w-4 h-4" />
+                <span className="text-xs uppercase tracking-wider font-semibold">Accommodation</span>
+              </div>
+              <p className="text-slate-900 font-medium dark:text-slate-100">
+                {trip.room_type || 'No Room Config'}
+              </p>
+              <p className="text-slate-500 text-sm">
+                {trip.board_basis || 'No Board Basis'}
+              </p>
+            </div>
+
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 dark:bg-slate-900/50 dark:border-slate-800/60">
+              <div className="flex items-center gap-3 mb-2 text-slate-500 dark:text-slate-400">
+                <Users className="w-4 h-4" />
+                <span className="text-xs uppercase tracking-wider font-semibold">Travelers</span>
+              </div>
+              <p className="text-slate-900 font-medium dark:text-slate-100">{trip.travelers_count} People</p>
+            </div>
+          </section>
+
+          {/* 2. Financial Summary */}
+          {(sale > 0 || wholesale > 0 || paid > 0) && (
+            <section className="animate-fadeIn">
+              <div className="flex items-center gap-2 mb-3 px-1">
+                 <DollarSign className="w-4 h-4 text-emerald-500" />
+                 <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Financials</h3>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 overflow-hidden dark:border-slate-800 dark:bg-slate-900/20">
+                <div className="p-5 grid grid-cols-2 md:grid-cols-4 gap-6">
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1 uppercase">Wholesale Cost</p>
+                    <p className="text-lg font-semibold text-slate-700 dark:text-slate-300">{format(wholesale, trip.currency)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1 uppercase">Sale Price</p>
+                    <p className="text-lg font-semibold text-sky-600 dark:text-sky-300">{format(sale, trip.currency)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1 uppercase">Total Profit</p>
+                    <p className="text-lg font-semibold text-emerald-600 dark:text-emerald-400">{format(profitValue, trip.currency)}</p>
+                  </div>
+                   <div>
+                    <p className="text-xs text-slate-500 mb-1 uppercase">Amount Due</p>
+                    <p className={`text-lg font-bold ${amountDue > 0 ? 'text-rose-500 dark:text-rose-400' : 'text-slate-400'}`}>
+                      {format(amountDue, trip.currency)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
           )}
 
-          {/* 2. Travelers Tab */}
-          {activeTab === 'travelers' && (
-            <div className="space-y-4 animate-fadeIn">
-              {trip.travelers && trip.travelers.length > 0 ? (
+          {/* 3. Travelers */}
+          {trip.travelers && trip.travelers.length > 0 && (
+             <section className="animate-fadeIn">
+                <div className="flex items-center gap-2 mb-3 px-1">
+                    <Users className="w-4 h-4 text-sky-500" />
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Traveler Details</h3>
+                </div>
                 <div className="rounded-xl border border-slate-200 overflow-hidden dark:border-slate-800">
                   <table className="w-full text-left text-sm">
                     <thead className="bg-slate-100 text-slate-500 dark:bg-slate-900/80 dark:text-slate-400">
@@ -202,19 +204,16 @@ export default function ViewTripModal({ trip, onClose }: ViewTripModalProps) {
                     </tbody>
                   </table>
                 </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-slate-500">
-                  <Users className="w-12 h-12 mb-3 opacity-20" />
-                  <p>No detailed traveler information recorded.</p>
-                </div>
-              )}
-            </div>
+             </section>
           )}
 
-          {/* 3. Itinerary Tab */}
-          {activeTab === 'itinerary' && (
-            <div className="space-y-6 animate-fadeIn relative">
-              {trip.itinerary && trip.itinerary.length > 0 ? (
+          {/* 4. Itinerary */}
+          {trip.itinerary && trip.itinerary.length > 0 && (
+             <section className="animate-fadeIn">
+                <div className="flex items-center gap-2 mb-3 px-1">
+                    <Calendar className="w-4 h-4 text-fuchsia-500" />
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Itinerary</h3>
+                </div>
                 <div className="relative border-l-2 border-slate-200 ml-4 space-y-8 py-2 dark:border-slate-800">
                   {trip.itinerary.map((item, idx) => (
                     <div key={idx} className="relative pl-8">
@@ -232,34 +231,16 @@ export default function ViewTripModal({ trip, onClose }: ViewTripModalProps) {
                     </div>
                   ))}
                 </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-slate-500">
-                  <MapPin className="w-12 h-12 mb-3 opacity-20" />
-                  <p>No itinerary details available.</p>
-                </div>
-              )}
-            </div>
+             </section>
           )}
 
-          {/* 4. Payments Tab */}
-          {activeTab === 'payments' && (
-            <div className="space-y-6 animate-fadeIn">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                 <div className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/5">
-                    <p className="text-xs text-emerald-600 uppercase tracking-wider mb-1 dark:text-emerald-400">Total Paid</p>
-                    <p className="text-xl font-bold text-emerald-700 dark:text-emerald-100">{format(paid, trip.currency)}</p>
-                 </div>
-                 <div className="p-4 rounded-xl border border-rose-500/20 bg-rose-50 dark:bg-rose-500/5">
-                    <p className="text-xs text-rose-500 uppercase tracking-wider mb-1 dark:text-rose-400">Remaining Due</p>
-                    <p className="text-xl font-bold text-rose-700 dark:text-rose-100">{format(amountDue, trip.currency)}</p>
-                 </div>
-                 <div className="p-4 rounded-xl border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800/50">
-                    <p className="text-xs text-slate-500 uppercase tracking-wider mb-1 dark:text-slate-400">Payment Status</p>
-                    <p className="text-xl font-bold text-slate-700 capitalize dark:text-slate-200">{trip.payment_status}</p>
-                 </div>
-              </div>
-
-              {trip.payments && trip.payments.length > 0 ? (
+          {/* 5. Payments List (if any) */}
+          {trip.payments && trip.payments.length > 0 && (
+            <section className="animate-fadeIn">
+                <div className="flex items-center gap-2 mb-3 px-1">
+                    <CreditCard className="w-4 h-4 text-amber-500" />
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Payment History</h3>
+                </div>
                 <div className="rounded-xl border border-slate-200 overflow-hidden dark:border-slate-800">
                   <table className="w-full text-left text-sm">
                     <thead className="bg-slate-100 text-slate-500 dark:bg-slate-900/80 dark:text-slate-400">
@@ -282,18 +263,16 @@ export default function ViewTripModal({ trip, onClose }: ViewTripModalProps) {
                     </tbody>
                   </table>
                 </div>
-              ) : (
-                <div className="text-center py-8 border border-dashed border-slate-300 rounded-xl dark:border-slate-800">
-                  <p className="text-slate-500 text-sm">No payment history recorded.</p>
-                </div>
-              )}
-            </div>
+            </section>
           )}
 
-          {/* 5. Files Tab */}
-          {activeTab === 'files' && (
-            <div className="space-y-4 animate-fadeIn">
-              {trip.attachments && trip.attachments.length > 0 ? (
+          {/* 6. Files */}
+          {trip.attachments && trip.attachments.length > 0 && (
+             <section className="animate-fadeIn">
+                <div className="flex items-center gap-2 mb-3 px-1">
+                    <Paperclip className="w-4 h-4 text-indigo-500" />
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Attachments</h3>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {trip.attachments.map((file, idx) => (
                     <a 
@@ -313,13 +292,17 @@ export default function ViewTripModal({ trip, onClose }: ViewTripModalProps) {
                     </a>
                   ))}
                 </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-slate-500">
-                  <Paperclip className="w-12 h-12 mb-3 opacity-20" />
-                  <p>No files attached to this trip.</p>
-                </div>
-              )}
-            </div>
+             </section>
+          )}
+
+          {/* 7. Notes */}
+          {trip.notes && (
+            <section className="space-y-2">
+              <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">Notes & Requirements</h3>
+              <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-slate-600 text-sm whitespace-pre-wrap leading-relaxed dark:bg-amber-500/5 dark:border-amber-500/20 dark:text-slate-300">
+                {trip.notes}
+              </div>
+            </section>
           )}
 
         </div>

@@ -37,9 +37,19 @@ const generatePDF = async (mode: PdfMode, options: PDFOptions): Promise<Uint8Arr
   const qrData = `INV-${firstTrip.id.slice(0, 8)}\nAmount: ${firstTrip.sale_price} ${firstTrip.currency}`;
   const qrCodeDataUrl = await generateQRCode(qrData);
 
+  // Determine direction
+  const isRTL = language === 'ar' || language === 'he';
+  
+  // Reshape Logic (Simulated for this env, normally would use library)
+  // Since we are adding imports, let's assume 'arabic-reshaper' and 'rtl-detect' are available via npm
+  // But strict-mode might fail if types aren't there. 
+  // We will simply ensure the HTML direction is set correctly for Electron to handle it, 
+  // because Electron/Chromium handles RTL rendering natively better than jsPDF text().
+  
   const payload = {
     mode,
     language,
+    dir: isRTL ? 'rtl' : 'ltr', // Pass direction
     userFullName,
     phoneNumber,
     trips,

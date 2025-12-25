@@ -13,6 +13,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
 import { useDebounce } from '../../hooks/useDebounce';
+import { FileUpload } from '../ui/FileUpload';
 
 interface NewTripFormProps {
   onClose: () => void;
@@ -27,10 +28,10 @@ type TripFormValues = z.input<typeof tripSchema>;
 
 export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormProps) {
   const { t } = useLanguage();
-  const { profile: _profile } = useAuth(); // avoid unused variable warning
+  const { profile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('details');
-  const { rates } = useCurrency();
+  const { rates, convert } = useCurrency(); // Added convert
 
   const {
     register,
@@ -38,6 +39,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
     handleSubmit,
     watch,
     setValue,
+    getValues,
     formState: { errors },
   } = useForm<TripFormValues>({
     resolver: zodResolver(tripSchema),
@@ -53,11 +55,20 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
       exchange_rate: editTrip?.exchange_rate || 1,
       wholesale_cost: editTrip?.wholesale_cost || 0,
       sale_price: editTrip?.sale_price || 0,
+      
+      // Load saved original values if they exist, otherwise default to "view" logic
+      wholesale_original_amount: editTrip?.wholesale_original_amount,
+      wholesale_currency: editTrip?.wholesale_currency,
+      sale_original_amount: editTrip?.sale_original_amount,
+      sale_currency: editTrip?.sale_currency,
+
       payments: editTrip?.payments || [],
       payment_status:
         (editTrip?.payment_status as TripFormValues['payment_status']) || 'unpaid',
       amount_paid: editTrip?.amount_paid || 0,
       payment_date: editTrip?.payment_date || '',
+      room_type: editTrip?.room_type || '', // Ensure persistence
+      board_basis: editTrip?.board_basis || '', // Ensure persistence
       attachments: editTrip?.attachments || [],
       notes: editTrip?.notes || '',
       status: (editTrip?.status as TripFormValues['status']) || 'active',
@@ -133,6 +144,34 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
   const amountPaid = watch('amount_paid');
   const currency = watch('currency');
 
+  // Independent Currency State for Inputs
+  // Priority: 1. Saved Original Currency from DB. 2. Fallback to trip currency.
+  const [wholesaleCurrency, setWholesaleCurrency] = useState<string>(
+      editTrip?.wholesale_currency || editTrip?.currency || 'USD'
+  );
+  const [saleCurrency, setSaleCurrency] = useState<string>(
+      editTrip?.sale_currency || editTrip?.currency || 'USD'
+  );
+  const [amountPaidCurrency, setAmountPaidCurrency] = useState<string>(
+      editTrip?.currency || 'USD'
+  );
+
+  // Initialize independent currencies when trip loads
+  useEffect(() => {
+    if (editTrip) {
+      // If we have explicit original currency saved, use it.
+      if (editTrip.wholesale_currency) setWholesaleCurrency(editTrip.wholesale_currency);
+      else if (editTrip.currency) setWholesaleCurrency(editTrip.currency);
+
+      if (editTrip.sale_currency) setSaleCurrency(editTrip.sale_currency);
+      else if (editTrip.currency) setSaleCurrency(editTrip.currency);
+    }
+  }, [editTrip]);
+
+  // When global currency changes (e.g. from draft load or user change main currency), sync ONLY if we haven't diverged?
+  // Actually, the main currency dropdown should probably control the "Base" for the trip.
+  // We'll keep local states independent.
+
   const [profit, setProfit] = useState(0);
   const [profitPercentage, setProfitPercentage] = useState(0);
   const [amountDue, setAmountDue] = useState(0);
@@ -147,47 +186,118 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
     Suite: 0,
     Family: 0,
   });
+
+  // Parse initial room_type to counts if possible
+  useEffect(() => { 
+     // 1. Room Type Parsing
+     if (editTrip?.room_type) {
+         try {
+             // Example format "Single x1, Double x2"
+             const items = editTrip.room_type.split(', ');
+             const newCounts = { ...roomCounts };
+             let found = false;
+             
+             items.forEach(item => {
+                 const [type, countStr] = item.split(' x');
+                 if (type && countStr && type in newCounts) {
+                     newCounts[type as RoomType] = parseInt(countStr) || 0;
+                     found = true;
+                 }
+             });
+             
+             if (found) setRoomCounts(newCounts);
+         } catch (e) {
+             console.log("Could not parse room type string, relying on manual input");
+         }
+     }
+
+     // 2. Load Original Financial Values (if they exist)
+     if (editTrip) {
+         if (editTrip.wholesale_original_amount !== undefined && editTrip.wholesale_original_amount !== null) {
+             setValue('wholesale_cost', editTrip.wholesale_original_amount);
+         }
+         if (editTrip.sale_original_amount !== undefined && editTrip.sale_original_amount !== null) {
+             setValue('sale_price', editTrip.sale_original_amount);
+         }
+     }
+  }, []); // Run ONCE on mount
   
   // Sync room_type string when counts change
   useEffect(() => {
     // Only update if one of the counts is > 0
-    // If all are 0, we don't force overwrite unless we want to clear it (or maybe user wants to type manually?)
-    // User asked "make them option that the user can to not use it".
-    // I will auto-generate the string IF counts > 0.
-    const parts: string[] = [];
-    Object.entries(roomCounts).forEach(([type, count]) => {
-      if (count > 0) parts.push(`${type} x${count}`);
-    });
+    // Prevent overwriting existing string with empty if counts are 0 on load
+    const hasCounts = Object.values(roomCounts).some(c => c > 0);
     
-    if (parts.length > 0) {
-      const result = parts.join(', ');
-      setValue('room_type', result);
+    if (hasCounts) {
+        const parts: string[] = [];
+        Object.entries(roomCounts).forEach(([type, count]) => {
+          if (count > 0) parts.push(`${type} x${count}`);
+        });
+        const result = parts.join(', ');
+        setValue('room_type', result); // This updates the form value
     }
-    // If parts are empty, we leave it alone (user might have typed manually or cleared it).
   }, [roomCounts, setValue]);
 
   useEffect(() => {
-    const calculatedProfit = (salePrice || 0) - (wholesaleCost || 0);
-    const calculatedPercentage =
-      wholesaleCost > 0 ? (calculatedProfit / wholesaleCost) * 100 : 0;
+    // Normalize to Main Currency for profit calc
+    // If independent currencies are used, the visual inputs are in those currencies.
+    // The `wholesaleCost` and `salePrice` variables from `watch` are the NUMBERS in the form.
+    // We need to know what currency they are in to calculate profit correctly if we wanted to show specific profit.
+    // However, `watch` values ARE what gets submitted.
+    // Requirement: "store the original currency and value, but calculate display value based on Base Currency".
+    // Since we don't have new columns, we will assume the User changes the Main Currency to the "Base" they want,
+    // and if they use the independent conversions, we convert the value INTO the Main Currency before setting setValue.
+    // WAIT. The user said: "If a user enters 2000 in USD and then switches... to ILS, numeric value should convert".
+    // This implies the standard flow: Input is tied to Dropdown.
+    
+    // Profit Calculation: Always based on what's in the form (which should always be normalized to 'currency' ON SUBMIT, 
+    // but in the UI, if wholesale is 100 ILS and Sale is 50 USD, profit calc is complex).
+    // SIMPLIFICATION: We will enforce that the Form Values (wholesale_cost, sale_price) are ALWAYS in the Trip's Main `currency`.
+    // The "Independent Dropdown" is just a helper to allow them to enter "2000 ILS" and have it auto-convert to USD (if Trip is USD).
+    // But the user asked for "Select specific currency... independently".
+    // Use Case: Wholesale is paid in ILS. Sale is in USD.
+    // If I force conversion, I lose the "Original" value of 2000 ILS.
+    // Since I cannot change SCHEMA, I MUST force conversion to keep data valid in 1 currency.
+    // I will treat the dropdowns as "Converter Tools".
+    // When you change the dropdown:
+    // 1. It converts the current value to the NEW currency.
+    // 2. It updates the state `wholesaleCurrency`.
+    // NOTE: This effectively changes the "viewing" currency.
+    // BUT, if `wholesaleCurrency` != `currency` (Main), we have a mismatch.
+    // 
+    // REVISED STRATEGY: 
+    // The form inputs `wholesale_cost` and `sale_price` will hold the value in `wholesaleCurrency` and `saleCurrency` respectively.
+    // On Submit, we convert everything to `currency` (Main) to store in DB consistently.
+    // Profit calc needs real-time conversion.
+    
+    const wCost = convert(wholesaleCost || 0, wholesaleCurrency, currency || 'USD'); 
+    const sPrice = convert(salePrice || 0, saleCurrency, currency || 'USD');
+    
+    const calculatedProfit = sPrice - wCost;
+    const calculatedPercentage = wCost > 0 ? (calculatedProfit / wCost) * 100 : 0;
+    
     setProfit(calculatedProfit);
     setProfitPercentage(calculatedPercentage);
-  }, [wholesaleCost, salePrice]);
+  }, [wholesaleCost, salePrice, currency, wholesaleCurrency, saleCurrency, convert]); // Added dependencies
 
   useEffect(() => {
-    const due = (salePrice || 0) - (amountPaid || 0);
+    // Amount due calc
+    // Amount Paid is in... let's say Main Currency? Or its own?
+    // Let's assume Amount Paid matches Sale Price currency usually.
+    // Let's stick to Sales Currency for Amount Paid for simplicity/consistency with Sale.
+    // Or just Main Currency? The existing code `syncPaymentStatusWithAmount` uses raw values.
+    // We will assume Amount Paid is in `currency` (Main) for now to avoid too much complexity, 
+    // because `payments` array has history.
+    
+    const sPrice = convert(salePrice || 0, saleCurrency, currency || 'USD');
+    const paidInMain = convert(amountPaid || 0, amountPaidCurrency, currency || 'USD');
+    const due = sPrice - paidInMain;
     setAmountDue(due >= 0 ? due : 0);
-  }, [salePrice, amountPaid]);
+  }, [salePrice, saleCurrency, amountPaid, amountPaidCurrency, currency, convert]);
 
   // Auto-update exchange rate when currency changes
   useEffect(() => {
     if (currency && rates && rates[currency]) {
-      // Check if we should update. 
-      // If the user manually changed it, we might not want to overwrite it EXCEPT when they change currency.
-      // The requirement says: "When currency changes, auto-fill...".
-      // So we do it here.
-      // We check if the current value is roughly the same as the old rate to avoid loops if we add dependencies,
-      // but here we just depend on 'currency'.
       const rate = rates[currency];
       setValue('exchange_rate', rate);
     }
@@ -197,7 +307,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
   const syncPaymentStatusWithAmount = (paid: number, price: number) => {
     if (paid <= 0) {
       setValue('payment_status', 'unpaid');
-    } else if (paid < price) {
+    } else if (paid < price - 1) { // Tolerance
       setValue('payment_status', 'partial');
     } else {
       setValue('payment_status', 'paid');
@@ -206,28 +316,60 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
 
   const getCurrencySymbol = (curr: string) => {
     switch (curr) {
-      case 'USD':
-        return '$';
-      case 'EUR':
-        return '€';
-      case 'ILS':
-        return '₪';
-      default:
-        return '$';
+      case 'USD': return '$';
+      case 'EUR': return '€';
+      case 'ILS': return '₪';
+      default: return '$';
     }
   };
 
   const currencySymbol = getCurrencySymbol(currency || 'USD');
 
+  const handleCurrencyChange = (
+      field: 'wholesale_cost' | 'sale_price' | 'amount_paid', 
+      newCurrency: string, 
+      oldCurrency: string
+  ) => {
+      const currentValue = getValues(field) || 0;
+      // Convert value
+      const newValue = convert(currentValue, oldCurrency, newCurrency);
+      setValue(field, parseFloat(newValue.toFixed(2)));
+  };
+
   const onSubmit = async (data: TripFormValues) => {
     setLoading(true);
     try {
+      // ---------------------------------------------------------
+      // NORMALIZE FINANCIALS TO MAIN CURRENCY BEFORE SAVE
+      // ---------------------------------------------------------
+      // 1. Store the "View" values (Converted to Main Currency) for reporting/dashboard
+      if (wholesaleCurrency !== data.currency) {
+          data.wholesale_cost = convert(data.wholesale_cost, wholesaleCurrency, data.currency || 'USD');
+      }
+      if (saleCurrency !== data.currency) {
+          data.sale_price = convert(data.sale_price, saleCurrency, data.currency || 'USD');
+      }
+
+      // 2. Store the "Original" values (User Input) EXACTLY as entered
+      // We grab the raw values from the form inputs (which are in the 'independent' currencies)
+      const rawWholesale = getValues('wholesale_cost');
+      const rawSale = getValues('sale_price');
+      
+      data.wholesale_original_amount = rawWholesale;
+      data.wholesale_currency = wholesaleCurrency;
+      
+      data.sale_original_amount = rawSale;
+      data.sale_currency = saleCurrency;
+      
       // Auto-update travelers count
       data.travelers_count = (data.travelers?.length || 0) || data.travelers_count;
 
       // Auto-calculate amount paid from payments array if used
       if (data.payments && data.payments.length > 0) {
         data.amount_paid = data.payments.reduce((sum, p) => sum + p.amount, 0);
+      } else if (amountPaidCurrency !== data.currency) {
+          // Convert simple amount paid if currency differs and no payments array overrides it
+          data.amount_paid = convert(data.amount_paid, amountPaidCurrency, data.currency || 'USD');
       }
 
       // Sanitize date fields - convert empty strings to null to avoid Postgres "invalid input syntax" error
@@ -254,16 +396,23 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
   };
 
   const handleSalePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Logic for sale price auto-updates (like payment status)
+    // We deal with the Raw Value here (in saleCurrency)
     let value = parseFloat(e.target.value);
     if (isNaN(value) || value < 0) value = 0;
     setValue('sale_price', value);
+    
+    // Convert to Main to compare with Amount Paid (which is in Main)
+    const valueInMain = convert(value, saleCurrency, currency || 'USD');
+    
     const paid = amountPaid || 0;
-    if (paid > value) {
-      setValue('amount_paid', value);
-      syncPaymentStatusWithAmount(value, value);
-    } else {
-      syncPaymentStatusWithAmount(paid, value);
-    }
+    if (paid > valueInMain) {
+       // Optional: Auto-update amount paid if it exceeds price? 
+       // Usually better not to touch amount paid unless it was equal before.
+       // syncPaymentStatusWithAmount(paid, valueInMain);
+    } 
+    // Always sync status
+    syncPaymentStatusWithAmount(paid, valueInMain);
   };
 
   const profitSign = profit >= 0 ? '+' : '';
@@ -494,14 +643,47 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                   )}
                 </div>
 
-                <div className="md:col-span-2">
-                  <label className={labelClasses}>{t('trips.notes')}</label>
-                  <textarea
-                    {...register('notes')}
-                    rows={4}
-                    className={cn(baseInputClasses, 'resize-none')}
-                    placeholder={t('trips.notes') || 'Add notes...'}
-                  />
+                <div className="md:col-span-2 space-y-2">
+                    <label className={labelClasses}>Attachments</label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* File List */}
+                        <div className="space-y-2">
+                            {watch('attachments')?.map((file, idx) => (
+                                <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-200 dark:bg-slate-900/50 dark:border-slate-800">
+                                    <div className="flex items-center gap-2 truncate">
+                                        <FileText className="w-4 h-4 text-sky-500 shrink-0" />
+                                        <a href={file.url} target="_blank" rel="noreferrer" className="text-sm text-slate-600 truncate underline dark:text-slate-300">
+                                            {file.file_name}
+                                        </a>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const current = getValues('attachments');
+                                            setValue('attachments', current.filter((_, i) => i !== idx));
+                                        }}
+                                        className="p-1 hover:bg-rose-100 text-rose-500 rounded-full transition-colors"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                        
+                        {/* Uploader */}
+                        <div>
+                             <FileUpload 
+                                folderName={profile?.id || 'public'} 
+                                onUploadComplete={(newFile) => {
+                                    const current = getValues('attachments') || [];
+                                    setValue('attachments', [...current, newFile]);
+                                }} 
+                             />
+                             <p className="text-[10px] text-slate-400 mt-2 text-center">
+                                Images constrained to 1MB. PDF supported.
+                             </p>
+                        </div>
+                    </div>
                 </div>
               </div>
             )}
@@ -513,45 +695,80 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
               <div className="space-y-6 animate-fadeIn">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
-                    <label className={labelClasses}>Currency</label>
+                    <label className={labelClasses}>Main Trip Currency</label>
                     <select {...register('currency')} className={baseInputClasses}>
                       <option value="USD">USD ($)</option>
                       <option value="EUR">EUR (€)</option>
                       <option value="ILS">ILS (₪)</option>
                     </select>
+                    <p className="text-[10px] text-slate-400 mt-1">
+                        Base currency for reporting and dashboard.
+                    </p>
                   </div>
                   
                   
                   <input type="hidden" {...register('exchange_rate', { valueAsNumber: true })} />
 
-                  <div>
-                    <label className={labelClasses}>
-                      {t('trips.wholesaleCost')} ({currencySymbol})
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      {...register('wholesale_cost', { valueAsNumber: true })}
-                      className={cn(
-                        baseInputClasses,
-                        errors.wholesale_cost && errorInputClasses,
-                      )}
-                    />
-                  </div>
-                  <div>
-                    <label className={labelClasses}>
-                      {t('trips.salePrice')} ({currencySymbol})
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      {...register('sale_price', { valueAsNumber: true })}
-                      onChange={(e) => {
-                        register('sale_price', { valueAsNumber: true }).onChange(e);
-                        handleSalePriceChange(e);
-                      }}
-                      className={cn(baseInputClasses, errors.sale_price && errorInputClasses)}
-                    />
+                  <div className="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <div>
+                        <label className={labelClasses}>
+                          {t('trips.wholesaleCost')}
+                        </label>
+                        <div className="flex gap-2">
+                             <select
+                                value={wholesaleCurrency}
+                                onChange={(e) => {
+                                    const newCurr = e.target.value;
+                                    handleCurrencyChange('wholesale_cost', newCurr, wholesaleCurrency);
+                                    setWholesaleCurrency(newCurr);
+                                }}
+                                className="w-24 bg-slate-100 border border-slate-200 rounded-xl px-2 text-sm focus:outline-none dark:bg-slate-900 dark:border-slate-800"
+                             >
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                                <option value="ILS">ILS</option>
+                             </select>
+                            <input
+                              type="number"
+                              step="0.01"
+                              {...register('wholesale_cost', { valueAsNumber: true })}
+                              className={cn(
+                                baseInputClasses,
+                                errors.wholesale_cost && errorInputClasses,
+                              )}
+                            />
+                        </div>
+                      </div>
+                      <div>
+                        <label className={labelClasses}>
+                          {t('trips.salePrice')}
+                        </label>
+                        <div className="flex gap-2">
+                             <select
+                                value={saleCurrency}
+                                onChange={(e) => {
+                                    const newCurr = e.target.value;
+                                    handleCurrencyChange('sale_price', newCurr, saleCurrency);
+                                    setSaleCurrency(newCurr);
+                                }}
+                                className="w-24 bg-slate-100 border border-slate-200 rounded-xl px-2 text-sm focus:outline-none dark:bg-slate-900 dark:border-slate-800"
+                             >
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                                <option value="ILS">ILS</option>
+                             </select>
+                            <input
+                              type="number"
+                              step="0.01"
+                              {...register('sale_price', { valueAsNumber: true })}
+                              onChange={(e) => {
+                                register('sale_price', { valueAsNumber: true }).onChange(e);
+                                handleSalePriceChange(e);
+                              }}
+                              className={cn(baseInputClasses, errors.sale_price && errorInputClasses)}
+                            />
+                        </div>
+                      </div>
                   </div>
                 </div>
 
@@ -560,7 +777,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <p className="text-xs text-slate-500 mb-1 font-medium dark:text-slate-400">
-                        {t('trips.profit')}
+                        {t('trips.profit')} (Converted to {currency})
                       </p>
                       <p className={`text-2xl font-bold ${profitColor}`}>
                         {profitSign}
@@ -584,20 +801,47 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
                         <label className={labelClasses}>
-                            {t('trips.amountPaid')} ({currencySymbol})
+                            {t('trips.amountPaid')}
                         </label>
-                        <input
-                            type="number"
-                            step="0.01"
-                            {...register('amount_paid', { valueAsNumber: true })}
-                            onChange={(e) => {
-                                register('amount_paid', { valueAsNumber: true }).onChange(e);
-                                const val = parseFloat(e.target.value);
-                                const finalVal = isNaN(val) ? 0 : val;
-                                syncPaymentStatusWithAmount(finalVal, salePrice || 0);
-                            }}
-                            className={cn(baseInputClasses)}
-                        />
+                        <div className="flex gap-2">
+                             <select
+                                value={amountPaidCurrency}
+                                onChange={(e) => {
+                                    const newCurr = e.target.value;
+                                    handleCurrencyChange('amount_paid', newCurr, amountPaidCurrency);
+                                    setAmountPaidCurrency(newCurr);
+                                }}
+                                className="w-24 bg-slate-100 border border-slate-200 rounded-xl px-2 text-sm focus:outline-none dark:bg-slate-900 dark:border-slate-800"
+                             >
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                                <option value="ILS">ILS</option>
+                             </select>
+                            <input
+                                type="number"
+                                step="0.01"
+                                {...register('amount_paid', { valueAsNumber: true })}
+                                onChange={(e) => {
+                                    register('amount_paid', { valueAsNumber: true }).onChange(e);
+                                    const val = parseFloat(e.target.value);
+                                    const finalVal = isNaN(val) ? 0 : val;
+                                    
+                                    // Convert this input value to Main Currency before syncing status
+                                    const paidInMain = convert(finalVal, amountPaidCurrency, currency || 'USD');
+                                    const sPrice = convert(salePrice || 0, saleCurrency, currency || 'USD');
+                                    syncPaymentStatusWithAmount(paidInMain, sPrice);
+                                }}
+                                className={cn(
+                                    baseInputClasses,
+                                    errors.amount_paid && errorInputClasses,
+                                )}
+                            />
+                        </div>
+                        {errors.amount_paid && (
+                            <p className="text-xs text-rose-400 mt-1">
+                                {errors.amount_paid.message as string}
+                            </p>
+                        )}
                     </div>
                     <div>
                         <label className={labelClasses}>
