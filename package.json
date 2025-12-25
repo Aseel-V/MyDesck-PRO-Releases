@@ -64,7 +64,7 @@
     "dist:dir": "npm run build && dotenv electron-builder --win dir",
     "dist:portable": "npm run build && dotenv electron-builder --win portable",
     "release": "npm run build && dotenv electron-builder --win --publish always",
-    "release:ci:win": "npm run build && electron-builder --win --publish=always",
+    "release:ci:win": "npm run build && electron-builder --win --publish=always --config release.json",
     "release:patch": "npm version patch && npm run release",
     "release:minor": "npm version minor && npm run release"
   },
