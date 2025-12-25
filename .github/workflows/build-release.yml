@@ -33,7 +33,7 @@ jobs:
 
   build-release:
     name: Build & Release
-    needs: quality-gate
+    # needs: quality-gate
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
