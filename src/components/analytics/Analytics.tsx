@@ -234,11 +234,10 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
 
   const fetchYearlyStats = async () => {
     try {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore: RPC function not yet in types
       const { data, error } = await supabase.rpc('get_yearly_stats_overview');
       if (error) throw error;
-      if (data) setYearlyStats(data as YearlyStats[]);
+      if (data) setYearlyStats(data as unknown as YearlyStats[]);
     } catch (error) {
        console.error('Error fetching yearly stats:', error);
     }
