@@ -60,7 +60,7 @@ jobs:
           GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         # Overriding output directory to 'release' to avoid absolute path issues
         # Adding --publish always to ensure artifacts are uploaded
-        run: npm run dist:win -- -c.directories.output=release --publish always
+        run: npm run release:ci:win -- -c.directories.output=release
 
       - name: Build and Release (macOS)
         if: matrix.os == 'macos-latest'
