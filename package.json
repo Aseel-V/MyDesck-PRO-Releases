@@ -1,5 +1,5 @@
 {
-  "name": "vite-react-typescript-starter",
+  "name": "my-desck-pro",
   "private": true,
   "version": "0.0.7",
   "repository": "https://github.com/Aseel-V/MyDesck-PRO",
@@ -26,6 +26,7 @@
         "dir",
         "portable"
       ],
+      "artifactName": "${productName}-Setup-${version}.${ext}",
       "icon": "assets/icon.ico"
     },
     "mac": {

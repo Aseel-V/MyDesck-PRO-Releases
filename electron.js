@@ -199,6 +199,8 @@ function createWindow() {
     mainWindow.webContents.openDevTools();
   } else {
     mainWindow.loadFile(path.join(__dirname, 'dist/index.html'));
+    // DEBUG: Open DevTools in production to diagnose white screen
+    mainWindow.webContents.openDevTools();
   }
 
   mainWindow.once('ready-to-show', () => {
