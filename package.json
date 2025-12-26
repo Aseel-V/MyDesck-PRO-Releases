@@ -1,33 +1,46 @@
 {
   "name": "my-desck-pro",
   "private": true,
-  "version": "0.0.7",
-  "repository": "https://github.com/Aseel-V/MyDesck-PRO",
+  "version": "0.0.8", 
+  "description": "Professional Travel Agency Dashboard",
+  "repository": "https://github.com/Aseel-V/MyDesck-PRO-Releases",
   "type": "module",
   "main": "electron.js",
   "homepage": "./",
+  "author": {
+    "name": "Aseel-V",
+    "email": "your-email@example.com"
+  },
   "build": {
     "appId": "com.mydesck.pro",
     "productName": "MyDesck PRO",
     "directories": {
-      "output": "dist_electron"
+      "output": "release"
     },
     "files": [
       "dist/**/*",
       "electron.js",
-      "preload.js",
       "preload.cjs",
       "assets/**/*",
       "node_modules/**/*"
     ],
     "win": {
       "target": [
-        "nsis",
-        "dir",
-        "portable"
+        "nsis"
       ],
       "artifactName": "${productName}-Setup-${version}.${ext}",
       "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerHeaderIcon": "assets/icon.ico",
+      "deleteAppDataOnUninstall": true,
+      "runAfterFinish": true
     },
     "mac": {
       "target": [
@@ -35,24 +48,17 @@
         "zip"
       ],
       "icon": "assets/icon.icns",
-      "category": "public.app-category.business",
-      "identity": null
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      "category": "public.app-category.business"
     },
     "publish": {
       "provider": "github",
       "owner": "Aseel-V",
-      "repo": "MyDesck-PRO"
+      "repo": "MyDesck-PRO-Releases"
     }
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
@@ -61,11 +67,7 @@
     "electron:build-start": "npm run build && cross-env NODE_ENV=production node node_modules/electron/cli.js .",
     "dist": "npm run build && dotenv electron-builder",
     "dist:win": "npm run build && dotenv electron-builder --win",
-    "dist:mac": "npm run build && dotenv electron-builder --mac",
-    "dist:dir": "npm run build && dotenv electron-builder --win dir",
-    "dist:portable": "npm run build && dotenv electron-builder --win portable",
     "release": "npm run build && dotenv electron-builder --win --publish always",
-    "release:ci:win": "npm run build && electron-builder --win --publish=always --config release.json",
     "release:patch": "npm version patch && npm run release",
     "release:minor": "npm version minor && npm run release"
   },
