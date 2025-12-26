@@ -1,4 +1,4 @@
 owner: Aseel-V
-repo: MyDesck-PRO
+repo: MyDesck-PRO-Releases
 provider: github
-updaterCacheDirName: vite-react-typescript-starter-updater
+updaterCacheDirName: my-desck-pro-updater
