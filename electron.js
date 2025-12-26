@@ -11,13 +11,18 @@ const isDev = process.env.NODE_ENV === 'development';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Use a portable data directory beside the executable (USB-friendly)
-// Must be set before the app is ready
-try {
-  const portableBase = process.env.PORTABLE_EXECUTABLE_DIR || path.dirname(process.execPath);
-  const portableUserData = path.join(portableBase, 'app-data');
-  app.setPath('userData', portableUserData);
-} catch { }
+// --- FIX: User Data Path Logic ---
+// Use a portable data directory ONLY if explicitly strictly portable (via electron-builder portable env)
+// Otherwise, let Electron use the default system AppData path.
+// This prevents permission errors (White Screen) when installed in "Program Files".
+if (process.env.PORTABLE_EXECUTABLE_DIR) {
+  try {
+    const portableUserData = path.join(process.env.PORTABLE_EXECUTABLE_DIR, 'app-data');
+    app.setPath('userData', portableUserData);
+  } catch (e) {
+    console.error('Failed to set portable path:', e);
+  }
+}
 
 // Reduce noisy DevTools/Autofill warnings in production
 if (!isDev) {
@@ -200,7 +205,8 @@ function createWindow() {
   } else {
     mainWindow.loadFile(path.join(__dirname, 'dist/index.html'));
     // DEBUG: Open DevTools in production to diagnose white screen
-    mainWindow.webContents.openDevTools();
+    // You can comment this out later if you want to hide devtools in prod
+    // mainWindow.webContents.openDevTools();
   }
 
   mainWindow.once('ready-to-show', () => {
@@ -225,9 +231,7 @@ function createWindow() {
         }
       } 
       
-      // Always check for updates on startup (unless we just resumed a 'downloading' state, but 'checkForUpdates' is safe/idempotent usually)
-      // Actually if we just called downloadUpdate above, we shouldn't call checkForUpdates immediately potentially.
-      // But to be safe and ensure we have latest info:
+      // Always check for updates on startup
       if (!lock || lock.status === 'error') {
           autoUpdater.checkForUpdates();
       }
@@ -272,8 +276,6 @@ ipcMain.on('open_external', (event, url) => {
 
 // Handle PDF generation (Keep existing logic)
 ipcMain.handle('print-to-pdf', async (event, data) => {
-  // Check strict lockdown: If update downloading, deny PDF generation?
-  // Ideally yes.
   if (!isDev) {
     const lock = getUpdateLock();
     if (lock && (lock.status === 'downloading' || lock.status === 'downloaded')) {
