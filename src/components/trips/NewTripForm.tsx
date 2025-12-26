@@ -644,6 +644,15 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                   )}
                 </div>
 
+                <div className="md:col-span-2">
+                  <label className={labelClasses}>{t('trips.description') || 'Description / תיאור'}</label>
+                  <textarea
+                    {...register('notes')}
+                    className={cn(baseInputClasses, 'min-h-[100px] resize-y')}
+                    placeholder={t('trips.descriptionPlaceholder') || 'Add trip description...'}
+                  />
+                </div>
+
                 <div className="md:col-span-2 space-y-2">
                     <label className={labelClasses}>Attachments</label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

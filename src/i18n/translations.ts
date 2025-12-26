@@ -139,6 +139,8 @@ export const translations = {
       confirmDelete: 'Are you sure you want to delete this trip?',
       deleteWarning: 'This action cannot be undone.',
       travelersCount: 'Number of Travelers',
+      description: 'Description',
+      descriptionPlaceholder: 'Add trip description...',
 
       paymentStatuses: {
         paid: 'Paid',
@@ -383,6 +385,8 @@ export const translations = {
       confirmDelete: 'هل أنت متأكد من حذف هذه الرحلة؟',
       deleteWarning: 'لا يمكن التراجع عن هذا الإجراء.',
       travelersCount: 'عدد المسافرين',
+      description: 'الوصف',
+      descriptionPlaceholder: 'أضف وصف الرحلة...',
 
       paymentStatuses: {
         paid: 'مدفوع',
@@ -627,6 +631,8 @@ export const translations = {
       confirmDelete: 'האם אתה בטוח שברצונך למחוק טיול זה?',
       deleteWarning: 'לא ניתן לבטל פעולה זו.',
       travelersCount: 'מספר נוסעים',
+      description: 'תיאור',
+      descriptionPlaceholder: 'הוסף תיאור לטיול...',
 
       paymentStatuses: {
         paid: 'שולם',
