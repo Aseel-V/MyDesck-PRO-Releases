@@ -67,6 +67,7 @@
     "electron:build-start": "npm run build && cross-env NODE_ENV=production node node_modules/electron/cli.js .",
     "dist": "npm run build && dotenv electron-builder",
     "dist:win": "npm run build && dotenv electron-builder --win",
+    "dist:mac": "npm run build && electron-builder --mac",
     "release": "npm run build && dotenv electron-builder --win --publish always",
     "release:ci:win": "npm run build && electron-builder --win --publish always",
     "release:patch": "npm version patch && npm run release",

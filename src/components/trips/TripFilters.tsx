@@ -5,7 +5,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 interface TripFiltersProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
-  filters?: any;
+  filters?: Record<string, unknown>;
   // ... other props remain the same (implied)
   paymentStatusFilter: string;
   onPaymentStatusFilterChange: (value: string) => void;
