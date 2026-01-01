@@ -90,11 +90,11 @@ function enforceLockdown() {
   // 2. Disable interactions
   if (!isDev) {
     // Block common shortcuts
-    globalShortcut.register('CommandOrControl+R', () => {});
-    globalShortcut.register('CommandOrControl+Shift+R', () => {});
-    globalShortcut.register('CommandOrControl+Shift+I', () => {});
-    globalShortcut.register('F11', () => {});
-    globalShortcut.register('F5', () => {});
+    // globalShortcut.register('CommandOrControl+R', () => {});
+    // globalShortcut.register('CommandOrControl+Shift+R', () => {});
+    // globalShortcut.register('CommandOrControl+Shift+I', () => {});
+    // globalShortcut.register('F11', () => {});
+    // globalShortcut.register('F5', () => {});
   }
 }
 
@@ -205,8 +205,8 @@ function createWindow() {
   } else {
     mainWindow.loadFile(path.join(__dirname, 'dist/index.html'));
     // DEBUG: Open DevTools in production to diagnose white screen
-    // You can comment this out later if you want to hide devtools in prod
-    mainWindow.webContents.openDevTools();
+    // mainWindow.webContents.openDevTools();
+    mainWindow.webContents.openDevTools({ mode: 'detach' });
   }
 
   mainWindow.once('ready-to-show', () => {
