@@ -85,7 +85,7 @@ function clearUpdateLock() {
 
 function enforceLockdown() {
   // 1. Remove Menu
-  Menu.setApplicationMenu(null);
+  // Menu.setApplicationMenu(null);
   
   // 2. Disable interactions
   if (!isDev) {
@@ -358,6 +358,14 @@ app.whenReady().then(() => {
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  });
+
+  // Explicitly register DevTools shortcut for debugging
+  globalShortcut.register('CommandOrControl+Shift+I', () => {
+    const win = BrowserWindow.getFocusedWindow();
+    if (win) {
+      win.webContents.openDevTools({ mode: 'detach' });
+    }
   });
 });
 
