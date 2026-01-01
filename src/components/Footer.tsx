@@ -3,7 +3,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 export default function Footer() {
   const { t } = useLanguage();
   const currentYear = new Date().getFullYear();
-  const appVersion = '1.0.0';
+  const appVersion = __APP_VERSION__;
 
   return (
     <footer className="mt-14 pb-6">

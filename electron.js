@@ -206,7 +206,7 @@ function createWindow() {
     mainWindow.loadFile(path.join(__dirname, 'dist/index.html'));
     // DEBUG: Open DevTools in production to diagnose white screen
     // You can comment this out later if you want to hide devtools in prod
-    // mainWindow.webContents.openDevTools();
+    mainWindow.webContents.openDevTools();
   }
 
   mainWindow.once('ready-to-show', () => {

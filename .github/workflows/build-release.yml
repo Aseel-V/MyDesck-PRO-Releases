@@ -58,6 +58,8 @@ jobs:
         if: matrix.os == 'windows-latest'
         env:
           GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         # Overriding output directory to 'release' to avoid absolute path issues
         # Adding --publish always to ensure artifacts are uploaded
         run: npm run release:ci:win
@@ -66,6 +68,8 @@ jobs:
         if: matrix.os == 'macos-latest'
         env:
           GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         # Overriding output directory to 'release'
         # Adding --publish always to ensure artifacts are uploaded
         run: npm run dist:mac -- -c.directories.output=release --publish always
