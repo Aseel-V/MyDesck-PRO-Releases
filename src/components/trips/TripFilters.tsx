@@ -1,9 +1,12 @@
+import { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 interface TripFiltersProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
+  filters?: any;
+  // ... other props remain the same (implied)
   paymentStatusFilter: string;
   onPaymentStatusFilterChange: (value: string) => void;
   yearFilter: string;
@@ -31,6 +34,20 @@ export default function TripFilters({
   availableDestinations,
 }: TripFiltersProps) {
   const { t } = useLanguage();
+
+  // Local state for search input to allow "Enter" to trigger search
+  const [localSearch, setLocalSearch] = useState(searchTerm);
+
+  // Sync local state if parent updates searchTerm externally (e.g. clear filters)
+  useEffect(() => {
+    setLocalSearch(searchTerm);
+  }, [searchTerm]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      onSearchChange(localSearch);
+    }
+  };
 
   const months = [
     { value: '', label: t('trips.allMonths') },
@@ -98,11 +115,15 @@ export default function TripFilters({
       {/* Search */}
       <div className="rounded-2xl bg-white border border-slate-200 px-3.5 py-2.5 shadow-sm dark:bg-slate-950/95 dark:border-slate-800/90 dark:shadow-md dark:shadow-slate-950/60">
         <div className="relative">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 pointer-events-none" />
+          <Search 
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 cursor-pointer hover:text-sky-500 transition-colors" 
+            onClick={() => onSearchChange(localSearch)}
+          />
           <input
             type="text"
-            value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
+            onKeyDown={handleKeyDown}
             placeholder={t('trips.search')}
             className={`${baseInputClasses} pl-10`}
           />

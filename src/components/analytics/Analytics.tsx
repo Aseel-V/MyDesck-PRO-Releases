@@ -168,8 +168,14 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
       })
     );
     
+    // Always include current year (e.g. 2026) to allow filtering even with no data
+    const currentYear = new Date().getFullYear().toString();
+    if (!years.has(currentYear)) {
+      years.add(currentYear);
+    }
+    
     const sortedYears = Array.from(years).sort((a, b) => b.localeCompare(a));
-    return sortedYears.length > 0 ? sortedYears : [new Date().getFullYear().toString()];
+    return sortedYears.length > 0 ? sortedYears : [currentYear];
   }, [trips]);
 
   // Ensure selectedYear is valid when availableYears changes
@@ -237,7 +243,44 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
       // @ts-expect-error: RPC function not yet in types
       const { data, error } = await supabase.rpc('get_yearly_stats_overview');
       if (error) throw error;
-      if (data) setYearlyStats(data as unknown as YearlyStats[]);
+
+      let stats = (data || []) as unknown as YearlyStats[];
+      const currentYear = new Date().getFullYear().toString();
+
+      // Ensure current year is in the list
+      if (!stats.find((s) => s.year === currentYear)) {
+        stats = [
+          {
+            year: currentYear,
+            total_trips: 0,
+            total_revenue: 0,
+            total_profit: 0,
+            profit_growth_percentage: 0,
+          },
+          ...stats,
+        ];
+      }
+
+      // Sort by year descending to ensure correct order
+      stats.sort((a, b) => b.year.localeCompare(a.year));
+
+      // Calculate growth percentages
+      const statsWithGrowth = stats.map((stat) => {
+        const prevYear = (parseInt(stat.year) - 1).toString();
+        const prevStat = stats.find((s) => s.year === prevYear);
+
+        let growth = 0;
+        if (prevStat && prevStat.total_profit > 0) {
+          growth = ((stat.total_profit - prevStat.total_profit) / prevStat.total_profit) * 100;
+        }
+
+        return {
+          ...stat,
+          profit_growth_percentage: parseFloat(growth.toFixed(1)),
+        };
+      });
+
+      setYearlyStats(statsWithGrowth);
     } catch (error) {
        console.error('Error fetching yearly stats:', error);
     }
@@ -428,18 +471,18 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <p className="text-[11px] uppercase tracking-[0.3em] text-sky-600/80 mb-1 dark:text-sky-300/80">
-            {isAdmin ? 'Platform Insights' : 'Business Insights'}
+            {isAdmin ? t('analytics.platformInsights') : t('analytics.businessInsights')}
           </p>
           <h2 className="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-sky-800 to-slate-700 drop-shadow-sm dark:from-slate-50 dark:via-sky-100 dark:to-slate-200 dark:drop-shadow-[0_0_16px_rgba(15,23,42,0.9)]">
             {isAdmin ? 'Admin Analytics' : t('analytics.title')}
           </h2>
           <p className="text-slate-500 mt-1 text-sm dark:text-slate-400">
             {isAdmin
-              ? 'Track user growth, admin distribution, and overall platform activity.'
-              : 'Follow your trips, profit, payments health, and destinations performance.'}
+              ? t('analytics.adminSubtitle')
+              : t('analytics.subtitle')}
             {currency !== 'USD' && !isAdmin && (
               <span className="ml-2 text-xs text-sky-500 bg-sky-100 px-2 py-0.5 rounded-full border border-sky-200 dark:text-sky-400 dark:bg-sky-500/10 dark:border-sky-500/20">
-                Converted to {currency}
+                {t('analytics.convertedTo')?.replace('{{currency}}', currency)}
                 {ratesLoading && <span className="ml-1 animate-pulse">...</span>}
               </span>
             )}
@@ -523,7 +566,7 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
             <div className="glass-panel rounded-2xl border border-slate-200 bg-white shadow-sm p-6 text-slate-900 transform transition-all hover:scale-[1.02] md:col-span-2 dark:border-slate-800/80 dark:bg-slate-950/90 dark:shadow-[0_18px_55px_rgba(15,23,42,0.95)] dark:text-slate-100">
               <div className="flex items-center justify-between mb-3">
                 <div className="bg-slate-100 rounded-lg px-3 py-1 dark:bg-white/10">
-                  <span className="text-xs font-semibold">Net Profit Margin</span>
+                  <span className="text-xs font-semibold">{t('analytics.netProfitMargin')}</span>
                 </div>
                 <div className={`flex items-center gap-1 text-sm ${profitMarginTrend >= 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}>
                   {profitMarginTrend >= 0 ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
@@ -531,7 +574,7 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
                 </div>
               </div>
               <div className="text-4xl font-extrabold mb-1">{profitMarginPct.toFixed(1)}%</div>
-              <div className="text-slate-500 text-xs dark:text-slate-400">Shows how efficiently your business converts revenue to profit.</div>
+              <div className="text-slate-500 text-xs dark:text-slate-400">{t('analytics.netProfitMarginDesc')}</div>
             </div>
 
             <div className="glass-panel rounded-2xl border border-slate-200 bg-white shadow-sm p-6 text-slate-900 transform transition-all hover:scale-[1.02] dark:border-slate-800/80 dark:bg-slate-950/90 dark:shadow-[0_18px_55px_rgba(15,23,42,0.95)] dark:text-slate-100">
@@ -585,16 +628,16 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
       {!isAdmin && (
         <div className="glass-panel rounded-2xl border border-slate-200 bg-white shadow-sm p-6 dark:border-slate-800/80 dark:bg-slate-950/90 dark:shadow-[0_18px_55px_rgba(15,23,42,0.95)]">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">Payment Health</h3>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">{t('analytics.paymentHealth')}</h3>
             <AlertTriangle className={`w-5 h-5 ${totalPending > 0 ? 'text-red-500 dark:text-red-400' : 'text-emerald-500 dark:text-emerald-400'}`} />
           </div>
           <div className="mb-2 flex items-center justify-between text-sm text-slate-600 dark:text-slate-300">
             <span>
-              Collected:{' '}
+              {t('analytics.collected')}:{' '}
               <span className="text-emerald-500 font-semibold dark:text-emerald-400">{format(totalCollected, currency)}</span>
             </span>
             <span>
-              Pending:{' '}
+              {t('analytics.pending')}:{' '}
               <span
                 className="text-red-500 font-semibold cursor-pointer hover:underline decoration-red-400/70 dark:text-red-400"
                 onClick={() => onOpenTripsWithFilter?.({ pendingOnly: true })}
@@ -607,7 +650,7 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
             <div className="h-full bg-emerald-500" style={{ width: `${paymentHealthPct.toFixed(0)}%` }} />
           </div>
           <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-            Shows Total Collected vs Total Pending to help prioritize collections.
+            {t('analytics.paymentHealthDesc')}
           </div>
         </div>
       )}
@@ -623,9 +666,9 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
           {monthlyData.length === 0 ? (
             <div className="flex items-center justify-center h-[300px] text-slate-400 dark:text-slate-500">
               <div className="text-center">
-                <div className="text-lg font-medium mb-2">No data available</div>
+                <div className="text-lg font-medium mb-2">{t('analytics.noData')}</div>
                 <div className="text-sm">
-                  {isAdmin ? 'No user registrations found in the system.' : `No trips found for ${selectedYear}.`}
+                  {isAdmin ? 'No user registrations found in the system.' : t('analytics.noTripsForYear')?.replace('{{year}}', selectedYear)}
                 </div>
               </div>
             </div>
@@ -689,7 +732,11 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
               ].filter((d) => d.value > 0);
 
               if (pieData.length === 0) {
-                return <div className="flex items-center justify-center h-[300px] text-slate-400 dark:text-slate-500">No payment data for {selectedYear}.</div>;
+                return (
+                  <div className="flex items-center justify-center h-[300px] text-slate-400 dark:text-slate-500">
+                    {t('analytics.noPaymentData')?.replace('{{year}}', selectedYear)}
+                  </div>
+                );
               }
 
               return (
@@ -724,10 +771,10 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
       {!isAdmin && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="glass-panel rounded-2xl border border-slate-200 bg-white shadow-sm p-6 dark:border-slate-800/80 dark:bg-slate-950/95 dark:shadow-[0_20px_60px_rgba(15,23,42,1)]">
-            <h3 className="text-xl font-bold text-slate-900 mb-6 dark:text-slate-100">Top Destinations</h3>
+            <h3 className="text-xl font-bold text-slate-900 mb-6 dark:text-slate-100">{t('analytics.topDestinations')}</h3>
 
             {(stats as UserStats).topDestinations?.length === 0 ? (
-              <div className="flex items-center justify-center h-64 text-slate-400 dark:text-slate-500">No destination data available.</div>
+              <div className="flex items-center justify-center h-64 text-slate-400 dark:text-slate-500">{t('analytics.noDestinations')}</div>
             ) : (
               <div className="h-[300px] w-full flex items-center justify-center">
                 <ResponsiveContainer width="100%" height="100%">
@@ -763,25 +810,25 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
         <div className="glass-panel rounded-2xl border border-slate-200 bg-white shadow-sm p-6 overflow-hidden dark:border-slate-800/80 dark:bg-slate-950/95 dark:shadow-[0_20px_60px_rgba(15,23,42,1)]">
           <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2 dark:text-slate-100">
              <TrendingUp className="w-5 h-5 text-sky-600 dark:text-sky-400" />
-             Yearly Performance History
+             {t('analytics.yearlyPerformance')}
           </h3>
           
           <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 text-slate-500 text-sm uppercase tracking-wider dark:border-slate-800 dark:text-slate-400">
-                  <th className="pb-3 pl-2">Year</th>
-                  <th className="pb-3">Trips</th>
-                  <th className="pb-3">Revenue</th>
-                  <th className="pb-3">Profit</th>
-                  <th className="pb-3 pr-2 text-right">Growth</th>
+                  <th className="pb-3 pl-2">{t('analytics.year')}</th>
+                  <th className="pb-3">{t('dashboard.trips')}</th>
+                  <th className="pb-3">{t('analytics.revenue')}</th>
+                  <th className="pb-3">{t('analytics.profit')}</th>
+                  <th className="pb-3 pr-2 text-right">{t('analytics.growth')}</th>
                 </tr>
               </thead>
               <tbody className="text-slate-700 dark:text-slate-200">
                 {yearlyStats.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="py-8 text-center text-slate-500 italic">
-                      No history available yet.
+                      {t('analytics.noHistory')}
                     </td>
                   </tr>
                 ) : (

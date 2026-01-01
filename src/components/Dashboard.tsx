@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../contexts/AuthContext";
 import { useLanguage } from "../contexts/LanguageContext";
@@ -169,17 +169,52 @@ export default function Dashboard() {
     }
   }, [user, isAdmin]);
 
-  // 📊 إحصائيات الداشبورد للمستخدم العادي
-  const totalTrips = trips.length;
+  // State for Year Filter
+  const [yearFilter, setYearFilter] = useState(new Date().getFullYear().toString());
+
+  // Derive available years from trips
+  const availableYears = useMemo(() => {
+    if (!trips || trips.length === 0) return [new Date().getFullYear().toString()];
+    const years = new Set(
+      trips
+        .filter(t => t.status !== 'cancelled')
+        .map((tr) => {
+          const effDate = tr.payment_date || tr.start_date;
+          return new Date(effDate).getFullYear().toString();
+        })
+    );
+    const currentYear = new Date().getFullYear().toString();
+    if (!years.has(currentYear)) years.add(currentYear);
+    
+    return Array.from(years).sort((a, b) => b.localeCompare(a));
+  }, [trips]);
+
+  // Filter trips by year
+  const filteredTrips = useMemo(() => {
+    return trips.filter(trip => {
+      if (trip.status === 'cancelled') return false;
+      const effDate = trip.payment_date || trip.start_date;
+      return new Date(effDate).getFullYear().toString() === yearFilter;
+    });
+  }, [trips, yearFilter]);
+
+  // 📊 إحصائيات الداشبورد للمستخدم العادي (Filtered)
+  const totalTrips = filteredTrips.length;
   const today = new Date().toISOString().split("T")[0];
 
-  const upcomingTrips = trips.filter((trip) => trip.start_date >= today).length;
-  const uniqueClients = new Set(trips.map((trip) => trip.client_name)).size;
-  const totalTravelers = trips.reduce(
+  const upcomingTrips = filteredTrips.filter((trip) => trip.start_date >= today).length;
+  const uniqueClients = new Set(filteredTrips.map((trip) => trip.client_name)).size;
+  const totalTravelers = filteredTrips.reduce(
     (sum, trip) => sum + (trip.travelers_count || 0),
     0
   );
-  const recentTrips = trips.slice(0, 5);
+  // Keep recent trips global or filtered? Plan said global.
+  // Actually, let's keep recent trips as global recent, so they don't disappear when selecting an old year.
+  // BUT the user asked for "show 2026 also". If they select 2026, they expect to see 2026 stats. 
+  // Recent trips usually means "what did I just do?". 
+  // I will use `trips` (all trips) for Recent Trips, but `filteredTrips` for the top stats cards.
+  // UPDATE: User requested Recent Trips to be filtered by year as well ("show the 2026 also").
+  const recentTrips = filteredTrips.slice(0, 5);
 
   // Compute Alerts
   const alerts = trips.filter(trip => {
@@ -342,6 +377,26 @@ export default function Dashboard() {
                         ? "Manage users and monitor platform growth with a clear overview of the system."
                         : "Track your trips, clients and profit — keep your travel business organized in one smart place."}
                     </p>
+
+                    {/* Year Selector for Users */}
+                    {!isAdmin && (
+                      <div className="flex flex-wrap gap-2 mt-4">
+                        {availableYears.map((year) => (
+                          <button
+                            key={year}
+                            onClick={() => setYearFilter(year)}
+                            className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
+                              yearFilter === year
+                                ? 'bg-sky-500 text-white shadow-md shadow-sky-500/20'
+                                : 'bg-slate-100 text-slate-500 hover:text-slate-700 hover:bg-slate-200 dark:bg-slate-800/50 dark:text-slate-400 dark:hover:text-slate-200'
+                            }`}
+                          >
+                            {year}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
                     {error && !isAdmin && (
                       <p className="text-xs text-rose-400 mt-2">
                         Failed to load trips. Please try again later.
@@ -491,13 +546,13 @@ export default function Dashboard() {
                   <div className="glass-panel lg:col-span-2 bg-white/90 border border-slate-200/80 rounded-2xl p-6 shadow-xl dark:bg-slate-950/90 dark:border-slate-800/80 dark:shadow-[0_20px_60px_rgba(15,23,42,0.95)]">
                     <div className="flex items-center justify-between mb-4">
                       <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
-                        Recent trips
+                        {t('dashboard.recentTrips')}
                       </h2>
                       <button
                         onClick={() => setCurrentPage("trips")}
                         className="text-xs font-medium text-sky-300 hover:text-sky-200"
                       >
-                        View all
+                        {t('dashboard.viewAll')}
                       </button>
                     </div>
                     {isLoading ? (
@@ -516,19 +571,19 @@ export default function Dashboard() {
                           <thead>
                             <tr className="text-slate-500 border-b border-slate-200/80 dark:text-slate-400 dark:border-slate-800/80">
                               <th className="text-left py-2 pr-4 font-medium">
-                                Destination
+                                {t('trips.destination')}
                               </th>
                               <th className="text-left py-2 pr-4 font-medium">
-                                Client
+                                {t('trips.clientName')}
                               </th>
                               <th className="text-left py-2 pr-4 font-medium">
-                                Start
+                                {t('trips.startDate')}
                               </th>
                               <th className="text-left py-2 pr-4 font-medium">
-                                Travelers
+                                {t('trips.travelers')}
                               </th>
                               <th className="text-left py-2 pr-4 font-medium">
-                                Status
+                                {t('trips.status')}
                               </th>
                             </tr>
                           </thead>
@@ -575,12 +630,12 @@ export default function Dashboard() {
                 <div className="space-y-4">
                   <div className="glass-panel bg-white/90 border border-slate-200/80 rounded-2xl p-6 shadow-xl dark:bg-slate-950/90 dark:border-slate-800/80 dark:shadow-[0_20px_60px_rgba(15,23,42,0.95)]">
                     <h2 className="text-lg font-semibold text-slate-900 mb-3 dark:text-slate-50">
-                      {isAdmin ? "Admin shortcuts" : "Quick actions"}
+                      {isAdmin ? "Admin shortcuts" : t('dashboard.quickActions')}
                     </h2>
                     <p className="text-sm text-slate-400 mb-4">
                       {isAdmin
                         ? "Move quickly to key admin areas."
-                        : "Jump directly to the most important sections of your workspace."}
+                        : t('dashboard.quickActionsSubtitle')}
                     </p>
                     <div className="space-y-3">
                       {!isAdmin && (
@@ -588,9 +643,9 @@ export default function Dashboard() {
                           onClick={() => setCurrentPage("trips")}
                           className="w-full text-sm font-semibold inline-flex items-center justify-between px-4 py-3 rounded-xl bg-sky-600/95 hover:bg-sky-500 text-white transition shadow-[0_16px_40px_rgba(56,189,248,0.6)]"
                         >
-                          <span>Open Trips</span>
+                          <span>{t('dashboard.openTrips')}</span>
                           <span className="text-xs text-sky-100/90">
-                            Manage all bookings
+                            {t('dashboard.manageBookings')}
                           </span>
                         </button>
                       )}
@@ -611,9 +666,9 @@ export default function Dashboard() {
                         onClick={() => setCurrentPage("settings")}
                         className="w-full text-sm font-semibold inline-flex items-center justify-between px-4 py-3 rounded-xl bg-slate-100/95 hover:bg-slate-200 text-slate-900 transition shadow-sm dark:bg-slate-900/95 dark:hover:bg-slate-800 dark:text-slate-100 dark:shadow-[0_16px_40px_rgba(15,23,42,0.8)]"
                       >
-                        <span>Open Settings</span>
+                        <span>{t('dashboard.openSettings')}</span>
                         <span className="text-xs text-slate-500 dark:text-slate-300">
-                          Branding, language & currency
+                          {t('dashboard.brandingLanguageCurrency')}
                         </span>
                       </button>
                     </div>

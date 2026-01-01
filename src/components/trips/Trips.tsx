@@ -16,7 +16,6 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
 import { supabase } from '../../lib/supabase';
 import { Trip } from '../../types/trip';
-import { useDebounce } from '../../hooks/useDebounce';
 import { useTripMutations } from '../../hooks/useTripMutations';
 import TripCard from './TripCard';
 import TripFilters from './TripFilters';
@@ -70,7 +69,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
   const setMonthFilter = (val: string) => onFiltersChange(prev => ({ ...prev, month: val }));
   const setDestinationFilter = (val: string) => onFiltersChange(prev => ({ ...prev, destination: val }));
 
-  const debouncedSearchTerm = useDebounce(filters.search, 1000);
+  // const debouncedSearchTerm = useDebounce(filters.search, 1000);
 
   useEffect(() => {
     if (initialViewTrip) {
@@ -119,7 +118,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
 
   // 2. جلب الرحلات للسنة المحددة باستخدام get_trips_by_year
   const { data: { data: rawTrips, count } = { data: [], count: 0 }, isLoading: loading } = useQuery({
-    queryKey: ['trips', user?.id, debouncedSearchTerm, filters.paymentStatus, filters.tripStatus, filters.year],
+    queryKey: ['trips', user?.id, filters.search, filters.paymentStatus, filters.tripStatus, filters.year],
     queryFn: async () => {
       if (!user?.id) return { data: [], count: 0 };
 
@@ -146,8 +145,8 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
     // Filter out archived trips by default unless searching specifically (optional, but strictly hiding for now)
     filtered = filtered.filter(t => t.status !== 'archived');
 
-    if (debouncedSearchTerm) {
-      const lowerSearch = debouncedSearchTerm.toLowerCase();
+    if (filters.search) {
+      const lowerSearch = filters.search.toLowerCase();
       filtered = filtered.filter(
         (trip) =>
           (trip.client_name && trip.client_name.toLowerCase().includes(lowerSearch)) ||
@@ -185,7 +184,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
     }
 
     return filtered;
-  }, [rawTrips, debouncedSearchTerm, filters.paymentStatus, filters.tripStatus, filters.month, filters.destination]);
+  }, [rawTrips, filters.search, filters.paymentStatus, filters.tripStatus, filters.month, filters.destination]);
 
   const handleDeleteTrip = (id: string) => {
     if (deleteConfirm !== id) {
