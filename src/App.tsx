@@ -1,16 +1,28 @@
-// src/App.tsx
 import React, { useState, useEffect } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import { useLanguage } from './contexts/LanguageContext';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import SplashScreen from './components/SplashScreen';
+import LandingPage from './pages/LandingPage';
 
 import InvoiceTemplate from './components/invoice/InvoiceTemplate';
 
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ResetPassword from './components/auth/ResetPassword';
 import UpdateModal from './components/UpdateModal';
+
+function LoginWrapper() {
+  const { user } = useAuth();
+  if (user) {
+    return <Navigate to="/" replace />;
+  }
+  return (
+    <div className="relative min-h-screen animate-fadeIn">
+      <Login />
+    </div>
+  );
+}
 
 function App() {
   const [updateState, setUpdateState] = useState<{
@@ -74,6 +86,8 @@ function App() {
       )}
       <Routes>
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/login" element={<LoginWrapper />} />
+        <Route path="/landing" element={<LandingPage />} />
         <Route path="/" element={<AppContent />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
@@ -108,12 +122,17 @@ function AppContent() {
     return <SplashScreen onComplete={() => setShowSplash(false)} />;
   }
 
+  const isElectron = typeof window !== 'undefined' && !!window.electronAPI;
+
   if (!user) {
-    return (
-      <div className="relative min-h-screen animate-fadeIn">
-        <Login />
-      </div>
-    );
+    if (isElectron) {
+      return (
+        <div className="relative min-h-screen animate-fadeIn">
+          <Login />
+        </div>
+      );
+    }
+    return <LandingPage />;
   }
 
   return (

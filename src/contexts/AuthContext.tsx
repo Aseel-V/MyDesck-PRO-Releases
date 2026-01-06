@@ -219,7 +219,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+    if (error) {
+      console.warn('[Auth] SignIn failed:', error.message);
+      // We throw to keep existing behavior for now, but logged warning above helps debugging
+      throw error; 
+    }
     if (data.user) {
        await refreshUserData(data.user.id);
     }
@@ -227,7 +231,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     try {
-      await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.warn('[Auth] SignOut warning:', error.message);
+      }
+    } catch (err) {
+      console.warn('[Auth] SignOut error:', err);
     } finally {
       setUser(null);
       setProfile(null);

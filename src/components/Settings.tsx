@@ -201,19 +201,30 @@ export default function Settings() {
     }
   };
 
-  const handleChangePassword = async () => {
-    const newPassword = prompt('Enter new password:');
-    if (newPassword && newPassword.length >= 6) {
-      try {
-        const { error } = await supabase.auth.updateUser({ password: newPassword });
-        if (error) throw error;
-        showNotice('success', 'Password changed successfully');
-      } catch (error) {
-        console.error('Error changing password:', error);
-        showNotice('error', 'Failed to change password');
-      }
-    } else if (newPassword) {
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  const handleSavePassword = async () => {
+    if (newPassword.length < 6) {
       showNotice('error', 'Password must be at least 6 characters');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      showNotice('error', 'Passwords do not match');
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      showNotice('success', 'Password changed successfully');
+      setShowPasswordModal(false);
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error) {
+      console.error('Error changing password:', error);
+      showNotice('error', 'Failed to change password');
     }
   };
 
@@ -791,20 +802,60 @@ export default function Settings() {
             {activeTab === 'security' && (
               <div className="space-y-6">
                 <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/70">
-                  <div className="flex items-center justify-between gap-4">
+                  <div className={`flex flex-col gap-4 ${!showPasswordModal ? 'sm:flex-row sm:items-center sm:justify-between' : ''}`}>
                     <div>
                       <h3 className="font-semibold text-slate-900 dark:text-slate-100">{t('settings.security.changePassword')}</h3>
                       <p className="text-sm text-slate-500 dark:text-slate-400">{t('settings.security.changePasswordDesc')}</p>
                     </div>
-                    <button
-                      onClick={handleChangePassword}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-600 text-white text-sm font-medium hover:bg-sky-700 transition-all"
-                    >
-                      <Key className="w-4 h-4" />
-                      <span>{t('settings.security.change')}</span>
-                    </button>
+                    {!showPasswordModal ? (
+                      <button
+                        onClick={() => setShowPasswordModal(true)}
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-600 text-white text-sm font-medium hover:bg-sky-700 transition-all"
+                      >
+                        <Key className="w-4 h-4" />
+                        <span>{t('settings.security.change')}</span>
+                      </button>
+                    ) : (
+                      <div className="w-full bg-slate-100 rounded-xl p-4 dark:bg-slate-900 animate-fadeIn">
+                        <div className="space-y-3">
+                          <input
+                            type="password"
+                            placeholder="New Password"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                          />
+                          <input
+                            type="password"
+                            placeholder="Confirm New Password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                          />
+                          <div className="flex gap-2 justify-end">
+                            <button
+                              onClick={() => {
+                                setShowPasswordModal(false);
+                                setNewPassword('');
+                                setConfirmPassword('');
+                              }}
+                              className="px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-200 rounded-lg dark:text-slate-300 dark:hover:bg-slate-800"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={handleSavePassword}
+                              className="px-3 py-1.5 text-sm bg-sky-600 text-white rounded-lg hover:bg-sky-700"
+                            >
+                              Save Password
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
+
 
                 <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/70">
                   <div className="flex items-center justify-between gap-4">
