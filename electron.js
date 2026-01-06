@@ -44,17 +44,7 @@ function setupAutoUpdater() {
 
   // 3. Handle events to install the update silently if found
   autoUpdater.on('update-downloaded', () => {
-    // Start silent install logic
-    // We can either quitAndInstall immediately or wait for restart. 
-    // "install the update silently if found" usually implies forcing it or ensuring it happens.
-    // autoInstallOnAppQuit handles the "on quit" part. 
-    // If we want it immediately silently:
-    // autoUpdater.quitAndInstall(true, true); 
-    // But typically we let the user finish their session. 
-    // I'll stick to autoInstallOnAppQuit = true which is the standard "silent update" behavior for Electron apps (updates on next launch).
-    // However, if the user explicitly wants to trigger it:
-    
-    // Notify renderer for UI updates if needed
+    // Only notify renderer, let autoInstallOnAppQuit handle the actual install
     const win = BrowserWindow.getAllWindows()[0];
     if (win) {
        win.webContents.send('update_downloaded');
@@ -89,7 +79,12 @@ function createWindow() {
     mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, 'dist/index.html'));
+    // CRITICAL FIX: Robust production loading
+    const indexHtml = path.join(__dirname, 'dist', 'index.html');
+    mainWindow.loadFile(indexHtml);
+    
+    // Optional: open devtools also in production to debug if needed
+    // mainWindow.webContents.openDevTools({ mode: 'detach' });
   }
 
   mainWindow.once('ready-to-show', () => {
@@ -108,7 +103,7 @@ ipcMain.on('quit-app', () => {
   app.quit();
 });
 
-// Update IPCs (Simple wrappers if frontend triggers them manually)
+// Update IPCs
 ipcMain.on('download_update', () => {
   autoUpdater.downloadUpdate();
 });
@@ -137,7 +132,7 @@ ipcMain.handle('print-to-pdf', async (event, data) => {
   try {
     const invoiceUrl = isDev
       ? 'http://localhost:5173?invoice=true'
-      : `file://${path.join(__dirname, 'dist/index.html')}?invoice=true`;
+      : `file://${path.join(__dirname, 'dist', 'index.html')}?invoice=true`;
     
     await pdfWindow.loadURL(invoiceUrl);
     const pdfWindowId = pdfWindow.webContents.id;

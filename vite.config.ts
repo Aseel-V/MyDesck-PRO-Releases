@@ -37,6 +37,7 @@ export default defineConfig({
       },
     }),
   ],
+  // CRITICAL FIX: Ensure relative paths for Electron
   base: './',
   optimizeDeps: {
     exclude: ['lucide-react'],
@@ -48,6 +49,8 @@ export default defineConfig({
   },
   assetsInclude: ['**/*.woff', '**/*.woff2', '**/*.ttf', '**/*.otf'],
   build: {
+    // Ensure output goes to dist
+    outDir: 'dist',
     assetsInlineLimit: 0,
     rollupOptions: {
       output: {
