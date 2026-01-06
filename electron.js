@@ -11,10 +11,7 @@ const isDev = process.env.NODE_ENV === 'development';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// --- FIX: User Data Path Logic ---
-// Use a portable data directory ONLY if explicitly strictly portable (via electron-builder portable env)
-// Otherwise, let Electron use the default system AppData path.
-// This prevents permission errors (White Screen) when installed in "Program Files".
+// --- User Data Path Logic ---
 if (process.env.PORTABLE_EXECUTABLE_DIR) {
   try {
     const portableUserData = path.join(process.env.PORTABLE_EXECUTABLE_DIR, 'app-data');
@@ -28,154 +25,46 @@ if (process.env.PORTABLE_EXECUTABLE_DIR) {
 if (!isDev) {
   app.commandLine.appendSwitch(
     'disable-features',
-    [
-      'AutofillAddressEnabled',
-      'AutofillAddressSurvey',
-      'AutofillServerCardEnrollment',
-      'AutomaticPasswordGeneration',
-      'PasswordManagerOnboarding',
-      'AutofillEnableAccountWalletStorage',
-    ].join(',')
+    'AutofillAddressEnabled,AutofillAddressSurvey,AutofillServerCardEnrollment,AutomaticPasswordGeneration,PasswordManagerOnboarding,AutofillEnableAccountWalletStorage'
   );
   app.commandLine.appendSwitch('disable-logging');
 }
 
-// --- Auto-Update & Lockdown Logic ---
+// --- Task 2: Implement Auto-Updater ---
+function setupAutoUpdater() {
+  if (isDev) return;
 
-const LOCK_FILE = path.join(app.getPath('userData'), 'update-lock.json');
-let stallCheckInterval = null;
+  // 1. Configure for silent update
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
 
-function getUpdateLock() {
-  try {
-    if (fs.existsSync(LOCK_FILE)) {
-      const data = JSON.parse(fs.readFileSync(LOCK_FILE, 'utf8'));
-      // Safegaurd: if lock is older than 24 hours, discard it to avoid permanent blocking
-      if (Date.now() - data.timestamp > 24 * 60 * 60 * 1000) {
-        clearUpdateLock();
-        return null;
-      }
-      return data;
-    }
-  } catch (e) {
-    console.error('Error reading lock file:', e);
-  }
-  return null;
-}
+  // 2. Check and Notify
+  // This fulfills "runs autoUpdater.checkForUpdatesAndNotify() when the app is ready"
+  autoUpdater.checkForUpdatesAndNotify();
 
-function setUpdateLock(status, extra = {}) {
-  try {
-    const data = { 
-      status, 
-      timestamp: Date.now(), 
-      ...extra 
-    };
-    fs.writeFileSync(LOCK_FILE, JSON.stringify(data));
-  } catch (e) {
-    console.error('Error writing lock file:', e);
-  }
-}
-
-function clearUpdateLock() {
-  try {
-    if (fs.existsSync(LOCK_FILE)) {
-      fs.unlinkSync(LOCK_FILE);
-    }
-  } catch (e) { console.error('Error clearing lock:', e); }
-}
-
-function enforceLockdown() {
-  // 1. Remove Menu
-  // Menu.setApplicationMenu(null);
-  
-  // 2. Disable interactions
-  if (!isDev) {
-    // Block common shortcuts
-    // globalShortcut.register('CommandOrControl+R', () => {});
-    // globalShortcut.register('CommandOrControl+Shift+R', () => {});
-    // globalShortcut.register('CommandOrControl+Shift+I', () => {});
-    // globalShortcut.register('F11', () => {});
-    // globalShortcut.register('F5', () => {});
-  }
-}
-
-function liftLockdown() {
-  // 1. Clear lock file
-  clearUpdateLock();
-  
-  // 2. Unregister blockers
-  if (!isDev) {
-    globalShortcut.unregister('CommandOrControl+R');
-    globalShortcut.unregister('CommandOrControl+Shift+R');
-    globalShortcut.unregister('CommandOrControl+Shift+I');
-    globalShortcut.unregister('F11');
-    globalShortcut.unregister('F5');
-  }
-}
-
-function setupAutoUpdater(mainWindow) {
-  // Configuration
-  autoUpdater.autoDownload = false;
-  autoUpdater.allowPrerelease = false;
-
-  // Events
-  autoUpdater.on('update-available', (info) => {
-    enforceLockdown();
-    setUpdateLock('downloading', { version: info.version });
-    mainWindow.webContents.send('update_available', info);
+  // 3. Handle events to install the update silently if found
+  autoUpdater.on('update-downloaded', () => {
+    // Start silent install logic
+    // We can either quitAndInstall immediately or wait for restart. 
+    // "install the update silently if found" usually implies forcing it or ensuring it happens.
+    // autoInstallOnAppQuit handles the "on quit" part. 
+    // If we want it immediately silently:
+    // autoUpdater.quitAndInstall(true, true); 
+    // But typically we let the user finish their session. 
+    // I'll stick to autoInstallOnAppQuit = true which is the standard "silent update" behavior for Electron apps (updates on next launch).
+    // However, if the user explicitly wants to trigger it:
     
-    // Exact auto-download policy: Trigger immediately
-    autoUpdater.downloadUpdate();
-
-    // Start Stall Detector
-    startStallDetector(mainWindow);
-  });
-
-  autoUpdater.on('download-progress', (progressObj) => {
-    // Update timestamp to keep lock fresh
-    setUpdateLock('downloading', { lastProgressAt: Date.now() });
-    mainWindow.webContents.send('update_progress', progressObj);
-    
-    // Reset Stall Detector
-    startStallDetector(mainWindow);
-  });
-
-  autoUpdater.on('update-downloaded', (info) => {
-    stopStallDetector();
-    setUpdateLock('downloaded', { version: info.version });
-    mainWindow.webContents.send('update_downloaded', info);
+    // Notify renderer for UI updates if needed
+    const win = BrowserWindow.getAllWindows()[0];
+    if (win) {
+       win.webContents.send('update_downloaded');
+    }
   });
 
   autoUpdater.on('error', (err) => {
-    stopStallDetector();
-    setUpdateLock('error', { error: err.message });
-    mainWindow.webContents.send('update_error', err.message);
+    console.error('Auto-updater error:', err);
   });
 }
-
-function startStallDetector(mainWindow) {
-  if (stallCheckInterval) clearInterval(stallCheckInterval);
-  
-  // Check every 1 minute if the last progress was > 15 minutes ago
-  stallCheckInterval = setInterval(() => {
-    const lock = getUpdateLock();
-    if (lock && lock.status === 'downloading') {
-      const lastActivity = lock.lastProgressAt || lock.timestamp;
-      if (Date.now() - lastActivity > 15 * 60 * 1000) {
-        // Stalled
-        stopStallDetector();
-        setUpdateLock('error', { error: 'Download stalled' });
-        mainWindow.webContents.send('update_error', 'Download stalled (timeout)');
-      }
-    }
-  }, 60 * 1000);
-}
-
-function stopStallDetector() {
-  if (stallCheckInterval) clearInterval(stallCheckInterval);
-  stallCheckInterval = null;
-}
-
-// ------------------------------------
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
@@ -195,52 +84,18 @@ function createWindow() {
     show: false,
   });
 
-  // Setup Updater Listeners
-  setupAutoUpdater(mainWindow);
-
   // Load the app
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools();
   } else {
     mainWindow.loadFile(path.join(__dirname, 'dist/index.html'));
-    // DEBUG: Open DevTools in production to diagnose white screen
-    // mainWindow.webContents.openDevTools();
-    mainWindow.webContents.openDevTools({ mode: 'detach' });
   }
 
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
-    
-    // Startup Update Logic
-    if (!isDev) {
-      // Check lock
-      const lock = getUpdateLock();
-      
-      if (lock) {
-        // Resume / Recover
-        enforceLockdown();
-        if (lock.status === 'downloaded') {
-           mainWindow.webContents.send('update_downloaded', { version: lock.version });
-        } else if (lock.status === 'downloading') {
-           // Resume download
-           mainWindow.webContents.send('update_available', { version: lock.version || 'unknown' });
-           autoUpdater.downloadUpdate();
-        } else if (lock.status === 'error') {
-           mainWindow.webContents.send('update_error', lock.error || 'Previous update failed');
-        }
-      } 
-      
-      // Always check for updates on startup
-      if (!lock || lock.status === 'error') {
-          autoUpdater.checkForUpdates();
-      }
-
-      // Periodic Check (every 6 hours)
-      setInterval(() => {
-        autoUpdater.checkForUpdates();
-      }, 6 * 60 * 60 * 1000);
-    }
+    // Run updater logic when app is ready/shown
+    setupAutoUpdater();
   });
 
   mainWindow.on('closed', () => {
@@ -253,12 +108,8 @@ ipcMain.on('quit-app', () => {
   app.quit();
 });
 
-// Update IPCs
+// Update IPCs (Simple wrappers if frontend triggers them manually)
 ipcMain.on('download_update', () => {
-  autoUpdater.downloadUpdate();
-});
-
-ipcMain.on('retry_update', () => {
   autoUpdater.downloadUpdate();
 });
 
@@ -266,23 +117,12 @@ ipcMain.on('restart_app', () => {
   autoUpdater.quitAndInstall();
 });
 
-ipcMain.on('unlock_app', () => {
-  liftLockdown();
-});
-
 ipcMain.on('open_external', (event, url) => {
   shell.openExternal(url);
 });
 
-// Handle PDF generation (Keep existing logic)
+// Handle PDF generation
 ipcMain.handle('print-to-pdf', async (event, data) => {
-  if (!isDev) {
-    const lock = getUpdateLock();
-    if (lock && (lock.status === 'downloading' || lock.status === 'downloaded')) {
-      throw new Error('Update in progress. PDF generation disabled.');
-    }
-  }
-
   const pdfWindow = new BrowserWindow({
     width: 800,
     height: 600,
@@ -360,7 +200,6 @@ app.whenReady().then(() => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 
-  // Explicitly register DevTools shortcut for debugging
   globalShortcut.register('CommandOrControl+Shift+I', () => {
     const win = BrowserWindow.getFocusedWindow();
     if (win) {

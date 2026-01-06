@@ -1,7 +1,7 @@
 {
   "name": "my-desck-pro",
   "private": true,
-  "version": "0.0.15",
+  "version": "0.0.16",
   "description": "Professional Travel Agency Dashboard",
   "repository": "https://github.com/Aseel-V/MyDesck-PRO-Releases",
   "type": "module",
@@ -9,7 +9,7 @@
   "homepage": "./",
   "author": {
     "name": "Aseel-V",
-    "email": "your-email@example.com"
+    "email": "Aseelshaheen621@gmail.com"
   },
   "build": {
     "appId": "com.mydesck.pro",
@@ -40,7 +40,8 @@
       "uninstallerIcon": "assets/icon.ico",
       "installerHeaderIcon": "assets/icon.ico",
       "deleteAppDataOnUninstall": true,
-      "runAfterFinish": true
+      "runAfterFinish": true,
+      "artifactName": "MyDesck-PRO-Setup.exe"
     },
     "mac": {
       "target": [

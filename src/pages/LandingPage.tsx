@@ -1,296 +1,195 @@
-import { motion } from 'framer-motion';
-import { Download, CheckCircle, Mail, FileText, TrendingUp } from 'lucide-react';
-import Logo from '../components/Logo';
+
 import { useLanguage } from '../contexts/LanguageContext';
-import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Download, CheckCircle, Globe, Mail, LayoutDashboard, FileText, BadgeDollarSign } from 'lucide-react';
 
 const LandingPage = () => {
-    const { language, setLanguage, direction } = useLanguage();
-    const navigate = useNavigate();
+  const { language, setLanguage, direction } = useLanguage();
 
-    const isRtl = direction === 'rtl';
+  const translations = {
+    en: {
+      heroTitle: "Say Goodbye to Receipt Books",
+      heroSubtitle: "Smart accounting system",
+      download: "Download Windows App",
+      featuresTitle: "Why MyDesck PRO?",
+      features: [
+        { title: "Dashboard/Profits", icon: LayoutDashboard },
+        { title: "Accountant Export", icon: FileText },
+        { title: "3 Months Free Trial then $20/mo", icon: BadgeDollarSign }
+      ],
+      customizationTitle: "Customization",
+      customizationText: "Ready for Tourism, customizable for Supermarkets/others via request to aseelshaheen621@gmail.com",
+      footer: "© {year} MyDesck PRO. All rights reserved."
+    },
+    he: {
+      heroTitle: "היפרדו לשלום מפנקסי הקבלות",
+      heroSubtitle: "מערכת הנהלת חשבונות חכמה",
+      download: "הורד לווינדוס",
+      featuresTitle: "למה MyDesck PRO?",
+      features: [
+        { title: "לוח בקרה ורווחים", icon: LayoutDashboard },
+        { title: "ייצוא לרואה חשבון", icon: FileText },
+        { title: "3 חודשים חינם, אח״כ $20/חודש", icon: BadgeDollarSign }
+      ],
+      customizationTitle: "התאמה אישית",
+      customizationText: "מוכן לתיירות, ניתן להתאמה אישית לסופרמרקטים ועסקים אחרים בבקשה דרך aseelshaheen621@gmail.com",
+      footer: "© {year} MyDesck PRO. כל הזכויות שמורות."
+    },
+    ar: {
+      heroTitle: "قل وداعاً لدفاتر الإيصالات",
+      heroSubtitle: "نظام محاسبة ذكي",
+      download: "تحميل لنظام ويندوز",
+      featuresTitle: "لماذا MyDesck PRO؟",
+      features: [
+        { title: "لوحة التحكم والأرباح", icon: LayoutDashboard },
+        { title: "تصدير للمحاسب", icon: FileText },
+        { title: "3 أشهر مجاناً ثم $20/شهر", icon: BadgeDollarSign }
+      ],
+      customizationTitle: "تخصيص",
+      customizationText: "جاهز لشركات السياحة، قابل للتخصيص للسوبر ماركت وغيرها عبر الطلب من aseelshaheen621@gmail.com",
+      footer: "© {year} MyDesck PRO. جميع الحقوق محفوظة."
+    }
+  };
 
-    const content = {
-        en: {
-            nav: {
-                login: "Login",
-            },
-            hero: {
-                headline: "Say Goodbye to Receipt Books",
-                subHeadline: "The smart accounting system that replaces paper. Use it as a Website or Desktop App - your choice.",
-                cta: "Download for Windows",
-                platforms: "Available now on Windows. Mobile App coming soon.",
-            },
-            dashboard: {
-                title: "Real-Time Dashboard",
-                description: "Track your profits, losses, and percentages instantly.",
-            },
-            accountants: {
-                title: "For Accountants",
-                text: "Easy export for your accountant. Save hours of work.",
-                highlight: "Your accountant will love this.",
-            },
-            customization: {
-                title: "Need for Supermarket?", // Shortened for card title
-                subtitle: "Built to be upgraded for any business.",
-                cta: "Contact us to customize.",
-                process: "Request your industry setup",
-                contact: "Contact:",
-                fullText: "Contact the developer to customize your workspace."
-            },
-            pricing: {
-                offer: "First 3 Months Free",
-                price: "$20 / month",
-                cta: "Start Free Trial",
-            },
-            footer: {
-                copyright: `© ${new Date().getFullYear()} MyDesck PRO. All rights reserved.`,
-            }
-        },
-        he: {
-            nav: {
-                login: "התחבר",
-            },
-            hero: {
-                headline: "אין צורך יותר בפנקסי קבלות",
-                subHeadline: "מערכת הנהלת החשבונות החכמה שמחליפה את הנייר. השתמש בה כאתר או כאפליקציה - לבחירתך.",
-                cta: "הורד עבור Windows",
-                platforms: "זמין כעת ב-Windows. אפליקציה לנייד בקרוב.",
-            },
-            dashboard: {
-                title: "לוח בקרה בזמן אמת",
-                description: "עקוב אחר הרווחים, ההפסדים והאחוזים שלך באופן מיידי.",
-            },
-            accountants: {
-                title: "עבור רואי חשבון",
-                text: "ייצוא קל לרואה החשבון שלך. חסוך שעות של עבודה.",
-                highlight: "רואה החשבון שלך יאהב את זה.",
-            },
-            customization: {
-                title: "צריך לסופרמרקט?",
-                subtitle: "נבנה כדי להיות משודרג לכל עסק.",
-                cta: "צור קשר להתאמה אישית.",
-                process: "בקש הגדרות לתעשייה שלך",
-                contact: "צור קשר:",
-                fullText: "צור קשר עם המפתח להתאמת סביבת העבודה שלך."
-            },
-            pricing: {
-                offer: "3 חודשי ניסיון חינם",
-                price: "לאחר מכן $20 / חודש",
-                cta: "התחל ניסיון חינם",
-            },
-            footer: {
-                copyright: `© ${new Date().getFullYear()} MyDesck PRO. כל הזכויות שמורות.`,
-            }
-        },
-        ar: {
-            nav: {
-                login: "تسجيل الدخول",
-            },
-            hero: {
-                headline: "لا داعي لدفاتر الايصالات",
-                subHeadline: "نظام المحاسبة الذكي الذي يحل محل الورق. استخدمه كموقع ويب أو تطبيق - الخيار لك.",
-                cta: "تحميل لـ Windows",
-                platforms: "متاح الآن على Windows. تطبيق الهاتف قريبا.",
-            },
-            dashboard: {
-                title: "لوحة تحكم فورية",
-                description: "تتبع أرباحك وخسائرك ونسبك على الفور.",
-            },
-            accountants: {
-                title: "للمحاسبين",
-                text: "تصدير سهل لمحاسبك. وفر ساعات من العمل.",
-                highlight: "محاسبك سيحب هذا.",
-            },
-            customization: {
-                title: "هل تحتاجه لمحل او سوبرماركت؟",
-                subtitle: "مصمم ليكون قابل للترقية لأي نشاط تجاري.",
-                cta: "تواصل معنا للتخصيص.",
-                process: "اطلب إعداد مجالك",
-                contact: "تواصل معنا:",
-                fullText: "تواصل مع المطور لتخصيص مساحة العمل الخاصة بك."
-            },
-            pricing: {
-                offer: "3 أشهر مجاناً",
-                price: "ثم 20 دولار / شهر",
-                cta: "ابدأ التجربة المجانية",
-            },
-            footer: {
-                copyright: `© ${new Date().getFullYear()} MyDesck PRO. جميع الحقوق محفوظة.`,
-            }
-        }
-    };
+  const t = translations[language as keyof typeof translations] || translations.en;
 
-    const t = content[language as keyof typeof content] || content.en;
+  // Animation variants
+  const fadeIn = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.6 }
+  };
 
-    const fadeInUp = {
-        initial: { opacity: 0, y: 10 },
-        animate: { opacity: 1, y: 0 },
-        transition: { duration: 0.4 }
-    };
-
-    return (
-        <div className={`min-h-screen bg-slate-50 text-slate-800 font-sans flex flex-col ${isRtl ? 'rtl' : 'ltr'}`} dir={isRtl ? 'rtl' : 'ltr'}>
-            {/* Compact Navbar */}
-            <nav className="bg-white/80 backdrop-blur-md border-b border-slate-200">
-                <div className="max-w-7xl mx-auto px-4 lg:px-6">
-                    <div className="flex justify-between items-center h-16">
-                        <div className="flex-shrink-0 flex items-center gap-2">
-                            <Logo className="h-8 w-auto" />
-                            <span className="font-bold text-lg text-blue-600 sm:block">MyDesck PRO</span>
-                        </div>
-                        
-                        <div className="flex items-center gap-3">
-                            <div className="flex items-center bg-slate-100 rounded-full p-1">
-                                {(['en', 'he', 'ar'] as const).map((lang) => (
-                                    <button
-                                        key={lang}
-                                        onClick={() => setLanguage(lang)}
-                                        className={`px-3 py-1 text-[10px] font-bold rounded-full transition-all ${
-                                            language === lang 
-                                            ? 'bg-blue-600 text-white shadow-sm' 
-                                            : 'text-slate-500 hover:text-slate-800'
-                                        }`}
-                                    >
-                                        {lang.toUpperCase()}
-                                    </button>
-                                ))}
-                            </div>
-                            <button 
-                                onClick={() => navigate('/login')} 
-                                className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                            >
-                                {t.nav.login}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </nav>
-
-            <main className="flex-1 max-w-7xl mx-auto w-full px-4 lg:px-6 py-6 flex flex-col gap-5">
-                
-                {/* Hero + Dashboard Visual (Combined) */}
-                <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="grid lg:grid-cols-12 gap-6 bg-white rounded-3xl p-6 md:p-10 shadow-sm border border-slate-200 items-center"
-                >
-                    <div className="lg:col-span-7 space-y-6">
-                         <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 leading-tight">
-                            {t.hero.headline}
-                        </h1>
-                        <p className="text-lg text-slate-600 leading-relaxed max-w-2xl">
-                            {t.hero.subHeadline}
-                        </p>
-                        
-                        <div className="flex flex-col sm:flex-row gap-4 pt-2">
-                            <a 
-                                href="https://github.com/Aseel-V/MyDesck-PRO-Releases/releases/latest"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-base px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-blue-200 hover:shadow-xl hover:scale-105"
-                            >
-                                <Download className="w-5 h-5" />
-                                {t.hero.cta}
-                            </a>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs font-medium text-slate-400">
-                             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                             {t.hero.platforms}
-                        </div>
-                    </div>
-
-                    {/* Dashboard Visual Mini */}
-                    <div className="lg:col-span-5 w-full bg-slate-50 rounded-2xl border border-slate-100 p-5 relative overflow-hidden group">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-2">
-                                <TrendingUp className="w-5 h-5 text-blue-600" />
-                                <span className="font-bold text-slate-700">{t.dashboard.title}</span>
-                            </div>
-                            <div className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full">+12%</div>
-                        </div>
-                        <div className="h-32 flex items-end justify-between gap-2">
-                             {[35, 60, 40, 80, 55, 90, 45].map((h, i) => (
-                                <div key={i} className="w-full bg-blue-100 rounded-t-md relative overflow-hidden h-full"> 
-                                     <motion.div 
-                                        initial={{ height: 0 }}
-                                        whileInView={{ height: `${h}%` }}
-                                        transition={{ duration: 1, delay: i * 0.1 }}
-                                        className="absolute bottom-0 inset-x-0 bg-blue-500 rounded-t-md" 
-                                     />
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </motion.div>
-
-                {/* 3-Column Features Grid */}
-                <div className="grid md:grid-cols-3 gap-5">
-                    
-                    {/* Accountants Card */}
-                    <motion.div 
-                        variants={fadeInUp}
-                        className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow"
-                    >
-                         <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center mb-4">
-                            <FileText className="w-5 h-5" />
-                         </div>
-                         <h3 className="text-lg font-bold text-slate-900 mb-2">{t.accountants.title}</h3>
-                         <p className="text-sm text-slate-500 mb-4">{t.accountants.text}</p>
-                         <div className="text-xs font-semibold text-indigo-600 flex items-center gap-1">
-                            <CheckCircle className="w-3 h-3" />
-                            {t.accountants.highlight}
-                         </div>
-                    </motion.div>
-
-                    {/* Pricing Card */}
-                    <motion.div 
-                        variants={fadeInUp}
-                        className="bg-slate-900 text-white p-6 rounded-3xl shadow-lg relative overflow-hidden group"
-                    >
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/20 blur-2xl rounded-full -mr-10 -mt-10" />
-                        <h3 className="text-sm font-medium text-slate-400 uppercase tracking-widest mb-4">Pro Plan</h3>
-                        <div className="flex items-baseline gap-1 mb-2">
-                             <span className="text-3xl font-bold">{t.pricing.price}</span>
-                        </div>
-                        <div className="inline-block bg-green-500/20 text-green-300 text-xs px-2 py-1 rounded mb-4">
-                            {t.pricing.offer}
-                        </div>
-                         <button className="w-full bg-white text-slate-900 py-3 rounded-xl font-bold text-sm hover:bg-slate-100 transition-colors">
-                            {t.pricing.cta}
-                        </button>
-                    </motion.div>
-
-                    {/* Customization Card */}
-                    <motion.div 
-                        variants={fadeInUp}
-                        className="bg-gradient-to-br from-blue-50 to-white p-6 rounded-3xl border border-blue-100 shadow-sm"
-                    >
-                        <h3 className="text-lg font-bold text-blue-900 mb-2">{t.customization.title}</h3>
-                        <p className="text-sm text-slate-600 mb-4">{t.customization.fullText}</p>
-                        <a 
-                           href="https://mail.google.com/mail/?view=cm&fs=1&to=aseelshaheen621@gmail.com"
-                           target="_blank"
-                           rel="noopener noreferrer"
-                           className="inline-flex items-center gap-2 text-sm font-bold text-blue-600 hover:text-blue-700 group"
-                        >
-                            <Mail className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                            {t.customization.cta}
-                        </a>
-                         <div className="mt-3 text-xs text-slate-400 flex items-center gap-1">
-                             <span>→</span> {t.customization.process}
-                         </div>
-                    </motion.div>
-
-                </div>
-            </main>
-
-            {/* Micro Footer */}
-            <footer className="py-6 border-t border-slate-100 text-center">
-                 <p className="text-xs text-slate-400">{t.footer.copyright}</p>
-            </footer>
+  return (
+    <div className={`min-h-screen bg-slate-50 text-slate-900 font-sans overflow-x-hidden ${direction === 'rtl' ? 'rtl' : 'ltr'}`} dir={direction}>
+      {/* Navbar */}
+      <nav className="fixed w-full bg-white/80 backdrop-blur-md shadow-sm z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+          <div className="flex items-center space-x-2 rtl:space-x-reverse">
+             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">
+               M
+             </div>
+             <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+               MyDesck PRO
+             </span>
+          </div>
+          
+          <div className="flex gap-2">
+            {(['en', 'he', 'ar'] as const).map((lang) => (
+              <button
+                key={lang}
+                onClick={() => setLanguage(lang)}
+                className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                  language === lang 
+                    ? 'bg-blue-100 text-blue-700' 
+                    : 'text-slate-500 hover:bg-slate-100'
+                }`}
+              >
+                {lang.toUpperCase()}
+              </button>
+            ))}
+          </div>
         </div>
-    );
+      </nav>
+
+      {/* Hero Section */}
+      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
+        <motion.div 
+          initial="initial"
+          animate="animate"
+          variants={fadeIn}
+          className="space-y-8"
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 text-blue-700 text-sm font-medium border border-blue-100">
+            <CheckCircle className="w-4 h-4" />
+            <span>V 0.0.15 Available Now</span>
+          </div>
+
+          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-slate-900 mb-6 rtl:leading-tight">
+            {t.heroTitle}
+          </h1>
+          
+          <p className="text-xl md:text-2xl text-slate-600 max-w-2xl mx-auto mb-10">
+            {t.heroSubtitle}
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <motion.a
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              href="https://github.com/Aseel-V/MyDesck-PRO-Releases/releases/latest/download/MyDesck-PRO-Setup.exe"
+              className="inline-flex items-center gap-3 px-8 py-4 bg-blue-600 text-white rounded-xl font-bold text-lg shadow-lg hover:bg-blue-700 transition-all hover:shadow-blue-500/25"
+            >
+              <Download className="w-6 h-6" />
+              {t.download}
+            </motion.a>
+          </div>
+
+          <div className="pt-12">
+            <img 
+               src="dashboard.png" 
+               alt="Dashboard Preview" 
+               className="rounded-2xl shadow-2xl border border-slate-200 mx-auto w-full max-w-5xl bg-slate-200 aspect-video object-cover"
+               onError={(e) => { e.currentTarget.style.display = 'none' }} // Hide if no image
+            />
+            {/* Fallback visual if image fails or generic placeholder */}
+            <div className="hidden rounded-2xl shadow-2xl border border-slate-200 mx-auto w-full max-w-5xl bg-gradient-to-b from-slate-100 to-white aspect-[16/9] flex items-center justify-center text-slate-400">
+               <span className="text-lg">Dashboard Preview UI</span>
+            </div>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+           <h2 className="text-3xl font-bold text-center mb-16">{t.featuresTitle}</h2>
+           
+           <div className="grid md:grid-cols-3 gap-8">
+             {t.features.map((feature, idx) => (
+               <motion.div
+                 key={idx}
+                 whileHover={{ y: -5 }}
+                 className="p-8 rounded-2xl bg-slate-50 border border-slate-100 hover:shadow-lg transition-all"
+               >
+                 <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 mb-6">
+                   <feature.icon className="w-6 h-6" />
+                 </div>
+                 <h3 className="text-xl font-bold text-slate-900 mb-2">{feature.title}</h3>
+                 <p className="text-slate-500">
+                   {/* Description placeholder if needed */}
+                 </p>
+               </motion.div>
+             ))}
+           </div>
+        </div>
+      </section>
+
+      {/* Customization Section */}
+      <section className="py-20 bg-blue-600 text-white overflow-hidden relative">
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+        <div className="max-w-4xl mx-auto px-4 text-center relative z-10">
+          <Globe className="w-12 h-12 mx-auto mb-6 text-blue-200" />
+          <h2 className="text-3xl font-bold mb-6">{t.customizationTitle}</h2>
+          <p className="text-xl md:text-2xl font-medium leading-relaxed opacity-90 mb-8">
+            {t.customizationText}
+          </p>
+          <a 
+            href="mailto:aseelshaheen621@gmail.com"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-white text-blue-600 rounded-lg font-bold hover:bg-blue-50 transition-colors"
+          >
+            <Mail className="w-5 h-5" />
+            aseelshaheen621@gmail.com
+          </a>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-slate-900 text-slate-400 py-12 text-center text-sm">
+        <p>{t.footer.replace('{year}', new Date().getFullYear().toString())}</p>
+      </footer>
+    </div>
+  );
 };
 
 export default LandingPage;

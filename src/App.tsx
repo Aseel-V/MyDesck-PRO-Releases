@@ -12,10 +12,15 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import ResetPassword from './components/auth/ResetPassword';
 import UpdateModal from './components/UpdateModal';
 
+
+// Helper to detect Electron
+const isElectron = typeof window !== 'undefined' && !!window.electronAPI;
+
 function LoginWrapper() {
   const { user } = useAuth();
   if (user) {
-    return <Navigate to="/" replace />;
+    // Redirect to root for Electron, or Dashboard for Web
+    return <Navigate to={isElectron ? "/" : "/dashboard"} replace />;
   }
   return (
     <div className="relative min-h-screen animate-fadeIn">
@@ -87,8 +92,13 @@ function App() {
       <Routes>
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/login" element={<LoginWrapper />} />
-        <Route path="/landing" element={<LandingPage />} />
-        <Route path="/" element={<AppContent />} />
+        
+        {/* Explicit Routing: Web = Landing Page, Electron = App */}
+        <Route path="/" element={ isElectron ? <AppContent /> : <LandingPage /> } />
+        
+        {/* Web App Access */}
+        <Route path="/dashboard" element={<AppContent />} />
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
@@ -99,20 +109,11 @@ function AppContent() {
   const { user, loading: authLoading, profile } = useAuth();
   const [showSplash, setShowSplash] = useState(true);
 
-  // This effect determines whether to show the splash screen or the main app.
-  // It waits until the initial authentication check is complete.
-  // If the user is logged in, it can also wait for the profile to be loaded,
-  // ensuring custom branding is ready before showing the dashboard.
   useEffect(() => {
     if (!authLoading) {
-      // If there's a user, we can optionally wait for the profile to load.
-      // This is crucial for displaying the correct branding on the splash/dashboard.
       if (user && !profile) {
-        // Keep splash visible while profile is loading
         return;
       }
-
-      // Delay slightly to allow for CSS transitions to complete
       const timer = setTimeout(() => setShowSplash(false), 500);
       return () => clearTimeout(timer);
     }
@@ -122,17 +123,13 @@ function AppContent() {
     return <SplashScreen onComplete={() => setShowSplash(false)} />;
   }
 
-  const isElectron = typeof window !== 'undefined' && !!window.electronAPI;
-
   if (!user) {
-    if (isElectron) {
-      return (
-        <div className="relative min-h-screen animate-fadeIn">
-          <Login />
-        </div>
-      );
-    }
-    return <LandingPage />;
+    // If we are in AppContent and not logged in, show Login
+    return (
+      <div className="relative min-h-screen animate-fadeIn">
+        <Login />
+      </div>
+    );
   }
 
   return (
