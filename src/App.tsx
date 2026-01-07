@@ -11,6 +11,7 @@ import InvoiceTemplate from './components/invoice/InvoiceTemplate';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ResetPassword from './components/auth/ResetPassword';
 import UpdateModal from './components/UpdateModal';
+import { HelmetProvider } from 'react-helmet-async';
 
 
 // Helper to detect Electron
@@ -79,7 +80,7 @@ function App() {
   }
 
   return (
-    <>
+    <HelmetProvider>
       {updateState.status !== 'idle' && (
         <UpdateModal 
           status={updateState.status}
@@ -101,7 +102,7 @@ function App() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </>
+    </HelmetProvider>
   );
 }
 

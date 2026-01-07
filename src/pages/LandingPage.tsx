@@ -1,15 +1,27 @@
 
+import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { motion } from 'framer-motion';
-import { Download, CheckCircle, Globe, Mail, LayoutDashboard, FileText, BadgeDollarSign } from 'lucide-react';
+import { Download, CheckCircle, Globe, Mail, LayoutDashboard, FileText, BadgeDollarSign, Sun, Moon } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Toaster, toast } from 'sonner';
+import SEO from '../components/SEO';
 
 const LandingPage = () => {
   const { language, setLanguage, direction } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
+
+  // Force Light Mode on mount REMOVED to support toggling
+  // useEffect(() => {
+  //   setTheme('light');
+  // }, [setTheme]);
 
   const translations = {
     en: {
       heroTitle: "Say Goodbye to Receipt Books",
       heroSubtitle: "Smart accounting system",
+      login: "Login",
       download: "Download Windows App",
       featuresTitle: "Why MyDesck PRO?",
       features: [
@@ -24,6 +36,7 @@ const LandingPage = () => {
     he: {
       heroTitle: "היפרדו לשלום מפנקסי הקבלות",
       heroSubtitle: "מערכת הנהלת חשבונות חכמה",
+      login: "התחברות",
       download: "הורד לווינדוס",
       featuresTitle: "למה MyDesck PRO?",
       features: [
@@ -38,6 +51,7 @@ const LandingPage = () => {
     ar: {
       heroTitle: "قل وداعاً لدفاتر الإيصالات",
       heroSubtitle: "نظام محاسبة ذكي",
+      login: "تسجيل الدخول",
       download: "تحميل لنظام ويندوز",
       featuresTitle: "لماذا MyDesck PRO؟",
       features: [
@@ -60,29 +74,66 @@ const LandingPage = () => {
     transition: { duration: 0.6 }
   };
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "MyDesck PRO",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Windows 10, Windows 11",
+    "offers": {
+      "@type": "Offer",
+      "price": "20.00",
+      "priceCurrency": "USD"
+    }
+  };
+
   return (
-    <div className={`min-h-screen bg-slate-50 text-slate-900 font-sans overflow-x-hidden ${direction === 'rtl' ? 'rtl' : 'ltr'}`} dir={direction}>
+    <div className={`min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans overflow-x-hidden ${direction === 'rtl' ? 'rtl' : 'ltr'}`} dir={direction}>
+      <SEO 
+        title={t.heroTitle}
+        description={t.heroSubtitle}
+        structuredData={structuredData}
+      />
+      <Toaster position="top-center" richColors />
       {/* Navbar */}
-      <nav className="fixed w-full bg-white/80 backdrop-blur-md shadow-sm z-50">
+      <nav className="fixed w-full bg-white/80 dark:bg-slate-950/80 backdrop-blur-md shadow-sm dark:shadow-slate-900/50 z-50 border-b border-transparent dark:border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-2 rtl:space-x-reverse">
-             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">
-               M
-             </div>
-             <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+             <img 
+               src="/favicon.ico" 
+               alt="MyDesck PRO" 
+               className="w-8 h-8 rounded-full object-contain shadow-blue-500/20 shadow-lg bg-white"
+             />
+             <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent dark:from-blue-400 dark:to-cyan-300">
                MyDesck PRO
              </span>
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            <button
+              onClick={() => navigate('/login')}
+              className="px-4 py-1.5 rounded-full text-sm font-bold bg-slate-900 text-white hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/10"
+            >
+              {t.login}
+            </button>
+            <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1"></div>
+            
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-full text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-colors"
+              title="Toggle Theme"
+            >
+              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+
             {(['en', 'he', 'ar'] as const).map((lang) => (
               <button
                 key={lang}
                 onClick={() => setLanguage(lang)}
                 className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
                   language === lang 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'text-slate-500 hover:bg-slate-100'
+                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300' 
+                    : 'text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
                 }`}
               >
                 {lang.toUpperCase()}
@@ -100,16 +151,16 @@ const LandingPage = () => {
           variants={fadeIn}
           className="space-y-8"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 text-blue-700 text-sm font-medium border border-blue-100">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-sm font-medium border border-blue-100 dark:border-blue-800/50">
             <CheckCircle className="w-4 h-4" />
             <span>V 0.0.20 Available Now</span>
           </div>
 
-          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-slate-900 mb-6 rtl:leading-tight">
+          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-6 rtl:leading-tight">
             {t.heroTitle}
           </h1>
           
-          <p className="text-xl md:text-2xl text-slate-600 max-w-2xl mx-auto mb-10">
+          <p className="text-xl md:text-2xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-10">
             {t.heroSubtitle}
           </p>
 
@@ -129,7 +180,7 @@ const LandingPage = () => {
             <img 
                src="dashboard.png" 
                alt="Dashboard Preview" 
-               className="rounded-2xl shadow-2xl border border-slate-200 mx-auto w-full max-w-5xl bg-slate-200 aspect-video object-cover"
+               className="rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 mx-auto w-full max-w-5xl bg-slate-200 dark:bg-slate-800 aspect-video object-cover"
                onError={(e) => { e.currentTarget.style.display = 'none' }} // Hide if no image
             />
             {/* Fallback visual if image fails or generic placeholder */}
@@ -141,22 +192,22 @@ const LandingPage = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-white dark:bg-slate-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-           <h2 className="text-3xl font-bold text-center mb-16">{t.featuresTitle}</h2>
+           <h2 className="text-3xl font-bold text-center mb-16 dark:text-white">{t.featuresTitle}</h2>
            
            <div className="grid md:grid-cols-3 gap-8">
              {t.features.map((feature, idx) => (
                <motion.div
                  key={idx}
                  whileHover={{ y: -5 }}
-                 className="p-8 rounded-2xl bg-slate-50 border border-slate-100 hover:shadow-lg transition-all"
+                 className="p-8 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 hover:shadow-lg transition-all"
                >
-                 <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 mb-6">
+                 <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-400 mb-6">
                    <feature.icon className="w-6 h-6" />
                  </div>
-                 <h3 className="text-xl font-bold text-slate-900 mb-2">{feature.title}</h3>
-                 <p className="text-slate-500">
+                 <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{feature.title}</h3>
+                 <p className="text-slate-500 dark:text-slate-400">
                    {/* Description placeholder if needed */}
                  </p>
                </motion.div>
@@ -176,7 +227,13 @@ const LandingPage = () => {
           </p>
           <a 
             href="mailto:aseelshaheen621@gmail.com"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-white text-blue-600 rounded-lg font-bold hover:bg-blue-50 transition-colors"
+            onClick={() => {
+               // Optional: prevent default if you ONLY want copy, but keeping default allows mail app to open too if available.
+               // e.preventDefault(); 
+               navigator.clipboard.writeText('aseelshaheen621@gmail.com');
+               toast.success('Email copied to clipboard!');
+            }}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-white text-blue-600 rounded-lg font-bold hover:bg-blue-50 transition-colors cursor-pointer shadow-lg shadow-blue-900/20"
           >
             <Mail className="w-5 h-5" />
             aseelshaheen621@gmail.com
@@ -185,7 +242,7 @@ const LandingPage = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-slate-900 text-slate-400 py-12 text-center text-sm">
+      <footer className="bg-slate-900 dark:bg-black text-slate-400 py-12 text-center text-sm border-t border-slate-800">
         <p>{t.footer.replace('{year}', new Date().getFullYear().toString())}</p>
       </footer>
     </div>

@@ -138,8 +138,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const initSession = async () => {
       try {
         // 2. التحقق من الجلسة (سريع عادةً)
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
         
+        if (error) throw error;
+
         if (!mounted) return;
 
         if (session?.user) {
@@ -155,8 +157,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
            setUserProfile(null);
            lastUserIdRef.current = null;
         }
-      } catch (e) {
+      } catch (e: any) {
         console.error('Auth load error:', e);
+
+        // Handle invalid refresh token by clearing local data
+        if (e?.message?.includes('Invalid Refresh Token') || e?.message?.includes('Refresh Token Not Found')) {
+          console.warn('[Auth] Invalid token detected, clearing session...');
+          await supabase.auth.signOut().catch(() => {});
+          
+          if (mounted) {
+            setUser(null);
+            setProfile(null);
+            setUserProfile(null);
+            lastUserIdRef.current = null;
+          }
+
+          localStorage.removeItem(CACHE_KEY_BUSINESS_PROFILE);
+          localStorage.removeItem(CACHE_KEY_USER_PROFILE);
+          // Clean trip cache
+          Object.keys(localStorage).forEach(key => {
+            if (key.startsWith('elite_travels_')) localStorage.removeItem(key);
+          });
+        }
       } finally {
         // 4. نوقف التحميل فوراً (لأن لدينا بيانات الكاش والجلسة، لا داعي لانتظار تحميل الملفات من النت)
         if (mounted) setLoading(false);

@@ -3,7 +3,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useBranding } from '../hooks/useBranding';
-import LogoPng from '../../logo.png';
 import {
   Settings,
   LogOut,
@@ -69,10 +68,10 @@ export default function Navbar({ onNavigate, currentPage, onOpenSearch }: Navbar
               onClick={() => handleNavigate('home')}
             >
                <img
-                  src={displayLogoUrl || (LogoPng as unknown as string)}
+                  src={displayLogoUrl || "/favicon.ico"}
                   alt="Logo"
                   className="h-full w-full object-contain rounded-full"
-                  onError={(e) => { e.currentTarget.src = LogoPng as unknown as string; }}
+                  onError={(e) => { e.currentTarget.src = "/favicon.ico"; }}
                 />
             </motion.div>
              <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-sky-800 to-slate-700 dark:from-white dark:to-slate-300 hidden lg:block tracking-tight">
@@ -162,10 +161,10 @@ export default function Navbar({ onNavigate, currentPage, onOpenSearch }: Navbar
            {/* Logo */}
            <div className="flex items-center gap-2.5">
               <img
-                src={displayLogoUrl || (LogoPng as unknown as string)}
+                src={displayLogoUrl || "/favicon.ico"}
                 alt="Logo"
                 className="h-8 w-8 object-contain"
-                onError={(e) => { e.currentTarget.src = LogoPng as unknown as string; }}
+                onError={(e) => { e.currentTarget.src = "/favicon.ico"; }}
               />
               <span className="font-bold text-lg bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 truncate max-w-[150px]">
                 {displayName || 'MyDesck'}
