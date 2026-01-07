@@ -157,8 +157,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
            setUserProfile(null);
            lastUserIdRef.current = null;
         }
-      } catch (e: any) {
-        console.error('Auth load error:', e);
+      } catch (err: unknown) {
+        console.error('Auth load error:', err);
+        const e = err as { message?: string };
 
         // Handle invalid refresh token by clearing local data
         if (e?.message?.includes('Invalid Refresh Token') || e?.message?.includes('Refresh Token Not Found')) {
