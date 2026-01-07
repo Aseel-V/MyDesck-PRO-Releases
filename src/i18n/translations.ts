@@ -341,6 +341,48 @@ export const translations = {
       today: 'Today',
       inDays: 'In {{count}} days',
     },
+    heroTitle: "Comprehensive Accounting & Management System for All Businesses - MyDesck PRO",
+    heroSubtitle: "Smart software for sales, customers, and tax invoices. Designed for all business types: shops, service providers, and travel agencies.",
+    dashboardPreview: "Dashboard Preview UI",
+    seoFeatures: {
+        title: "Integrated Solutions for Your Business",
+        sales: {
+            title: "Sales & Client Management",
+            desc: "Record sales, track debts, and manage contracts easily."
+        },
+        invoices: {
+            title: "Instant Tax Invoices",
+            desc: "Issue professional invoices and quotes with a click."
+        },
+        reports: {
+            title: "Profit & Growth Reports",
+            desc: "Comprehensive dashboard for business insights."
+        }
+    },
+    forgotPassword: {
+      title: "Forgot Password?",
+      desc: "Enter your email and we'll send you reset instructions.",
+      emailLabel: "Email Address",
+      emailPlaceholder: "name@example.com",
+      sendResetLink: "Send Reset Link",
+      backToLogin: "Back to Login",
+      checkEmail: {
+        title: "Check your email",
+        desc: "We sent a password reset link to"
+      },
+      back: "Back",
+      emailNotFound: "We couldn't find an account with that email address.",
+      resetPassword: {
+        title: "Reset Password",
+        desc: "Enter your new password below.",
+        newPassword: "New Password",
+        confirmPassword: "Confirm Password",
+        updatePassword: "Update Password",
+        success: "Password updated successfully",
+        mismatch: "Passwords do not match",
+        length: "Password must be at least 6 characters"
+      }
+    },
   },
 
   ar: {
@@ -685,6 +727,48 @@ export const translations = {
       today: 'اليوم',
       inDays: 'خلال {{count}} أيام',
     },
+    heroTitle: "نظام المحاسبة والإدارة الشامل لجميع الشركات والمتاجر - MyDesck PRO",
+    heroSubtitle: "برنامج ذكي لإدارة المبيعات، العملاء، والفواتير الضريبية. صُمم ليناسب جميع أنواع الأعمال: شركات تجارية، متاجر، مكاتب خدمات، ووكالات سفر.",
+    dashboardPreview: "معاينة لوحة التحكم",
+    seoFeatures: {
+        title: "حلول متكاملة لإدارة أعمالك",
+        sales: {
+            title: "إدارة المبيعات والعملاء",
+            "desc": "سجل مبيعاتك، تابع ديون العملاء، وأدر عقودك بكل سهولة سواء كنت تملك متجراً، شركة خدمية، أو مكتباً عقارياً."
+        },
+        invoices: {
+            title: "فواتير ضريبية فورية",
+            "desc": "إصدار فواتير وعروض أسعار احترافية بضغطة زر، متوافقة مع متطلبات الهيئة الضريبية وحساب تلقائي للضرائب."
+        },
+        reports: {
+            title: "تقارير الأرباح والنمو",
+            "desc": "لوحة تحكم شاملة تعطيك رؤية كاملة عن أداء شركتك، صافي الأرباح، المصاريف، والتدفقات المالية لاتخاذ قرارات صحيحة."
+        }
+    },
+    forgotPassword: {
+      title: "هل نسيت كلمة المرور؟",
+      desc: "أدخل بريدك الإلكتروني وسنرسل لك تعليمات استعادة كلمة المرور.",
+      emailLabel: "البريد الإلكتروني",
+      emailPlaceholder: "name@example.com",
+      sendResetLink: "إرسال رابط الاستعادة",
+      backToLogin: "العودة لتسجيل الدخول",
+      checkEmail: {
+        title: "تحقق من بريدك الإلكتروني",
+        desc: "أرسلنا رابط استعادة كلمة المرور إلى"
+      },
+      back: "عودة",
+      emailNotFound: "لم نتمكن من العثور على حساب بهذا البريد الإلكتروني.",
+      resetPassword: {
+        title: "إعادة تعيين كلمة المرور",
+        desc: "أدخل كلمة المرور الجديدة أدناه.",
+        newPassword: "كلمة المرور الجديدة",
+        confirmPassword: "تأكيد كلمة المرور",
+        updatePassword: "تحديث كلمة المرور",
+        success: "تم تحديث كلمة المرور بنجاح",
+        mismatch: "كلمات المرور غير متطابقة",
+        length: "يجب أن تكون كلمة المرور 6 أحرف على الأقل"
+      }
+    },
   },
 
   he: {
@@ -1028,6 +1112,48 @@ export const translations = {
       viewTrip: 'צפה בטיול',
       today: 'היום',
       inDays: 'בעוד {{count}} ימים',
+    },
+    heroTitle: "מערכת הנהלת חשבונות וניהול מקיפה לכל העסקים - MyDesck PRO",
+    heroSubtitle: "תוכנה חכמה למכירות, לקוחות וחשבוניות מס. מותאמת לכל סוגי העסקים: חנויות, נותני שירותים וסוכנויות נסיעות.",
+    dashboardPreview: "תצוגה מקדימה של לוח הבקרה",
+    seoFeatures: {
+        title: "פתרונות משולבים לעסק שלך",
+        sales: {
+            title: "ניהול מכירות ולקוחות",
+            desc: "רשום מכירות, עקוב אחר חובות ונהל חוזים בקלות."
+        },
+        invoices: {
+            title: "חשבוניות מס מיידיות",
+            desc: "הפק חשבוניות והצעות מחיר מקצועיות בלחיצה."
+        },
+        reports: {
+            title: "דוחות רווח וצמיחה",
+            desc: "לוח בקרה מקיף לתובנות עסקיות."
+        }
+    },
+    forgotPassword: {
+      title: "שכחת סיסמה?",
+      desc: "הזן את האימייל שלך ונשלח לך הוראות לאיפוס סיסמה.",
+      emailLabel: "כתובת אימייל",
+      emailPlaceholder: "name@example.com",
+      sendResetLink: "שלח קישור לאיפוס",
+      backToLogin: "חזרה להתחברות",
+      checkEmail: {
+        title: "בדוק את האימייל שלך",
+        desc: "שלחנו קישור לאיפוס סיסמה לכתובת"
+      },
+      back: "חזרה",
+      emailNotFound: "לא מצאנו חשבון עם כתובת האימייל הזו.",
+      resetPassword: {
+        title: "איפוס סיסמה",
+        desc: "הזן את הסיסמה החדשה שלך למטה.",
+        newPassword: "סיסמה חדשה",
+        confirmPassword: "אימות סיסמה",
+        updatePassword: "עדכן סיסמה",
+        success: "הסיסמה עודכנה בהצלחה",
+        mismatch: "הסיסמאות אינן תואמות",
+        length: "הסיסמה חייבת להכיל לפחות 6 תווים"
+      }
     },
   },
 };

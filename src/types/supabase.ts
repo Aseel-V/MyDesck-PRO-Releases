@@ -297,6 +297,12 @@ export interface Database {
           year: string
         }[]
       }
+      check_email_exists: {
+        Args: {
+          email_input: string
+        }
+        Returns: boolean
+      }
     }
 
     Enums: {

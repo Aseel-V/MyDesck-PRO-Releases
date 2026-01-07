@@ -1,3 +1,3 @@
 User-agent: *
 Allow: /
-Sitemap: https://mydesck.pro/sitemap.xml
+Sitemap: https://my-desck-pro.vercel.app/sitemap.xml

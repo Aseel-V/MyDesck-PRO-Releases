@@ -154,5 +154,22 @@
         "en": "English",
         "ar": "Arabic",
         "he": "Hebrew"
+    },
+    "heroTitle": "Comprehensive Accounting & Management System for All Businesses - MyDesck PRO",
+    "heroSubtitle": "Smart software for sales, customers, and tax invoices. Designed for all business types: shops, service providers, and travel agencies.",
+    "seoFeatures": {
+        "title": "Integrated Solutions for Your Business",
+        "sales": {
+            "title": "Sales & Client Management",
+            "desc": "Record sales, track debts, and manage contracts easily."
+        },
+        "invoices": {
+            "title": "Instant Tax Invoices",
+            "desc": "Issue professional invoices and quotes with a click."
+        },
+        "reports": {
+            "title": "Profit & Growth Reports",
+            "desc": "Comprehensive dashboard for business insights."
+        }
     }
 }

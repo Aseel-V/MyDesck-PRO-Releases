@@ -1,8 +1,9 @@
 
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { motion } from 'framer-motion';
-import { Download, CheckCircle, Globe, Mail, LayoutDashboard, FileText, BadgeDollarSign, Sun, Moon } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Download, CheckCircle, Globe, Mail, LayoutDashboard, FileText, BadgeDollarSign, Sun, Moon, TrendingUp, Receipt, PieChart, ChevronDown, Command, UserPlus } from 'lucide-react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Toaster, toast } from 'sonner';
 import SEO from '../components/SEO';
@@ -11,6 +12,7 @@ const LandingPage = () => {
   const { language, setLanguage, direction } = useLanguage();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const [isLanguageOpen, setIsLanguageOpen] = useState(false);
 
   // Force Light Mode on mount REMOVED to support toggling
   // useEffect(() => {
@@ -23,14 +25,16 @@ const LandingPage = () => {
       heroSubtitle: "Smart accounting system",
       login: "Login",
       download: "Download Windows App",
+      downloadMac: "Download for MacBook",
+      appDesc: "Experience the ultimate control over your business finances. MyDesck PRO offers a seamless blend of power and simplicity, designed to help you grow with confidence.",
       featuresTitle: "Why MyDesck PRO?",
       features: [
         { title: "Dashboard/Profits", icon: LayoutDashboard },
         { title: "Accountant Export", icon: FileText },
         { title: "3 Months Free Trial then $20/mo", icon: BadgeDollarSign }
       ],
-      customizationTitle: "Customization",
-      customizationText: "Ready for Tourism, customizable for Supermarkets/others via request to aseelshaheen621@gmail.com",
+      customizationTitle: "Get Started & Customization",
+      customizationText: "To register for a new account, please contact us with your business type. Ready for Tourism, customizable for Supermarkets/others.",
       footer: "© {year} MyDesck PRO. All rights reserved."
     },
     he: {
@@ -38,14 +42,16 @@ const LandingPage = () => {
       heroSubtitle: "מערכת הנהלת חשבונות חכמה",
       login: "התחברות",
       download: "הורד לווינדוס",
-      featuresTitle: "למה MyDesck PRO?",
+      downloadMac: "הורד למקבוק",
+      appDesc: "חוו את השליטה האולטימטיבית בכספים של העסק שלכם. MyDesck PRO מציעה שילוב מושלם של עוצמה ופשטות, שנועד לעזור לכם לצמוח בביטחון.",
+      featuresTitle: "היתרון העסקי שלך עם MyDesck PRO",
       features: [
-        { title: "לוח בקרה ורווחים", icon: LayoutDashboard },
-        { title: "ייצוא לרואה חשבון", icon: FileText },
-        { title: "3 חודשים חינם, אח״כ $20/חודש", icon: BadgeDollarSign }
+        { title: "שליטה פיננסית וניתוח רווחים", icon: LayoutDashboard },
+        { title: "סנכרון מלא ואוטומטי לרואה חשבון", icon: FileText },
+        { title: "3 חודשי ניסיון חינם, ואז $20/חודש בלבד", icon: BadgeDollarSign }
       ],
-      customizationTitle: "התאמה אישית",
-      customizationText: "מוכן לתיירות, ניתן להתאמה אישית לסופרמרקטים ועסקים אחרים בבקשה דרך aseelshaheen621@gmail.com",
+      customizationTitle: "הצטרפות והתאמה אישית",
+      customizationText: "להרשמה ופתיחת חשבון, אנא צרו קשר וציינו את סוג העסק. הפלטפורמה מוכנה לתיירות וניתנת להתאמה לסופרמרקטים ועסקים נוספים.",
       footer: "© {year} MyDesck PRO. כל הזכויות שמורות."
     },
     ar: {
@@ -53,19 +59,23 @@ const LandingPage = () => {
       heroSubtitle: "نظام محاسبة ذكي",
       login: "تسجيل الدخول",
       download: "تحميل لنظام ويندوز",
+      downloadMac: "تحميل للماك",
+      appDesc: "استمتع بالتحكم المطلق في أموال عملك. يقدم MyDesck PRO مزيجاً سلساً من القوة والبساطة، صُمم ليساعدك على النمو بثقة.",
       featuresTitle: "لماذا MyDesck PRO؟",
       features: [
         { title: "لوحة التحكم والأرباح", icon: LayoutDashboard },
         { title: "تصدير للمحاسب", icon: FileText },
         { title: "3 أشهر مجاناً ثم $20/شهر", icon: BadgeDollarSign }
       ],
-      customizationTitle: "تخصيص",
-      customizationText: "جاهز لشركات السياحة، قابل للتخصيص للسوبر ماركت وغيرها عبر الطلب من aseelshaheen621@gmail.com",
+      customizationTitle: "التسجيل والتخصيص",
+      customizationText: "للتسجيل وفتح حساب، يرجى التواصل معنا وتحديد نوع النشاط. المنصة جاهزة للسياحة وقابلة للتخصيص للمتاجر والأنشطة الأخرى.",
       footer: "© {year} MyDesck PRO. جميع الحقوق محفوظة."
     }
   };
 
-  const t = translations[language as keyof typeof translations] || translations.en;
+  /* Rename to localT to avoid conflict with i18n t hook */
+  const localT = translations[language as keyof typeof translations] || translations.en;
+  const { t } = useLanguage();
 
   // Animation variants
   const fadeIn = {
@@ -80,6 +90,12 @@ const LandingPage = () => {
     "name": "MyDesck PRO",
     "applicationCategory": "BusinessApplication",
     "operatingSystem": "Windows 10, Windows 11",
+    "description": "نظام محاسبة ومبيعات متكامل لإدارة جميع أنواع الأنشطة التجارية والشركات",
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.9",
+      "ratingCount": "200"
+    },
     "offers": {
       "@type": "Offer",
       "price": "20.00",
@@ -90,8 +106,8 @@ const LandingPage = () => {
   return (
     <div className={`min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans overflow-x-hidden ${direction === 'rtl' ? 'rtl' : 'ltr'}`} dir={direction}>
       <SEO 
-        title={t.heroTitle}
-        description={t.heroSubtitle}
+        title={t('heroTitle')}
+        description={t('heroSubtitle')}
         structuredData={structuredData}
       />
       <Toaster position="top-center" richColors />
@@ -114,7 +130,7 @@ const LandingPage = () => {
               onClick={() => navigate('/login')}
               className="px-4 py-1.5 rounded-full text-sm font-bold bg-slate-900 text-white hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/10"
             >
-              {t.login}
+              {localT.login}
             </button>
             <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1"></div>
             
@@ -126,19 +142,49 @@ const LandingPage = () => {
               {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
 
-            {(['en', 'he', 'ar'] as const).map((lang) => (
+            {/* Language Dropdown */}
+            <div className="relative">
               <button
-                key={lang}
-                onClick={() => setLanguage(lang)}
-                className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                  language === lang 
-                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300' 
-                    : 'text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
-                }`}
+                onClick={() => setIsLanguageOpen(!isLanguageOpen)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-sm font-medium"
               >
-                {lang.toUpperCase()}
+                <Globe className="w-4 h-4" />
+                <span>{language.toUpperCase()}</span>
+                <ChevronDown className={`w-3 h-3 transition-transform ${isLanguageOpen ? 'rotate-180' : ''}`} />
               </button>
-            ))}
+
+              <AnimatePresence>
+                {isLanguageOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute top-full mt-2 right-0 min-w-[120px] bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden z-[60]"
+                  >
+                    <div className="p-1 flex flex-col gap-0.5">
+                      {(['en', 'he', 'ar'] as const).map((lang) => (
+                        <button
+                          key={lang}
+                          onClick={() => {
+                            setLanguage(lang);
+                            setIsLanguageOpen(false);
+                          }}
+                          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors w-full ${
+                            language === lang 
+                              ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400' 
+                              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                          }`}
+                        >
+                          <span className="w-4 text-center">{lang === 'en' ? '🇺🇸' : lang === 'he' ? '🇮🇱' : '🇸🇦'}</span>
+                          <span>{lang === 'en' ? 'English' : lang === 'he' ? 'עברית' : 'العربية'}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </div>
       </nav>
@@ -153,15 +199,15 @@ const LandingPage = () => {
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-sm font-medium border border-blue-100 dark:border-blue-800/50">
             <CheckCircle className="w-4 h-4" />
-            <span>V 0.0.26 Available Now</span>
+            <span>V 0.0.27 Available Now</span>
           </div>
 
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-6 rtl:leading-tight">
-            {t.heroTitle}
+            {localT.heroTitle}
           </h1>
           
           <p className="text-xl md:text-2xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-10">
-            {t.heroSubtitle}
+            {localT.heroSubtitle}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -172,9 +218,28 @@ const LandingPage = () => {
               className="inline-flex items-center gap-3 px-8 py-4 bg-blue-600 text-white rounded-xl font-bold text-lg shadow-lg hover:bg-blue-700 transition-all hover:shadow-blue-500/25"
             >
               <Download className="w-6 h-6" />
-              {t.download}
+              {localT.download}
+            </motion.a>
+
+            <motion.a
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              href="#" /* Placeholder for Mac download */
+              className="inline-flex items-center gap-3 px-8 py-4 bg-slate-900 text-white dark:bg-white dark:text-slate-900 rounded-xl font-bold text-lg shadow-lg hover:bg-slate-800 dark:hover:bg-slate-100 transition-all"
+            >
+              <Command className="w-6 h-6" />
+              {localT.downloadMac}
             </motion.a>
           </div>
+
+          <motion.p 
+             initial={{ opacity: 0 }}
+             animate={{ opacity: 1 }}
+             transition={{ delay: 0.4 }}
+             className="text-lg md:text-xl text-slate-500 dark:text-slate-400 max-w-3xl mx-auto mt-12 leading-relaxed"
+          >
+            {localT.appDesc}
+          </motion.p>
 
           <div className="pt-12">
             <img 
@@ -194,10 +259,10 @@ const LandingPage = () => {
       {/* Features Section */}
       <section className="py-20 bg-white dark:bg-slate-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-           <h2 className="text-3xl font-bold text-center mb-16 dark:text-white">{t.featuresTitle}</h2>
+           <h2 className="text-3xl font-bold text-center mb-16 dark:text-white">{localT.featuresTitle}</h2>
            
            <div className="grid md:grid-cols-3 gap-8">
-             {t.features.map((feature, idx) => (
+             {localT.features.map((feature, idx) => (
                <motion.div
                  key={idx}
                  whileHover={{ y: -5 }}
@@ -216,14 +281,62 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* NEW: Universal Features Section */}
+      <section className="py-20 bg-slate-50 dark:bg-slate-950">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+           <div className="text-center mb-16">
+             <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">{t('seoFeatures.title')}</h2>
+             <div className="w-20 h-1 bg-blue-600 mx-auto rounded-full"></div>
+           </div>
+           
+           <div className="grid md:grid-cols-3 gap-8">
+             {/* Sales */}
+             <div className="p-8 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-md transition-shadow">
+                <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-xl flex items-center justify-center mb-6">
+                  <TrendingUp className="w-6 h-6" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">{t('seoFeatures.sales.title')}</h3>
+                <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                  {t('seoFeatures.sales.desc')}
+                </p>
+             </div>
+
+             {/* Invoices */}
+             <div className="p-8 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-md transition-shadow">
+                <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-xl flex items-center justify-center mb-6">
+                  <Receipt className="w-6 h-6" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">{t('seoFeatures.invoices.title')}</h3>
+                <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                  {t('seoFeatures.invoices.desc')}
+                </p>
+             </div>
+
+             {/* Reports */}
+             <div className="p-8 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-md transition-shadow">
+                <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded-xl flex items-center justify-center mb-6">
+                  <PieChart className="w-6 h-6" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">{t('seoFeatures.reports.title')}</h3>
+                <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                  {t('seoFeatures.reports.desc')}
+                </p>
+             </div>
+           </div>
+        </div>
+      </section>
+
       {/* Customization Section */}
       <section className="py-20 bg-blue-600 text-white overflow-hidden relative">
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
         <div className="max-w-4xl mx-auto px-4 text-center relative z-10">
-          <Globe className="w-12 h-12 mx-auto mb-6 text-blue-200" />
-          <h2 className="text-3xl font-bold mb-6">{t.customizationTitle}</h2>
+          <div className="flex justify-center gap-4 mb-6">
+            <Globe className="w-12 h-12 text-blue-200" />
+            <UserPlus className="w-12 h-12 text-blue-200" />
+          </div>
+          <h2 className="text-3xl font-bold mb-6">{localT.customizationTitle}</h2>
           <p className="text-xl md:text-2xl font-medium leading-relaxed opacity-90 mb-8">
-            {t.customizationText}
+            {localT.customizationText}
           </p>
           <a 
             href="mailto:aseelshaheen621@gmail.com"
@@ -243,7 +356,7 @@ const LandingPage = () => {
 
       {/* Footer */}
       <footer className="bg-slate-900 dark:bg-black text-slate-400 py-12 text-center text-sm border-t border-slate-800">
-        <p>{t.footer.replace('{year}', new Date().getFullYear().toString())}</p>
+        <p>{localT.footer.replace('{year}', new Date().getFullYear().toString())}</p>
       </footer>
     </div>
   );
