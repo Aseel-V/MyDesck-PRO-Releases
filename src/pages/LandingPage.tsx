@@ -153,7 +153,7 @@ const LandingPage = () => {
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-sm font-medium border border-blue-100 dark:border-blue-800/50">
             <CheckCircle className="w-4 h-4" />
-            <span>V 0.0.25 Available Now</span>
+            <span>V 0.0.26 Available Now</span>
           </div>
 
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-6 rtl:leading-tight">
