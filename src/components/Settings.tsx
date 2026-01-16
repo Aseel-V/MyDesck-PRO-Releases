@@ -13,8 +13,10 @@ import {
   Upload,
   RotateCcw,
   RefreshCw,
+  UtensilsCrossed,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import RestaurantSettings from './restaurant/RestaurantSettings';
 import { PostgrestError } from '@supabase/supabase-js';
 import { resizeImage } from '../lib/imageUtils';
 import { CurrencyService } from '../lib/currency';
@@ -43,7 +45,7 @@ export default function Settings() {
 
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [activeTab, setActiveTab] = useState<'profile' | 'business' | 'security' | 'data' | 'payments'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'business' | 'security' | 'data' | 'restaurant'>('profile');
   const [uploading, setUploading] = useState(false);
   const [notice, setNotice] = useState<null | { type: NoticeType; message: string }>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -538,6 +540,21 @@ export default function Settings() {
               <RotateCcw className="w-4 h-4" />
               <span>{t('settings.tabs.data')}</span>
             </button>
+
+            {/* Restaurant Tab - Only for Restaurant users */}
+            {profile?.business_type === 'restaurant' && (
+              <button
+                onClick={() => setActiveTab('restaurant')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                  activeTab === 'restaurant'
+                    ? 'bg-emerald-500/15 text-emerald-700 border border-emerald-500/30 shadow-sm dark:bg-emerald-500/15 dark:text-emerald-200 dark:border-emerald-500/60 dark:shadow-emerald-900/60'
+                    : 'text-slate-500 hover:bg-slate-100 border border-transparent dark:text-slate-300 dark:hover:bg-slate-900/70'
+                }`}
+              >
+                <UtensilsCrossed className="w-4 h-4" />
+                <span>{t('Restaurant')}</span>
+              </button>
+            )}
           </div>
 
           {/* Content */}
@@ -705,6 +722,36 @@ export default function Settings() {
                     </div>
                   </div>
 
+
+                  {/* Subscription Status */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-200">
+                      {t('settings.business.statusLabel')}
+                    </label>
+                    <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 dark:bg-slate-900/80 dark:border-slate-700">
+                      <div className={`w-3 h-3 rounded-full ${
+                        profile?.subscription_status === 'active' ? 'bg-emerald-500' : 
+                        profile?.subscription_status === 'past_due' ? 'bg-rose-500' : 'bg-amber-400'
+                      }`} />
+                      <div className="flex-1">
+                        <span className="font-medium text-slate-900 dark:text-slate-100 block">
+                          {t(`settings.business.status.${profile?.subscription_status || 'trial'}` as any)}
+                        </span>
+                        {/* Show trial end date if in trial */}
+                        {(profile?.subscription_status === 'trial' || !profile?.subscription_status) && (
+                           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                             {t('settings.business.trialEnds')}: {(() => {
+                               const startDate = new Date(profile?.trial_start_date || profile?.created_at || Date.now());
+                               const endDate = new Date(startDate);
+                               endDate.setMonth(endDate.getMonth() + 3);
+                               return endDate.toLocaleDateString();
+                             })()}
+                           </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-200">{t('settings.currency')}</label>
                     <select
@@ -858,8 +905,8 @@ export default function Settings() {
 
 
                 <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/70">
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="w-full sm:w-auto">
                       <h3 className="font-semibold text-slate-900 dark:text-slate-100">{t('settings.security.signOut')}</h3>
                       <p className="text-sm text-slate-500 dark:text-slate-400">{t('settings.security.signOutDesc')}</p>
                     </div>
@@ -880,8 +927,8 @@ export default function Settings() {
                 </div>
 
                 <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/70">
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="w-full sm:w-auto">
                       <h3 className="font-semibold text-slate-900 dark:text-slate-100">{t('settings.security.refreshProfile')}</h3>
                       <p className="text-sm text-slate-500 dark:text-slate-400">{t('settings.security.refreshProfileDesc')}</p>
                     </div>
@@ -903,8 +950,8 @@ export default function Settings() {
 
                 <div className="space-y-4">
                   <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/70">
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                      <div className="w-full sm:w-auto">
                         <h3 className="font-semibold text-slate-900 dark:text-slate-100">{t('settings.data.export')}</h3>
                         <p className="text-sm text-slate-500 dark:text-slate-400">{t('settings.data.exportDesc')}</p>
                       </div>
@@ -919,8 +966,8 @@ export default function Settings() {
                   </div>
 
                   <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/70">
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                      <div className="w-full sm:w-auto">
                         <h3 className="font-semibold text-slate-900 dark:text-slate-100">{t('settings.data.import')}</h3>
                         <p className="text-sm text-slate-500 dark:text-slate-400">{t('settings.data.importDesc')}</p>
                       </div>
@@ -933,6 +980,11 @@ export default function Settings() {
                   </div>
                 </div>
               </div>
+            )}
+
+            {/* Restaurant Settings Tab */}
+            {activeTab === 'restaurant' && profile?.business_type === 'restaurant' && (
+              <RestaurantSettings />
             )}
           </div>
         </div>

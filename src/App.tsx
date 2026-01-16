@@ -3,6 +3,7 @@ import { useAuth } from './contexts/AuthContext';
 import { useLanguage } from './contexts/LanguageContext';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
+import SuspendedView from './components/SuspendedView';
 import SplashScreen from './components/SplashScreen';
 import LandingPage from './pages/LandingPage';
 
@@ -107,7 +108,7 @@ function App() {
 }
 
 function AppContent() {
-  const { user, loading: authLoading, profile } = useAuth();
+  const { user, loading: authLoading, profile, userProfile } = useAuth();
   const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
@@ -131,6 +132,11 @@ function AppContent() {
         <Login />
       </div>
     );
+  }
+
+  // Check for suspension
+  if (profile?.is_suspended || userProfile?.is_suspended) {
+    return <SuspendedView />;
   }
 
   return (

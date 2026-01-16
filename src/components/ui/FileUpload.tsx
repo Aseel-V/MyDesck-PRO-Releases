@@ -4,13 +4,16 @@ import { compressImage } from '../../lib/imageUtils';
 import { Attachment } from '../../types/trip';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface FileUploadProps {
   onUploadComplete: (attachment: Attachment) => void;
-  folderName: string; 
+  folderName: string;
+  bucketName?: string;
 }
 
-export function FileUpload({ onUploadComplete, folderName }: FileUploadProps) {
+export function FileUpload({ onUploadComplete, folderName, bucketName = 'trip-attachments' }: FileUploadProps) {
+  const { t } = useLanguage();
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -18,6 +21,13 @@ export function FileUpload({ onUploadComplete, folderName }: FileUploadProps) {
     if (!e.target.files || e.target.files.length === 0) return;
     
     const file = e.target.files[0];
+    
+    // Check size limit (15MB)
+    if (file.size > 15 * 1024 * 1024) {
+        toast.error(t('trips.fileTooLarge') || 'File size must be less than 15MB');
+        return;
+    }
+
     setUploading(true);
 
     try {
@@ -30,14 +40,14 @@ export function FileUpload({ onUploadComplete, folderName }: FileUploadProps) {
       const filePath = `${folderName}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('trip-attachments')
+        .from(bucketName)
         .upload(filePath, processedFile);
 
       if (uploadError) throw uploadError;
 
       // 3. Get Public URL
       const { data: { publicUrl } } = supabase.storage
-        .from('trip-attachments')
+        .from(bucketName)
         .getPublicUrl(filePath);
 
       // 4. Determine type
@@ -83,7 +93,7 @@ export function FileUpload({ onUploadComplete, folderName }: FileUploadProps) {
             <Upload className="w-4 h-4" />
         )}
         <span className="text-sm font-medium">
-            {uploading ? 'Uploading...' : 'Upload File'}
+            {uploading ? t('trips.uploading') || 'Uploading...' : t('trips.uploadFile')}
         </span>
       </button>
     </div>

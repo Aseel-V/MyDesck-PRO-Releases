@@ -12,6 +12,12 @@ import Analytics from "./analytics/Analytics";
 import { AnimatePresence } from "framer-motion";
 import MotionWrapper from "./MotionWrapper";
 import AdminDashboard from "./admin/AdminDashboard";
+import RestaurantDashboard from "./dashboards/RestaurantDashboard";
+import SupermarketDashboard from "./dashboards/SupermarketDashboard";
+import PhoneShopDashboard from "./dashboards/PhoneShopDashboard";
+import CarPartsDashboard from "./dashboards/CarPartsDashboard";
+import ClothesShopDashboard from "./dashboards/ClothesShopDashboard";
+import FurnitureStoreDashboard from "./dashboards/FurnitureStoreDashboard";
 
 import { Toaster } from "sonner";
 import { CommandPalette } from "./CommandPalette";
@@ -22,6 +28,7 @@ import { useTripMutations } from "../hooks/useTripMutations";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import NewYearOverlay from "./ui/NewYearOverlay";
 import { AlertTriangle, X, ArrowRight } from "lucide-react";
+import { ErrorBoundary } from "./ErrorBoundary";
 
 type Page = "home" | "trips" | "analytics" | "settings" | "admin";
 
@@ -47,6 +54,7 @@ export default function Dashboard() {
   const { t } = useLanguage();
 
   const [currentPage, setCurrentPage] = useState<Page>("home");
+  const [showNavbar, setShowNavbar] = useState(true);
   const [selectedTrip, setSelectedTrip] = useState<Trip | undefined>(undefined);
   const [adminStats, setAdminStats] = useState<AdminStats>({
     totalUsers: 0,
@@ -278,15 +286,17 @@ export default function Dashboard() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.08),transparent_60%)] dark:bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.08),transparent_60%)]" />
       </div>
 
-      <Navbar 
-        onNavigate={handleNavigate} 
-        currentPage={currentPage} 
-        onOpenSearch={() => setIsCommandPaletteOpen(true)}
-      />
+      {showNavbar && (
+        <Navbar 
+          onNavigate={handleNavigate} 
+          currentPage={currentPage} 
+          onOpenSearch={() => setIsCommandPaletteOpen(true)}
+        />
+      )}
 
       <main className="relative z-10 flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-10 space-y-6">
         <AnimatePresence mode="wait">
-          {currentPage === "home" && (
+          {currentPage === "home" && (!profile?.business_type || profile?.business_type === 'tourism' || isAdmin) && (
             <MotionWrapper key="home" className="space-y-6">
               {/* Alerts Section */}
               {alerts.length > 0 && (
@@ -315,7 +325,7 @@ export default function Dashboard() {
                       return (
                         <div
                           key={trip.id}
-                          className="group relative overflow-hidden bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-800/30 rounded-xl p-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between transition-all hover:bg-amber-50 dark:hover:bg-amber-950/30"
+                          className="group relative overflow-hidden bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-800/30 rounded-xl p-4 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between transition-all hover:bg-amber-50 dark:hover:bg-amber-950/30"
                         >
                           <div className="flex items-start gap-4">
                             <div className="p-2.5 rounded-full bg-amber-100/50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 shrink-0">
@@ -336,7 +346,7 @@ export default function Dashboard() {
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0 pl-14 sm:pl-0">
+                          <div className="flex items-center gap-2 w-full md:w-auto mt-2 md:mt-0 pl-14 md:pl-0">
                             <button
                               onClick={() => handleSelectTrip(trip)}
                               className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-700 dark:text-amber-400 bg-amber-100/50 dark:bg-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-900/50 rounded-lg transition-colors"
@@ -385,7 +395,7 @@ export default function Dashboard() {
                           <button
                             key={year}
                             onClick={() => setYearFilter(year)}
-                            className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
+                            className={`px-3 py-2 text-xs font-semibold rounded-lg transition-all ${
                               yearFilter === year
                                 ? 'bg-sky-500 text-white shadow-md shadow-sky-500/20'
                                 : 'bg-slate-100 text-slate-500 hover:text-slate-700 hover:bg-slate-200 dark:bg-slate-800/50 dark:text-slate-400 dark:hover:text-slate-200'
@@ -566,7 +576,38 @@ export default function Dashboard() {
                         page.
                       </div>
                     ) : (
-                      <div className="overflow-x-auto">
+                      <>
+                        <div className="block sm:hidden space-y-3">
+                        {recentTrips.map((trip) => (
+                          <div key={trip.id} className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800">
+                            <div className="flex justify-between items-start mb-2">
+                              <div>
+                                <h3 className="font-semibold text-slate-900 dark:text-slate-100">{trip.destination}</h3>
+                                <p className="text-sm text-slate-500 dark:text-slate-400">{trip.client_name}</p>
+                              </div>
+                              <span
+                                className={`inline-flex px-2 py-1 rounded-full text-[10px] font-semibold ${trip.status === "active"
+                                  ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/40"
+                                  : trip.status === "completed"
+                                    ? "bg-sky-500/15 text-sky-300 border border-sky-500/40"
+                                    : "bg-rose-500/15 text-rose-300 border border-rose-500/40"
+                                  }`}
+                              >
+                                {trip.status}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mt-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+                              <div className="flex items-center gap-2">
+                                <span>{trip.start_date}</span>
+                                <span>•</span>
+                                <span>{trip.travelers_count} Travelers</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="hidden sm:block overflow-x-auto">
                         <table className="min-w-full text-sm">
                           <thead>
                             <tr className="text-slate-500 border-b border-slate-200/80 dark:text-slate-400 dark:border-slate-800/80">
@@ -622,6 +663,7 @@ export default function Dashboard() {
                           </tbody>
                         </table>
                       </div>
+                      </>
                     )}
                   </div>
                 )}
@@ -678,7 +720,7 @@ export default function Dashboard() {
             </MotionWrapper>
           )}
 
-          {currentPage === "trips" && !isAdmin && (
+          {currentPage === "trips" && !isAdmin && (!profile?.business_type || profile?.business_type === 'tourism') && (
             <MotionWrapper key="trips">
               <Trips
                 filters={tripFilters}
@@ -718,6 +760,42 @@ export default function Dashboard() {
             <MotionWrapper key="admin">
               <AdminDashboard />
             </MotionWrapper>
+          )}
+
+          {/* Dynamic Business Dashboards - Active on "home" page */}
+          {profile?.business_type === 'restaurant' && !isAdmin && currentPage === 'home' && (
+             <MotionWrapper key="restaurant">
+                <ErrorBoundary>
+                  <RestaurantDashboard 
+                    onToggleNavbar={(show: boolean) => setShowNavbar(show)} 
+                  />
+                </ErrorBoundary>
+             </MotionWrapper>
+          )}
+          {profile?.business_type === 'supermarket' && !isAdmin && currentPage === 'home' && (
+             <MotionWrapper key="supermarket">
+               <SupermarketDashboard />
+             </MotionWrapper>
+          )}
+          {profile?.business_type === 'phone_shop' && !isAdmin && currentPage === 'home' && (
+             <MotionWrapper key="phone_shop">
+               <PhoneShopDashboard />
+             </MotionWrapper>
+          )}
+          {profile?.business_type === 'car_parts' && !isAdmin && currentPage === 'home' && (
+             <MotionWrapper key="car_parts">
+               <CarPartsDashboard />
+             </MotionWrapper>
+          )}
+          {profile?.business_type === 'clothes_shop' && !isAdmin && currentPage === 'home' && (
+             <MotionWrapper key="clothes_shop">
+               <ClothesShopDashboard />
+             </MotionWrapper>
+          )}
+          {profile?.business_type === 'furniture_store' && !isAdmin && currentPage === 'home' && (
+             <MotionWrapper key="furniture_store">
+               <FurnitureStoreDashboard />
+             </MotionWrapper>
           )}
         </AnimatePresence>
       </main>

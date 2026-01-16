@@ -40,9 +40,11 @@ export default function Navbar({ onNavigate, currentPage, onOpenSearch }: Navbar
   };
 
   // Nav Items Configuration
+  const { profile } = useAuth(); // Destructure profile
+  
   const navItems = [
     { id: 'home', icon: Home, label: t('dashboard.home') },
-    { id: 'trips', icon: MapPin, label: t('dashboard.trips'), hidden: isAdmin },
+    { id: 'trips', icon: MapPin, label: t('dashboard.trips'), hidden: isAdmin || (profile?.business_type && profile.business_type !== 'tourism') },
     { id: 'analytics', icon: BarChart3, label: t('dashboard.analytics') },
     { id: 'settings', icon: Settings, label: t('dashboard.settings') },
     { id: 'admin', icon: Shield, label: t('navbar.admin'), hidden: !isAdmin },
@@ -52,7 +54,7 @@ export default function Navbar({ onNavigate, currentPage, onOpenSearch }: Navbar
     <nav className="fixed top-0 left-0 right-0 z-50 flex flex-col items-center pointer-events-none" dir={direction}>
       
       {/* === DESKTOP FLOATING DOCK === */}
-      <div className="hidden md:flex mt-6 pointer-events-auto">
+      <div className="hidden lg:flex mt-6 pointer-events-auto">
         <motion.div 
           initial={{ y: -50, opacity: 0, scale: 0.95 }}
           animate={{ y: 0, opacity: 1, scale: 1 }}
@@ -155,8 +157,8 @@ export default function Navbar({ onNavigate, currentPage, onOpenSearch }: Navbar
       </div>
 
       {/* === MOBILE TOP BAR (Glassmorphism) === */}
-      <div className="md:hidden w-full pointer-events-auto">
-        <div className="bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 px-4 h-16 flex items-center justify-between shadow-sm sticky top-0 z-50">
+      <div className="lg:hidden w-full pointer-events-auto">
+        <div className="bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 px-4 h-16 pt-[env(safe-area-inset-top)] flex items-center justify-between shadow-sm sticky top-0 z-50">
            
            {/* Logo */}
            <div className="flex items-center gap-2.5">

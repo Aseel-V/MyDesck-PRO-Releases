@@ -30,16 +30,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
 import { Trip } from '../../types/trip';
 import { supabase } from '../../lib/supabase';
+import RestaurantAnalytics from './RestaurantAnalytics';
 
-interface APIUserProfile {
-  id: string;
-  email: string;
-  full_name: string;
-  phone_number: string;
-  role: 'user' | 'admin';
-  created_at: string;
-  business_name?: string;
-}
 
 
 // Local interface matching what we map manually
@@ -51,6 +43,10 @@ interface UserProfile {
   role: 'user' | 'admin';
   created_at: string;
   business_name?: string | null;
+  business_type?: string | null;
+  subscription_status?: 'trial' | 'active' | 'past_due';
+  trial_start_date?: string;
+  is_suspended?: boolean;
 }
 
 interface AdminStats {
@@ -113,8 +109,12 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
 
 export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsProps) {
   const { t } = useLanguage();
-  const { isAdmin } = useAuth();
+  const { isAdmin, profile } = useAuth();
   const { convert, format, currency, isLoading: ratesLoading } = useCurrency();
+
+  if (profile?.business_type === 'restaurant' && !isAdmin) {
+      return <RestaurantAnalytics />;
+  }
 
   const [userProfiles, setUserProfiles] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(false);
@@ -212,29 +212,48 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
     loadData();
   }, [isAdmin]);
 
+  /* REPLACED WITH PARALLEL FETCH AND MERGE TO SOLVE RELATIONSHIP ERROR */
   const fetchUserProfiles = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('get-users', {
-        body: { page: 1, perPage: 1000 },
-      });
-      if (error) throw error;
+      // Fetch both profiles separately since they don't have a direct foreign key relationship
+      const [usersResponse, businessResponse] = await Promise.all([
+        supabase.from('user_profiles').select('*'),
+        supabase.from('business_profiles').select('user_id, business_name, business_type, subscription_status, trial_start_date, is_suspended')
+      ]);
 
-      if (data && data.users) {
-        const mappedUsers: UserProfile[] = (data.users as APIUserProfile[]).map((u) => ({
-          user_id: u.id,
+      if (usersResponse.error) throw usersResponse.error;
+      if (businessResponse.error) throw businessResponse.error;
+
+      const users = usersResponse.data || [];
+      const businesses = businessResponse.data || [];
+
+      // Create a map for quick business lookup by user_id
+      const businessMap = new Map(businesses.map(b => [b.user_id, b]));
+
+      // Merge data
+      const mappedUsers: UserProfile[] = users.map((u) => {
+        const business = businessMap.get(u.user_id);
+        return {
+          user_id: u.user_id,
           email: u.email,
           full_name: u.full_name,
           phone_number: u.phone_number,
           role: u.role,
           created_at: u.created_at,
-          business_name: u.business_name,
-        }));
-        setUserProfiles(mappedUsers);
-      }
+          // Business Profile Data (Source of Truth for Subscription)
+          business_name: business?.business_name || null,
+          business_type: business?.business_type || null,
+          subscription_status: business?.subscription_status || 'trial',
+          trial_start_date: business?.trial_start_date || undefined,
+          is_suspended: business?.is_suspended ?? u.is_suspended // Prefer business profile, fallback to user profile
+        };
+      });
+
+      setUserProfiles(mappedUsers);
     } catch (error) {
-      console.error('Error fetching user profiles:', error);
+       console.error('Error fetching user profiles:', error);
     } finally {
-      setLoading(false);
+       setLoading(false);
     }
   };
 
@@ -244,7 +263,7 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
       const { data, error } = await supabase.rpc('get_yearly_stats_overview');
       if (error) throw error;
 
-      let stats = (data || []) as unknown as YearlyStats[];
+      let stats = ((data as any) || []) as YearlyStats[];
       const currentYear = new Date().getFullYear().toString();
 
       // Ensure current year is in the list
@@ -741,7 +760,7 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
 
               return (
                 <div className="h-[300px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={100}>
                     <PieChart>
                       <Pie
                         data={pieData}
@@ -777,7 +796,7 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
               <div className="flex items-center justify-center h-64 text-slate-400 dark:text-slate-500">{t('analytics.noDestinations')}</div>
             ) : (
               <div className="h-[300px] w-full flex items-center justify-center">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={100}>
                   <PieChart>
                     <Pie
                       data={(stats as UserStats).topDestinations}

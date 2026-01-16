@@ -9,13 +9,14 @@ import {
   generateMultipleTripsPDF,
 } from '../../lib/pdfGenerator';
 
-interface PDFExportModalProps {
+export interface PDFExportModalProps {
   trips: Trip[];
   onClose: () => void;
+  onExportComplete?: () => void;
 }
 
 const labels = {
-  en: {
+  en: { 
     title: 'Export to PDF',
     fullName: 'Your Full Name',
     phoneNumber: 'Phone Number',
@@ -72,7 +73,7 @@ const isPhoneValid = (v: string) => {
   return /^\+?[0-9\s\-()]{6,}$/.test(s);
 };
 
-export default function PDFExportModal({ trips, onClose }: PDFExportModalProps) {
+export default function PDFExportModal({ trips, onClose, onExportComplete }: PDFExportModalProps) {
   const { language } = useLanguage();
   const { profile, user, userProfile } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -204,6 +205,7 @@ export default function PDFExportModal({ trips, onClose }: PDFExportModalProps) 
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
+      onExportComplete?.();
       onClose();
     } catch (error) {
       console.error('PDF generation error:', error);

@@ -30,6 +30,8 @@ export default function CreateUserForm({ onClose, onSuccess, existingBusinesses 
     const [logoUrl, setLogoUrl] = useState('');
     const [currency, setCurrency] = useState('USD');
     const [language, setLanguage] = useState<'en' | 'ar' | 'he'>('en');
+    const [businessType, setBusinessType] = useState('tourism'); // Added
+
 
     // Staff fields
     const [selectedBusinessId, setSelectedBusinessId] = useState('');
@@ -54,6 +56,7 @@ export default function CreateUserForm({ onClose, onSuccess, existingBusinesses 
                 payload.logoUrl = logoUrl;
                 payload.currency = currency;
                 payload.language = language;
+                payload.businessType = businessType; // Added to payload
             } else {
                 if (!selectedBusinessId) throw new Error('Please select a business');
                 payload.businessId = selectedBusinessId;
@@ -63,7 +66,23 @@ export default function CreateUserForm({ onClose, onSuccess, existingBusinesses 
                 body: payload,
             });
 
-            if (error) throw error;
+            console.log('Response data:', data);
+            console.log('Response error:', error);
+            
+            if (error) {
+                // Try to get detailed error from response context
+                let errorMessage = error.message || 'Unknown error';
+                if ('context' in error && error.context) {
+                    try {
+                        const errorBody = await (error.context as Response).json();
+                        console.log('Error body:', errorBody);
+                        errorMessage = errorBody?.error || errorMessage;
+                    } catch {
+                        console.log('Could not parse error body');
+                    }
+                }
+                throw new Error(errorMessage);
+            }
             if (data?.error) throw new Error(data.error);
 
             onSuccess();
@@ -186,6 +205,24 @@ export default function CreateUserForm({ onClose, onSuccess, existingBusinesses 
                                 required
                             />
                         </div>
+                        
+                        <div>
+                             <label className={labelClass}>Business Type</label>
+                             <select
+                                 value={businessType}
+                                 onChange={(e) => setBusinessType(e.target.value)}
+                                 className={inputClass}
+                             >
+                                 <option value="tourism">Tourism (Trips)</option>
+                                 <option value="restaurant">Restaurant</option>
+                                 <option value="supermarket">Supermarket</option>
+                                 <option value="phone_shop">Phone Shop</option>
+                                 <option value="car_parts">Car Parts Shop</option>
+                                 <option value="clothes_shop">Clothes Shop</option>
+                                 <option value="furniture_store">Home Furniture Store</option>
+                             </select>
+                        </div>
+
                         <div>
                             <label className={labelClass}>Logo URL (Optional)</label>
                             <input

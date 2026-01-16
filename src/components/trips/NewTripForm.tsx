@@ -51,7 +51,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
       itinerary: editTrip?.itinerary || [],
       start_date: editTrip?.start_date || '',
       end_date: editTrip?.end_date || '',
-      currency: (editTrip?.currency as TripFormValues['currency']) || 'USD',
+      currency: (editTrip?.currency as TripFormValues['currency']) || (profile?.preferred_currency as TripFormValues['currency']) || 'USD',
       exchange_rate: editTrip?.exchange_rate || 1,
       wholesale_cost: editTrip?.wholesale_cost || 0,
       sale_price: editTrip?.sale_price || 0,
@@ -147,13 +147,13 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
   // Independent Currency State for Inputs
   // Priority: 1. Saved Original Currency from DB. 2. Fallback to trip currency.
   const [wholesaleCurrency, setWholesaleCurrency] = useState<string>(
-      editTrip?.wholesale_currency || editTrip?.currency || 'USD'
+      editTrip?.wholesale_currency || editTrip?.currency || profile?.preferred_currency || 'USD'
   );
   const [saleCurrency, setSaleCurrency] = useState<string>(
-      editTrip?.sale_currency || editTrip?.currency || 'USD'
+      editTrip?.sale_currency || editTrip?.currency || profile?.preferred_currency || 'USD'
   );
   const [amountPaidCurrency, setAmountPaidCurrency] = useState<string>(
-      editTrip?.currency || 'USD'
+      editTrip?.currency || profile?.preferred_currency || 'USD'
   );
 
   // Initialize independent currencies when trip loads
@@ -525,7 +525,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                 </div>
 
                 <div>
-                  <label className={labelClasses}>{t('trips.clientPhone') || 'Client Phone'}</label>
+                  <label className={labelClasses}>{t('trips.clientPhone')}</label>
                   <input
                     type="tel"
                     {...register('client_phone')}
@@ -544,7 +544,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                 </div>
 
                 <div>
-                  <label className={labelClasses}>{t('trips.travelersCount') || 'Travelers Count'} *</label>
+                  <label className={labelClasses}>{t('trips.travelersCount')}</label>
                   <input
                     type="number"
                     {...register('travelers_count', { valueAsNumber: true })}
@@ -562,21 +562,21 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                 {/* Room Composition Selector */}
                 <div className="md:col-span-2 space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200 dark:bg-slate-900/30 dark:border-slate-800/50">
                    <div className="flex items-center justify-between">
-                        <label className={labelClasses}>הרכב חדרים (אופציונלי) / Room Configuration</label>
+                        <label className={labelClasses}>{t('trips.roomConfiguration')}</label>
                         {/* Clear button to reset counts */}
                         <button 
                              type="button"
                              onClick={() => setRoomCounts({ Single: 0, Double: 0, Triple: 0, Quad: 0, Suite: 0, Family: 0 })}
                              className="text-[10px] text-sky-600 hover:text-sky-500 dark:text-sky-400 dark:hover:text-sky-300"
                         >
-                            Reset Counts
+                            {t('trips.resetCounts')}
                         </button>
                    </div>
                    
                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                        {(Object.keys(roomCounts) as RoomType[]).map((type) => (
                            <div key={type} className="flex flex-col items-center gap-1">
-                               <span className="text-[10px] text-slate-400 uppercase tracking-wider">{type}</span>
+                               <span className="text-[10px] text-slate-400 uppercase tracking-wider">{t(`trips.roomTypes.${type}`) || type}</span>
                                <input
                                    type="number"
                                    min={0}
@@ -593,7 +593,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                    
                    {/* Manual Override / Final String */}
                    <div className="mt-2">
-                       <label className="text-[10px] text-slate-500 mb-1 block dark:text-slate-500">Final Text (Editable)</label>
+                       <label className="text-[10px] text-slate-500 mb-1 block dark:text-slate-500">{t('trips.finalText')}</label>
                        <input
                          type="text"
                          {...register('room_type')}
@@ -605,14 +605,14 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
 
                 {/* Board Basis Selector */}
                 <div>
-                   <label className={labelClasses}>בסיס אירוח (אופציונלי) / Board Basis</label>
+                   <label className={labelClasses}>{t('trips.boardBasis')}</label>
                    <select {...register('board_basis')} className={baseInputClasses}>
-                        <option value="">לא צוין / Not Specified</option>
-                        <option value="Room Only">לינה בלבד (Room Only)</option>
-                        <option value="Bed & Breakfast">לינה וארוחת בוקר (B&B)</option>
-                        <option value="Half Board">חצי פנסיון (Half Board)</option>
-                        <option value="Full Board">פנסיון מלא (Full Board)</option>
-                        <option value="All Inclusive">הכל כלול (All Inclusive)</option>
+                        <option value="">{t('trips.notSpecified')}</option>
+                        <option value="Room Only">{t('trips.boardTypes.roomOnly')}</option>
+                        <option value="Bed & Breakfast">{t('trips.boardTypes.bedAndBreakfast')}</option>
+                        <option value="Half Board">{t('trips.boardTypes.halfBoard')}</option>
+                        <option value="Full Board">{t('trips.boardTypes.fullBoard')}</option>
+                        <option value="All Inclusive">{t('trips.boardTypes.allInclusive')}</option>
                    </select>
                 </div>
 
@@ -645,7 +645,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className={labelClasses}>{t('trips.description') || 'Description / תיאור'}</label>
+                  <label className={labelClasses}>{t('trips.description')}</label>
                   <textarea
                     {...register('notes')}
                     className={cn(baseInputClasses, 'min-h-[100px] resize-y')}
@@ -654,7 +654,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                 </div>
 
                 <div className="md:col-span-2 space-y-2">
-                    <label className={labelClasses}>Attachments</label>
+                    <label className={labelClasses}>{t('trips.attachments')}</label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* File List */}
                         <div className="space-y-2">
@@ -690,7 +690,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                                 }} 
                              />
                              <p className="text-[10px] text-slate-400 mt-2 text-center">
-                                Images constrained to 1MB. PDF supported.
+                                {t('trips.uploadConstraints', { size: '15MB' })}
                              </p>
                         </div>
                     </div>

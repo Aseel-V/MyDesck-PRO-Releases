@@ -162,23 +162,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const e = err as { message?: string };
 
         // Handle invalid refresh token by clearing local data
-        if (e?.message?.includes('Invalid Refresh Token') || e?.message?.includes('Refresh Token Not Found')) {
-          console.warn('[Auth] Invalid token detected, clearing session...');
-          await supabase.auth.signOut().catch(() => {});
+        // Handle invalid refresh token by clearing local data
+        const errorMessage = e?.message || (e as any)?.error_description || JSON.stringify(e);
+        if (
+          errorMessage.includes('Invalid Refresh Token') || 
+          errorMessage.includes('Refresh Token Not Found') ||
+          errorMessage.includes('not found') // Catch generic "not found" which sometimes happens with tokens
+        ) {
+          console.warn('[Auth] Critical session error detected, wiping storage and resetting...');
           
+          // 1. Attempt standard sign out
+          await supabase.auth.signOut().catch(() => console.warn('SignOut failed during recovery'));
+          
+          // 2. Aggressively clear ALL Supabase-related keys from localStorage
+          Object.keys(localStorage).forEach(key => {
+            if (
+              key.startsWith('sb-') || 
+              key.startsWith('supabase.') || 
+              key === CACHE_KEY_BUSINESS_PROFILE || 
+              key === CACHE_KEY_USER_PROFILE
+            ) {
+              localStorage.removeItem(key);
+            }
+          });
+
+          // 3. Reset internal state immediately
           if (mounted) {
             setUser(null);
             setProfile(null);
             setUserProfile(null);
             lastUserIdRef.current = null;
           }
-
-          localStorage.removeItem(CACHE_KEY_BUSINESS_PROFILE);
-          localStorage.removeItem(CACHE_KEY_USER_PROFILE);
-          // Clean trip cache
-          Object.keys(localStorage).forEach(key => {
-            if (key.startsWith('elite_travels_')) localStorage.removeItem(key);
-          });
         }
       } finally {
         // 4. نوقف التحميل فوراً (لأن لدينا بيانات الكاش والجلسة، لا داعي لانتظار تحميل الملفات من النت)

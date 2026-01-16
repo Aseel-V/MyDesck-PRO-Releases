@@ -1,17 +1,19 @@
 
-
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers":
-        "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-serve(async (req: Request): Promise<Response> => {
+Deno.serve(async (req: Request) => {
+    // Handle CORS preflight requests
     if (req.method === "OPTIONS") {
-        return new Response("ok", { headers: corsHeaders });
+        return new Response(null, { 
+            status: 204,
+            headers: corsHeaders 
+        });
     }
 
     try {
@@ -65,6 +67,7 @@ serve(async (req: Request): Promise<Response> => {
             logoUrl,
             currency = "USD",
             language = "en",
+            businessType = "tourism",
         } = await req.json() as {
             email?: string;
             password?: string;
@@ -76,6 +79,7 @@ serve(async (req: Request): Promise<Response> => {
             logoUrl?: string;
             currency?: string;
             language?: string;
+            businessType?: string;
         };
 
         if (!email || !password) {
@@ -124,6 +128,7 @@ serve(async (req: Request): Promise<Response> => {
                         {
                             user_id: userId, // Owner
                             business_name: businessName || "My Business",
+                            business_type: businessType,
                             logo_url: logoUrl,
                             preferred_currency: currency,
                             preferred_language: language,

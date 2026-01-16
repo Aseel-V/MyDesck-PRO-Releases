@@ -110,6 +110,12 @@ export interface TripFormData {
   room_type?: string;
   board_basis?: string;
 
+  // Stored Original Values
+  wholesale_original_amount?: number;
+  wholesale_currency?: string;
+  sale_original_amount?: number;
+  sale_currency?: string;
+
   attachments: Attachment[];
 
   notes?: string;
@@ -142,6 +148,12 @@ export interface TripInsert {
   payment_date?: string;
 
   room_type?: string;
+  board_basis?: string;
+
+  wholesale_original_amount?: number;
+  wholesale_currency?: string;
+  sale_original_amount?: number;
+  sale_currency?: string;
 
   attachments?: Attachment[];
 

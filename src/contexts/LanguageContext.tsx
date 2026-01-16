@@ -12,6 +12,9 @@ interface LanguageContextType {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   t: (key: string, options?: any) => string;
   direction: 'ltr' | 'rtl';
+  formatCurrency: (amount: number) => string;
+  formatDate: (date: Date | string | number, options?: Intl.DateTimeFormatOptions) => string;
+  formatTime: (date: Date | string | number, options?: Intl.DateTimeFormatOptions) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -49,6 +52,68 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   const direction: 'ltr' | 'rtl' = language === 'ar' || language === 'he' ? 'rtl' : 'ltr';
 
+  const formatCurrency = (amount: number) => {
+    // Determine info based on language
+    let locale = 'en-US';
+    let currency = 'ILS'; // Default to Shekels as per original app, or make dynamic later
+
+    if (language === 'he') {
+      locale = 'he-IL';
+      currency = 'ILS';
+    } else if (language === 'ar') {
+      locale = 'ar-IL'; // Arabic in Israel context usually uses ILS
+      currency = 'ILS';
+    } else {
+      // Default EN
+      locale = 'en-IL'; // English in Israel
+      currency = 'ILS';
+    }
+
+    if (language === 'ar') {
+      const parts = new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency: currency,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+      }).formatToParts(amount);
+      
+      const currencyPart = parts.find(p => p.type === 'currency');
+      const otherParts = parts.filter(p => p.type !== 'currency').map(p => p.value).join('').trim();
+      return `${otherParts} ${currencyPart?.value || '₪'}`;
+    }
+
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: currency,
+      minimumFractionDigits: 0, 
+      maximumFractionDigits: 2 
+    }).format(amount);
+  };
+
+  const formatDate = (date: Date | string | number, options: Intl.DateTimeFormatOptions = {}) => {
+      const d = new Date(date);
+      let locale = 'en-IL';
+      if (language === 'he') locale = 'he-IL';
+      if (language === 'ar') locale = 'ar-IL';
+      
+      return new Intl.DateTimeFormat(locale, {
+          dateStyle: 'medium',
+          ...options
+      }).format(d);
+  };
+
+  const formatTime = (date: Date | string | number, options: Intl.DateTimeFormatOptions = {}) => {
+      const d = new Date(date);
+      let locale = 'en-IL';
+      if (language === 'he') locale = 'he-IL';
+      if (language === 'ar') locale = 'ar-IL';
+
+      return new Intl.DateTimeFormat(locale, {
+          timeStyle: 'short',
+          ...options
+      }).format(d);
+  };
+
   return (
     <LanguageContext.Provider
       value={{
@@ -56,6 +121,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         setLanguage,
         t,
         direction,
+        formatCurrency,
+        formatDate,
+        formatTime,
       }}
     >
       {children}

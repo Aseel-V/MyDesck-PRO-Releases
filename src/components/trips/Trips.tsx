@@ -268,7 +268,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
 
 
 
-  // PDF Export Logic
+  // PDF Export Logic - Opens in new window for print preview
   const handleExportPDF = async () => {
     try {
         const { jsPDF } = await import('jspdf');
@@ -311,7 +311,16 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
         doc.text(`Total Revenue: ${format(stats.totalRevenue, currency)}`, 14, finalY);
         doc.text(`Total Profit: ${format(stats.totalProfit, currency)}`, 14, finalY + 6);
         
-        doc.save('trips_summary.pdf');
+        // Open PDF in new window for print preview
+        const pdfBlob = doc.output('blob');
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        const printWindow = window.open(pdfUrl, '_blank');
+        
+        if (printWindow) {
+            printWindow.onload = () => {
+                printWindow.print();
+            };
+        }
     } catch (e) {
         console.error("Export failed", e);
     }
@@ -398,7 +407,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* Header + actions */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-extrabold gradient-title drop-shadow dark:drop-shadow-none text-slate-900 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-slate-50 dark:via-sky-100 dark:to-slate-200">
             {t('trips.title')}
@@ -415,7 +424,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
           <div className="flex items-center bg-slate-100 rounded-xl p-1 border border-slate-200/80 mr-2 dark:bg-slate-900/80 dark:border-slate-800/80">
             <button
               onClick={() => setViewMode('grid')}
@@ -446,7 +455,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
               title="Download all displayed invoices"
             >
               <FileText className="w-5 h-5" />
-              <span>
+              <span className="hidden md:inline">
                 {isExportingBatch ? 'Zipping...' : 'Download All'}
               </span>
             </button>
@@ -458,7 +467,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
               className={secondaryActionBtn}
             >
               <FileText className="w-5 h-5" />
-              <span>
+              <span className="hidden md:inline">
                 {t('trips.exportToPdf')} ({tripsMarkedForExport.length})
               </span>
             </button>
@@ -469,7 +478,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
               className={secondaryActionBtn}
           >
               <FileText className="w-5 h-5" />
-              <span>
+              <span className="hidden md:inline">
                 Export PDF
               </span>
           </button>
@@ -479,7 +488,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
             className={primaryActionBtn}
           >
             <Plus className="w-5 h-5" />
-            <span>{t('trips.newTrip')}</span>
+            <span className="hidden md:inline">{t('trips.newTrip')}</span>
           </button>
         </div>
       </div>
@@ -717,6 +726,12 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
           <PDFExportModal
             trips={tripsMarkedForExport}
             onClose={() => setShowPDFExport(false)}
+            onExportComplete={() => {
+              // Clear export_to_pdf flag for all trips that were exported
+              tripsMarkedForExport.forEach(trip => {
+                toggleExport({ id: trip.id, value: false });
+              });
+            }}
           />
         )
       }

@@ -4,14 +4,191 @@ import { BusinessProfile } from '../../lib/supabase';
 
 interface ExtendedProfile extends BusinessProfile {
     email?: string;
-
-    phone_number?: string;
 }
 
 interface InvoiceData {
     trip: Trip;
     profile: ExtendedProfile;
     userFullName?: string;
+}
+
+interface InvoiceLayoutProps {
+    trip: Trip;
+    profile: ExtendedProfile;
+    userFullName: string;
+}
+
+// Exportable layout component for use in PDF preview
+export function InvoiceLayout({ trip, profile, userFullName }: InvoiceLayoutProps) {
+    const currencySymbol = profile.preferred_currency === 'ILS' ? '₪' :
+        profile.preferred_currency === 'EUR' ? '€' : '$';
+
+    return (
+        <div className="bg-white text-black p-8" dir="rtl" style={{ minWidth: '600px' }}>
+            {/* Header Section - Vertical Stack */}
+            <div className="mb-8 pb-6 border-b-2 border-slate-200">
+                {/* Top Row: Logo on right, Title in center */}
+                <div className="flex items-start justify-between mb-6">
+                    {/* Logo - Right Side (first in RTL) */}
+                    {profile.logo_url && (
+                        <img src={profile.logo_url} alt="Logo" className="h-28 object-contain" />
+                    )}
+                    {/* Title - Center */}
+                    <div className="flex-1 flex justify-center">
+                        <h1 className="text-2xl font-extrabold text-slate-900 border-b-4 border-blue-600 pb-1 px-4">
+                            קבלה
+                        </h1>
+                    </div>
+                    {/* Empty spacer for balance */}
+                    <div className="w-20"></div>
+                </div>
+                
+                {/* Business Info and Document Info */}
+                <div className="flex justify-between items-start gap-8">
+                    {/* Right: Business Details */}
+                    <div className="flex-1">
+                        <h2 className="text-lg font-bold text-slate-800 mb-1">{userFullName}</h2>
+                        <p className="text-sm text-slate-600">
+                            תיירות ונופש עראבה מיקוד 3081200
+                        </p>
+                        <p className="text-sm text-slate-600">
+                            טל. {profile.phone_number}
+                        </p>
+                        {profile.business_registration_number && (
+                            <p className="text-sm text-slate-500 mt-1">
+                                ע.מ. {profile.business_registration_number}
+                            </p>
+                        )}
+                    </div>
+                    
+                    {/* Left: Document Meta */}
+                    <div className="text-left">
+                        <div className="mb-3">
+                            <p className="text-xs text-slate-500">מספר מסמך</p>
+                            <p className="text-lg font-mono font-bold text-slate-700">#{trip.id.slice(0, 8).toUpperCase()}</p>
+                        </div>
+                        <div>
+                            <p className="text-xs text-slate-500">תאריך</p>
+                            <p className="text-lg font-bold text-slate-700">{new Date().toLocaleDateString('he-IL')}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Client Info Section */}
+            <div className="mb-8 bg-slate-50 p-6 rounded-xl border border-slate-100">
+                <h3 className="text-base font-bold text-slate-800 mb-5 flex items-center gap-2">
+                    <span className="w-1 h-5 bg-blue-600 rounded-full"></span>
+                    פרטי הלקוח
+                </h3>
+                
+                {/* Info Cards Grid */}
+                <div className="grid grid-cols-2 gap-4">
+                    {/* Client Name */}
+                    <div className="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
+                        <p className="text-xs font-semibold text-blue-600 mb-1">שם הלקוח</p>
+                        <p className="font-bold text-lg text-slate-800">{trip.client_name}</p>
+                    </div>
+                    
+                    {/* Destination */}
+                    <div className="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
+                        <p className="text-xs font-semibold text-blue-600 mb-1">יעד</p>
+                        <p className="font-bold text-lg text-slate-800">{trip.destination}</p>
+                    </div>
+                    
+                    {/* Dates */}
+                    <div className="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
+                        <p className="text-xs font-semibold text-blue-600 mb-1">תאריכים</p>
+                        <p className="font-bold text-base text-slate-700">
+                            {new Date(trip.start_date).toLocaleDateString('he-IL')} - {new Date(trip.end_date).toLocaleDateString('he-IL')}
+                        </p>
+                    </div>
+                    
+                    {/* Accommodation Details */}
+                    <div className="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
+                        <p className="text-xs font-semibold text-blue-600 mb-1">פרטי אירוח</p>
+                        <div className="font-bold text-base text-slate-700 space-y-0.5">
+                            <p>{trip.room_type || 'לא צוין'}</p>
+                            {trip.board_basis && <p className="text-slate-600">{trip.board_basis}</p>}
+                            <p className="text-blue-600">{trip.travelers_count} נוסעים</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Financials Section */}
+            <div className="mb-6">
+                <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                    {/* Header */}
+                    <div className="bg-slate-50 px-5 py-3 border-b border-slate-200 flex justify-between">
+                        <span className="font-bold text-base text-slate-700">תיאור</span>
+                        <span className="font-bold text-base text-slate-700">סכום</span>
+                    </div>
+                    
+                    {/* Content */}
+                    <div className="px-5 py-4">
+                        <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                                <p className="font-bold text-lg text-slate-800">חבילת נופש - {trip.destination}</p>
+                                {trip.notes && (
+                                    <p className="text-slate-500 mt-2 text-sm leading-relaxed">{trip.notes}</p>
+                                )}
+                            </div>
+                            <span className="font-bold text-lg text-slate-800 mr-4">
+                                {currencySymbol}{trip.sale_price.toLocaleString()}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    {/* Total */}
+                    <div className="bg-blue-600 px-5 py-4 flex justify-between items-center">
+                        <span className="font-bold text-white text-lg">סה"כ לתשלום</span>
+                        <span className="font-extrabold text-2xl text-white">
+                            {currencySymbol}{trip.sale_price.toLocaleString()}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            {/* Thank You Message */}
+            <div className="text-center py-4 mb-4">
+                <p className="text-lg font-bold text-slate-700">תודה רבה על בחירתכם בנו! ❤️</p>
+                <p className="text-sm text-slate-500 mt-1">מאחלים לכם חופשה מהנה ונעימה</p>
+            </div>
+
+            {/* Signature Section - Box on left, image centered within */}
+            <div className="pt-8">
+                <div className="text-center w-56 mr-auto">
+                    <div className="h-20 mb-2 flex items-end justify-center">
+                        {profile.signature_url && (
+                            <img 
+                                src={profile.signature_url} 
+                                alt="Signature" 
+                                className="h-16 object-contain" 
+                                style={{ mixBlendMode: 'multiply' }}
+                            />
+                        )}
+                    </div> 
+                    <div className="border-t-2 border-slate-300 pt-2">
+                        <p className="font-bold text-slate-700 text-sm">חתימה דיגיטלית / חותמת</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Footer - Elegant Design */}
+            <div className="mt-8 pt-5 border-t-2 border-slate-100">
+                <div className="flex items-center justify-center gap-3 mb-2">
+                    <div className="h-px flex-1 bg-gradient-to-r from-transparent to-slate-200"></div>
+                    <div className="px-4 py-2 bg-gradient-to-r from-blue-50 to-slate-50 rounded-full border border-slate-200">
+                        <p className="text-sm font-bold text-blue-600">MyDesck PRO</p>
+                    </div>
+                    <div className="h-px flex-1 bg-gradient-to-l from-transparent to-slate-200"></div>
+                </div>
+                <p className="text-center text-xs text-slate-400">Advanced Travel Agency Management System</p>
+                <p className="text-center text-xs text-slate-300 mt-1">Developed with ❤️ by Aseel Shaheen</p>
+            </div>
+        </div>
+    );
 }
 
 export default function InvoiceTemplate() {

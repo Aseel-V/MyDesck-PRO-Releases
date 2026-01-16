@@ -68,7 +68,7 @@ export default function GuideWallet() {
             <div className="glass-panel bg-slate-950/90 border border-slate-800 rounded-2xl p-6">
                 <h3 className="text-lg font-semibold text-white mb-6">Earnings Overview</h3>
                 <div className="h-[300px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={100}>
                         <LineChart data={analytics?.sales_chart_data || []}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                             <XAxis dataKey="name" stroke="#94a3b8" />
