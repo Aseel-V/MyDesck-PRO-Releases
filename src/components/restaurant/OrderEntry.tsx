@@ -3,7 +3,7 @@
 // Version: 2.0.0 | Production-Ready with i18n, Allergy Safety, Quick Add
 // ============================================================================
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useRestaurant, useGuestProfiles as useGuestProfilesHook } from '../../hooks/useRestaurant';
 import { useRestaurantRole } from '../../contexts/RestaurantRoleContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -755,7 +755,9 @@ export default function OrderEntry({ tableId, sessionId, orderId, onClose }: Ord
           .single();
         
         // Cast to any because of strict typing issues with generated types
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         if ((session as any)?.guest_id) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const guest = guestProfiles?.find(g => g.id === (session as any).guest_id);
           if (guest?.allergy_codes?.length || guest?.allergies?.length) {
             setGuestAllergies(guest.allergy_codes || guest.allergies || []);
@@ -781,6 +783,7 @@ export default function OrderEntry({ tableId, sessionId, orderId, onClose }: Ord
   const holdTimer = useRef<NodeJS.Timeout | null>(null);
   const [allergenWarningItem, setAllergenWarningItem] = useState<MenuItem | null>(null);
   const [matchingAllergens, setMatchingAllergens] = useState<string[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [showManagerPin, setShowManagerPin] = useState<{ action: (staff?: any) => void; item?: MenuItem } | null>(null);
   const [verballyConfirmed, setVerballyConfirmed] = useState(false);
 
@@ -791,6 +794,7 @@ export default function OrderEntry({ tableId, sessionId, orderId, onClose }: Ord
   // 2. LOGGING: Immutable audit log
   const logAllergyOverride = async (item: MenuItem, reason: string, method: string) => {
     try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (supabase.rpc as any)('log_business_activity_v2', {
              p_business_id: user?.id,
              p_activity_type: 'ALLERGY_OVERRIDE',
@@ -851,7 +855,7 @@ export default function OrderEntry({ tableId, sessionId, orderId, onClose }: Ord
   // UX FIX: Removed auto-popup - allergy check now triggers on first item add
   // This matches real waiter workflow: approach table → start taking order → ask about allergies
 
-  const handleAllergyDeclaration = (_hasAllergies: boolean) => {
+  const handleAllergyDeclaration = () => {
 
     setShowAllergyCheck(false);
   };
@@ -901,6 +905,7 @@ export default function OrderEntry({ tableId, sessionId, orderId, onClose }: Ord
       modifiers: item.modifiers,
     }));
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return calculateOrderTotal({ items } as any);
   }, [cart]);
 
@@ -925,7 +930,7 @@ export default function OrderEntry({ tableId, sessionId, orderId, onClose }: Ord
   // Total with tip
   const finalTotal = orderTotals.total_amount + calculatedTip;
 
-  const itemHasModifiers = (_item: MenuItem): boolean => {
+  const itemHasModifiers = (): boolean => {
     if (modifierGroups.length === 0) return false;
     return modifierGroups.some(group => group.modifiers && group.modifiers.length > 0);
   };
@@ -1003,7 +1008,7 @@ export default function OrderEntry({ tableId, sessionId, orderId, onClose }: Ord
       return;
     }
 
-    if (itemHasModifiers(item) && modifierGroups.length > 0) {
+    if (itemHasModifiers() && modifierGroups.length > 0) {
       setShowModifierModal(item);
     } else {
       addToCart(item, [], '');
@@ -1036,7 +1041,7 @@ export default function OrderEntry({ tableId, sessionId, orderId, onClose }: Ord
     setEditingNotesItem(null);
   };
 
-  const handleSendOrder = async () => {
+  const handleSendOrder = useCallback(async () => {
     if (cart.length === 0) return;
     try {
       const verification = await verifyPriceIntegrity(cart);
@@ -1087,7 +1092,7 @@ export default function OrderEntry({ tableId, sessionId, orderId, onClose }: Ord
     } finally {
       setIsSending(false);
     }
-  };
+  }, [cart, orderId, tableId, sessionId, isRush, createOrder, addOrderItem, sendToKitchen, onClose, t, verifyPriceIntegrity]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -1542,6 +1547,7 @@ export default function OrderEntry({ tableId, sessionId, orderId, onClose }: Ord
               <button
                 disabled={!cancelReason}
                 onClick={() => {
+                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
                    const proceedCancellation = (staff: any) => {
                        cancelOrder.mutate({ 
                            orderId: orderId!, 
@@ -1560,6 +1566,7 @@ export default function OrderEntry({ tableId, sessionId, orderId, onClose }: Ord
                        setShowManagerPin(null);
                        setShowCancelConfirm(false);
                    };
+                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
                    setShowManagerPin({ action: proceedCancellation, item: undefined as any });
                 }}
                 className="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 disabled:opacity-50"
@@ -1615,6 +1622,7 @@ export default function OrderEntry({ tableId, sessionId, orderId, onClose }: Ord
                     return;
                   }
                   authorizeStaffAction.mutateAsync({ pin, requiredRole: 'Manager' })
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     .then((result) => (showManagerPin.action as any)(result))
                     .catch(err => toast.error(err.message));
                 }}
@@ -1675,13 +1683,13 @@ export default function OrderEntry({ tableId, sessionId, orderId, onClose }: Ord
               
               <div className="grid grid-cols-2 gap-3 mt-6">
                 <button
-                  onClick={() => handleAllergyDeclaration(false)}
+                  onClick={() => handleAllergyDeclaration()}
                   className="py-3 bg-slate-100 text-slate-700 font-medium rounded-xl hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
                 >
                   {t('orderEntry.allergySafety.noAllergies')}
                 </button>
                 <button
-                  onClick={() => handleAllergyDeclaration(true)}
+                  onClick={() => handleAllergyDeclaration()}
                   className="py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30"
                 >
                   {t('orderEntry.allergySafety.confirmStart')}

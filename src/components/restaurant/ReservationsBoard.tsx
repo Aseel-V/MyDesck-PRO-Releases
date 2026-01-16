@@ -384,7 +384,7 @@ export default function ReservationsBoard() {
            setServerOffset(serverTime - Date.now());
            return;
         }
-      } catch (e) {
+      } catch {
         // RPC might not exist
       }
       

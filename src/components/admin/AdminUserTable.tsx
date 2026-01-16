@@ -3,10 +3,27 @@ import { useAuth } from '../../contexts/AuthContext';
 
 import { useLanguage } from '../../contexts/LanguageContext';
 
+interface AdminUser {
+  id: string;
+  created_at: string;
+  subscription_status: 'active' | 'trial' | 'past_due' | 'cancelled' | null;
+  is_suspended: boolean;
+  user_id: string;
+  role: string;
+  logo_url: string | null;
+  business_name: string;
+  full_name: string;
+  short_id: string;
+  business_type: string;
+  email: string;
+  phone_number: string | null;
+  trial_start_date?: string;
+}
+
 interface AdminUserTableProps {
-  users: any[];
+  users: AdminUser[];
   loading: boolean;
-  onEdit: (user: any) => void;
+  onEdit: (user: AdminUser) => void;
 }
 
 export default function AdminUserTable({ users, loading, onEdit }: AdminUserTableProps) {
@@ -74,12 +91,12 @@ export default function AdminUserTable({ users, loading, onEdit }: AdminUserTabl
             
             // Safe access for dynamic keys
             const getBusinessTypeName = (type: string) => {
-               // @ts-ignore
+
                return t(`admin.businessTypes.${type}`) || type;
             };
 
             const getSubscriptionStatusName = (status: string) => {
-               // @ts-ignore
+
                return t(`admin.subscriptionStatus.${status}`) || status;
             };
             

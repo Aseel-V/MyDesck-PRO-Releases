@@ -29,7 +29,7 @@ export default function BusinessLunchModal({ isOpen, onClose, onConfirm, categor
         categories.find(c => 
             c.name.toLowerCase().includes('starter') || 
             c.name.includes('ראשונות') || 
-            // @ts-ignore
+            // @ts-expect-error: type property missing on interface
             c.type === 'appetizers'
         )?.items || [], 
     [categories]);
@@ -38,7 +38,7 @@ export default function BusinessLunchModal({ isOpen, onClose, onConfirm, categor
         categories.find(c => 
             c.name.toLowerCase().includes('main') || 
             c.name.includes('עיקריות') || 
-            // @ts-ignore
+            // @ts-expect-error: type property missing on interface
             c.type === 'mains'
         )?.items || [], 
     [categories]);
@@ -47,7 +47,7 @@ export default function BusinessLunchModal({ isOpen, onClose, onConfirm, categor
         categories.find(c => 
             c.name.toLowerCase().includes('drink') || 
             c.name.includes('שתייה') || 
-            // @ts-ignore
+            // @ts-expect-error: type property missing on interface
             c.type === 'drinks'
         )?.items || [], 
     [categories]);
@@ -147,6 +147,7 @@ export default function BusinessLunchModal({ isOpen, onClose, onConfirm, categor
     );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function StepIndicator({ active, completed, label, onClick }: any) {
     return (
         <button 

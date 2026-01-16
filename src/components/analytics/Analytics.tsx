@@ -107,14 +107,12 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   return null;
 };
 
-export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsProps) {
+const AnalyticsContent = ({ trips, onOpenTripsWithFilter }: AnalyticsProps) => {
   const { t } = useLanguage();
-  const { isAdmin, profile } = useAuth();
+  const { isAdmin } = useAuth();
   const { convert, format, currency, isLoading: ratesLoading } = useCurrency();
 
-  if (profile?.business_type === 'restaurant' && !isAdmin) {
-      return <RestaurantAnalytics />;
-  }
+  // Redirect check moved to parent component wrapper
 
   const [userProfiles, setUserProfiles] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(false);
@@ -263,7 +261,7 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
       const { data, error } = await supabase.rpc('get_yearly_stats_overview');
       if (error) throw error;
 
-      let stats = ((data as any) || []) as YearlyStats[];
+      let stats = ((data as unknown) || []) as YearlyStats[];
       const currentYear = new Date().getFullYear().toString();
 
       // Ensure current year is in the list
@@ -889,4 +887,14 @@ export default function Analytics({ trips, onOpenTripsWithFilter }: AnalyticsPro
 
     </div>
   );
+}
+
+export default function Analytics(props: AnalyticsProps) {
+  const { isAdmin, profile } = useAuth();
+
+  if (profile?.business_type === 'restaurant' && !isAdmin) {
+    return <RestaurantAnalytics />;
+  }
+
+  return <AnalyticsContent {...props} />;
 }
