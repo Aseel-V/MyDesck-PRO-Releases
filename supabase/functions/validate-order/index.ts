@@ -29,7 +29,7 @@ serve(async (req) => {
       { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
     )
 
-    const { items, _tableId }: ValidationRequest = await req.json()
+    const { items }: ValidationRequest = await req.json()
 
     // 1. Validate Prices
     const itemIds = items.map((i: OrderItemInput) => i.itemId)

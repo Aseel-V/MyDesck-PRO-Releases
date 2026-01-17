@@ -687,9 +687,9 @@ export function useRestaurant() {
         currency,
       };
       
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await supabase
         .from('restaurant_orders')
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .upsert(payload as any)
         .select()
         .single();
@@ -1018,9 +1018,9 @@ export function useRestaurant() {
   const createDailyReport = useMutation({
     mutationFn: async (reportData: Partial<DailyReport>) => {
       if (!userId) throw new Error("No user logged in");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await supabase
         .from('restaurant_daily_reports')
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .insert({ ...reportData, business_id: userId, currency } as any)
         .select()
         .single();

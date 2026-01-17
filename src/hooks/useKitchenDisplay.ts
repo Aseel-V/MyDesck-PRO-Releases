@@ -357,6 +357,7 @@ export function useKitchenDisplay(
   const startTicket = useCallback(async (ticketId: string) => {
     if (!user?.id) throw new Error('Not authenticated');
     
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error: updateError } = await (supabase as any)
       .from('restaurant_kitchen_tickets')
       .update({

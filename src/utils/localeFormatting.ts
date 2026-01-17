@@ -143,7 +143,7 @@ export function formatRelativeTime(
  * Format a phone number for display (basic formatting)
  * Note: For production, consider using libphonenumber-js
  */
-export function formatPhoneDisplay(phone: string, _language: string): string {
+export function formatPhoneDisplay(phone: string): string {
   // Remove non-numeric characters except +
   const cleaned = phone.replace(/[^\d+]/g, '');
   

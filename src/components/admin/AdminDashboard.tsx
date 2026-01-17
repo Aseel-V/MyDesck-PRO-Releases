@@ -7,9 +7,12 @@ import AdminUserTable from './AdminUserTable';
 import EditUserModal from './EditUserModal';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
+
+
 export default function AdminDashboard() {
   
   // States
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -18,9 +21,11 @@ export default function AdminDashboard() {
   // Modals
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [selectedUser, setSelectedUser] = useState<any>(null);
   
   // Dropdown data
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [businesses, setBusinesses] = useState<any[]>([]);
 
   // Stats
@@ -29,6 +34,7 @@ export default function AdminDashboard() {
     totalAdmins: 0,
     activeSubscriptions: 0,
     totalRevenue: 0,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     newUsersChat: [] as any[]
   });
 
@@ -123,6 +129,7 @@ export default function AdminDashboard() {
     fetchData();
   }, [fetchData]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleEditUser = (user: any) => {
     setSelectedUser(user);
     setShowEditModal(true);

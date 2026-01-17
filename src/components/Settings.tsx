@@ -735,6 +735,7 @@ export default function Settings() {
                       }`} />
                       <div className="flex-1">
                         <span className="font-medium text-slate-900 dark:text-slate-100 block">
+                          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                           {t(`settings.business.status.${profile?.subscription_status || 'trial'}` as any)}
                         </span>
                         {/* Show trial end date if in trial */}

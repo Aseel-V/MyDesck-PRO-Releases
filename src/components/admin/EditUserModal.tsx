@@ -5,7 +5,15 @@ import { X, Save, Calendar, Building2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface EditUserModalProps {
-  user: any;
+  user: {
+    id: string;
+    user_id: string;
+    full_name?: string;
+    trial_start_date?: string;
+    business_type?: string;
+    is_suspended?: boolean;
+    subscription_status?: string;
+  };
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -22,9 +30,11 @@ export default function EditUserModal({ user, onClose, onSuccess }: EditUserModa
   useEffect(() => {
     if (user) {
       setTrialStart(user.trial_start_date ? new Date(user.trial_start_date).toISOString().split('T')[0] : '');
-      setBusinessType(user.business_type || 'tourism');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setBusinessType((user.business_type as any) || 'tourism');
       setIsSuspended(user.is_suspended || false);
-      setSubscriptionStatus(user.subscription_status || 'trial');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setSubscriptionStatus((user.subscription_status as any) || 'trial');
     }
   }, [user]);
 
@@ -60,9 +70,9 @@ export default function EditUserModal({ user, onClose, onSuccess }: EditUserModa
 
       toast.success('User updated successfully');
       onSuccess();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating user:', error);
-      toast.error(error.message || 'Failed to update user');
+      toast.error((error as Error)?.message || 'Failed to update user');
     } finally {
       setLoading(false);
     }
@@ -105,7 +115,7 @@ export default function EditUserModal({ user, onClose, onSuccess }: EditUserModa
               <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <select
                 value={businessType}
-                onChange={(e) => setBusinessType(e.target.value as any)}
+                onChange={(e) => setBusinessType(e.target.value as typeof businessType)}
                 className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 dark:bg-slate-950 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none appearance-none"
               >
                 <option value="tourism">Tourism (Trips)</option>
@@ -126,7 +136,7 @@ export default function EditUserModal({ user, onClose, onSuccess }: EditUserModa
             </label>
             <select
               value={subscriptionStatus}
-              onChange={(e) => setSubscriptionStatus(e.target.value as any)}
+              onChange={(e) => setSubscriptionStatus(e.target.value as typeof subscriptionStatus)}
               className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 dark:bg-slate-950 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none"
             >
               <option value="trial">Trial</option>

@@ -109,8 +109,8 @@ export default function CloseDayWizard({ isOpen, onClose }: CloseDayWizardProps)
                 setIsPinPadOpen(false);
                 executeCloseDay(result.staff_id);
             }
-        } catch (err: any) {
-             toast.error(err.message || 'Authorization failed');
+        } catch (err: unknown) {
+             toast.error((err as Error)?.message || 'Authorization failed');
              pinPadRef.current?.triggerFailure();
         }
     };
@@ -145,9 +145,9 @@ export default function CloseDayWizard({ isOpen, onClose }: CloseDayWizardProps)
 
             toast.success(t('restaurantAnalytics.closeDayWizard.closing'));
             onClose();
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error(err);
-            toast.error(err.message || 'Failed to close day');
+            toast.error((err as Error)?.message || 'Failed to close day');
         } finally {
             setProcessing(false);
         }

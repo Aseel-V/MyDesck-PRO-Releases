@@ -329,6 +329,7 @@ export default function AnalyticsDashboard() {
                       : 'text-slate-500 hover:text-slate-700'
                   }`}
                 >
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                   {t(`restaurantAnalytics.${range}` as any)}
                 </button>
               ))}

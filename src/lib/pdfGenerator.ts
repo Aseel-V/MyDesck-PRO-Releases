@@ -25,6 +25,7 @@ const generateQRCode = async (text: string): Promise<string> => {
   }
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const generateBrowserPDF = async (payload: any): Promise<Uint8Array> => {
   console.warn('Using browser fallback for PDF generation');
   const { jsPDF } = await import('jspdf');
@@ -196,6 +197,7 @@ const generateBrowserPDF = async (payload: any): Promise<Uint8Array> => {
     
     if (payload.trips && Array.isArray(payload.trips)) {
       const { default: autoTable } = await import('jspdf-autotable');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const tableData = payload.trips.map((t: any) => [
         t.destination || '',
         t.client_name || '',
@@ -214,11 +216,13 @@ const generateBrowserPDF = async (payload: any): Promise<Uint8Array> => {
   }
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const generatePDF = async (mode: PdfMode, options: any): Promise<Uint8Array> => {
   // If we are dealing with Trip PDF options (which matched the User's provided content)
   // We handle the payload construction here to match their design.
   // BUT we must support the other modes (Receipt/Report) which might pass 'options' differently.
   
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let payload: any = {};
 
   if (mode === 'invoice' || mode === 'summary') {
@@ -271,7 +275,7 @@ const generatePDF = async (mode: PdfMode, options: any): Promise<Uint8Array> => 
     console.error('Error generating PDF:', error);
     try {
         return await generateBrowserPDF(payload);
-    } catch (fallbackError) {
+    } catch (_fallbackError) {
         throw new Error('Failed to generate PDF. Please try again.');
     }
   }

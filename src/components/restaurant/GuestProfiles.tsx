@@ -348,7 +348,7 @@ function GuestDetailPanel({ guest, onUpdate, onClose }: GuestDetailPanelProps) {
             {isEditing ? (
               <select
                 value={formData.seating_preference}
-                onChange={(e) => setFormData({ ...formData, seating_preference: e.target.value as any })}
+                onChange={(e) => setFormData({ ...formData, seating_preference: e.target.value as typeof formData.seating_preference })}
                 className="w-full px-3 py-2 border rounded-lg dark:bg-slate-800 dark:border-slate-700 text-sm"
               >
                 <option value="any">Any</option>
@@ -370,7 +370,7 @@ function GuestDetailPanel({ guest, onUpdate, onClose }: GuestDetailPanelProps) {
             {isEditing ? (
               <select
                 value={formData.vip_level}
-                onChange={(e) => setFormData({ ...formData, vip_level: parseInt(e.target.value) as any })}
+                onChange={(e) => setFormData({ ...formData, vip_level: parseInt(e.target.value) as 0 | 1 | 2 | 3 })}
                 className="w-full px-3 py-2 border rounded-lg dark:bg-slate-800 dark:border-slate-700 text-sm"
               >
                 {VIP_LEVELS.map((v) => (
