@@ -282,6 +282,7 @@ export default function OrderModal({ table, isOpen, onClose, onToggleNavbar }: O
                     notes: item.notes,
                     course_number: item.course_number || 1,
                     is_fired: shouldFire // Set based on button click
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 } as any);
             });
             

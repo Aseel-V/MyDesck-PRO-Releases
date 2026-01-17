@@ -275,7 +275,7 @@ const generatePDF = async (mode: PdfMode, options: any): Promise<Uint8Array> => 
     console.error('Error generating PDF:', error);
     try {
         return await generateBrowserPDF(payload);
-    } catch (_fallbackError) {
+    } catch {
         throw new Error('Failed to generate PDF. Please try again.');
     }
   }

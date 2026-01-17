@@ -125,6 +125,7 @@ function Sidebar({ activeView, onViewChange, isCollapsed, onToggleCollapse }: Si
   const { t } = useLanguage();
   
   // Filter nav items based on permissions
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const visibleItems = NAV_ITEMS.filter(item => can(item.permission as any));
   
   return (
