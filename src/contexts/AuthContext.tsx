@@ -163,7 +163,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         // Handle invalid refresh token by clearing local data
         // Handle invalid refresh token by clearing local data
-        const errorMessage = e?.message || (e as any)?.error_description || JSON.stringify(e);
+        const errorMessage = e?.message || (e as { error_description?: string })?.error_description || JSON.stringify(e);
         if (
           errorMessage.includes('Invalid Refresh Token') || 
           errorMessage.includes('Refresh Token Not Found') ||

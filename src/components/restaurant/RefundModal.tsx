@@ -73,8 +73,8 @@ export default function RefundModal({ isOpen, onClose, order }: RefundModalProps
       toast.success(t('refund.success'));
       setIsPinPadOpen(false);
       onClose();
-    } catch (err: any) {
-      toast.error(err.message || 'Refund Failed');
+    } catch (err: unknown) {
+      toast.error((err as Error)?.message || 'Refund Failed');
       pinPadRef.current?.triggerFailure();
     } finally {
       setIsProcessing(false);

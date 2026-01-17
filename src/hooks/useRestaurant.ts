@@ -672,14 +672,14 @@ export function useRestaurant() {
         server_id: orderData.server_id,
         guest_id: orderData.guest_id,
         order_type: orderData.order_type ?? 'dine_in',
-        status: 'draft' as 'draft',
+        status: 'draft' as const,
         subtotal_amount: 0,
         discount_amount: 0,
         discount_percentage: 0,
         tax_amount: 0,
         tip_amount: 0,
         total_amount: 0,
-        payment_status: 'pending' as 'pending',
+        payment_status: 'pending' as const,
         is_rush: orderData.is_rush ?? false,
         is_vip: orderData.is_vip ?? false,
         course_number: 1,
@@ -687,6 +687,7 @@ export function useRestaurant() {
         currency,
       };
       
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await supabase
         .from('restaurant_orders')
         .upsert(payload as any)
@@ -735,7 +736,8 @@ export function useRestaurant() {
       
       if (itemsError) throw itemsError;
 
-      // 3. Log activity
+      // Log activity
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase as any).rpc('log_business_activity_v2', {
         p_activity_type: 'ORDER_CANCELLED',
         p_details: { orderId, reason, authorizedBy: managerId }
@@ -848,6 +850,7 @@ export function useRestaurant() {
 
      if (error) throw error;
 
+     // eslint-disable-next-line @typescript-eslint/no-explicit-any
      const dbItemMap = new Map(dbItems.map((i: any) => [i.id, i]));
      const errors: string[] = [];
 
@@ -879,7 +882,9 @@ export function useRestaurant() {
     }: { 
       staffId: string; 
       date: string; 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       shifts: any[]; 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expenses: any[]; 
     }) => {
       const { data, error } = await supabase.rpc('close_business_day_secure', {
@@ -920,6 +925,7 @@ export function useRestaurant() {
     mutationFn: async (params: { orderId: string; station?: string }) => {
       if (!userId) throw new Error("No user logged in");
       
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase.rpc as any)('create_kitchen_ticket', {
         p_order_id: params.orderId,
         p_station: params.station ?? null,
@@ -943,7 +949,7 @@ export function useRestaurant() {
 
   const updateTicketStatus = useMutation({
     mutationFn: async ({ ticketId, status }: { ticketId: string; status: TicketStatus }) => {
-      const updates: any = { status };
+      const updates: Record<string, unknown> = { status };
       
       if (status === 'in_progress') {
         updates.started_at = new Date().toISOString();
@@ -967,7 +973,7 @@ export function useRestaurant() {
 
   const updateTicketItemStatus = useMutation({
     mutationFn: async ({ itemId, status }: { itemId: string; status: string }) => {
-      const updates: any = { status };
+      const updates: Record<string, unknown> = { status };
       
       if (status === 'cooking') {
         updates.started_at = new Date().toISOString();
@@ -1012,6 +1018,7 @@ export function useRestaurant() {
   const createDailyReport = useMutation({
     mutationFn: async (reportData: Partial<DailyReport>) => {
       if (!userId) throw new Error("No user logged in");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await supabase
         .from('restaurant_daily_reports')
         .insert({ ...reportData, business_id: userId, currency } as any)
@@ -1059,6 +1066,7 @@ export function useRestaurant() {
         authStaffId: string;
     }) => {
         // Log the refund
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (supabase.rpc as any)('log_business_activity_v2', {
             p_business_id: userId,
             p_activity_type: 'REFUND',
@@ -1262,7 +1270,7 @@ export function useReservations() {
 
   const updateReservationStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: ReservationStatus }) => {
-      const updates: any = { status };
+      const updates: Record<string, unknown> = { status };
       if (status === 'seated') {
         updates.seated_at = new Date().toISOString();
       }

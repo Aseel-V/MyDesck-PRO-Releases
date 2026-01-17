@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 interface ReservationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: any) => Promise<void>;
+  onSubmit: (data: Record<string, unknown>) => Promise<void>;
   selectedDate: Date;
   guestSuggestions: GuestProfile[];
   onSearchGuests: (query: string) => void;
@@ -306,7 +306,7 @@ export default function ReservationModal({
                                         : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
                                     }`}
                                  >
-                                    {t(`reservationsBoard.sources.${src}` as any)}
+                                    {t(`reservationsBoard.sources.${src}`) as string}
                                  </button>
                              ))}
                          </div>

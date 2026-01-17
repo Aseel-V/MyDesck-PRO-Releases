@@ -169,6 +169,7 @@ export function RestaurantRoleProvider({ children, staffOverride }: RestaurantRo
     try {
       // Use secure server-side PIN verification (hashed comparison)
       // Type assertion needed until Supabase types are regenerated with new RPC
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: result, error: rpcError } = await (supabase.rpc as any)(
         'verify_staff_pin_secure',
         { 

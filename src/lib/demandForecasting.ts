@@ -287,6 +287,7 @@ export async function generateDemandForecast(input: ForecastInput): Promise<Dema
   };
   
   // Save to database
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await supabase
     .from('restaurant_demand_forecasts')
     .upsert(forecast as any, { onConflict: 'business_id,forecast_date' })

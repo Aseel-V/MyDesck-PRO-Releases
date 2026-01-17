@@ -178,7 +178,7 @@ export default function OrderModal({ table, isOpen, onClose, onToggleNavbar }: O
                 menu_item: item,
                 course_number: 1, // Default to Starters
                 is_fired: true    // Default to Fire Immediately
-            } as any];
+            } as Partial<OrderItem>];
         });
     };
 
@@ -198,7 +198,7 @@ export default function OrderModal({ table, isOpen, onClose, onToggleNavbar }: O
             price_at_time: price,
             notes: `BUSINESS LUNCH: ${description}`,
             menu_item: { ...mainItem, name: `Business Lunch (${mainItem.name})` }
-        } as any]);
+        } as Partial<OrderItem>]);
     };
 
     const handleRemoveRequest = (index: number) => {
@@ -417,9 +417,9 @@ export default function OrderModal({ table, isOpen, onClose, onToggleNavbar }: O
 
             setIsPinPadOpen(false);
 
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error(err);
-            toast.error(err.message || 'Authorization failed');
+            toast.error((err as Error)?.message || 'Authorization failed');
             pinPadRef.current?.triggerFailure();
             // Do NOT close modal, let them try again
         } finally {
@@ -471,8 +471,7 @@ export default function OrderModal({ table, isOpen, onClose, onToggleNavbar }: O
                                             : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400'}
                                     `}
                                 >
-                                    {/* @ts-ignore */}
-                                    {cat.type ? t(`settings.restaurant.categoryTypes.${cat.type}` as any) || cat.name : cat.name}
+                                        {cat.name}
                                 </button>
                             ))}
                         </div>
@@ -576,8 +575,7 @@ export default function OrderModal({ table, isOpen, onClose, onToggleNavbar }: O
                                     <div key={idx} className={`flex items-center justify-between p-3 rounded-lg border ${item.id ? 'bg-white border-slate-200 dark:bg-slate-900 dark:border-slate-700' : 'bg-slate-50 border-slate-100 dark:bg-slate-950 dark:border-slate-800'}`}>
                                         <div className="flex-1">
                                             <div className="font-medium dark:text-white flex items-center gap-2">
-                                                {/* @ts-ignore */}
-                                                {(item.menu_item ? getItemName(item.menu_item) : t('orderModal.unknownItem'))}
+                                                {(item.menu_item ? getItemName(item.menu_item as MenuItem) : t('orderModal.unknownItem'))}
                                                 {item.id && <span className="text-[10px] bg-slate-100 text-slate-500 px-1 py-0.5 rounded">{t('orderModal.saved')}</span>}
                                                 <button 
                                                     onClick={() => setEditingItemIndex(idx)}
@@ -603,7 +601,7 @@ export default function OrderModal({ table, isOpen, onClose, onToggleNavbar }: O
                                                                 : 'bg-transparent text-slate-400 border-slate-200'
                                                         }`}
                                                     >
-                                                        {t(c.labelKey as any)[0]}
+                                                        {(t(c.labelKey) as string)[0]}
                                                     </button>
                                                 ))}
                                             </div>

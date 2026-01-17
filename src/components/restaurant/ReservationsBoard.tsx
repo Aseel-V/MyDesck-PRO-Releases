@@ -10,7 +10,7 @@ import ReservationModal from './ReservationModal';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { supabase } from '../../lib/supabase';
 
-import { Reservation, Waitlist as WaitlistType, ReservationStatus } from '../../types/restaurant';
+import { Reservation, Waitlist as WaitlistType, ReservationStatus, GuestProfile } from '../../types/restaurant';
 import { 
   Calendar, 
   Clock, 
@@ -351,7 +351,7 @@ export default function ReservationsBoard() {
   } = useWaitlist();
   
   const { searchGuests } = useGuestProfiles();
-  const [guestSuggestions, setGuestSuggestions] = useState<any[]>([]);
+  const [guestSuggestions, setGuestSuggestions] = useState<GuestProfile[]>([]);
   const handleSearchGuests = async (term: string) => {
       if (term.length >= 3) {
           const results = await searchGuests(term);
@@ -377,10 +377,10 @@ export default function ReservationsBoard() {
       // Preferred: Select NOW() via RPC
       // Fallback: Use simple offset if RPC missing (graceful degradation)
       try {
-        // @ts-ignore - RPC created manually in DB
-        const { data, error } = await supabase.rpc('get_server_time');
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data, error } = await (supabase as any).rpc('get_server_time');
         if (data && !error) {
-           const serverTime = new Date(data as any).getTime();
+           const serverTime = new Date(data as string).getTime();
            setServerOffset(serverTime - Date.now());
            return;
         }
@@ -450,6 +450,7 @@ export default function ReservationsBoard() {
     await cancelReservation.mutateAsync(id);
   };
   
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleAddReservation = async (data: any) => {
     await createReservation.mutateAsync(data);
     setShowAddModal(false);
@@ -556,7 +557,7 @@ export default function ReservationsBoard() {
             </div>
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as any)}
+              onChange={(e) => setStatusFilter(e.target.value as ReservationStatus | 'all')}
               className="px-3 py-2 border rounded-lg dark:bg-slate-800 dark:border-slate-700 text-sm"
             >
               <option value="all">{t('reservationsBoard.allStatus') || 'All Status'}</option>
