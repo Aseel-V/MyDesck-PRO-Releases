@@ -1,0 +1,52 @@
+on:
+  push:
+    branches: [ "main" ]
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build
+        run: npm run build
+
+      - name: Release (Windows)
+        if: matrix.os == 'windows-latest' && startsWith(github.ref, 'refs/tags/')
+        id: release-win
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx electron-builder --win --publish always
+
+      - name: Build (Windows - Test Only)
+        if: matrix.os == 'windows-latest' && !startsWith(github.ref, 'refs/tags/')
+        run: npx electron-builder --win --publish never
+
+      - name: Release (macOS)
+        if: matrix.os == 'macos-latest' && startsWith(github.ref, 'refs/tags/')
+        id: release-mac
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx electron-builder --mac --publish always
+
+      - name: Build (macOS - Test Only)
+        if: matrix.os == 'macos-latest' && !startsWith(github.ref, 'refs/tags/')
+        run: npx electron-builder --mac --publish never

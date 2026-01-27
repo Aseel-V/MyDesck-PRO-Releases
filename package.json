@@ -68,7 +68,7 @@
     "electron:build-start": "npm run build && cross-env NODE_ENV=production node node_modules/electron/cli.js .",
     "dist": "npm run build && dotenv electron-builder",
     "dist:win": "npm run build && dotenv electron-builder --win",
-    "dist:mac": "npm run build && electron-builder --mac",
+    "dist:mac": "node -e \"if (process.platform === 'win32') { console.log('\\x1b[31mError: macOS builds cannot be run on Windows.\\x1b[0m\\n\\x1b[33mPlease push a tag (e.g. v0.0.35) to GitHub to trigger the cloud build.\\x1b[0m'); process.exit(1); }\" && npm run build && electron-builder --mac",
     "release": "npm run build && dotenv electron-builder --win --publish always",
     "release:ci:win": "npm run build && electron-builder --win --publish always",
     "release:patch": "npm version patch && npm run release",

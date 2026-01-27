@@ -70,9 +70,15 @@ A new dedicated legal and support hub.
 
 ### 3. Build & Release
 
-- **Command:** `npm run release`
-- **Outcome:** Script should generate both `.exe` and `.dmg` (if on Mac) or
-  `.exe` (on Windows) in the `dist/` folder without linting errors.
+- **Local (Windows only):** `npm run release` (Generates `.exe` only)
+- **CI/CD (Test Mode):**
+  - Push any commit to `main`.
+  - Go to GitHub Actions tab. You will see a "Build" workflow running.
+  - It will build for both Windows and macOS but **will not publish** a release.
+  - If this passes (Green Checkmark), you are safe to create a release.
+- **CI/CD (Release Mode):
+  - Push a tag starting with `v` (e.g., `v0.0.35`).
+  - GitHub Actions will automatically build and publish release artifacts.
 
 ---
 
