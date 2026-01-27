@@ -15,9 +15,18 @@ import {
 import { formatDate } from '../../lib/utils';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
-import { Trip } from '../../types/trip';
+import { Trip, RoomConfiguration } from '../../types/trip';
 import { supabase } from '../../lib/supabase'; // Import supabase
 import { toast } from 'sonner';
+
+// Helper to format RoomConfiguration object for display
+const formatRoomType = (roomType: RoomConfiguration | undefined): string => {
+  if (!roomType || typeof roomType !== 'object') return 'No Room Config';
+  const parts = Object.entries(roomType)
+    .filter(([, count]) => count && count > 0)
+    .map(([type, count]) => `${type} x${count}`);
+  return parts.length > 0 ? parts.join(', ') : 'No Room Config';
+};
 
 interface ViewTripModalProps {
   trip: Trip;
@@ -30,7 +39,6 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
   const { format } = useCurrency();
   const [trip] = useState(initialTrip);
   const [updating, setUpdating] = useState(false);
-
 
 
   const handleArchive = async () => {
@@ -127,7 +135,7 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
                 <span className="text-xs uppercase tracking-wider font-semibold">{t('trips.accommodation')}</span>
               </div>
               <p className="text-slate-900 font-medium dark:text-slate-100">
-                {trip.room_type || 'No Room Config'}
+                {formatRoomType(trip.room_type)}
               </p>
               <p className="text-slate-500 text-sm">
                 {trip.board_basis || 'No Board Basis'}

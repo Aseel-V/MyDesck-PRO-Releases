@@ -49,17 +49,6 @@
   .dark body {
     color: rgb(226 232 240); /* slate-200 */
     background-color: rgb(2 6 23); /* slate-950 */
-    background-image:
-      radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.1) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.1) 0px, transparent 50%),
-      radial-gradient(
-      at 100% 100%,
-      rgba(56, 189, 248, 0.1) 0px,
-      transparent 50%
-    ),
-      radial-gradient(at 0% 100%, rgba(168, 85, 247, 0.1) 0px, transparent 50%);
-    background-repeat: no-repeat;
-    background-attachment: fixed;
   }
 
   #root {
@@ -159,4 +148,62 @@
 
 .page-transition {
   animation: fadeIn 0.3s ease-out;
+}
+
+/* Print Styles */
+@media print {
+  /* Reset page flow */
+  html, body, #root {
+    height: auto !important;
+    overflow: visible !important;
+    min-height: auto !important;
+  }
+
+  /* Hide everything */
+  body * {
+    visibility: hidden;
+  }
+
+  /* Show print area and its children */
+  #print-area, #print-area * {
+    visibility: visible;
+  }
+
+  /* Position print area to fill the paper */
+  #print-area {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 20px; /* Add some padding for paper margins */
+    background: white;
+    color: black;
+    z-index: 9999;
+    height: auto;
+    overflow: visible;
+  }
+
+  /* Ensure text is black for printing */
+  #print-area * {
+    color: black !important;
+    text-shadow: none !important;
+  }
+
+  /* Hide potential modal backdrops */
+  .fixed, .absolute, .overlay, .backdrop-blur-sm {
+    display: none !important;
+  }
+
+  /* Ensure the receipt wrapper itself (if used) displays correctly */
+  #print-area > div {
+    margin: 0 auto;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  @page {
+    margin: 0;
+    size: auto;
+  }
 }

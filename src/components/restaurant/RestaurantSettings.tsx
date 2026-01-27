@@ -1,4 +1,5 @@
-﻿import { useState, useEffect } from 'react';
+﻿// ... imports
+import { useState, useEffect } from 'react';
 import { useRestaurant } from '../../hooks/useRestaurant';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { toast } from 'sonner';
@@ -11,15 +12,16 @@ import {
   UtensilsCrossed, 
   Users, 
   ChefHat,
-  Armchair,
-  Image as ImageIcon
+  Image as ImageIcon,
+  LayoutGrid,
 } from 'lucide-react';
-import { RestaurantTable, RestaurantStaff, StaffRole } from '../../types/restaurant';
+import { RestaurantStaff, StaffRole, FloorZone, RestaurantTable } from '../../types/restaurant';
 import { ConfirmationModal } from '../ui/ConfirmationModal';
 import { FileUpload } from '../ui/FileUpload';
 
 type SettingsTab = 'tables' | 'menu' | 'staff';
 
+// ... (Category definitions)
 // Predefined category types
 const CATEGORY_TYPES = ['drinks', 'food', 'salads', 'appetizers', 'mains', 'desserts', 'specials', 'other'] as const;
 type CategoryType = typeof CATEGORY_TYPES[number];
@@ -42,7 +44,7 @@ export default function RestaurantSettings({ defaultTab = 'tables' }: Restaurant
   }, [defaultTab]);
 
   const tabs: { id: SettingsTab; label: string; icon: React.ElementType }[] = [
-    { id: 'tables', label: t('settings.restaurantSetup.tables'), icon: Armchair },
+    { id: 'tables', label: t('settings.restaurantSetup.tables'), icon: LayoutGrid },
     { id: 'menu', label: t('settings.restaurantSetup.menu'), icon: UtensilsCrossed },
     { id: 'staff', label: t('settings.restaurantSetup.staff'), icon: Users },
   ];
@@ -71,23 +73,33 @@ export default function RestaurantSettings({ defaultTab = 'tables' }: Restaurant
       </div>
 
       {/* Content */}
-      {activeTab === 'tables' && <TablesManager />}
+      {activeTab === 'tables' && <TableManager />}
       {activeTab === 'menu' && <MenuManager />}
       {activeTab === 'staff' && <StaffManager />}
     </div>
   );
 }
 
-// ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•
-// TABLES MANAGER
-// ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•
 
-function TablesManager() {
+// ═══════════════════════════════════════════════════════════════════════════
+// TABLE MANAGER
+// ═══════════════════════════════════════════════════════════════════════════
+
+function TableManager() {
   const { t } = useLanguage();
-  const { tables, loadingTables, createTable, updateTable, deleteTable } = useRestaurant();
+  const { tables, createTable, updateTable, deleteTable, loadingTables } = useRestaurant();
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [formData, setFormData] = useState({ name: '', seats: 4 });
+  
+  const [formData, setFormData] = useState<{
+    name: string;
+    seats: number;
+    zone: FloorZone;
+  }>({
+    name: '',
+    seats: 4,
+    zone: 'indoor'
+  });
 
   const handleAddTable = async () => {
     if (!formData.name.trim()) {
@@ -95,24 +107,36 @@ function TablesManager() {
       return;
     }
     try {
-      await createTable.mutateAsync({ name: formData.name, seats: formData.seats });
+      await createTable.mutateAsync({
+        name: formData.name,
+        seats: formData.seats,
+        zone: formData.zone,
+        position_x: tables.length * 100, // naive positioning
+        position_y: 100
+      });
       toast.success(t('settings.restaurantSetup.tableAdded'));
-      setFormData({ name: '', seats: 4 });
+      setFormData({ name: '', seats: 4, zone: 'indoor' });
       setIsAdding(false);
     } catch (err) {
-      toast.error(t('settings.restaurantSetup.failed'));
       console.error(err);
+      toast.error(t('settings.restaurantSetup.failed'));
     }
   };
 
-  const handleUpdateTable = async (table: RestaurantTable) => {
+  const handleUpdateTable = async (id: string) => {
+    if (!formData.name.trim()) return;
     try {
-      await updateTable.mutateAsync({ id: table.id, name: formData.name, seats: formData.seats });
+      await updateTable.mutateAsync({
+        id,
+        name: formData.name,
+        seats: formData.seats,
+        zone: formData.zone
+      });
       toast.success(t('settings.restaurantSetup.tableUpdated'));
       setEditingId(null);
     } catch (err) {
-      toast.error(t('settings.restaurantSetup.failed'));
       console.error(err);
+      toast.error(t('settings.restaurantSetup.failed'));
     }
   };
 
@@ -122,23 +146,24 @@ function TablesManager() {
       await deleteTable.mutateAsync(id);
       toast.success(t('settings.restaurantSetup.tableDeleted'));
     } catch (err) {
-      toast.error(t('settings.restaurantSetup.failed'));
       console.error(err);
+      toast.error(t('settings.restaurantSetup.failed'));
     }
   };
 
   const startEditing = (table: RestaurantTable) => {
     setEditingId(table.id);
-    setFormData({ name: table.name, seats: table.seats });
+    setFormData({
+      name: table.name,
+      seats: table.seats,
+      zone: table.zone || 'indoor'
+    });
   };
 
-  if (loadingTables) {
-    return <div className="text-center py-10 text-slate-400">{t('auth.loading')}</div>;
-  }
+  if (loadingTables) return <div className="p-8 text-center text-slate-400">{t('auth.loading')}</div>;
 
   return (
-    <div className="space-y-4">
-      {/* Add Button */}
+    <div className="space-y-6">
       {!isAdding && (
         <button
           onClick={() => setIsAdding(true)}
@@ -149,19 +174,18 @@ function TablesManager() {
         </button>
       )}
 
-      {/* Add Form */}
       {isAdding && (
         <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 space-y-4">
           <h3 className="font-semibold">{t('settings.restaurantSetup.addTable')}</h3>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">{t('settings.restaurantSetup.tableName')}</label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="e.g., T-1, Table 5"
-                className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-900"
+                className="w-full px-3 py-2 rounded-lg border dark:bg-slate-900 dark:border-slate-700"
+                placeholder="Table 1"
               />
             </div>
             <div>
@@ -169,24 +193,37 @@ function TablesManager() {
               <input
                 type="number"
                 value={formData.seats}
-                onChange={(e) => setFormData({ ...formData, seats: parseInt(e.target.value) || 1 })}
+                onChange={(e) => setFormData({ ...formData, seats: parseInt(e.target.value) || 2 })}
+                className="w-full px-3 py-2 rounded-lg border dark:bg-slate-900 dark:border-slate-700"
                 min="1"
-                className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-900"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Zone</label>
+              <select
+                value={formData.zone}
+                onChange={(e) => setFormData({ ...formData, zone: e.target.value as FloorZone })}
+                className="w-full px-3 py-2 rounded-lg border dark:bg-slate-900 dark:border-slate-700"
+              >
+                <option value="indoor">Indoor</option>
+                <option value="outdoor">Outdoor</option>
+                <option value="patio">Patio</option>
+                <option value="bar_area">Bar</option>
+                <option value="private">Private</option>
+              </select>
             </div>
           </div>
           <div className="flex gap-2">
             <button
               onClick={handleAddTable}
               disabled={createTable.isPending}
-              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg"
             >
-              <Save size={16} />
-              {createTable.isPending ? t('settings.restaurantSetup.saving') : t('settings.restaurantSetup.save')}
+              <Save size={16} /> {createTable.isPending ? t('settings.restaurantSetup.saving') : t('settings.restaurantSetup.save')}
             </button>
             <button
-              onClick={() => { setIsAdding(false); setFormData({ name: '', seats: 4 }); }}
-              className="px-4 py-2 bg-slate-200 dark:bg-slate-700 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600"
+              onClick={() => { setIsAdding(false); setFormData({ name: '', seats: 4, zone: 'indoor' }); }}
+              className="px-4 py-2 bg-slate-200 dark:bg-slate-700 rounded-lg"
             >
               {t('settings.restaurantSetup.cancel')}
             </button>
@@ -194,83 +231,94 @@ function TablesManager() {
         </div>
       )}
 
-      {/* Tables List */}
-      {tables.length === 0 && !isAdding ? (
-        <div className="text-center py-10 bg-slate-50 dark:bg-slate-800 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700">
-          <Armchair size={48} className="mx-auto mb-4 text-slate-300" />
-          <p className="text-slate-500">{t('settings.restaurantSetup.noTables')}</p>
-          <p className="text-sm text-slate-400">{t('settings.restaurantSetup.noTablesHint')}</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {tables.map(table => (
-            <div
-              key={table.id}
-              className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm"
-            >
-              {editingId === table.id ? (
-                <div className="space-y-3">
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700"
-                  />
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        {tables.map(table => (
+          <div 
+            key={table.id} 
+            className={`relative group bg-white dark:bg-slate-900 border-2 rounded-xl p-4 flex flex-col items-center justify-center gap-2 transition-all ${
+              editingId === table.id ? 'border-emerald-500 ring-2 ring-emerald-500/20' : 'border-slate-200 dark:border-slate-800'
+            }`}
+          >
+            {editingId === table.id ? (
+              <div className="w-full space-y-2">
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-2 py-1 text-sm rounded border dark:bg-slate-800 dark:border-slate-700 text-center"
+                  autoFocus
+                />
+                <div className="flex gap-1 justify-center">
                   <input
                     type="number"
                     value={formData.seats}
-                    onChange={(e) => setFormData({ ...formData, seats: parseInt(e.target.value) || 1 })}
-                    min="1"
-                    className="w-full px-3 py-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700"
+                    onChange={(e) => setFormData({ ...formData, seats: parseInt(e.target.value) || 0 })}
+                    className="w-16 px-2 py-1 text-sm rounded border dark:bg-slate-800 dark:border-slate-700 text-center"
                   />
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleUpdateTable(table)}
-                      className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-emerald-600 text-white rounded-lg text-sm"
-                    >
-                      <Save size={14} /> {t('settings.restaurantSetup.save')}
-                    </button>
-                    <button
-                      onClick={() => setEditingId(null)}
-                      className="px-3 py-2 bg-slate-200 dark:bg-slate-700 rounded-lg text-sm"
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
                 </div>
-              ) : (
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-lg font-bold">{table.name}</div>
-                    <div className="text-sm text-slate-500">{table.seats} {t('settings.restaurantSetup.seats')}</div>
-                  </div>
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => startEditing(table)}
-                      className="p-2 text-slate-400 hover:text-sky-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
-                    >
-                      <Edit2 size={16} />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteTable(table.id)}
-                      className="p-2 text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
+                <div className="flex gap-2 justify-center pt-1">
+                  <button
+                    onClick={() => handleUpdateTable(table.id)}
+                    className="p-1.5 bg-emerald-500 text-white rounded hover:bg-emerald-600"
+                  >
+                    <Save size={14} />
+                  </button>
+                  <button
+                    onClick={() => setEditingId(null)}
+                    className="p-1.5 bg-slate-200 text-slate-600 rounded hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-300"
+                  >
+                    <X size={14} />
+                  </button>
                 </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+              </div>
+            ) : (
+              <>
+                <div className="text-3xl font-bold text-slate-700 dark:text-slate-300">
+                  {table.name}
+                </div>
+                <div className="flex items-center gap-1 text-xs font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-full">
+                  <Users size={12} />
+                  {table.seats}
+                </div>
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                  <button
+                    onClick={() => startEditing(table)}
+                    className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400"
+                    title={t('settings.restaurantSetup.edit')}
+                  >
+                    <Edit2 size={14} />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteTable(table.id)}
+                    className="p-1.5 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-100 dark:bg-rose-900/30 dark:text-rose-400"
+                    title={t('settings.restaurantSetup.delete')}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+                <div className={`absolute top-2 left-2 w-2 h-2 rounded-full ${
+                  table.status === 'free' ? 'bg-emerald-500' : 
+                  table.status === 'occupied' ? 'bg-rose-500' : 'bg-amber-500'
+                }`} />
+              </>
+            )}
+          </div>
+        ))}
+        {tables.length === 0 && !isAdding && (
+          <div className="col-span-full py-12 text-center text-slate-400 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
+            {t('settings.restaurantSetup.noTables')}
+            <br />
+            <span className="text-sm">{t('settings.restaurantSetup.noTablesHint')}</span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
-// ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•
+// ═══════════════════════════════════════════════════════════════════════════
 // MENU MANAGER
-// ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•
+// ═══════════════════════════════════════════════════════════════════════════
 
 function MenuManager() {
   const { t, formatCurrency } = useLanguage();
@@ -280,6 +328,7 @@ function MenuManager() {
     createCategory, 
     deleteCategory,
     createMenuItem,
+    updateMenuItem,
     deleteMenuItem,
     toggleItem86
   } = useRestaurant();
@@ -289,7 +338,8 @@ function MenuManager() {
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [isAddingItem, setIsAddingItem] = useState<string | null>(null);
   const [useImageLink, setUseImageLink] = useState(true);
-  const [newItem, setNewItem] = useState({ name: '', price: 0, description: '', imageUrl: '', allergens: [] as string[] });
+  const [newItem, setNewItem] = useState({ name: '', price: 0, cost_price: 0, description: '', imageUrl: '', allergens: [] as string[] });
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
   
   const [confirmState, setConfirmState] = useState<{
     isOpen: boolean;
@@ -364,23 +414,38 @@ function MenuManager() {
     }
   };
 
-  const handleAddItem = async (categoryId: string) => {
+  const handleSaveItem = async (categoryId: string) => {
     if (!newItem.name.trim() || newItem.price <= 0) {
       toast.error(t('settings.restaurantSetup.nameAndPriceRequired'));
       return;
     }
     try {
-      await createMenuItem.mutateAsync({
-        category_id: categoryId,
-        name: newItem.name,
-        price: newItem.price,
-        description: newItem.description || null,
-        image_url: newItem.imageUrl || undefined,
-        allergens: newItem.allergens
-      });
-      toast.success(t('settings.restaurantSetup.itemAdded'));
-      setNewItem({ name: '', price: 0, description: '', imageUrl: '', allergens: [] });
+      if (editingItemId) {
+        await updateMenuItem.mutateAsync({
+          id: editingItemId,
+          name: newItem.name,
+          price: newItem.price,
+          cost_price: newItem.cost_price,
+          description: newItem.description || null,
+          image_url: newItem.imageUrl || undefined,
+          allergens: newItem.allergens
+        });
+        toast.success(t('settings.restaurantSetup.itemUpdated') || 'Item updated');
+      } else {
+        await createMenuItem.mutateAsync({
+          category_id: categoryId,
+          name: newItem.name,
+          price: newItem.price,
+          cost_price: newItem.cost_price,
+          description: newItem.description || null,
+          image_url: newItem.imageUrl || undefined,
+          allergens: newItem.allergens
+        });
+        toast.success(t('settings.restaurantSetup.itemAdded'));
+      }
+      setNewItem({ name: '', price: 0, cost_price: 0, description: '', imageUrl: '', allergens: [] });
       setIsAddingItem(null);
+      setEditingItemId(null);
     } catch (err) {
       toast.error(t('settings.restaurantSetup.failed'));
       console.error(err);
@@ -527,22 +592,69 @@ function MenuManager() {
                               <UtensilsCrossed size={14} />
                             </button>
                             <button
-                              onClick={() => handleDeleteItem(item.id)}
-                              className="p-1 text-slate-400 hover:text-rose-500"
+                               onClick={() => {
+                                 setEditingItemId(item.id);
+                                 setNewItem({
+                                   name: item.name,
+                                   price: item.price,
+                                   cost_price: item.cost_price || 0,
+                                   description: item.description || '',
+                                   imageUrl: item.image_url || '',
+                                   allergens: item.allergen_codes || item.allergens || []
+                                 });
+                                 setIsAddingItem(category.id); // Open form
+                               }}
+                               className="p-1 text-slate-400 hover:text-blue-500"
+                            >
+                              <Edit2 size={14} />
+                            </button>
+                            <button
+                               onClick={() => handleDeleteItem(item.id)}
+                               className="p-1 text-slate-400 hover:text-rose-500"
                             >
                               <Trash2 size={14} />
+                            </button>
+                            <button
+                               onClick={() => {
+                                 setEditingItemId(item.id);
+                                 setNewItem({
+                                   name: item.name,
+                                   price: item.price,
+                                   cost_price: item.cost_price || 0,
+                                   description: item.description || '',
+                                   imageUrl: item.image_url || '',
+                                   allergens: item.allergen_codes || item.allergens || []
+                                 });
+                                 // Close other open forms if needed
+                                 setIsAddingItem(null); 
+                               }}
+                               className="p-1 text-slate-400 hover:text-blue-500"
+                            >
+                              <Edit2 size={14} />
                             </button>
                           </div>
                         </div>
                       ))}
+
+                    {/* Edit Form (Rendered just below the item or replacing it? For simplicity, let's keep the Add form logic separate or use a Modal. 
+                        Actually, doing inline editing for each row requires moving the form component out or conditional rendering PER ITEM.
+                        To minimize code changes, I will use the EXISTING 'Add Item' form area for editing as well if the user allows, 
+                        OR I will make the 'Add Item' form appear when editing (moved to the item position? No).
+                        
+                        Better approach: When 'Edit' is clicked, we scroll to the bottom of the category (where the Add Form is) and populate it, 
+                        switching the mode to 'Edit'.
+                    */}
                     </div>
                   ) : (
                     <p className="text-sm text-slate-400 text-center py-4">{t('settings.restaurantSetup.noItems')}</p>
                   )}
 
-                  {/* Add Item Form */}
-                  {isAddingItem === category.id ? (
+                  {/* Add/Edit Item Form */}
+                  {isAddingItem === category.id || (editingItemId && category.items?.find(i => i.id === editingItemId)) ? (
                     <div className="p-3 bg-white dark:bg-slate-900 rounded-lg border border-emerald-200 dark:border-emerald-800 space-y-3">
+                      <div className="flex justify-between items-center mb-2">
+                         <span className="text-xs font-bold uppercase text-slate-400">{editingItemId ? (t('settings.restaurantSetup.editItem') || 'Edit Item') : (t('settings.restaurantSetup.addItem') || 'Add New Item')}</span>
+                      </div>
                       <input
                         type="text"
                         value={newItem.name}
@@ -559,6 +671,13 @@ function MenuManager() {
                           className="px-3 py-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700"
                         />
                         <input
+                          type="number"
+                          value={newItem.cost_price || ''}
+                          onChange={(e) => setNewItem({ ...newItem, cost_price: parseFloat(e.target.value) || 0 })}
+                          placeholder={t('settings.restaurantSetup.costPrice') || 'Cost Price'}
+                          className="px-3 py-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50"
+                        />
+                        <input
                           type="text"
                           value={newItem.description}
                           onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
@@ -570,7 +689,7 @@ function MenuManager() {
                       {/* Allergen Selection */}
                       <div>
                         <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase">
-                          {t('settings.restaurantSetup.allergens')}
+                          {t('settings.restaurantSetup.allergensTitle') || 'Allergens'}
                         </label>
                         <div className="flex flex-wrap gap-2">
                           {ALLERGEN_LIST.map(allergen => {
@@ -614,7 +733,7 @@ function MenuManager() {
                         <button
                           onClick={() => setUseImageLink(false)}
                           className={`pb-2 text-sm font-medium transition-colors ${
-                            !useImageLink 
+                            (!useImageLink)
                               ? 'text-emerald-600 border-b-2 border-emerald-600' 
                               : 'text-slate-500 hover:text-slate-700'
                           }`}
@@ -657,13 +776,13 @@ function MenuManager() {
 
                       <div className="flex gap-2">
                         <button
-                          onClick={() => handleAddItem(category.id)}
+                          onClick={() => handleSaveItem(category.id)}
                           className="flex items-center gap-1 px-3 py-2 bg-emerald-600 text-white rounded-lg text-sm"
                         >
-                          <Save size={14} /> {t('settings.restaurantSetup.addMenuItem')}
+                          <Save size={14} /> {editingItemId ? (t('settings.restaurantSetup.update') || 'Update') : t('settings.restaurantSetup.addMenuItem')}
                         </button>
                         <button
-                          onClick={() => { setIsAddingItem(null); setNewItem({ name: '', price: 0, description: '', imageUrl: '', allergens: [] }); }}
+                          onClick={() => { setIsAddingItem(null); setEditingItemId(null); setNewItem({ name: '', price: 0, cost_price: 0, description: '', imageUrl: '', allergens: [] }); }}
                           className="px-3 py-2 bg-slate-200 dark:bg-slate-700 rounded-lg text-sm"
                         >
                           {t('settings.restaurantSetup.cancel')}
@@ -709,11 +828,13 @@ function StaffManager() {
   const { staff, loadingStaff, createStaff, updateStaff, deleteStaff } = useRestaurant();
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [formData, setFormData] = useState<{ full_name: string; role: StaffRole; hourly_rate: number; pin_code: string }>({ 
+  const [formData, setFormData] = useState<{ full_name: string; role: StaffRole; hourly_rate: number; pin_code: string; email: string; password: string }>({ 
     full_name: '', 
     role: 'Waiter', 
     hourly_rate: 0,
-    pin_code: ''
+    pin_code: '',
+    email: '',
+    password: ''
   });
 
   const roles: { value: StaffRole; labelKey: string }[] = [
@@ -721,6 +842,7 @@ function StaffManager() {
     { value: 'Chef', labelKey: 'settings.restaurantSetup.staffRoles.chef' },
     { value: 'Manager', labelKey: 'settings.restaurantSetup.staffRoles.manager' },
     { value: 'Other', labelKey: 'settings.restaurantSetup.staffRoles.other' },
+    { value: 'Kitchen', labelKey: 'settings.restaurantSetup.staffRoles.kitchen' }, // Ensure 'Kitchen' role exists
   ];
 
   const handleAddStaff = async () => {
@@ -733,14 +855,21 @@ function StaffManager() {
         full_name: formData.full_name, 
         role: formData.role, 
         hourly_rate: formData.hourly_rate,
-        pin_code: formData.pin_code || '0000' // Default PIN if empty
+        pin_code: formData.pin_code || '0000',
+        email: formData.email,
+        password: formData.password
       });
       toast.success(t('settings.restaurantSetup.staffAdded'));
-      setFormData({ full_name: '', role: 'Waiter', hourly_rate: 0, pin_code: '' });
+      setFormData({ full_name: '', role: 'Waiter', hourly_rate: 0, pin_code: '', email: '', password: '' });
       setIsAdding(false);
-    } catch (err) {
-      toast.error(t('settings.restaurantSetup.failed'));
+    } catch (err: unknown) {
       console.error(err);
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      if (message.includes('unique constraint') || message.includes('duplicate key')) {
+         toast.error(t('settings.restaurantSetup.emailExists') || 'Email already exists');
+      } else {
+         toast.error(t('settings.restaurantSetup.failed'));
+      }
     }
   };
 
@@ -751,7 +880,9 @@ function StaffManager() {
         full_name: formData.full_name, 
         role: formData.role, 
         hourly_rate: formData.hourly_rate,
-        pin_code: formData.pin_code
+        pin_code: formData.pin_code,
+        email: formData.email,
+        password: formData.password
       });
       toast.success(t('settings.restaurantSetup.staffUpdated'));
       setEditingId(null);
@@ -778,11 +909,13 @@ function StaffManager() {
       full_name: staffMember.full_name, 
       role: staffMember.role, 
       hourly_rate: staffMember.hourly_rate,
-      pin_code: staffMember.pin_code || ''
+      pin_code: staffMember.pin_code || '',
+      email: staffMember.email || '',
+      password: staffMember.password || ''
     });
   };
 
-  const getRoleColor = (role: StaffRole) => {
+  const getRoleColor = (role: StaffRole | string) => {
     switch (role) {
       case 'Manager': return 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400';
       case 'Chef': return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
@@ -791,7 +924,7 @@ function StaffManager() {
     }
   };
 
-  const getRoleLabel = (role: StaffRole) => {
+  const getRoleLabel = (role: StaffRole | string) => {
     const roleConfig = roles.find(r => r.value === role);
     return roleConfig ? t(roleConfig.labelKey) : role;
   };
@@ -860,6 +993,26 @@ function StaffManager() {
                 placeholder="0000"
               />
             </div>
+            <div className="col-span-2">
+              <label className="block text-sm font-medium mb-1">{t('auth.email')}</label>
+              <input
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="w-full px-3 py-2 rounded-lg border dark:bg-slate-900 dark:border-slate-700"
+                placeholder="staff@example.com"
+              />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-sm font-medium mb-1">{t('auth.password')}</label>
+              <input
+                type="text"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                className="w-full px-3 py-2 rounded-lg border dark:bg-slate-900 dark:border-slate-700 font-mono"
+                placeholder="Password"
+              />
+            </div>
           </div>
           <div className="flex gap-2">
             <button
@@ -870,7 +1023,7 @@ function StaffManager() {
               <Save size={16} /> {createStaff.isPending ? t('settings.restaurantSetup.saving') : t('settings.restaurantSetup.save')}
             </button>
             <button
-              onClick={() => { setIsAdding(false); setFormData({ full_name: '', role: 'Waiter', hourly_rate: 0, pin_code: '' }); }}
+              onClick={() => { setIsAdding(false); setFormData({ full_name: '', role: 'Waiter', hourly_rate: 0, pin_code: '', email: '', password: '' }); }}
               className="px-4 py-2 bg-slate-200 dark:bg-slate-700 rounded-lg"
             >
               {t('settings.restaurantSetup.cancel')}
@@ -919,14 +1072,28 @@ function StaffManager() {
                       className="px-3 py-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700"
                       placeholder={t('settings.restaurantSetup.hourlyRate')}
                     />
-                    <input
-                      type="text"
-                      maxLength={6}
-                      value={formData.pin_code}
-                      onChange={(e) => setFormData({ ...formData, pin_code: e.target.value.replace(/\D/g, '') })}
-                      className="px-3 py-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700 tracking-widest text-center font-mono"
-                      placeholder="PIN"
-                    />
+                      <input
+                        type="text"
+                        maxLength={6}
+                        value={formData.pin_code}
+                        onChange={(e) => setFormData({ ...formData, pin_code: e.target.value.replace(/\D/g, '') })}
+                        className="px-3 py-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700 tracking-widest text-center font-mono"
+                        placeholder="PIN"
+                      />
+                      <input
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        className="px-3 py-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700 col-span-2"
+                        placeholder="Email"
+                      />
+                      <input
+                        type="text"
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        className="px-3 py-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700 col-span-2 font-mono"
+                        placeholder="Password"
+                      />
                   </div>
                   <div className="flex gap-2">
                     <button
@@ -952,12 +1119,16 @@ function StaffManager() {
                     <div>
                       <div className="font-semibold">{staffMember.full_name}</div>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${getRoleColor(staffMember.role)}`}>
-                          {getRoleLabel(staffMember.role)}
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${getRoleColor(staffMember.role as StaffRole)}`}>
+                          {getRoleLabel(staffMember.role as StaffRole)}
                         </span>
                         <span className="text-xs text-slate-500 flex items-center gap-1">
                           {formatCurrency(staffMember.hourly_rate)}{t('settings.restaurantSetup.perHour')}
                         </span>
+                      </div>
+                      <div className="text-xs text-slate-400 mt-1 flex flex-col gap-0.5">
+                         {staffMember.email && <div>{staffMember.email}</div>}
+                         {staffMember.password && <div className="font-mono bg-slate-100 dark:bg-slate-800 px-1 rounded inline-block">Pass: {staffMember.password}</div>}
                       </div>
                     </div>
                   </div>

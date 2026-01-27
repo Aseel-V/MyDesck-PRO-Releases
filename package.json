@@ -1,7 +1,7 @@
 {
   "name": "my-desck-pro",
   "private": true,
-  "version": "0.0.33",
+  "version": "0.0.34",
   "description": "Professional Travel Agency Dashboard",
   "repository": "https://github.com/Aseel-V/MyDesck-PRO-Releases",
   "type": "module",
@@ -109,6 +109,7 @@
     "react-router-dom": "^7.11.0",
     "recharts": "^3.5.1",
     "rtl-detect": "^1.1.2",
+    "serialport": "^13.0.0",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0",
     "zod": "^4.1.13"

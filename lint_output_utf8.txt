@@ -1,0 +1,150 @@
+﻿
+> my-desck-pro@0.0.34 lint
+> eslint .
+
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck-PRO\src\components\analytics\EditRestaurantOrderModal.tsx
+   18:38  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+   35:6   warning  React Hook useEffect has a missing dependency: 'fetchMenu'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  138:35  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  157:25  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  166:32  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck-PRO\src\components\analytics\RestaurantAnalytics.tsx
+   41:8    warning  React Hook useEffect has a missing dependency: 'fetchOrders'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+   46:17   error    'startDate' is never reassigned. Use 'const' instead                                                            prefer-const
+   47:17   error    'endDate' is never reassigned. Use 'const' instead                                                              prefer-const
+  123:25   error    Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
+  322:64   error    Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
+  400:168  error    Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
+  400:198  error    Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck-PRO\src\components\analytics\RestaurantOrderModal.tsx
+   25:14  error  'e' is defined but never used             @typescript-eslint/no-unused-vars
+   38:14  error  'e' is defined but never used             @typescript-eslint/no-unused-vars
+  125:55  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  125:86  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  202:86  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  204:68  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck-PRO\src\components\dashboards\SupermarketDashboard.tsx
+  397:48  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  457:60  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  478:6   warning  React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  675:42  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  685:21  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  696:70  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  717:21  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck-PRO\src\components\market\AddProductModal.tsx
+   10:13  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   31:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  151:45  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  166:45  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  185:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck-PRO\src\components\market\EditTransactionModal.tsx
+  10:16  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  18:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  75:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  94:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck-PRO\src\components\market\ReceiptModal.tsx
+   48:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  143:66  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck-PRO\src\components\market\SalesAnalytics.tsx
+   27:10  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+   50:6   warning  React Hook useEffect has a missing dependency: 'fetchSales'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+   56:11  error    'startDate' is never reassigned. Use 'const' instead                                                           prefer-const
+   57:11  error    'endDate' is never reassigned. Use 'const' instead                                                             prefer-const
+   80:40  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+   88:32  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+  109:40  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+  115:33  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+  132:40  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+  144:21  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+  212:6   warning  React Hook useMemo has a missing dependency: 'language'. Either include it or remove the dependency array      react-hooks/exhaustive-deps
+  384:46  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+  446:87  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck-PRO\src\components\market\SalesAnalyticsModal.tsx
+   27:10  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+   47:6   warning  React Hook useEffect has a missing dependency: 'fetchSales'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+   53:11  error    'startDate' is never reassigned. Use 'const' instead                                                           prefer-const
+   54:11  error    'endDate' is never reassigned. Use 'const' instead                                                             prefer-const
+   77:40  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+   85:32  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+  151:6   warning  React Hook useMemo has a missing dependency: 'language'. Either include it or remove the dependency array      react-hooks/exhaustive-deps
+  289:46  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+  353:84  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck-PRO\src\components\restaurant\KitchenDisplaySystem.tsx
+  368:6  warning  React Hook useCallback has missing dependencies: 'handleBump' and 'handleStart'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck-PRO\src\components\restaurant\RestaurantModeRouter.tsx
+  202:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck-PRO\src\components\restaurant\RestaurantSettings.tsx
+  794:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck-PRO\src\components\ui\DirectionProvider.tsx
+  40:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck-PRO\src\contexts\RestaurantRoleContext.tsx
+  251:6   warning  React Hook useCallback has a missing dependency: 'LOCKOUT_DURATION_MS'. Either include it or remove the dependency array        react-hooks/exhaustive-deps
+  489:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck-PRO\src\lib\fiscal\documentNumbering.ts
+   16:24  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  138:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  232:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck-PRO\src\lib\fiscal\fiscalDocumentService.ts
+   19:24  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  345:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck-PRO\src\lib\fiscal\hashChain.ts
+   19:24  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  278:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  279:31  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  351:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  352:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck-PRO\src\lib\hardware\scaleDriver.ts
+  296:9   error  'tare' is never reassigned. Use 'const' instead  prefer-const
+  307:11  error  Unexpected lexical declaration in case block     no-case-declarations
+  317:11  error  Unexpected lexical declaration in case block     no-case-declarations
+  328:11  error  Unexpected lexical declaration in case block     no-case-declarations
+  337:11  error  Unexpected lexical declaration in case block     no-case-declarations
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck-PRO\src\lib\payment\paymentService.ts
+  118:14  error  '_transactionId' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck-PRO\src\lib\reports\zReportService.ts
+   15:24  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  326:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  373:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck-PRO\src\modules\market\hooks\useMarketFiscal.ts
+   91:6  warning  React Hook useEffect has a missing dependency: 'loadCurrentShift'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  264:6  warning  React Hook useCallback has a missing dependency: 'printReceipt'. Either include it or remove the dependency array    react-hooks/exhaustive-deps
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck-PRO\src\modules\market\hooks\useMarketLogic.ts
+  472:6  warning  React Hook useCallback has a missing dependency: 'playError'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck-PRO\src\pages\LandingPage.tsx
+   15:89  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   16:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  464:45  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck-PRO\src\pages\solutions\SolutionPage.tsx
+   20:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  299:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck-PRO\src\utils\audio.ts
+  9:61  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+Γ£צ 92 problems (77 errors, 15 warnings)
+  7 errors and 0 warnings potentially fixable with the `--fix` option.
+

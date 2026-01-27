@@ -1,28 +1,85 @@
-# Refactoring Walkthrough
+# Walkthrough - v0.0.34 Updates
 
-I have completed the refactoring of the application to fix translation issues, hardcoded text, and encoding errors.
+I have completed the massive upgrade to **v0.0.34**, focusing on a complete
+overhaul of the Web Landing Page, the introduction of a dedicated Safety Center,
+and deep technical optimizations.
 
-## Changes
+## 🚀 Key Changes
 
-### 1. Internationalization Configuration (`src/lib/i18n.ts`)
-- Removed `i18next-http-backend` dependency.
-- Configured `i18n` to use the local `translations` object directly.
-- This ensures translations are loaded immediately and eliminates network requests for translation files.
+### 1. Web & Landing Page Overhaul 2.0 (`src/pages/LandingPage.tsx`)
 
-### 2. Translations (`src/i18n/translations.ts`)
-- Added new translation sections for `admin` and `navbar` to English, Arabic, and Hebrew.
-- Included keys for dashboard statistics, table headers, and user roles.
+A completely reimagined entry point for the application.
 
-### 3. Admin Dashboard (`src/components/admin/AdminDashboard.tsx`)
-- **Refactored Code**: Replaced the existing code with the improved version based on `temp_admin_dashboard.txt`.
-- **Translations**: Replaced all hardcoded text with `t('admin...')` keys.
-- **Encoding Fixes**: Fixed the `getCurrencySymbol` function to correctly return `$` (USD), `€` (EUR), and `₪` (ILS), replacing corrupted characters like `ג‚¬`.
-- **RTL Support**: Changed `text-left` classes to `text-start` to ensure correct alignment in Arabic and Hebrew.
+- **Dynamic Spotlight Cards:** Interactive UI elements that follow the mouse
+  cursor (`SpotlightCard` component).
+- **Bento Grid Layout:** Modern, grid-based display for "Industry Solutions"
+  (Retail, Tourism, Restaurants).
+- **Smart Download Detection:**
+  - Automatically fetches the latest `.exe` (Windows) and `.dmg` (macOS) from
+    GitHub Releases.
+  - Displays the current version tag (`v0.0.34`) dynamically.
+- **SEO & Social:** Integrated `StructuredData` (JSON-LD) for better Google
+  indexing and Rich Snippets.
 
-### 4. Navbar (`src/components/Navbar.tsx`)
-- Replaced hardcoded strings "Close", "Exit safely", "Close App", and "Admin" with `t('navbar...')` keys.
+### 2. Safety & Support Center (`src/pages/SafetySupportPage.tsx`)
 
-## Verification
-- **Translations**: All text in the Admin Dashboard and Navbar should now be localized.
-- **Currency Symbols**: Currency symbols should display correctly without encoding errors.
-- **Layout**: The Admin Dashboard table headers should align correctly based on the selected language direction (LTR/RTL).
+A new dedicated legal and support hub.
+
+- **Local-First Security:** Documentation explaining that data resides _only_ on
+  the user's device (GDPR compliance).
+- **Interactive Bento UI:**
+  - **Security:** Explains Offline Mode and Local Sovereignty.
+  - **Privacy:** Details data minimization (only email is collected for
+    licensing).
+  - **Support:** Direct link to Priority Support/Legal.
+- **RTL Native:** Fully optimized for Hebrew and Arabic layouts (text alignment,
+  icon positioning).
+
+### 3. Technical Optimizations
+
+- **Performance:**
+  - Refactored `LanguageAnimationWrapper.tsx`: Removed expensive background
+    blur/glow effects for smoother transitions.
+  - Simplified `AnimatedText.tsx`: Reduced motion overhead for text rendering.
+- **Encoding & Localization:**
+  - Fixed all Currency Symbol encoding issues (₪, $, €).
+  - `i18n`: Enforced "Zero-Lag" local translation loading (removed HTTP
+    backend).
+
+---
+
+## ✅ Verification Procedures
+
+### 1. Landing Page Interactive Elements
+
+- **Hover Effects:** Move mouse over the "Industry Solutions" cards. You should
+  see a subtle spotlight effect following the cursor.
+- **Downloads:** Click "Download Windows App". It should trigger the download of
+  `MyDesck-PRO-Setup.exe`.
+- **Responsive Design:** Resize the window to mobile size. The grid should stack
+  vertically, and the "Download" buttons should arrange themselves for touch.
+
+### 2. Safety Page
+
+- **Navigation:** Click "Safety & Support" in the footer.
+- **Content Check:** Verify that "Local Data Sovereignty" and "Offline
+  Capability" are clearly visible.
+- **Language Switch:** Toggle to **Arabic**.
+  - Verify the layout flips to Right-to-Left (RTL).
+  - Verify the "Shield" icon animation works correctly.
+
+### 3. Build & Release
+
+- **Command:** `npm run release`
+- **Outcome:** Script should generate both `.exe` and `.dmg` (if on Mac) or
+  `.exe` (on Windows) in the `dist/` folder without linting errors.
+
+---
+
+## 📂 Files Modified
+
+- `src/pages/LandingPage.tsx` (Major Rewrite)
+- `src/pages/SafetySupportPage.tsx` (New Feature)
+- `src/components/LanguageAnimationWrapper.tsx` (Optimization)
+- `package.json` (Version Bump 0.0.34)
+- `ENTERPRISE_FEATURES_SETUP.md` (Updated Documentation)

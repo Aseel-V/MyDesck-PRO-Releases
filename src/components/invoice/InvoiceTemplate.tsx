@@ -1,10 +1,19 @@
 import { useEffect, useState } from 'react';
-import { Trip } from '../../types/trip';
+import { Trip, RoomConfiguration } from '../../types/trip';
 import { BusinessProfile } from '../../lib/supabase';
 
 interface ExtendedProfile extends BusinessProfile {
     email?: string;
 }
+
+// Helper to format RoomConfiguration JSONB object for display
+const formatRoomType = (roomType: RoomConfiguration | undefined): string => {
+  if (!roomType || typeof roomType !== 'object') return 'לא צוין';
+  const parts = Object.entries(roomType)
+    .filter(([, count]) => count && count > 0)
+    .map(([type, count]) => `${type} x${count}`);
+  return parts.length > 0 ? parts.join(', ') : 'לא צוין';
+};
 
 interface InvoiceData {
     trip: Trip;
@@ -108,7 +117,7 @@ export function InvoiceLayout({ trip, profile, userFullName }: InvoiceLayoutProp
                     <div className="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
                         <p className="text-xs font-semibold text-blue-600 mb-1">פרטי אירוח</p>
                         <div className="font-bold text-base text-slate-700 space-y-0.5">
-                            <p>{trip.room_type || 'לא צוין'}</p>
+                            <p>{formatRoomType(trip.room_type)}</p>
                             {trip.board_basis && <p className="text-slate-600">{trip.board_basis}</p>}
                             <p className="text-blue-600">{trip.travelers_count} נוסעים</p>
                         </div>
@@ -329,7 +338,7 @@ export default function InvoiceTemplate() {
                     <div>
                         <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">הרכב חדרים ואירוח</p>
                         <div className="font-medium text-slate-700">
-                             <p>{trip.room_type || 'לא צוין'}</p>
+                             <p>{formatRoomType(trip.room_type)}</p>
                              {trip.board_basis && (
                                 <p className="text-sm text-slate-500 mt-1 font-semibold">{trip.board_basis}</p>
                              )}

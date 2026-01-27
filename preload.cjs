@@ -24,5 +24,40 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.removeAllListeners('update_progress');
     ipcRenderer.removeAllListeners('update_downloaded');
     ipcRenderer.removeAllListeners('update_error');
-  }
+  },
+
+  // =========================================================================
+  // ENTERPRISE: Direct Thermal Printing
+  // =========================================================================
+  getPrinters: () => ipcRenderer.invoke('get-printers'),
+  printTicket: (html, printerName, options) => ipcRenderer.invoke('print-ticket', { html, printerName, options }),
+
+  // =========================================================================
+  // ENTERPRISE: Customer Facing Display (CFD)
+  // =========================================================================
+  getDisplays: () => ipcRenderer.invoke('get-displays'),
+  openCustomerDisplay: (displayIndex) => ipcRenderer.invoke('open-customer-display', displayIndex),
+  closeCustomerDisplay: () => ipcRenderer.invoke('close-customer-display'),
+  updateCustomerDisplay: (data) => ipcRenderer.send('update-customer-display', data),
+  onCustomerDisplayUpdate: (callback) => ipcRenderer.on('customer-display-update', (_, data) => callback(data)),
+  removeCustomerDisplayListeners: () => ipcRenderer.removeAllListeners('customer-display-update'),
+
+  // =========================================================================
+  // HARDWARE: Serial Port Communication (Scales, EMV Terminals)
+  // =========================================================================
+  serialListPorts: () => ipcRenderer.invoke('serial-list-ports'),
+  serialConnect: (port, baudRate) => ipcRenderer.invoke('serial-connect', { port, baudRate }),
+  serialDisconnect: (port) => ipcRenderer.invoke('serial-disconnect', port),
+  serialSend: (port, data, options) => ipcRenderer.invoke('serial-send', { port, data, ...options }),
+
+  // =========================================================================
+  // HARDWARE: ESC/POS Thermal Printing
+  // =========================================================================
+  printEscPos: (printerName, commands) => ipcRenderer.invoke('print-escpos', { printerName, commands }),
+
+  // =========================================================================
+  // HARDWARE: Cash Drawer Control
+  // =========================================================================
+  openCashDrawer: (printerName, method) => ipcRenderer.invoke('open-cash-drawer', { printerName, method }),
 });
+

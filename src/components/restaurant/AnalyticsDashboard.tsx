@@ -6,7 +6,7 @@
 import { useState, useMemo } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useRestaurantKPIs, useRestaurant } from '../../hooks/useRestaurant';
-import { useRestaurantRole, ManagerOnly } from '../../contexts/RestaurantRoleContext';
+import { useRestaurantRole } from '../../contexts/RestaurantRoleContext';
 import { 
   BarChart3, 
   TrendingUp, 
@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import OrderHistoryModal from './OrderHistoryModal';
 import { History } from 'lucide-react';
-import CloseDayWizard from './CloseDayWizard';
+
 
 // ============================================================================
 // KPI CARD COMPONENT
@@ -243,7 +243,6 @@ export default function AnalyticsDashboard() {
   const { dailyReports, staff } = useRestaurant();
   
   const [dateRange, setDateRange] = useState<'today' | 'week' | 'month'>('today');
-  const [isCloseWizardOpen, setIsCloseWizardOpen] = useState(false);
   const [isOrderHistoryOpen, setIsOrderHistoryOpen] = useState(false);
   
   // Mock hourly data (in production, fetch from backend)
@@ -453,29 +452,6 @@ export default function AnalyticsDashboard() {
             <CategoryBreakdown categories={categoryData} />
           </div>
           
-          
-          {/* Z-Report - Manager Only */}
-          <ManagerOnly>
-             <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-5 text-white">
-                <h3 className="font-bold mb-4 flex items-center gap-2">
-                    <FileText size={18} />
-                    {t('restaurantAnalytics.closeBusinessDay')}
-                </h3>
-                <p className="text-sm text-slate-300 mb-4">
-                    {t('restaurantAnalytics.closeBusinessDaySubtitle')}
-                </p>
-                <button
-                    onClick={() => setIsCloseWizardOpen(true)}
-                    className="w-full py-3 bg-red-500 hover:bg-red-600 rounded-lg font-bold transition-colors"
-                >
-                    {t('restaurantAnalytics.startEndOfDay')}
-                </button>
-            </div>
-          </ManagerOnly>
-        <CloseDayWizard 
-            isOpen={isCloseWizardOpen} 
-            onClose={() => setIsCloseWizardOpen(false)} 
-        />
         </div>
         
         {/* Recent Reports */}

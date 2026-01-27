@@ -4,7 +4,7 @@
 // ============================================================================
 
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { useRestaurant, useGuestProfiles as useGuestProfilesHook } from '../../hooks/useRestaurant';
+import { useRestaurant, useGuestProfiles as useGuestProfilesHook, StaffAuthorizationResult } from '../../hooks/useRestaurant';
 import { useRestaurantRole } from '../../contexts/RestaurantRoleContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -14,6 +14,20 @@ import {
   MenuItem,
   ModifierGroup,
 } from '../../types/restaurant';
+
+// Explicit type definition for the RPC to ensure type safety without 'any'
+type LogActivityRpc = (
+  fn: 'log_business_activity_v2',
+  args: {
+    p_business_id?: string | null;
+    p_activity_type: string;
+    p_entity_type?: string;
+    p_entity_id?: string;
+    p_details: Record<string, unknown>;
+    p_staff_id?: string | null;
+  }
+) => Promise<{ data: null; error: Error | null }>;
+
 import { calculateOrderTotal } from '../../lib/restaurantCalculator';
 import {
   Plus,
@@ -94,7 +108,9 @@ function MenuItemCard({ item, onAdd, t, formatCurrency }: MenuItemCardProps) {
             <h4 className="font-medium text-slate-800 dark:text-white">{item.name}</h4>
             {item.is_popular && <Star size={12} className="text-yellow-500 fill-yellow-500" />}
             {item.is_new && (
-              <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-bold">NEW</span>
+              <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-bold">
+                {t('menuManagement.newItem')}
+              </span>
             )}
           </div>
           {item.description && (
@@ -104,7 +120,7 @@ function MenuItemCard({ item, onAdd, t, formatCurrency }: MenuItemCardProps) {
             <div className="flex flex-wrap gap-1 mt-2">
               {item.allergens.map(allergen => (
                 <span key={allergen} className="text-[10px] px-1.5 py-0.5 bg-rose-50 text-rose-600 dark:bg-rose-900/20 dark:text-rose-300 rounded border border-rose-100 dark:border-rose-800 font-medium">
-                  {allergen}
+                  {t(`settings.restaurantSetup.allergens.${allergen}`) !== `settings.restaurantSetup.allergens.${allergen}` ? t(`settings.restaurantSetup.allergens.${allergen}`) : allergen}
                 </span>
               ))}
             </div>
@@ -734,10 +750,11 @@ export default function OrderEntry({ tableId, sessionId, orderId, onClose }: Ord
 
   // 1.4 FIX: Active Allergy Safety
   const [showAllergyCheck, setShowAllergyCheck] = useState(false);
+  const [showManagerPin, setShowManagerPin] = useState<{ action: (result: StaffAuthorizationResult) => void; item?: MenuItem } | null>(null);
 
   const [customAllergy, setCustomAllergy] = useState('');
 
-  const selectedTable = tables.find(t => t.id === tableId);
+  const selectedTable = tables.find(table => table.id === tableId);
 
   // ============================================================================
   // CRITICAL: Fetch guest allergies from linked guest profile
@@ -783,8 +800,6 @@ export default function OrderEntry({ tableId, sessionId, orderId, onClose }: Ord
   const holdTimer = useRef<NodeJS.Timeout | null>(null);
   const [allergenWarningItem, setAllergenWarningItem] = useState<MenuItem | null>(null);
   const [matchingAllergens, setMatchingAllergens] = useState<string[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [showManagerPin, setShowManagerPin] = useState<{ action: (staff?: any) => void; item?: MenuItem } | null>(null);
   const [verballyConfirmed, setVerballyConfirmed] = useState(false);
 
   const [guestCount, setGuestCount] = useState(2);
@@ -794,9 +809,9 @@ export default function OrderEntry({ tableId, sessionId, orderId, onClose }: Ord
   // 2. LOGGING: Immutable audit log
   const logAllergyOverride = async (item: MenuItem, reason: string, method: string) => {
     try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (supabase.rpc as any)('log_business_activity_v2', {
-             p_business_id: user?.id,
+        const rpc = supabase.rpc as unknown as LogActivityRpc;
+        await rpc('log_business_activity_v2', {
+             p_business_id: user?.id ?? null,
              p_activity_type: 'ALLERGY_OVERRIDE',
              p_entity_type: 'order_item',
              p_entity_id: item.id,
@@ -807,7 +822,7 @@ export default function OrderEntry({ tableId, sessionId, orderId, onClose }: Ord
                 method: method,
                 orderId: orderId || 'NEW_ORDER'
              },
-             p_staff_id: user?.id 
+             p_staff_id: user?.id ?? null
         });
         // We can toast if needed but user flow shouldn't be interrupted too much
         console.log('Safety Override Logged');
@@ -905,9 +920,20 @@ export default function OrderEntry({ tableId, sessionId, orderId, onClose }: Ord
       modifiers: item.modifiers,
     }));
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return calculateOrderTotal({ items } as any);
-  }, [cart]);
+    return calculateOrderTotal({ 
+      id: orderId || 'temp',
+      items: items.map(i => ({ 
+        ...i, 
+        id: 'calc-id', 
+        item_id: 'calc-item',
+        modifiers: i.modifiers.map(m => ({
+          id: m.id,
+          modifier_name: m.name,
+          price_adjustment: m.price
+        }))
+      })) 
+    });
+  }, [cart, orderId]);
 
   // Calculate tip amount
   const calculatedTip = useMemo(() => {
@@ -1252,7 +1278,7 @@ export default function OrderEntry({ tableId, sessionId, orderId, onClose }: Ord
           <button
             onClick={() => setSelectedCategory(null)}
             className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap ${
-              !selectedCategory
+              (selectedCategory === null)
                 ? 'bg-blue-500 text-white'
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
             }`}
@@ -1547,8 +1573,8 @@ export default function OrderEntry({ tableId, sessionId, orderId, onClose }: Ord
               <button
                 disabled={!cancelReason}
                 onClick={() => {
-                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                   const proceedCancellation = (staff: any) => {
+                   const proceedCancellation = (staff: StaffAuthorizationResult) => {
+                       if (!staff.staff_id) return;
                        cancelOrder.mutate({ 
                            orderId: orderId!, 
                            reason: cancelReason,
@@ -1566,8 +1592,7 @@ export default function OrderEntry({ tableId, sessionId, orderId, onClose }: Ord
                        setShowManagerPin(null);
                        setShowCancelConfirm(false);
                    };
-                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                   setShowManagerPin({ action: proceedCancellation, item: undefined as any });
+                   setShowManagerPin({ action: proceedCancellation, item: undefined });
                 }}
                 className="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 disabled:opacity-50"
               >
@@ -1622,8 +1647,7 @@ export default function OrderEntry({ tableId, sessionId, orderId, onClose }: Ord
                     return;
                   }
                   authorizeStaffAction.mutateAsync({ pin, requiredRole: 'Manager' })
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    .then((result) => (showManagerPin.action as any)(result))
+                    .then((result) => (showManagerPin.action)(result))
                     .catch(err => toast.error(err.message));
                 }}
                 isProcessing={authorizeStaffAction.isPending}

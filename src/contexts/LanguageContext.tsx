@@ -58,14 +58,14 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     let currency = 'ILS'; // Default to Shekels as per original app, or make dynamic later
 
     if (language === 'he') {
-      locale = 'he-IL';
+      locale = 'he-IL-u-nu-latn';
       currency = 'ILS';
     } else if (language === 'ar') {
-      locale = 'ar-IL'; // Arabic in Israel context usually uses ILS
+      locale = 'ar-IL-u-nu-latn'; 
       currency = 'ILS';
     } else {
       // Default EN
-      locale = 'en-IL'; // English in Israel
+      locale = 'en-IL-u-nu-latn'; 
       currency = 'ILS';
     }
 
@@ -92,9 +92,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   const formatDate = (date: Date | string | number, options: Intl.DateTimeFormatOptions = {}) => {
       const d = new Date(date);
-      let locale = 'en-IL';
-      if (language === 'he') locale = 'he-IL';
-      if (language === 'ar') locale = 'ar-IL';
+      let locale = 'en-IL-u-nu-latn';
+      if (language === 'he') locale = 'he-IL-u-nu-latn';
+      if (language === 'ar') locale = 'ar-IL-u-nu-latn';
       
       return new Intl.DateTimeFormat(locale, {
           dateStyle: 'medium',
@@ -104,9 +104,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   const formatTime = (date: Date | string | number, options: Intl.DateTimeFormatOptions = {}) => {
       const d = new Date(date);
-      let locale = 'en-IL';
-      if (language === 'he') locale = 'he-IL';
-      if (language === 'ar') locale = 'ar-IL';
+      let locale = 'en-IL-u-nu-latn';
+      if (language === 'he') locale = 'he-IL-u-nu-latn';
+      if (language === 'ar') locale = 'ar-IL-u-nu-latn';
 
       return new Intl.DateTimeFormat(locale, {
           timeStyle: 'short',

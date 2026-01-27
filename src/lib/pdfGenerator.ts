@@ -1,4 +1,4 @@
-import { Trip } from '../types/trip';
+import { Trip, RoomConfiguration } from '../types/trip';
 import { RestaurantOrder, RestaurantTable, DailyReport } from '../types/restaurant';
 import { BusinessProfile } from './supabase';
 import QRCode from 'qrcode';
@@ -15,6 +15,15 @@ interface PDFOptions {
 }
 
 type PdfMode = 'invoice' | 'summary' | 'receipt' | 'report';
+
+// Helper to format RoomConfiguration JSONB object for display
+const formatRoomType = (roomType: RoomConfiguration | undefined): string => {
+  if (!roomType || typeof roomType !== 'object') return 'לא צוין';
+  const parts = Object.entries(roomType)
+    .filter(([, count]) => count && count > 0)
+    .map(([type, count]) => `${type} x${count}`);
+  return parts.length > 0 ? parts.join(', ') : 'לא צוין';
+};
 
 const generateQRCode = async (text: string): Promise<string> => {
   try {
@@ -61,7 +70,7 @@ const generateBrowserPDF = async (payload: any): Promise<Uint8Array> => {
           <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 32px;">
             <div style="flex: 1;">
               <h2 style="font-size: 18px; font-weight: bold; color: #1e293b; margin-bottom: 4px;">${userFullName}</h2>
-              <p style="font-size: 14px; color: #475569;">תיירות ונופש עראבה מיקוד 3081200</p>
+              <p style="font-size: 14px; color: #475569;">${profile.address || 'תיירות ונופש עראבה מיקוד 3081200'}</p>
               <p style="font-size: 14px; color: #475569;">טל. ${profile.phone_number || ''}</p>
               ${profile.business_registration_number ? `<p style="font-size: 14px; color: #64748b; margin-top: 4px;">ע.מ. ${profile.business_registration_number}</p>` : ''}
             </div>
@@ -100,7 +109,7 @@ const generateBrowserPDF = async (payload: any): Promise<Uint8Array> => {
             <div style="background: white; padding: 16px; border-radius: 8px; border: 1px solid #f1f5f9;">
               <p style="font-size: 12px; font-weight: 600; color: #2563eb; margin-bottom: 4px;">פרטי אירוח</p>
               <div style="font-size: 16px; font-weight: bold; color: #334155;">
-                <p>${trip?.room_type || 'לא צוין'}</p>
+                <p>${formatRoomType(trip?.room_type)}</p>
                 ${trip?.board_basis ? `<p style="color: #475569;">${trip.board_basis}</p>` : ''}
                 <p style="color: #2563eb;">${trip?.travelers_count || 0} נוסעים</p>
               </div>

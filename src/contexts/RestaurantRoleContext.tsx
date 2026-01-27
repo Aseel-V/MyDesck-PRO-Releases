@@ -14,6 +14,7 @@ import {
   KitchenStation,
   RestaurantStaff
 } from '../types/restaurant';
+import { ROLE_HIERARCHY, ROLE_DEFAULT_VIEWS } from '../lib/constants/restaurantRoles';
 
 // ============================================================================
 // CONTEXT TYPES
@@ -76,30 +77,14 @@ interface RestaurantRoleContextType {
   isAssignedToStation: (station: KitchenStation) => boolean;
 }
 
-// Role hierarchy for permission escalation checks
-const ROLE_HIERARCHY: UserRole[] = [
-  'super_admin',
-  'branch_manager',
-  'head_chef',
-  'waiter',
-  'cashier',
-  'kitchen_staff',
-  'host',
-];
-
-// Default views per role
-const ROLE_DEFAULT_VIEWS: Record<UserRole, string> = {
-  super_admin: '/restaurant/analytics',
-  branch_manager: '/restaurant/floor',
-  head_chef: '/restaurant/kitchen',
-  waiter: '/restaurant/tables',
-  kitchen_staff: '/restaurant/kds',
-  cashier: '/restaurant/payments',
-  host: '/restaurant/reservations',
-};
+// Role constants moved to '../lib/constants/restaurantRoles'
 
 // Session storage key
+// Session storage key
 const STAFF_SESSION_KEY = 'restaurant_active_staff';
+
+const MAX_PIN_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
 
 // ============================================================================
 // CONTEXT CREATION
@@ -144,9 +129,6 @@ export function RestaurantRoleProvider({ children, staffOverride }: RestaurantRo
   // PIN Rate Limiting - track failed attempts
   const [failedAttempts, setFailedAttempts] = useState<Record<string, number>>({});
   const [lockoutUntil, setLockoutUntil] = useState<Record<string, number>>({});
-  
-  const MAX_PIN_ATTEMPTS = 5;
-  const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
   
   // ============================================================================
   // PIN-BASED AUTHENTICATION
@@ -486,6 +468,7 @@ export function RestaurantRoleProvider({ children, staffOverride }: RestaurantRo
 // HOOK
 // ============================================================================
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useRestaurantRole() {
   const context = useContext(RestaurantRoleContext);
   if (!context) {
@@ -558,5 +541,4 @@ export function ManagerOnly({ fallback = null, children }: ManagerOnlyProps) {
 // EXPORTS
 // ============================================================================
 
-export { ROLE_HIERARCHY, ROLE_DEFAULT_VIEWS };
 export type { RestaurantRoleContextType, ManagerAuthRequest };

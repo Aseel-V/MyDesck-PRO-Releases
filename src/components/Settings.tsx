@@ -30,6 +30,7 @@ export default function Settings() {
 
   const [businessName, setBusinessName] = useState(profile?.business_name || '');
   const [businessRegNumber, setBusinessRegNumber] = useState(profile?.business_registration_number || '');
+  const [businessAddress, setBusinessAddress] = useState(profile?.address || '');
   const [logoUrl, setLogoUrl] = useState(profile?.logo_url || '');
   const [signatureUrl, setSignatureUrl] = useState(profile?.signature_url || '');
   const [currency, setCurrency] = useState<'USD' | 'EUR' | 'ILS'>(
@@ -70,6 +71,7 @@ export default function Settings() {
     if (!profile) return;
     setBusinessName(profile.business_name || '');
     setBusinessRegNumber(profile.business_registration_number || '');
+    setBusinessAddress(profile.address || '');
     setLogoUrl(profile.logo_url || '');
     setSignatureUrl(profile.signature_url || '');
     setCurrency((profile.preferred_currency as 'USD' | 'EUR' | 'ILS') || 'USD');
@@ -159,6 +161,7 @@ export default function Settings() {
         preferred_currency: currency,
         preferred_language: language,
         business_registration_number: businessRegNumber || null,
+        address: businessAddress || null,
         signature_url: signatureUrl || null,
       });
 
@@ -626,6 +629,19 @@ export default function Settings() {
                       type="text"
                       value={businessName}
                       onChange={(e) => setBusinessName(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all dark:bg-slate-900/80 dark:border-slate-700 dark:text-slate-100 dark:placeholder-slate-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-200">
+                      {t('settings.business.address')}
+                    </label>
+                    <input
+                      type="text"
+                      value={businessAddress}
+                      onChange={(e) => setBusinessAddress(e.target.value)}
+                      placeholder={t('settings.business.addressPlaceholder')}
                       className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all dark:bg-slate-900/80 dark:border-slate-700 dark:text-slate-100 dark:placeholder-slate-500"
                     />
                   </div>

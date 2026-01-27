@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { RestaurantTable, MenuItem, RestaurantOrder, OrderItem } from '../../types/restaurant';
+import { RestaurantTable, MenuItem, RestaurantOrder, OrderItem} from '../../types/restaurant';
 import { useRestaurant } from '../../hooks/useRestaurant';
 import { X, Plus, Minus, Printer, CreditCard, ChefHat, Sparkles, Trash2, Percent, Clock } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -9,9 +9,10 @@ import { toast } from 'sonner';
 import BusinessLunchModal from './BusinessLunchModal';
 import { PinPadModal, PinPadModalHandle } from './PinPadModal';
 import { DiscountModal } from './DiscountModal';
-import { ConfirmationModal } from '../ui/ConfirmationModal';
 import OrderModificationModal from './OrderModificationModal';
 import { Ban } from 'lucide-react';
+import RestaurantPaymentModal from './RestaurantPaymentModal';
+import RestaurantReceiptModal from './RestaurantReceiptModal';
 
 // Course Definitions
 const COURSES = [
@@ -48,7 +49,8 @@ export default function OrderModal({ table, isOpen, onClose, onToggleNavbar }: O
         authorizeStaffAction,
         applyDiscount,
         endSession,
-        updateOrderItem
+        updateOrderItem,
+        sendToKitchen
     } = useRestaurant();
     const { profile } = useAuth();
     
@@ -56,7 +58,6 @@ export default function OrderModal({ table, isOpen, onClose, onToggleNavbar }: O
     const [cartItems, setCartItems] = useState<Partial<OrderItem>[]>([]);
     const [currentOrder, setCurrentOrder] = useState<RestaurantOrder | null>(null);
     const [isBusinessLunchOpen, setIsBusinessLunchOpen] = useState(false);
-    const [isCloseConfirmationOpen, setIsCloseConfirmationOpen] = useState(false);
     
     // Void / Pin Pad State
     const [itemToVoid, setItemToVoid] = useState<{ index: number; item: Partial<OrderItem> } | null>(null);
@@ -72,6 +73,15 @@ export default function OrderModal({ table, isOpen, onClose, onToggleNavbar }: O
     // Order Modification State
     const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
     const [pendingCancelOrder, setPendingCancelOrder] = useState<boolean>(false);
+
+    // New Payment States
+    const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+    const [showBillPreview, setShowBillPreview] = useState(false);
+    const [paymentResult, setPaymentResult] = useState<{
+        method: 'cash' | 'card' | 'bit';
+        amountPaid: number;
+        change: number;
+    } | null>(null);
     
     // Helper to update local cart
     const updateCartItemLocal = (index: number, updates: Partial<OrderItem>) => {
@@ -95,10 +105,10 @@ export default function OrderModal({ table, isOpen, onClose, onToggleNavbar }: O
                     quantity: quantity,
                     notes: notes
                 });
-                toast.success(t('Item updated'));
+                toast.success(t('orderModal.itemUpdated') || 'Item updated');
              } catch(e) {
                  console.error(e);
-                 toast.error(t('Failed to update item'));
+                 toast.error(t('orderModal.itemUpdateFailed') || 'Failed to update item');
              }
         } else {
             updateCartItemLocal(editingItemIndex, { quantity, notes });
@@ -187,9 +197,9 @@ export default function OrderModal({ table, isOpen, onClose, onToggleNavbar }: O
         if (!mainItem) return;
 
         const description = [
-            selections.starter ? `Starter: ${selections.starter.name}` : '',
-            selections.main ? `Main: ${selections.main.name}` : '',
-            selections.drink ? `Drink: ${selections.drink.name}` : ''
+            selections.starter ? `${t('orderModal.businessLunchDetails.starter')}: ${selections.starter.name}` : '',
+            selections.main ? `${t('orderModal.businessLunchDetails.main')}: ${selections.main.name}` : '',
+            selections.drink ? `${t('orderModal.businessLunchDetails.drink')}: ${selections.drink.name}` : ''
         ].filter(Boolean).join(', ');
 
         setCartItems(prev => [...prev, {
@@ -197,7 +207,7 @@ export default function OrderModal({ table, isOpen, onClose, onToggleNavbar }: O
             quantity: 1,
             price_at_time: price,
             notes: `BUSINESS LUNCH: ${description}`,
-            menu_item: { ...mainItem, name: `Business Lunch (${mainItem.name})` }
+            menu_item: { ...mainItem, name: `${t('orderModal.businessLunch')} (${mainItem.name})` }
         } as Partial<OrderItem>]);
     };
 
@@ -255,17 +265,15 @@ export default function OrderModal({ table, isOpen, onClose, onToggleNavbar }: O
                     table_id: table.id,
                     status: 'pending',
                     total_amount: calculateSubtotal(), // Initial creation uses subtotal
-                    tax_amount: calculateSubtotal() * 0.17,
+                    tax_amount: calculateSubtotal() * (0.17 / 1.17), // VAT Inclusive
                 });
                 orderId = newOrder.id;
             } else {
                 // Update total
                  await supabase.from('restaurant_orders').update({
                     total_amount: calculateTotal(), // Updates with potential discount? Check logic. 
-                    // Wait, calculateTotal applies discount? Yes. 
-                    // But if we just added items, subtotal increased. Discount (amount) stays fixed unless percentage.
-                    // This logic is complex. For now, trust the simple update.
-                    tax_amount: calculateTotal() * 0.17
+                    // VAT Inclusive Calc: Tax = Total * (Rate / (1 + Rate))
+                    tax_amount: calculateTotal() * (0.17 / 1.17)
                  }).eq('id', orderId);
             }
 
@@ -286,61 +294,53 @@ export default function OrderModal({ table, isOpen, onClose, onToggleNavbar }: O
                 } as any);
             });
             
+            
             await Promise.all(ops);
             
+            // 3. Fire to Kitchen if requested
+            if (shouldFire) {
+                await sendToKitchen.mutateAsync({ orderId: orderId });
+            }
+
             // Update table status
             if (table.status === 'free') {
                 updateTableStatus.mutate({ id: table.id, status: 'occupied' });
             }
 
-            toast.success(shouldFire ? t('Order fired to kitchen') : t('Order held'));
+            toast.success(shouldFire ? (t('orderModal.orderFired') || 'Order fired to kitchen') : (t('orderModal.orderHeld') || 'Order held'));
             onClose();
         } catch (error) {
             console.error(error);
-            toast.error(t('Failed to save order'));
+            toast.error(t('orderModal.orderSaveFailed') || 'Failed to save order');
         }
     };
 
     const handlePrintBill = async () => {
         if (!currentOrder || !profile) return;
-        
-        try {
-            if (window.electronAPI) {
-                 toast.info(t('Printing Bill...'));
-                const payload = {
-                    type: 'receipt',
-                    order: { ...currentOrder, items: cartItems },
-                    table: table,
-                    profile: profile,
-                    userFullName: profile.business_name || 'Restaurant'
-                };
-                await window.electronAPI.printToPDF(payload);
-            } else {
-                // Fallback for browser
-                window.print();
-            }
-             await updateTableStatus.mutateAsync({ id: table.id, status: 'billed' });
-        } catch (e) {
-            console.error(e);
-            toast.error(t('orderModal.printFailed'));
-        }
+        setShowBillPreview(true);
+        await updateTableStatus.mutateAsync({ id: table.id, status: 'billed' });
     };
 
     const handlePayAndCloseRequest = () => {
         if (!currentOrder) return;
-        setIsCloseConfirmationOpen(true);
+        setIsPaymentModalOpen(true);
     };
 
-    const handlePayAndCloseConfirm = async () => {
+    const handlePaymentComplete = async (method: 'cash' | 'card' | 'bit', amountPaid: number) => {
         if (!currentOrder) return;
 
         try {
-            // 1. Close Order
+            const finalTotal = calculateTotal();
+            const change = amountPaid - finalTotal;
+
+            // 1. Close Order In DB
             await supabase.from('restaurant_orders').update({
                 status: 'closed',
                 closed_at: new Date().toISOString(),
-                payment_method: 'cash',
-                total_amount: calculateTotal()
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                payment_method: method as any,
+                total_amount: finalTotal,
+                tax_amount: finalTotal * (0.17 / 1.17)
             }).eq('id', currentOrder.id);
 
             // 2. Close Session
@@ -351,13 +351,18 @@ export default function OrderModal({ table, isOpen, onClose, onToggleNavbar }: O
             // 3. Free Table
             await updateTableStatus.mutateAsync({ id: table.id, status: 'free' });
 
+            // 4. Show Receipt Modal with results
+            setPaymentResult({
+                method,
+                amountPaid,
+                change
+            });
+            setIsPaymentModalOpen(false);
+            
             toast.success(t('orderModal.orderClosed'));
-            setIsCloseConfirmationOpen(false);
-            onClose();
         } catch (e) {
             console.error(e);
             toast.error(t('orderModal.orderCloseFailed'));
-            setIsCloseConfirmationOpen(false);
         }
     };
 
@@ -411,7 +416,7 @@ export default function OrderModal({ table, isOpen, onClose, onToggleNavbar }: O
                      await updateTableStatus.mutateAsync({ id: table.id, status: 'free' });
                   }
                   
-                  toast.success(t('Order Cancelled'));
+                  toast.success(t('orderModal.orderCancelled') || 'Order Cancelled');
                   setPendingCancelOrder(false);
                   onClose();
             }
@@ -420,7 +425,7 @@ export default function OrderModal({ table, isOpen, onClose, onToggleNavbar }: O
 
         } catch (err: unknown) {
             console.error(err);
-            toast.error((err as Error)?.message || 'Authorization failed');
+            toast.error((err as Error)?.message || t('orderModal.authFailed') || 'Authorization failed');
             pinPadRef.current?.triggerFailure();
             // Do NOT close modal, let them try again
         } finally {
@@ -755,17 +760,6 @@ export default function OrderModal({ table, isOpen, onClose, onToggleNavbar }: O
                 />
             )}
 
-            <ConfirmationModal
-                isOpen={isCloseConfirmationOpen}
-                onClose={() => setIsCloseConfirmationOpen(false)}
-                onConfirm={handlePayAndCloseConfirm}
-                title={t('pinPadModal.closeOrderConfirmTitle')}
-                description={t('pinPadModal.closeOrderConfirmMessage')}
-                confirmText={t('pinPadModal.confirmClose')}
-                cancelText={t('pinPadModal.cancel')}
-                variant="danger"
-            />
-
             <OrderModificationModal
                 isOpen={editingItemIndex !== null}
                 onClose={() => setEditingItemIndex(null)}
@@ -777,6 +771,38 @@ export default function OrderModal({ table, isOpen, onClose, onToggleNavbar }: O
                     if (idx !== null) handleRemoveRequest(idx);
                 }}
             />
+
+            {isPaymentModalOpen && (
+                <RestaurantPaymentModal 
+                    isOpen={isPaymentModalOpen}
+                    total={calculateTotal()}
+                    onClose={() => setIsPaymentModalOpen(false)}
+                    onComplete={handlePaymentComplete}
+                />
+            )}
+
+            {paymentResult && currentOrder && (
+                <RestaurantReceiptModal 
+                    order={{...currentOrder, items: cartItems as OrderItem[]}}
+                    profile={profile}
+                    onClose={() => {
+                        setPaymentResult(null);
+                        onClose();
+                    }}
+                    paymentMethod={paymentResult.method}
+                    amountPaid={paymentResult.amountPaid}
+                    change={paymentResult.change}
+                />
+            )}
+
+            {showBillPreview && currentOrder && (
+                <RestaurantReceiptModal 
+                    order={{...currentOrder, items: cartItems as OrderItem[]}}
+                    profile={profile}
+                    onClose={() => setShowBillPreview(false)}
+                    viewOnly={true}
+                />
+            )}
         </>
     );
 }

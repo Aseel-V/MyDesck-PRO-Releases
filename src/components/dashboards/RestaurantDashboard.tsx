@@ -1,20 +1,29 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useRestaurant } from '../../hooks/useRestaurant';
 import { RestaurantTable } from '../../types/restaurant';
-import { UtensilsCrossed, FileText, DollarSign, Users, LogOut } from 'lucide-react';
+import { UtensilsCrossed, FileText, DollarSign, ChefHat, LayoutDashboard, ArrowLeft } from 'lucide-react';
 import OrderModal from '../restaurant/OrderModal';
-import CloseDayWizard from '../restaurant/CloseDayWizard';
+
+import KitchenDisplaySystem from '../restaurant/KitchenDisplaySystem';
+import FloorPlanEditor from '../restaurant/FloorPlanEditor';
+import TableVisual from '../restaurant/TableVisual';
+import { RestaurantRoleProvider } from '../../contexts/RestaurantRoleContext';
+import { FloorZone } from '../../types/restaurant';
 import { ErrorBoundary } from '../ErrorBoundary';
 
 interface RestaurantDashboardProps {
   onToggleNavbar: (show: boolean) => void;
 }
 
+type ViewMode = 'overview' | 'kds' | 'floorplan';
+
 export default function RestaurantDashboard({ onToggleNavbar }: RestaurantDashboardProps) {
-  const { tables, activeOrders, loadingTables } = useRestaurant();
+  const { tables, activeOrders, kitchenTickets, loadingTables } = useRestaurant();
   const [selectedTable, setSelectedTable] = useState<RestaurantTable | null>(null);
-  const [isCloseDayOpen, setIsCloseDayOpen] = useState(false);
+
+  const [viewMode, setViewMode] = useState<ViewMode>('overview');
+  const [activeZone, setActiveZone] = useState<FloorZone>('indoor');
 
   const { t } = useLanguage();
 
@@ -22,105 +31,164 @@ export default function RestaurantDashboard({ onToggleNavbar }: RestaurantDashbo
   const openTablesCount = tables.filter(t => t.status === 'free').length;
   const activeOrdersValue = activeOrders.reduce((sum, o) => sum + (o.total_amount || 0), 0);
 
-  const getTableColor = (status: string) => {
-    switch (status) {
-      case 'occupied': return 'bg-rose-500 text-white border-rose-600 shadow-rose-200';
-      case 'billed': return 'bg-amber-400 text-amber-900 border-amber-500 shadow-amber-200';
-      case 'reserved': return 'bg-sky-500 text-white border-sky-600 shadow-sky-200';
-      case 'free':
-      default: return 'bg-emerald-500 text-white border-emerald-600 shadow-emerald-200';
-    }
-  };
+  // Ready Food Logic
+  const tablesWithReadyFood = useMemo(() => {
+    return new Set(
+      kitchenTickets
+        .filter(t => t.status === 'ready')
+        .map(t => t.order?.table_id)
+        .filter(Boolean)
+    );
+  }, [kitchenTickets]);
+
+
+  // Render KDS View
+  if (viewMode === 'kds') {
+    return (
+      <div className="animate-fadeIn">
+        <div className="mb-4">
+          <button 
+            onClick={() => setViewMode('overview')}
+            className="flex items-center gap-2 text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors"
+          >
+            <ArrowLeft size={18} />
+            <span>{t('settings.restaurant.nav.backToDashboard')}</span>
+          </button>
+        </div>
+        <ErrorBoundary>
+          <RestaurantRoleProvider>
+            <KitchenDisplaySystem />
+          </RestaurantRoleProvider>
+        </ErrorBoundary>
+      </div>
+    );
+  }
+
+  // Render Floor Plan Editor View
+  if (viewMode === 'floorplan') {
+    return (
+      <div className="animate-fadeIn">
+        <div className="mb-4">
+          <button 
+            onClick={() => setViewMode('overview')}
+            className="flex items-center gap-2 text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors"
+          >
+            <ArrowLeft size={18} />
+            <span>{t('settings.restaurant.nav.backToDashboard')}</span>
+          </button>
+        </div>
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 min-h-[80vh]">
+          <ErrorBoundary>
+            <RestaurantRoleProvider>
+              <FloorPlanEditor />
+            </RestaurantRoleProvider>
+          </ErrorBoundary>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fadeIn pb-20">
-      {/* Top Bar: Stats & Actions */}
-      <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full md:w-auto">
-             <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
-                 <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 rounded-lg">
-                    <UtensilsCrossed size={20} />
-                 </div>
-                 <div>
-                    <div className="text-2xl font-bold">{openTablesCount}</div>
-                    <div className="text-xs text-slate-500">{t('settings.restaurant.freeTables') || 'Free Tables'}</div>
-                 </div>
-             </div>
-             <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
-                 <div className="p-2 bg-rose-100 dark:bg-rose-900/30 text-rose-600 rounded-lg">
-                    <FileText size={20} />
-                 </div>
-                 <div>
-                    <div className="text-2xl font-bold">{activeOrders.length}</div>
-                    <div className="text-xs text-slate-500">{t('settings.restaurant.activeOrders') || 'Active Orders'}</div>
-                 </div>
-             </div>
-              <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
-                 <div className="p-2 bg-sky-100 dark:bg-sky-900/30 text-sky-600 rounded-lg">
-                    <DollarSign size={20} />
-                 </div>
-                 <div>
-                    <div className="text-2xl font-bold">₪{activeOrdersValue.toLocaleString()}</div>
-                    <div className="text-xs text-slate-500">{t('settings.restaurant.openValue') || 'Open Value'}</div>
-                 </div>
-             </div>
+      <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+         <div className="flex flex-wrap gap-2 w-full lg:w-auto">
+             <button 
+                onClick={() => setViewMode('kds')}
+                className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2.5 rounded-xl transition shadow-lg shadow-emerald-500/20"
+             >
+                <ChefHat size={18} />
+                <span className="font-semibold text-sm">{t('settings.restaurant.nav.kdsFull')}</span>
+             </button>
+             <button 
+                onClick={() => setViewMode('floorplan')}
+                className="flex items-center gap-2 bg-sky-500 hover:bg-sky-600 text-white px-4 py-2.5 rounded-xl transition shadow-lg shadow-sky-500/20"
+             >
+                <LayoutDashboard size={18} />
+                <span className="font-semibold text-sm">{t('settings.restaurant.nav.floorPlanFull')}</span>
+             </button>
          </div>
-
-         <button 
-            onClick={() => setIsCloseDayOpen(true)}
-            className="flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-xl hover:bg-slate-800 transition shadow-lg w-full md:w-auto justify-center"
-         >
-            <LogOut size={18} />
-            <span className="font-semibold">{t('settings.restaurant.closeDay') || 'Close Day (Z-Report)'}</span>
-         </button>
       </div>
 
-      {/* Floor Plan Grid */}
-      <h2 className="text-lg font-bold text-slate-800 dark:text-white">{t('settings.restaurant.floorPlan') || 'Floor Plan'}</h2>
-      
-      {loadingTables ? (
-          <div className="text-center py-20 text-slate-400">{t('auth.loading')}</div>
-      ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-            {tables.map(table => (
-              <div 
-                key={table.id}
-                onClick={() => setSelectedTable(table)}
-                className={`
-                    relative aspect-square rounded-full border-4 flex flex-col items-center justify-center cursor-pointer transition-transform hover:scale-105
-                    ${getTableColor(table.status)}
-                `}
-              >
-                  <span className="text-xl font-bold">{table.name}</span>
-                  <div className="flex items-center gap-1 text-xs opacity-90 mt-1">
-                      <Users size={12} />
-                      <span>{table.seats}</span>
-                  </div>
-                  {/* Status Label */}
-                  <span className="absolute -bottom-2 px-2 py-0.5 bg-white text-slate-900 text-[10px] font-bold uppercase rounded-full shadow-sm border border-slate-100">
-                      {table.status}
-                  </span>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
+              <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 rounded-lg">
+                <UtensilsCrossed size={20} />
               </div>
-            ))}
-            
-             {tables.length === 0 && (
-                 <div className="col-span-full text-center py-16 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl">
-                     <div className="p-4 bg-slate-100 dark:bg-slate-800 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
-                       <UtensilsCrossed size={40} className="text-slate-400" />
-                     </div>
-                     <h3 className="text-xl font-bold text-slate-700 dark:text-slate-300 mb-2">No tables configured</h3>
-                     <p className="text-slate-500 dark:text-slate-400 mb-6 max-w-md mx-auto">
-                       Set up your restaurant tables, menu items, and staff in Settings to start taking orders.
-                     </p>
-                     <p className="text-sm text-slate-400 dark:text-slate-500">
-                       Go to <span className="font-semibold text-emerald-600 dark:text-emerald-400">Settings → Restaurant</span> tab to configure your floor plan.
-                     </p>
+              <div>
+                <div className="text-2xl font-bold">{openTablesCount}</div>
+                <div className="text-xs text-slate-500">{t('settings.restaurant.freeTables') || 'Free Tables'}</div>
+              </div>
+          </div>
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
+              <div className="p-2 bg-rose-100 dark:bg-rose-900/30 text-rose-600 rounded-lg">
+                <FileText size={20} />
+              </div>
+              <div>
+                <div className="text-2xl font-bold">{activeOrders.length}</div>
+                <div className="text-xs text-slate-500">{t('settings.restaurant.activeOrders') || 'Active Orders'}</div>
+              </div>
+          </div>
+            <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
+              <div className="p-2 bg-sky-100 dark:bg-sky-900/30 text-sky-600 rounded-lg">
+                <DollarSign size={20} />
+              </div>
+              <div>
+                <div className="text-2xl font-bold">₪{activeOrdersValue.toLocaleString()}</div>
+                <div className="text-xs text-slate-500">{t('settings.restaurant.openValue') || 'Open Value'}</div>
+              </div>
+          </div>
+      </div>
+
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-bold text-slate-800 dark:text-white uppercase tracking-wider">{t('settings.restaurant.floorPlan') || 'Floor Plan'}</h2>
+        <div className="flex bg-slate-200 dark:bg-slate-800 p-1 rounded-lg">
+           {(['indoor', 'outdoor', 'patio', 'bar_area', 'private'] as const).map(zone => (
+               <button
+                  key={zone}
+                  onClick={() => setActiveZone(zone)}
+                  className={`
+                      px-3 py-1 text-xs font-bold rounded-md transition-all capitalize
+                      ${activeZone === zone 
+                          ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' 
+                          : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
+                      }
+                  `}
+               >
+                   {zone.replace('_', ' ')}
+               </button>
+           ))}
+        </div>
+      </div>
+      
+       {loadingTables ? (
+           <div className="text-center py-20 text-slate-500 animate-pulse">{t('auth.loading')}</div>
+       ) : (
+           <div className="relative bg-white/50 dark:bg-slate-900/50 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-x-auto shadow-2xl backdrop-blur-sm group/canvas custom-scrollbar mb-10">
+              <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none" 
+                   style={{ 
+                       backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)', 
+                       backgroundSize: '32px 32px' 
+                   }} 
+              />
+              <div className="relative min-w-[1200px] min-h-[800px] p-20">
+                {tables.filter(t => (t.zone || 'indoor') === activeZone).map(table => (
+                  <TableVisual 
+                    key={table.id} 
+                    table={table} 
+                    onClick={setSelectedTable} 
+                    hasReadyFood={tablesWithReadyFood.has(table.id)}
+                  />
+                ))}
+              </div>
+             {tables.filter(t => (t.zone || 'indoor') === activeZone).length === 0 && (
+                 <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400">
+                     <UtensilsCrossed size={48} className="mb-4 opacity-20" />
+                     <p>No tables in this zone</p>
                  </div>
              )}
           </div>
       )}
 
-      {/* Order Modal */}
       {selectedTable && (
         <ErrorBoundary>
           <OrderModal 
@@ -131,17 +199,6 @@ export default function RestaurantDashboard({ onToggleNavbar }: RestaurantDashbo
           />
         </ErrorBoundary>
       )}
-
-      {/* Close Day Wizard */}
-      {isCloseDayOpen && (
-          <ErrorBoundary>
-            <CloseDayWizard 
-              isOpen={isCloseDayOpen} 
-              onClose={() => setIsCloseDayOpen(false)} 
-            />
-          </ErrorBoundary>
-      )}
-
     </div>
   );
 }

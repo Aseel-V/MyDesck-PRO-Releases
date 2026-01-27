@@ -202,7 +202,7 @@ export default function AdminDashboard() {
             <TrendingUp className="w-5 h-5 text-sky-500" />
             New Users Joined
           </h3>
-          <div className="h-[300px] w-full">
+          <div className="h-[300px] w-full" style={{ minWidth: 0 }}>
             <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={100}>
               <BarChart data={stats.newUsersChat}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.1} />

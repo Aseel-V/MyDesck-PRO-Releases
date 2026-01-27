@@ -67,7 +67,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
         (editTrip?.payment_status as TripFormValues['payment_status']) || 'unpaid',
       amount_paid: editTrip?.amount_paid || 0,
       payment_date: editTrip?.payment_date || '',
-      room_type: editTrip?.room_type || '', // Ensure persistence
+      room_type: editTrip?.room_type || {}, // JSONB object for room configuration
       board_basis: editTrip?.board_basis || '', // Ensure persistence
       attachments: editTrip?.attachments || [],
       notes: editTrip?.notes || '',
@@ -187,29 +187,19 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
     Family: 0,
   });
 
-  // Parse initial room_type to counts if possible
+  // Parse initial room_type object to counts
   useEffect(() => { 
-     // 1. Room Type Parsing
-     if (editTrip?.room_type) {
-         try {
-             // Example format "Single x1, Double x2"
-             const items = editTrip.room_type.split(', ');
-              setRoomCounts(prevCounts => {
-                  const newCounts = { ...prevCounts };
-                  let found = false;
-                  
-                  items.forEach(item => {
-                      const [type, countStr] = item.split(' x');
-                      if (type && countStr && type in newCounts) {
-                          newCounts[type as RoomType] = parseInt(countStr) || 0;
-                          found = true;
-                      }
-                  });
-                  return found ? newCounts : prevCounts;
-              });
-          } catch {
-              console.log("Could not parse room type string, relying on manual input");
-          }
+     // 1. Room Type Parsing from JSONB object
+     if (editTrip?.room_type && typeof editTrip.room_type === 'object') {
+         setRoomCounts(prevCounts => {
+             const newCounts = { ...prevCounts };
+             Object.entries(editTrip.room_type || {}).forEach(([type, count]) => {
+                 if (type in newCounts && typeof count === 'number') {
+                     newCounts[type as RoomType] = count;
+                 }
+             });
+             return newCounts;
+         });
      }
 
      // 2. Load Original Financial Values (if they exist)
@@ -223,19 +213,19 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
       }
    }, [editTrip, setValue]); // Run ONCE on mount or when editTrip changes
   
-  // Sync room_type string when counts change
+  // Sync room_type JSONB object when counts change
   useEffect(() => {
     // Only update if one of the counts is > 0
-    // Prevent overwriting existing string with empty if counts are 0 on load
+    // Prevent overwriting existing object with empty if counts are 0 on load
     const hasCounts = Object.values(roomCounts).some(c => c > 0);
     
     if (hasCounts) {
-        const parts: string[] = [];
+        // Build room configuration object with only non-zero counts
+        const roomConfig: Record<string, number> = {};
         Object.entries(roomCounts).forEach(([type, count]) => {
-          if (count > 0) parts.push(`${type} x${count}`);
+          if (count > 0) roomConfig[type] = count;
         });
-        const result = parts.join(', ');
-        setValue('room_type', result); // This updates the form value
+        setValue('room_type', roomConfig); // Store as JSONB object
     }
   }, [roomCounts, setValue]);
 

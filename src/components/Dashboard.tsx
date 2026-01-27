@@ -279,12 +279,7 @@ export default function Dashboard() {
       {/* New Year Celebration Overlay */}
       <NewYearOverlay />
 
-      {/* خلفية ناعمة */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -left-32 w-80 h-80 bg-sky-500/18 blur-3xl rounded-full dark:bg-sky-500/18 bg-sky-400/20" />
-        <div className="absolute -bottom-40 -right-32 w-96 h-96 bg-fuchsia-500/14 blur-3xl rounded-full dark:bg-fuchsia-500/14 bg-fuchsia-400/20" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.08),transparent_60%)] dark:bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.08),transparent_60%)]" />
-      </div>
+
 
       {showNavbar && (
         <Navbar 

@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { Database } from '../types/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   RestaurantTable, 
@@ -27,11 +28,21 @@ import {
   TicketStatus,
   ReservationStatus,
   TableStatus,
+  BusinessSettings
 } from '../types/restaurant';
 
+// Define RPC helper type to avoid 'any'
 // ============================================================================
 // REALTIME SUBSCRIPTION HELPER
 // ============================================================================
+
+export interface StaffAuthorizationResult {
+  authorized: boolean;
+  staff_id?: string;
+  full_name?: string;
+  role?: string;
+  error?: string;
+}
 
 function useRealtimeSubscription(
   table: string,
@@ -65,35 +76,37 @@ function useRealtimeSubscription(
 // ============================================================================
 
 export function useRestaurant() {
-  const { user, profile } = useAuth();
+  const { user, profile, staffUser } = useAuth();
   const queryClient = useQueryClient();
-  const userId = user?.id;
+  const businessId = user?.id || staffUser?.business_id;
   const currency = profile?.preferred_currency || 'ILS';
 
   // ═══════════════════════════════════════════════════════════
   // REALTIME SUBSCRIPTIONS
   // ═══════════════════════════════════════════════════════════
   
-  useRealtimeSubscription('restaurant_tables', ['restaurant_tables', userId], !!userId);
-  useRealtimeSubscription('restaurant_orders', ['restaurant_active_orders', userId], !!userId);
-  useRealtimeSubscription('restaurant_kitchen_tickets', ['kitchen_tickets', userId], !!userId);
-  useRealtimeSubscription('restaurant_table_sessions', ['table_sessions', userId], !!userId);
+  useRealtimeSubscription('restaurant_tables', ['restaurant_tables', businessId], !!businessId);
+  useRealtimeSubscription('restaurant_orders', ['restaurant_active_orders', businessId], !!businessId);
+  useRealtimeSubscription('restaurant_kitchen_tickets', ['kitchen_tickets', businessId], !!businessId);
+  useRealtimeSubscription('restaurant_table_sessions', ['table_sessions', businessId], !!businessId);
 
   // ═══════════════════════════════════════════════════════════
   // TABLE QUERIES
   // ═══════════════════════════════════════════════════════════
 
   const { data: tables = [], isLoading: loadingTables } = useQuery({
-    queryKey: ['restaurant_tables', userId],
+    queryKey: ['restaurant_tables', businessId],
     queryFn: async () => {
+      if (!businessId) return [];
       const { data, error } = await supabase
         .from('restaurant_tables')
         .select('*')
+        .eq('business_id', businessId as string)
         .order('name');
       if (error) throw error;
       return data as RestaurantTable[];
     },
-    enabled: !!userId,
+    enabled: !!businessId,
   });
 
   // ═══════════════════════════════════════════════════════════
@@ -101,30 +114,32 @@ export function useRestaurant() {
   // ═══════════════════════════════════════════════════════════
 
   const { data: categories = [], isLoading: loadingMenu } = useQuery({
-    queryKey: ['restaurant_menu', userId],
+    queryKey: ['restaurant_menu', businessId],
     queryFn: async () => {
       const { data: cats, error: catsError } = await supabase
         .from('restaurant_menu_categories')
         .select('*, items:restaurant_menu_items(*)')
+        .eq('business_id', businessId as string)
         .order('sort_order');
       
       if (catsError) throw catsError;
       return cats as unknown as MenuCategory[];
     },
-    enabled: !!userId,
+    enabled: !!businessId,
   });
 
   const { data: modifierGroups = [], isLoading: loadingModifiers } = useQuery({
-    queryKey: ['restaurant_modifier_groups', userId],
+    queryKey: ['restaurant_modifier_groups', businessId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('restaurant_modifier_groups')
         .select('*, modifiers:restaurant_modifiers(*)')
+        .eq('business_id', businessId as string)
         .order('sort_order');
       if (error) throw error;
       return data as unknown as ModifierGroup[];
     },
-    enabled: !!userId,
+    enabled: !!businessId,
   });
 
   // ═══════════════════════════════════════════════════════════
@@ -132,7 +147,7 @@ export function useRestaurant() {
   // ═══════════════════════════════════════════════════════════
 
   const { data: activeOrders = [], isLoading: loadingOrders } = useQuery({
-    queryKey: ['restaurant_active_orders', userId],
+    queryKey: ['restaurant_active_orders', businessId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('restaurant_orders')
@@ -146,12 +161,13 @@ export function useRestaurant() {
           table:restaurant_tables(*),
           server:restaurant_staff(*)
         `)
+        .eq('business_id', businessId as string)
         .not('status', 'in', '("closed","cancelled")')
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data as unknown as RestaurantOrder[];
     },
-    enabled: !!userId,
+    enabled: !!businessId,
   });
 
   // ═══════════════════════════════════════════════════════════
@@ -159,16 +175,17 @@ export function useRestaurant() {
   // ═══════════════════════════════════════════════════════════
 
   const { data: staff = [], isLoading: loadingStaff } = useQuery({
-    queryKey: ['restaurant_staff', userId],
+    queryKey: ['restaurant_staff', businessId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('restaurant_staff')
         .select('*')
+        .eq('business_id', businessId as string)
         .order('full_name');
       if (error) throw error;
       return data as RestaurantStaff[];
     },
-    enabled: !!userId
+    enabled: !!businessId
   });
 
   // ═══════════════════════════════════════════════════════════
@@ -176,7 +193,7 @@ export function useRestaurant() {
   // ═══════════════════════════════════════════════════════════
 
   const { data: activeSessions = [], isLoading: loadingSessions } = useQuery({
-    queryKey: ['table_sessions', userId],
+    queryKey: ['table_sessions', businessId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('restaurant_table_sessions')
@@ -186,12 +203,13 @@ export function useRestaurant() {
           server:restaurant_staff(*),
           orders:restaurant_orders(*)
         `)
+        .eq('business_id', businessId as string)
         .eq('status', 'active')
         .order('started_at', { ascending: false });
       if (error) throw error;
       return data as unknown as TableSession[];
     },
-    enabled: !!userId,
+    enabled: !!businessId,
   });
 
   // ═══════════════════════════════════════════════════════════
@@ -199,7 +217,7 @@ export function useRestaurant() {
   // ═══════════════════════════════════════════════════════════
 
   const { data: kitchenTickets = [], isLoading: loadingTickets } = useQuery({
-    queryKey: ['kitchen_tickets', userId],
+    queryKey: ['kitchen_tickets', businessId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('restaurant_kitchen_tickets')
@@ -208,6 +226,7 @@ export function useRestaurant() {
           items:restaurant_ticket_items(*),
           order:restaurant_orders(*)
         `)
+        .eq('business_id', businessId as string)
         .in('status', ['new', 'in_progress', 'ready'])
         .order('created_at', { ascending: true });
       if (error) throw error;
@@ -227,7 +246,7 @@ export function useRestaurant() {
         return { ...ticket, elapsed_seconds: elapsedSeconds, urgency_level: urgencyLevel };
       });
     },
-    enabled: !!userId,
+    enabled: !!businessId,
     refetchInterval: 10000, // Refresh every 10 seconds for timers
   });
 
@@ -236,17 +255,18 @@ export function useRestaurant() {
   // ═══════════════════════════════════════════════════════════
 
   const { data: dailyReports = [], isLoading: loadingReports } = useQuery({
-    queryKey: ['restaurant_daily_reports', userId],
+    queryKey: ['restaurant_daily_reports', businessId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('restaurant_daily_reports')
         .select('*')
+        .eq('business_id', businessId as string)
         .order('date', { ascending: false })
         .limit(30);
       if (error) throw error;
       return (data as unknown as DailyReport[]);
     },
-    enabled: !!userId,
+    enabled: !!businessId,
   });
 
   // ═══════════════════════════════════════════════════════════
@@ -255,7 +275,7 @@ export function useRestaurant() {
 
   const createTable = useMutation({
     mutationFn: async (tableData: Partial<RestaurantTable> & { name: string }) => {
-      if (!userId) throw new Error("No user logged in");
+      if (!businessId) throw new Error("No business context");
       const { data, error } = await supabase
         .from('restaurant_tables')
         .insert({ 
@@ -271,7 +291,7 @@ export function useRestaurant() {
           height: tableData.height ?? 100,
           rotation: tableData.rotation ?? 0,
           is_mergeable: tableData.is_mergeable ?? true,
-          business_id: userId 
+          business_id: businessId 
         })
         .select()
         .single();
@@ -328,12 +348,12 @@ export function useRestaurant() {
 
   const createCategory = useMutation({
     mutationFn: async (categoryData: Partial<MenuCategory> & { name: string }) => {
-      if (!userId) throw new Error("No user logged in");
+      if (!businessId) throw new Error("No business context");
       const { data, error } = await supabase
         .from('restaurant_menu_categories')
         .insert([{ 
           ...categoryData, 
-          business_id: userId,
+          business_id: businessId,
           is_active: categoryData.is_active ?? true,
         }])
         .select()
@@ -456,12 +476,12 @@ export function useRestaurant() {
 
   const createModifierGroup = useMutation({
     mutationFn: async (groupData: Partial<ModifierGroup> & { name: string }) => {
-      if (!userId) throw new Error("No user logged in");
+      if (!businessId) throw new Error("No business context");
       const { data, error } = await supabase
         .from('restaurant_modifier_groups')
         .insert([{ 
           ...groupData, 
-          business_id: userId,
+          business_id: businessId,
           is_required: groupData.is_required ?? false,
           min_selections: groupData.min_selections ?? 0,
           max_selections: groupData.max_selections ?? 1,
@@ -502,19 +522,19 @@ export function useRestaurant() {
 
   const createStaff = useMutation({
     mutationFn: async (staffData: Partial<RestaurantStaff> & { full_name: string }) => {
-      if (!userId) throw new Error("No user logged in");
+      if (!businessId) throw new Error("No business context");
       const { data, error } = await supabase
         .from('restaurant_staff')
         .insert({ 
           full_name: staffData.full_name,
-          role: staffData.role ?? 'Waiter',
-          restaurant_role: staffData.restaurant_role ?? 'waiter',
+          role: (staffData.role ?? 'Waiter') as RestaurantStaff['role'],
+          restaurant_role: (staffData.restaurant_role ?? 'waiter') as RestaurantStaff['restaurant_role'],
           hourly_rate: staffData.hourly_rate ?? 0,
           email: staffData.email,
           phone: staffData.phone,
           pin_code: staffData.pin_code,
           assigned_station: staffData.assigned_station,
-          business_id: userId, 
+          business_id: businessId, 
           is_active: true,
           is_clocked_in: false,
         })
@@ -530,9 +550,10 @@ export function useRestaurant() {
 
   const updateStaff = useMutation({
     mutationFn: async ({ id, ...updates }: Partial<RestaurantStaff> & { id: string }) => {
+      const safeUpdates = updates as unknown as Database['public']['Tables']['restaurant_staff']['Update'];
       const { error } = await supabase
         .from('restaurant_staff')
-        .update(updates)
+        .update(safeUpdates)
         .eq('id', id);
       if (error) throw error;
     },
@@ -591,13 +612,13 @@ export function useRestaurant() {
 
   const startSession = useMutation({
     mutationFn: async (params: { tableId: string; guestCount: number; serverId?: string }) => {
-      if (!userId) throw new Error("No user logged in");
+      if (!businessId) throw new Error("No business context");
       
       // Create session
       const { data: session, error: sessionError } = await supabase
         .from('restaurant_table_sessions')
         .insert({
-          business_id: userId,
+          business_id: businessId,
           table_id: params.tableId,
           guest_count: params.guestCount,
           server_id: params.serverId,
@@ -663,10 +684,10 @@ export function useRestaurant() {
 
   const createOrder = useMutation({
     mutationFn: async (orderData: Partial<RestaurantOrder>) => {
-      if (!userId) throw new Error("No user logged in");
+      if (!businessId) throw new Error("No business context");
       
       const payload = {
-        business_id: userId,
+        business_id: businessId,
         table_id: orderData.table_id,
         session_id: orderData.session_id,
         server_id: orderData.server_id,
@@ -689,8 +710,7 @@ export function useRestaurant() {
       
       const { data, error } = await supabase
         .from('restaurant_orders')
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .upsert(payload as any)
+        .upsert(payload as Database['public']['Tables']['restaurant_orders']['Insert'])
         .select()
         .single();
       if (error) throw error;
@@ -706,7 +726,7 @@ export function useRestaurant() {
     mutationFn: async ({ id, ...updates }: Partial<RestaurantOrder> & { id: string }) => {
       const { error } = await supabase
         .from('restaurant_orders')
-        .update(updates)
+        .update(updates as Database['public']['Tables']['restaurant_orders']['Update'])
         .eq('id', id);
       if (error) throw error;
     },
@@ -737,8 +757,7 @@ export function useRestaurant() {
       if (itemsError) throw itemsError;
 
       // Log activity
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase as any).rpc('log_business_activity_v2', {
+      await supabase.rpc('log_business_activity_v2', {
         p_activity_type: 'ORDER_CANCELLED',
         p_details: { orderId, reason, authorizedBy: managerId }
       });
@@ -826,7 +845,9 @@ export function useRestaurant() {
 
       if (error) throw error;
       
-      const result = data as { authorized: boolean; staff_id?: string; full_name?: string; role?: string; error?: string };
+      if (error) throw error;
+      
+      const result = data as StaffAuthorizationResult;
       if (!result.authorized) {
         throw new Error(result.error || 'Authorization Failed');
       }
@@ -850,8 +871,7 @@ export function useRestaurant() {
 
      if (error) throw error;
 
-     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-     const dbItemMap = new Map(dbItems.map((i: any) => [i.id, i]));
+     const dbItemMap = new Map(dbItems.map((i) => [i.id, i]));
      const errors: string[] = [];
 
      for (const item of items) {
@@ -882,10 +902,8 @@ export function useRestaurant() {
     }: { 
       staffId: string; 
       date: string; 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      shifts: any[]; 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      expenses: any[]; 
+      shifts: Record<string, unknown>[];
+      expenses: Record<string, unknown>[]; 
     }) => {
       const { data, error } = await supabase.rpc('close_business_day_secure', {
         p_auth_staff_id: staffId,
@@ -923,10 +941,9 @@ export function useRestaurant() {
 
   const sendToKitchen = useMutation({
     mutationFn: async (params: { orderId: string; station?: string }) => {
-      if (!userId) throw new Error("No user logged in");
+      if (!businessId) throw new Error("No business context");
       
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase.rpc as any)('create_kitchen_ticket', {
+      const { data, error } = await supabase.rpc('create_kitchen_ticket', {
         p_order_id: params.orderId,
         p_station: params.station ?? null,
       });
@@ -1017,11 +1034,10 @@ export function useRestaurant() {
 
   const createDailyReport = useMutation({
     mutationFn: async (reportData: Partial<DailyReport>) => {
-      if (!userId) throw new Error("No user logged in");
+      if (!businessId) throw new Error("No business context");
       const { data, error } = await supabase
         .from('restaurant_daily_reports')
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .insert({ ...reportData, business_id: userId, currency } as any)
+        .insert({ ...reportData, business_id: businessId, currency } as Database['public']['Tables']['restaurant_daily_reports']['Insert'])
         .select()
         .single();
       if (error) throw error;
@@ -1065,10 +1081,12 @@ export function useRestaurant() {
         reason: string;
         authStaffId: string;
     }) => {
+        if (!businessId) throw new Error("No business context");
+
         // Log the refund
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (supabase.rpc as any)('log_business_activity_v2', {
-            p_business_id: userId,
+        // Log the refund
+        await supabase.rpc('log_business_activity_v2', {
+            p_business_id: businessId,
             p_activity_type: 'REFUND',
             p_entity_type: 'order',
             p_entity_id: params.orderId,
@@ -1176,44 +1194,45 @@ export function useRestaurant() {
   };
 }
 
-// ============================================================================
 // RESERVATIONS HOOK
 // ============================================================================
 
 export function useReservations() {
-  const { user } = useAuth();
+  const { user, staffUser } = useAuth();
   const queryClient = useQueryClient();
-  const userId = user?.id;
+  const businessId = user?.id || staffUser?.business_id;
   
-  useRealtimeSubscription('restaurant_reservations', ['reservations', userId], !!userId);
+  useRealtimeSubscription('restaurant_reservations', ['reservations', businessId], !!businessId);
 
   const { data: reservations = [], isLoading } = useQuery({
-    queryKey: ['reservations', userId],
+    queryKey: ['reservations', businessId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('restaurant_reservations')
         .select('*, guest:restaurant_guest_profiles(*)')
+        .eq('business_id', businessId as string)
         .order('reservation_date', { ascending: true })
         .order('reservation_time', { ascending: true });
       if (error) throw error;
       return data as unknown as Reservation[];
     },
-    enabled: !!userId,
+    enabled: !!businessId,
   });
 
   const { data: todayReservations = [] } = useQuery({
-    queryKey: ['reservations_today', userId],
+    queryKey: ['reservations_today', businessId],
     queryFn: async () => {
       const today = new Date().toISOString().split('T')[0];
       const { data, error } = await supabase
         .from('restaurant_reservations')
         .select('*, guest:restaurant_guest_profiles(*)')
+        .eq('business_id', businessId as string)
         .eq('reservation_date', today)
         .order('reservation_time', { ascending: true });
       if (error) throw error;
       return data as unknown as Reservation[];
     },
-    enabled: !!userId,
+    enabled: !!businessId,
   });
 
   const createReservation = useMutation({
@@ -1224,11 +1243,11 @@ export function useReservations() {
       reservation_time: string;
       party_size: number;
     }) => {
-      if (!userId) throw new Error("No user");
+      if (!businessId) throw new Error("No business context");
       const { data: reservation, error } = await supabase
         .from('restaurant_reservations')
         .insert({
-          business_id: userId,
+          business_id: businessId,
           guest_id: data.guest_id,
           guest_name: data.guest_name,
           guest_phone: data.guest_phone,
@@ -1316,24 +1335,25 @@ export function useReservations() {
 // ============================================================================
 
 export function useWaitlist() {
-  const { user } = useAuth();
+  const { user, staffUser } = useAuth();
   const queryClient = useQueryClient();
-  const userId = user?.id;
+  const businessId = user?.id || staffUser?.business_id;
   
-  useRealtimeSubscription('restaurant_waitlist', ['waitlist', userId], !!userId);
+  useRealtimeSubscription('restaurant_waitlist', ['waitlist', businessId], !!businessId);
 
   const { data: waitlist = [], isLoading } = useQuery({
-    queryKey: ['waitlist', userId],
+    queryKey: ['waitlist', businessId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('restaurant_waitlist')
         .select('*')
+        .eq('business_id', businessId as string)
         .eq('status', 'waiting')
         .order('check_in_time', { ascending: true });
       if (error) throw error;
       return data as Waitlist[];
     },
-    enabled: !!userId,
+    enabled: !!businessId,
   });
 
   const addToWaitlist = useMutation({
@@ -1342,11 +1362,11 @@ export function useWaitlist() {
       guest_phone: string; 
       party_size: number;
     }) => {
-      if (!userId) throw new Error("No user");
+      if (!businessId) throw new Error("No business context");
       const { data: entry, error } = await supabase
         .from('restaurant_waitlist')
         .insert({
-          business_id: userId,
+          business_id: businessId,
           guest_name: data.guest_name,
           guest_phone: data.guest_phone,
           party_size: data.party_size,
@@ -1741,4 +1761,113 @@ export function useRestaurantKPIs() {
   });
 
   return { kpis, isLoading };
+}
+
+// ============================================================================
+// BUSINESS SETTINGS HOOK (Market Mode Support)
+// ============================================================================
+
+export function useBusinessSettings() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const userId = user?.id;
+
+  const { data: settings, isLoading, error } = useQuery({
+    queryKey: ['business_settings', userId],
+    queryFn: async (): Promise<BusinessSettings> => {
+      if (!userId) throw new Error('Not authenticated');
+
+      // Try to fetch existing settings
+      const { data, error: fetchError } = await supabase
+        .from('business_settings')
+        .select('*')
+        .eq('business_id', userId)
+        .maybeSingle();
+
+      if (fetchError) throw fetchError;
+
+      // If no settings exist, create default row
+      if (!data) {
+        const { data: newSettings, error: insertError } = await supabase
+          .from('business_settings')
+          .insert({
+            business_id: userId,
+            operation_mode: 'restaurant',
+            market_scale_prefix: '20',
+            market_scale_port: null,
+          })
+          .select()
+          .single();
+
+        if (insertError) throw insertError;
+        return newSettings as BusinessSettings;
+      }
+
+      return data as BusinessSettings;
+    },
+    enabled: !!userId,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
+  const updateSettings = useMutation({
+    mutationFn: async (updates: Partial<Pick<BusinessSettings, 'operation_mode' | 'market_scale_prefix' | 'market_scale_port'>>) => {
+      if (!userId) throw new Error('Not authenticated');
+      
+      // Validate operation_mode if provided
+      if (updates.operation_mode && !['restaurant', 'market'].includes(updates.operation_mode)) {
+        throw new Error('Invalid operation mode');
+      }
+      
+      // Sanitize scale prefix (only digits allowed)
+      if (updates.market_scale_prefix) {
+        updates.market_scale_prefix = updates.market_scale_prefix.replace(/\D/g, '').slice(0, 5);
+      }
+
+      const { data, error } = await supabase
+        .from('business_settings')
+        .update(updates)
+        .eq('business_id', userId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data as BusinessSettings;
+    },
+    onMutate: async (updates) => {
+      // Optimistic update
+      await queryClient.cancelQueries({ queryKey: ['business_settings', userId] });
+      const previous = queryClient.getQueryData<BusinessSettings>(['business_settings', userId]);
+      
+      if (previous) {
+        queryClient.setQueryData(['business_settings', userId], {
+          ...previous,
+          ...updates,
+        });
+      }
+      
+      return { previous };
+    },
+    onError: (err, _, context) => {
+      // Rollback on error
+      if (context?.previous) {
+        queryClient.setQueryData(['business_settings', userId], context.previous);
+      }
+      toast.error('Failed to update settings');
+      console.error('Settings update error:', err);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['business_settings', userId] });
+      toast.success('Settings updated successfully');
+    },
+  });
+
+  return {
+    settings: settings ?? null,
+    isLoading,
+    error,
+    isMarketMode: settings?.operation_mode === 'market',
+    isRestaurantMode: settings?.operation_mode === 'restaurant' || !settings,
+    updateSettings: updateSettings.mutateAsync,
+    isUpdating: updateSettings.isPending,
+  };
 }

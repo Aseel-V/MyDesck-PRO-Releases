@@ -2,9 +2,11 @@ import { createContext, useContext, useEffect, useState, ReactNode, useCallback,
 import { User } from '@supabase/supabase-js';
 import { supabase, BusinessProfile } from '../lib/supabase';
 import type { Database } from '../types/supabase';
+import { RestaurantStaff } from '../types/restaurant';
 
 const CACHE_KEY_BUSINESS_PROFILE = 'app_business_profile';
 const CACHE_KEY_USER_PROFILE = 'app_user_profile';
+const CACHE_KEY_STAFF_USER = 'app_staff_user';
 
 type UserProfile = Database['public']['Tables']['user_profiles']['Row'];
 
@@ -12,6 +14,7 @@ interface AuthContextType {
   user: User | null;
   profile: BusinessProfile | null;
   userProfile: UserProfile | null;
+  staffUser: RestaurantStaff | null;
   loading: boolean;
   isAdmin: boolean;
   signUp: (
@@ -23,6 +26,7 @@ interface AuthContextType {
     language?: string
   ) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
+  signInStaff: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<BusinessProfile>) => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -34,6 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<BusinessProfile | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [staffUser, setStaffUser] = useState<RestaurantStaff | null>(null);
   const [loading, setLoading] = useState(true);
   
   // Track current user ID to avoid redundant fetches
@@ -44,9 +49,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const cachedBusiness = localStorage.getItem(CACHE_KEY_BUSINESS_PROFILE);
       const cachedUser = localStorage.getItem(CACHE_KEY_USER_PROFILE);
+      const cachedStaff = localStorage.getItem(CACHE_KEY_STAFF_USER);
       
       if (cachedBusiness) setProfile(JSON.parse(cachedBusiness));
       if (cachedUser) setUserProfile(JSON.parse(cachedUser));
+      if (cachedStaff) setStaffUser(JSON.parse(cachedStaff));
     } catch (e) {
       console.error('Cache parse error', e);
     }
@@ -155,6 +162,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
            setUser(null);
            setProfile(null);
            setUserProfile(null);
+           // Do not clear staffUser here immediately if we want to allow offline/refresh, 
+           // but normally staff session is tied to... local state. 
+           // We'll keep staffUser if it exists in cache.
            lastUserIdRef.current = null;
         }
       } catch (err: unknown) {
@@ -179,8 +189,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (
               key.startsWith('sb-') || 
               key.startsWith('supabase.') || 
+              key.startsWith('supabase.') || 
               key === CACHE_KEY_BUSINESS_PROFILE || 
-              key === CACHE_KEY_USER_PROFILE
+              key === CACHE_KEY_USER_PROFILE ||
+              key === CACHE_KEY_STAFF_USER
             ) {
               localStorage.removeItem(key);
             }
@@ -191,6 +203,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(null);
             setProfile(null);
             setUserProfile(null);
+            setStaffUser(null);
             lastUserIdRef.current = null;
           }
         }
@@ -220,6 +233,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
         setProfile(null);
         setUserProfile(null);
+        // Note: Staff logout is handled manually usually.
         lastUserIdRef.current = null;
       }
       
@@ -266,6 +280,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [refreshUserData]);
 
+  const signInStaff = useCallback(async (email: string, password: string) => {
+    // Call RPC function
+    const { data, error } = await supabase.rpc('authenticate_staff', {
+      p_email: email,
+      p_password: password
+    });
+
+    if (error) throw error;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = data as any;
+
+    if (!result.success) {
+      throw new Error(result.error || 'Login failed');
+    }
+
+    // Set persistence
+    const staff = result.staff;
+    const businessProfile = result.business_profile;
+
+    setStaffUser(staff);
+    setProfile(businessProfile); // Reuse profile for business settings context
+    localStorage.setItem(CACHE_KEY_STAFF_USER, JSON.stringify(staff));
+    localStorage.setItem(CACHE_KEY_BUSINESS_PROFILE, JSON.stringify(businessProfile));
+    
+  }, []);
+
   const signOut = useCallback(async () => {
     try {
       const { error } = await supabase.auth.signOut();
@@ -278,9 +319,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       setProfile(null);
       setUserProfile(null);
+      setStaffUser(null);
       lastUserIdRef.current = null;
       localStorage.removeItem(CACHE_KEY_BUSINESS_PROFILE);
       localStorage.removeItem(CACHE_KEY_USER_PROFILE);
+      localStorage.removeItem(CACHE_KEY_STAFF_USER);
       // Clean trip cache
       Object.keys(localStorage).forEach(key => {
         if (key.startsWith('elite_travels_')) localStorage.removeItem(key);
@@ -290,10 +333,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const updateProfile = useCallback(async (updates: Partial<BusinessProfile>) => {
     if (!user) throw new Error('No user');
-    const { error } = await supabase.from('business_profiles').update({ ...updates, updated_at: new Date().toISOString() }).eq('user_id', user.id);
+    
+    // We no longer filter out these fields as they are now in the schema
+    const { error } = await supabase.from('business_profiles').update({ 
+      ...updates, 
+      updated_at: new Date().toISOString() 
+    }).eq('user_id', user.id);
+    
     if (error) throw error;
-    await refreshUserData(user.id);
-  }, [user, refreshUserData]);
+    
+    // We update the local state manually with ALL fields so the UI reflects the change (until refresh)
+    setProfile(prev => prev ? ({ ...prev, ...updates }) : null);
+    
+    // await refreshUserData(user.id); // This would overwrite our optimistic update if DB doesn't have fields
+  }, [user]);
 
   const refreshProfile = useCallback(async () => {
     if (user) await refreshUserData(user.id);
@@ -301,8 +354,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(() => ({
     user, profile, userProfile, loading, isAdmin: userProfile?.role === 'admin',
-    signUp, signIn, signOut, updateProfile, refreshProfile
-  }), [user, profile, userProfile, loading, signUp, signIn, signOut, updateProfile, refreshProfile]);
+    signUp, signIn, signOut, updateProfile, refreshProfile,
+    staffUser, signInStaff
+  }), [user, profile, userProfile, loading, staffUser, signUp, signIn, signInStaff, signOut, updateProfile, refreshProfile]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

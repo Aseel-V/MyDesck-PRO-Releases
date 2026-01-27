@@ -17,7 +17,7 @@ import GuestProfiles from './GuestProfiles';
 import AnalyticsDashboard from './AnalyticsDashboard';
 import OrderEntry from './OrderEntry';
 import RestaurantSettings from './RestaurantSettings';
-import { RestaurantTable } from '../../types/restaurant';
+import { RestaurantTable, RolePermissions } from '../../types/restaurant';
 
 
 import {
@@ -37,6 +37,7 @@ import {
   LogOut,
   Store,
   Globe,
+  Utensils,
 } from 'lucide-react';
 
 import { Language } from '../../types/language';
@@ -51,7 +52,7 @@ interface NavItem {
   id: ViewType;
   labelKey: string;
   icon: React.ReactNode;
-  permission: string;
+  permission: keyof RolePermissions;
 }
 
 // ============================================================================
@@ -98,6 +99,10 @@ function QuickStats() {
         <Clock size={14} className="text-amber-500" />
         <span>{kpis?.pending_kitchen_tickets || 0} {t('restaurant.pending')}</span>
       </div>
+      <div className="flex items-center gap-2 text-emerald-500 font-bold">
+        <Utensils size={14} />
+        <span>{kitchenTickets.filter(t => t.status === 'ready').length} {t('kds.readyForPickup')}</span>
+      </div>
       {criticalTickets > 0 && (
         <div className="flex items-center gap-2 text-red-500 animate-pulse">
           <AlertTriangle size={14} />
@@ -125,8 +130,7 @@ function Sidebar({ activeView, onViewChange, isCollapsed, onToggleCollapse }: Si
   const { t } = useLanguage();
   
   // Filter nav items based on permissions
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const visibleItems = NAV_ITEMS.filter(item => can(item.permission as any));
+  const visibleItems = NAV_ITEMS.filter(item => can(item.permission as keyof RolePermissions));
   
   return (
     <aside className={`
@@ -216,6 +220,11 @@ function TopBar() {
   const { profile } = useAuth();
   const { currentStaff } = useRestaurantRole();
   const { language, setLanguage, t } = useLanguage();
+  const { kitchenTickets } = useRestaurant();
+  
+  const readyTickets = kitchenTickets.filter(t => t.status === 'ready').length;
+  const criticalTickets = kitchenTickets.filter(t => t.urgency_level === 'critical').length;
+  
   const [showLangMenu, setShowLangMenu] = useState(false);
   
   return (
@@ -256,9 +265,13 @@ function TopBar() {
         </div>
         
         {/* Notifications */}
-        <button className="relative p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
-          <Bell size={20} className="text-slate-500" />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+        <button className="relative p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg group">
+          <Bell size={20} className="text-slate-500 group-hover:text-indigo-500 transition-colors" />
+          {(readyTickets > 0 || criticalTickets > 0) && (
+            <span className={`absolute -top-1 -right-1 w-5 h-5 border-2 border-white dark:border-slate-900 rounded-full flex items-center justify-center text-[9px] text-white font-bold ${criticalTickets > 0 ? 'bg-red-500 animate-pulse' : 'bg-emerald-500'}`}>
+              {criticalTickets > 0 ? criticalTickets : readyTickets}
+            </span>
+          )}
         </button>
         
         {/* User */}
@@ -331,7 +344,7 @@ export default function RestaurantDashboardV2() {
   
   return (
     <div 
-      className={`h-screen flex bg-slate-100 dark:bg-slate-950 ${isRTL ? 'flex-row-reverse' : ''}`}
+      className={`h-screen flex bg-slate-50 dark:bg-slate-950 ${isRTL ? 'flex-row-reverse' : ''}`}
       dir={isRTL ? 'rtl' : 'ltr'}
     >
       {/* Sidebar */}

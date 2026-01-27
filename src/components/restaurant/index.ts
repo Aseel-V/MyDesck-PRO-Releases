@@ -13,7 +13,8 @@ export { default as OrderEntry } from './OrderEntry';
 
 // Staff Authentication & Routing
 export { default as StaffShiftScreen } from './StaffShiftScreen';
-export { default as RestaurantModeRouter, useRequireManagerAuth } from './RestaurantModeRouter';
+export { default as RestaurantModeRouter } from './RestaurantModeRouter';
+export { useRequireManagerAuth } from '../../hooks/useRequireManagerAuth';
 
 // Main Dashboard
 export { default as RestaurantDashboardV2, FloorPlanWithOrders } from './RestaurantDashboardV2';

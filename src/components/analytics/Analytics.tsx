@@ -31,6 +31,7 @@ import { useCurrency } from '../../contexts/CurrencyContext';
 import { Trip } from '../../types/trip';
 import { supabase } from '../../lib/supabase';
 import RestaurantAnalytics from './RestaurantAnalytics';
+import SalesAnalytics from '../market/SalesAnalytics';
 
 
 
@@ -690,7 +691,7 @@ const AnalyticsContent = ({ trips, onOpenTripsWithFilter }: AnalyticsProps) => {
               </div>
             </div>
           ) : (
-            <div className="h-[300px] w-full" style={{ position: 'relative' }}>
+            <div className="h-[300px] w-full" style={{ position: 'relative', minWidth: 0 }}>
               <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={100}>
                 {isAdmin ? (
                   <BarChart data={monthlyData}>
@@ -793,7 +794,7 @@ const AnalyticsContent = ({ trips, onOpenTripsWithFilter }: AnalyticsProps) => {
             {(stats as UserStats).topDestinations?.length === 0 ? (
               <div className="flex items-center justify-center h-64 text-slate-400 dark:text-slate-500">{t('analytics.noDestinations')}</div>
             ) : (
-              <div className="h-[300px] w-full flex items-center justify-center">
+              <div className="h-[300px] w-full flex items-center justify-center" style={{ minWidth: 0 }}>
                 <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={100}>
                   <PieChart>
                     <Pie
@@ -892,8 +893,14 @@ const AnalyticsContent = ({ trips, onOpenTripsWithFilter }: AnalyticsProps) => {
 export default function Analytics(props: AnalyticsProps) {
   const { isAdmin, profile } = useAuth();
 
-  if (profile?.business_type === 'restaurant' && !isAdmin) {
-    return <RestaurantAnalytics />;
+  if (!isAdmin) {
+    if (profile?.business_type === 'restaurant') {
+      return <RestaurantAnalytics />;
+    }
+    // For other retail businesses (not tourism), show SalesAnalytics
+    if (profile?.business_type && profile.business_type !== 'tourism') {
+      return <SalesAnalytics />;
+    }
   }
 
   return <AnalyticsContent {...props} />;

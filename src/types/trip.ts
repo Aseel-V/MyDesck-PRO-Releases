@@ -26,6 +26,17 @@ export interface Attachment {
   type: 'ticket' | 'visa' | 'voucher' | 'other';
 }
 
+// Room configuration as JSONB for analytics
+export interface RoomConfiguration {
+  Single?: number;
+  Double?: number;
+  Triple?: number;
+  Quad?: number;
+  Suite?: number;
+  Family?: number;
+  [key: string]: number | undefined;
+}
+
 export interface Trip {
   id: string;
   user_id: string;
@@ -59,7 +70,7 @@ export interface Trip {
   amount_paid: number; // Calculated sum of payments
   amount_due: number;
 
-  room_type?: string;
+  room_type?: RoomConfiguration;
   board_basis?: string;
 
   // Multi-Currency Storage (Original Input Preservation)
@@ -107,7 +118,7 @@ export interface TripFormData {
   amount_paid: number;
   payment_date?: string;
 
-  room_type?: string;
+  room_type?: RoomConfiguration;
   board_basis?: string;
 
   // Stored Original Values
@@ -147,7 +158,7 @@ export interface TripInsert {
   amount_paid?: number;
   payment_date?: string;
 
-  room_type?: string;
+  room_type?: RoomConfiguration;
   board_basis?: string;
 
   wholesale_original_amount?: number;
@@ -194,7 +205,7 @@ export interface TripUpdate {
   amount_paid?: number;
   payment_date?: string;
 
-  room_type?: string;
+  room_type?: RoomConfiguration;
 
   attachments?: Attachment[];
 

@@ -8,9 +8,9 @@
 // ============================================================================
 
 export type TableStatus = 'free' | 'occupied' | 'billed' | 'reserved' | 'dirty' | 'blocked';
-export type StaffRole = 'Waiter' | 'Chef' | 'Manager' | 'Other' | 'Host' | 'Cashier' | 'Kitchen';
+export type StaffRole = 'Manager' | 'Waiter' | 'Chef' | 'Other' | 'Host' | 'Cashier' | 'Kitchen';
 export type OrderStatus = 'draft' | 'pending' | 'in_progress' | 'ready' | 'served' | 'billed' | 'closed' | 'cancelled';
-export type PaymentMethod = 'cash' | 'card' | 'split';
+export type PaymentMethod = 'cash' | 'card' | 'bit' | 'split';
 export type PaymentStatus = 'pending' | 'partial' | 'paid' | 'refunded';
 export type OrderType = 'dine_in' | 'takeaway' | 'delivery';
 
@@ -45,6 +45,9 @@ export type TableShape = 'round' | 'square' | 'rectangle' | 'booth' | 'bar';
 
 // Floor Zones
 export type FloorZone = 'indoor' | 'outdoor' | 'patio' | 'private' | 'bar_area';
+
+// Operation Mode (Restaurant/Market)
+export type OperationMode = 'restaurant' | 'market';
 
 // ============================================================================
 // SECTION 2: PERMISSION SYSTEM TYPES
@@ -365,6 +368,7 @@ export interface MenuItem {
   description: string | null;
   price: number;
   cost_price?: number;
+  type?: 'unit' | 'weight';
   is_available: boolean;
   tax_rate: number;
   prep_time_minutes: number;
@@ -382,6 +386,7 @@ export interface MenuItem {
   available_days?: number[]; // 0-6 (Sun-Sat)
   spicy_level?: number; // 0-3
   dietary_tags?: string[]; // vegetarian, vegan, gluten-free, etc.
+  barcode?: string; // Product barcode for Market Mode (EAN-13, UPC-A, etc.)
   created_at: string;
   // Join fields
   modifier_groups?: ModifierGroup[];
@@ -390,19 +395,19 @@ export interface MenuItem {
 export interface RestaurantStaff {
   id: string;
   business_id: string;
-  user_id?: string; // Link to auth user if applicable
   full_name: string;
-  role: StaffRole;
-  restaurant_role: UserRole;
-  hourly_rate: number;
-  pin_code?: string; // 4-6 digit PIN for clock in/out
+  role: StaffRole; // 'Manager', 'Waiter', 'Kitchen', 'Host'
+  restaurant_role: 'super_admin' | 'branch_manager' | 'head_chef' | 'waiter' | 'kitchen_staff' | 'cashier' | 'host';
   email?: string;
+  password?: string; // App-level password
   phone?: string;
+  pin_code?: string;
+  avatar_url?: string;
+  hourly_rate: number;
   is_active: boolean;
   is_clocked_in: boolean;
   clocked_in_at?: string;
-  assigned_tables?: string[];
-  assigned_station?: KitchenStation;
+  assigned_station?: string; // 'Section A', 'Bar', 'Patio'
   created_at: string;
 }
 
@@ -1047,4 +1052,114 @@ export interface TimeRange {
 
 export interface OperatingHours {
   [key: number]: TimeRange | null; // 0-6 for Sun-Sat, null if closed
+}
+
+// ============================================================================
+// SECTION 15: INVENTORY ENGINE (Enterprise Feature)
+// ============================================================================
+
+export type IngredientUnit = 'kg' | 'g' | 'L' | 'ml' | 'pcs' | 'portion';
+export type NotificationType = 'low_stock' | 'out_of_stock' | 'expiring' | 'system';
+export type NotificationPriority = 'low' | 'medium' | 'high' | 'critical';
+
+export interface Ingredient {
+  id: string;
+  business_id: string;
+  name: string;
+  name_he?: string;
+  name_ar?: string;
+  unit: IngredientUnit;
+  current_stock: number;
+  alert_threshold: number;
+  cost_per_unit: number;
+  supplier?: string;
+  sku?: string;
+  is_active: boolean;
+  last_restock_date?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Recipe {
+  id: string;
+  menu_item_id: string;
+  ingredient_id: string;
+  quantity_required: number;
+  unit?: string;
+  notes?: string;
+  created_at: string;
+  // Join fields
+  ingredient?: Ingredient;
+  menu_item?: MenuItem;
+}
+
+export interface RestaurantNotification {
+  id: string;
+  business_id: string;
+  type: NotificationType;
+  title: string;
+  message?: string;
+  reference_id?: string;
+  is_read: boolean;
+  priority: NotificationPriority;
+  created_at: string;
+}
+
+// ============================================================================
+// SECTION 16: PRINTER CONFIGURATION (Enterprise Feature)
+// ============================================================================
+
+export interface PrinterConfig {
+  id: string;
+  business_id: string;
+  name: string;
+  device_name: string;
+  type: 'receipt' | 'kitchen' | 'label';
+  paper_width: number; // in mm
+  is_default: boolean;
+  is_active: boolean;
+  station?: KitchenStation;
+}
+
+export interface StationPrinterMapping {
+  station: KitchenStation;
+  printer_id: string;
+  printer_name: string;
+}
+
+// ============================================================================
+// SECTION 17: MARKET MODE TYPES
+// ============================================================================
+
+export interface BusinessSettings {
+  id: string;
+  business_id: string;
+  operation_mode: OperationMode;
+  market_scale_prefix: string;
+  market_scale_port: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MarketCartItem {
+  id: string;
+  menuItem: MenuItem;
+  quantity: number;
+  weight?: number; // For weighed items (kg)
+  unitPrice: number; // Price per unit or per kg
+  lineTotal: number; // Calculated total for this line
+  isWeighed: boolean;
+  scannedAt: number; // Timestamp for highlighting
+}
+
+export interface MarketTransaction {
+  id: string;
+  business_id: string;
+  items: MarketCartItem[];
+  subtotal: number;
+  tax_amount: number;
+  total_amount: number;
+  payment_method: PaymentMethod;
+  cashier_id?: string;
+  created_at: string;
 }

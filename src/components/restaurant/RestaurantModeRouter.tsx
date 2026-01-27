@@ -17,6 +17,8 @@ import StaffShiftScreen from './StaffShiftScreen';
 import RestaurantDashboardV2 from './RestaurantDashboardV2';
 import KitchenDisplaySystem from './KitchenDisplaySystem';
 import ReservationsBoard from './ReservationsBoard';
+import { MarketPOS } from '../../modules/market';
+import { useBusinessSettings } from '../../hooks/useRestaurant';
 
 // ============================================================================
 // MANAGER AUTH OVERLAY
@@ -81,7 +83,7 @@ function ManagerAuthOverlay({ action, onSuccess, onCancel }: ManagerAuthOverlayP
 // ============================================================================
 
 interface RestaurantModeRouterProps {
-  forceView?: 'shift' | 'dashboard' | 'kds' | 'reservations';
+  forceView?: 'shift' | 'dashboard' | 'kds' | 'reservations' | 'market';
 }
 
 export default function RestaurantModeRouter({ forceView }: RestaurantModeRouterProps) {
@@ -93,6 +95,9 @@ export default function RestaurantModeRouter({ forceView }: RestaurantModeRouter
     resolveManagerAuth,
     cancelManagerAuth,
   } = useRestaurantRole();
+  
+  // Get business settings to determine operation mode
+  const { isMarketMode, isLoading: settingsLoading } = useBusinessSettings();
   
   const [, setRerender] = useState(0);
   
@@ -126,7 +131,23 @@ export default function RestaurantModeRouter({ forceView }: RestaurantModeRouter
         return <KitchenDisplaySystem />;
       case 'reservations':
         return <ReservationsBoard />;
+      case 'market':
+        return <MarketPOS />;
     }
+  }
+  
+  // Show loading while settings are being fetched
+  if (settingsLoading) {
+    return (
+      <div className="h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-white text-xl animate-pulse">Loading...</div>
+      </div>
+    );
+  }
+  
+  // If Market Mode is enabled, show MarketPOS directly (no staff login required)
+  if (isMarketMode) {
+    return <MarketPOS />;
   }
   
   // If no staff is logged in, show shift screen
@@ -173,40 +194,4 @@ export default function RestaurantModeRouter({ forceView }: RestaurantModeRouter
   );
 }
 
-// ============================================================================
-// HELPER HOOK: useRequireManagerAuth
-// Simplified hook for components that need manager auth
-// ============================================================================
-
-export function useRequireManagerAuth() {
-  const { requireManagerAuth, isManager } = useRestaurantRole();
-  
-  /**
-   * Execute an action that requires manager authorization
-   * If current user is a manager, executes immediately
-   * Otherwise, prompts for manager PIN
-   */
-  const withManagerAuth = useCallback(
-    async <T,>(
-      action: string,
-      callback: (approver?: RestaurantStaff) => Promise<T> | T
-    ): Promise<T | null> => {
-      // Managers can execute directly
-      if (isManager) {
-        return callback();
-      }
-      
-      // Non-managers need authorization
-      const manager = await requireManagerAuth(action);
-      
-      if (manager) {
-        return callback(manager);
-      }
-      
-      return null;
-    },
-    [isManager, requireManagerAuth]
-  );
-  
-  return { withManagerAuth };
-}
+// useRequireManagerAuth hook moved to '../../hooks/useRequireManagerAuth'

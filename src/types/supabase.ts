@@ -9,6 +9,36 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      business_settings: {
+        Row: {
+            id: string;
+            business_id: string;
+            operation_mode: 'restaurant' | 'market';
+            market_scale_prefix: string;
+            market_scale_port: string | null;
+            created_at: string;
+            updated_at: string;
+        };
+        Insert: {
+            id?: string;
+            business_id: string;
+            operation_mode?: 'restaurant' | 'market';
+            market_scale_prefix?: string;
+            market_scale_port?: string | null;
+            created_at?: string;
+            updated_at?: string;
+        };
+        Update: {
+            id?: string;
+            business_id?: string;
+            operation_mode?: 'restaurant' | 'market';
+            market_scale_prefix?: string;
+            market_scale_port?: string | null;
+            created_at?: string;
+            updated_at?: string;
+        };
+        Relationships: [];
+      };
       trips: {
         Row: {
           id: string
@@ -25,7 +55,7 @@ export interface Database {
           payments: Json[] | null // Added
           attachments: Json[] | null // Added
           payment_date: string | null // Added
-          room_type: string | null // Added
+          room_type: Json | null // JSONB for room configuration
           board_basis: string | null // Added
           itinerary: Json[] | null // Added
           travelers: Json[] | null // Added
@@ -54,7 +84,7 @@ export interface Database {
           payments?: Json[] | null // Added
           attachments?: Json[] | null // Added
           payment_date?: string | null // Added
-          room_type?: string | null // Added
+          room_type?: Json | null // JSONB for room configuration
           board_basis?: string | null // Added
           itinerary?: Json[] | null // Added
           travelers?: Json[] | null // Added
@@ -80,7 +110,7 @@ export interface Database {
           attachments?: Json[] | null // Added
           itinerary?: Json[] | null // Added
           travelers?: Json[] | null // Added
-          room_type?: string | null // Added
+          room_type?: Json | null // JSONB for room configuration
           board_basis?: string | null // Added
           payment_status?: 'paid' | 'partial' | 'unpaid'
           amount_paid?: number
@@ -153,6 +183,7 @@ export interface Database {
           preferred_language: 'en' | 'ar' | 'he'
           phone_number: string | null // Added manually to fix receipt type error
           business_registration_number: string | null // Added
+          address: string | null // Added
           signature_url: string | null // Added
           business_type: 'tourism' | 'restaurant' | 'supermarket' | 'phone_shop' | 'car_parts' | 'clothes_shop' | 'furniture_store'
           subscription_status: 'active' | 'past_due' | 'trial'
@@ -170,6 +201,7 @@ export interface Database {
           preferred_language?: 'en' | 'ar' | 'he'
           phone_number?: string | null // Added manually
           business_registration_number?: string | null // Added
+          address?: string | null // Added
           signature_url?: string | null // Added
           business_type?: 'tourism' | 'restaurant' | 'supermarket' | 'phone_shop' | 'car_parts' | 'clothes_shop' | 'furniture_store'
           subscription_status?: 'active' | 'past_due' | 'trial'
@@ -187,6 +219,7 @@ export interface Database {
           preferred_language?: 'en' | 'ar' | 'he'
           phone_number?: string | null // Added manually
           business_registration_number?: string | null // Added
+          address?: string | null // Added
           signature_url?: string | null // Added
           business_type?: 'tourism' | 'restaurant' | 'supermarket' | 'phone_shop' | 'car_parts' | 'clothes_shop' | 'furniture_store'
           subscription_status?: 'active' | 'past_due' | 'trial'
@@ -1661,6 +1694,7 @@ export interface Database {
     }
 
     Functions: {
+
       get_user_stats: {
         Args: {
           p_user_id: string
@@ -1740,7 +1774,7 @@ export interface Database {
           payments: Json[] | null
           attachments: Json[] | null
           payment_date: string | null
-          room_type: string | null
+          room_type: Json | null
           board_basis: string | null
           itinerary: Json[] | null
           travelers: Json[] | null
@@ -1769,50 +1803,43 @@ export interface Database {
         Returns: boolean
       }
       authorize_staff_action: {
+        Args: { p_pin_code: string; p_required_role: string | null };
+        Returns: { authorized: boolean; staff_id?: string; full_name?: string; role?: string; error?: string };
+      }
+      void_order_item_secure: {
+        Args: { p_item_id: string; p_reason: string; p_auth_staff_id: string };
+        Returns: void;
+      }
+      apply_discount_secure: {
+        Args: { p_order_id: string; p_discount_amount: number; p_discount_percentage: number; p_reason: string; p_auth_staff_id: string };
+        Returns: void;
+      }
+      close_business_day_secure: {
+        Args: { p_auth_staff_id: string; p_date: string; p_shifts: unknown[]; p_expenses: unknown[] };
+        Returns: string; // report ID
+      }
+      delete_menu_item_secure: {
+        Args: { p_item_id: string };
+        Returns: void;
+      }
+      authenticate_staff: {
         Args: {
-          p_pin_code: string
-          p_required_role?: string | null
+          p_email: string
+          p_password: string
         }
         Returns: Json
       }
-      void_order_item_secure: {
-        Args: {
-          p_item_id: string
-          p_reason: string
-          p_auth_staff_id: string
-        }
-        Returns: void
-      }
-      apply_discount_secure: {
-        Args: {
-          p_order_id: string
-          p_discount_amount?: number
-          p_discount_percentage?: number
-          p_reason?: string
-          p_auth_staff_id?: string | null
-        }
-        Returns: void
-      }
-      close_business_day_secure: {
-        Args: {
-          p_auth_staff_id: string
-          p_date: string
-          p_shifts?: Json
-          p_expenses?: Json
-        }
-        Returns: string
-      }
-      delete_menu_item_secure: {
-        Args: {
-          p_item_id: string
-        }
-        Returns: void
-      }
       delete_staff_secure: {
-        Args: {
-          p_staff_id: string
-        }
-        Returns: void
+        Args: { p_staff_id: string };
+        Returns: void;
+      }
+      log_business_activity_v2: {
+        Args: { p_activity_type: string; p_entity_type?: string; p_entity_id?: string; p_details: Record<string, unknown>; p_staff_id?: string; p_business_id?: string };
+        Returns: void;
+      }
+      create_kitchen_ticket: {
+        Args: { p_order_id: string; p_station: string | null };
+        Returns: string;
       }
 
     }

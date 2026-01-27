@@ -1,5 +1,6 @@
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface ConfirmationModalProps {
   isOpen: boolean;
@@ -24,6 +25,8 @@ export function ConfirmationModal({
   variant = 'danger',
   isLoading = false
 }: ConfirmationModalProps) {
+  const { direction } = useLanguage();
+
   if (!isOpen) return null;
 
   const colors = {
@@ -61,6 +64,7 @@ export function ConfirmationModal({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           className="relative w-full max-w-md bg-white dark:bg-slate-800 rounded-2xl shadow-xl overflow-hidden"
+          dir={direction}
         >
           <div className="p-6">
             <div className="flex gap-4">

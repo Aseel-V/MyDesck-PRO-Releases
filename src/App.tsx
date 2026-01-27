@@ -6,6 +6,7 @@ import Dashboard from './components/Dashboard';
 import SuspendedView from './components/SuspendedView';
 import SplashScreen from './components/SplashScreen';
 import LandingPage from './pages/LandingPage';
+import ScrollToTop from './components/ScrollToTop';
 
 import InvoiceTemplate from './components/invoice/InvoiceTemplate';
 
@@ -13,17 +14,46 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import ResetPassword from './components/auth/ResetPassword';
 import UpdateModal from './components/UpdateModal';
 import { HelmetProvider } from 'react-helmet-async';
+import SolutionPage from './pages/solutions/SolutionPage';
+import SafetySupportPage from './pages/SafetySupportPage';
+
+// Import new components for staff routing
+import KitchenDisplaySystem from './components/restaurant/KitchenDisplaySystem';
+import RestaurantDashboardV2 from './components/restaurant/RestaurantDashboardV2';
 
 
 // Helper to detect Electron
 const isElectron = typeof window !== 'undefined' && !!window.electronAPI;
 
 function LoginWrapper() {
-  const { user } = useAuth();
+  const { user, staffUser } = useAuth(); // Destructure staffUser from useAuth
+
+  // 1. If a staff user is logged in, route them based on role
+  if (staffUser) {
+    // Check for Kitchen role
+    if (staffUser.role === 'Kitchen' || staffUser.role === 'Chef' || staffUser.restaurant_role === 'kitchen_staff') {
+       return (
+         <div className="bg-slate-900 min-h-screen text-white">
+           <KitchenDisplaySystem />
+         </div>
+       );
+    }
+    // Check for Waiter role (or others who use the POS)
+    if (staffUser.role === 'Waiter' || staffUser.restaurant_role === 'waiter') {
+       return <RestaurantDashboardV2 />;
+    }
+    
+    // Default fallback for staff (e.g., if role is not explicitly handled)
+    return <RestaurantDashboardV2 />;
+  }
+
+  // 2. If a regular user is logged in, redirect to dashboard
   if (user) {
     // Redirect to root for Electron, or Dashboard for Web
     return <Navigate to={isElectron ? "/" : "/dashboard"} replace />;
   }
+
+  // 3. If no user or staffUser, show the Login component
   return (
     <div className="relative min-h-screen animate-fadeIn">
       <Login />
@@ -82,6 +112,7 @@ function App() {
 
   return (
     <HelmetProvider>
+      <ScrollToTop />
       {updateState.status !== 'idle' && (
         <UpdateModal 
           status={updateState.status}
@@ -97,6 +128,9 @@ function App() {
         
         {/* Explicit Routing: Web = Landing Page, Electron = App */}
         <Route path="/" element={ isElectron ? <AppContent /> : <LandingPage /> } />
+        <Route path="/safety-support" element={<SafetySupportPage />} />
+        <Route path="/solutions/:type" element={<SolutionPage />} />
+        <Route path="/solutions" element={<SolutionPage />} />
         
         {/* Web App Access */}
         <Route path="/dashboard" element={<AppContent />} />

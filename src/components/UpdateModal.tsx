@@ -37,7 +37,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({ status, progress, version, er
   };
 
   const handleOpenRelease = () => {
-    window.electronAPI?.openExternal('https://github.com/Aseel-V/MyDesck-PRO/releases');
+    window.electronAPI?.openExternal('https://github.com/Aseel-V/MyDesck-PRO-Releases/releases');
   };
 
   return (

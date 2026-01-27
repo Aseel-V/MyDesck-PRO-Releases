@@ -15,57 +15,6 @@ export interface PDFExportModalProps {
   onExportComplete?: () => void;
 }
 
-const labels = {
-  en: { 
-    title: 'Export to PDF',
-    fullName: 'Your Full Name',
-    phoneNumber: 'Phone Number',
-    exportType: 'Export Type',
-    singleTrip: 'Single Trip',
-    multipleTrips: 'Multiple Trips with Summary',
-    selectTrip: 'Select Trip',
-    tripsToExport: 'Trips to Export',
-    cancel: 'Cancel',
-    export: 'Export PDF',
-    requiredFullName: 'Please enter your full name',
-    requiredPhone: 'Please enter phone number',
-    invalidPhone: 'Please enter a valid phone number',
-    pdfError: 'Error generating PDF',
-  },
-  ar: {
-    title: 'تصدير إلى PDF',
-    fullName: 'اسمك الكامل',
-    phoneNumber: 'رقم الهاتف',
-    exportType: 'نوع التصدير',
-    singleTrip: 'رحلة واحدة',
-    multipleTrips: 'رحلات متعددة مع الملخص',
-    selectTrip: 'اختر رحلة',
-    tripsToExport: 'الرحلات للتصدير',
-    cancel: 'إلغاء',
-    export: 'تصدير PDF',
-    requiredFullName: 'الرجاء إدخال الاسم الكامل',
-    requiredPhone: 'الرجاء إدخال رقم الهاتف',
-    invalidPhone: 'الرجاء إدخال رقم هاتف صالح',
-    pdfError: 'خطأ في إنشاء PDF',
-  },
-  he: {
-    title: 'ייצוא ל-PDF',
-    fullName: 'שמך המלא',
-    phoneNumber: 'מספר טלפון',
-    exportType: 'סוג ייצוא',
-    singleTrip: 'טיול בודד',
-    multipleTrips: 'טיולים מרובים עם סיכום',
-    selectTrip: 'בחר טיול',
-    tripsToExport: 'טיולים לייצוא',
-    cancel: 'ביטול',
-    export: 'ייצא PDF',
-    requiredFullName: 'נא להזין שם מלא',
-    requiredPhone: 'נא להזין מספר טלפון',
-    invalidPhone: 'יש להזין מספר טלפון תקין',
-    pdfError: 'שגיאה ביצירת PDF',
-  },
-} as const;
-
 const isPhoneValid = (v: string) => {
   const s = v.trim();
   if (!s) return false;
@@ -74,7 +23,7 @@ const isPhoneValid = (v: string) => {
 };
 
 export default function PDFExportModal({ trips, onClose, onExportComplete }: PDFExportModalProps) {
-  const { language } = useLanguage();
+  const { language, t, direction } = useLanguage();
   const { profile, user, userProfile } = useAuth();
   const [loading, setLoading] = useState(false);
   
@@ -95,16 +44,14 @@ export default function PDFExportModal({ trips, onClose, onExportComplete }: PDF
     if (userProfile?.phone_number && !phoneNumber) setPhoneNumber(userProfile.phone_number);
   }, [userProfile, userFullName, phoneNumber]);
 
-  const text = useMemo(() => labels[language as keyof typeof labels], [language]);
-
   const validate = useCallback(() => {
     const newErrors: { fullName?: string; phone?: string } = {};
-    if (!userFullName.trim()) newErrors.fullName = text.requiredFullName;
-    if (!phoneNumber.trim()) newErrors.phone = text.requiredPhone;
-    else if (!isPhoneValid(phoneNumber)) newErrors.phone = text.invalidPhone;
+    if (!userFullName.trim()) newErrors.fullName = t('trips.exportModal.requiredFullName');
+    if (!phoneNumber.trim()) newErrors.phone = t('trips.exportModal.requiredPhone');
+    else if (!isPhoneValid(phoneNumber)) newErrors.phone = t('trips.exportModal.invalidPhone');
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [userFullName, phoneNumber, text]);
+  }, [userFullName, phoneNumber, t]);
 
   const canExport = useMemo(() => {
     return !!userFullName.trim() && isPhoneValid(phoneNumber) && !loading;
@@ -209,15 +156,11 @@ export default function PDFExportModal({ trips, onClose, onExportComplete }: PDF
       onClose();
     } catch (error) {
       console.error('PDF generation error:', error);
-      setBannerError(text.pdfError);
+      setBannerError(t('trips.exportModal.pdfError'));
     } finally {
       setLoading(false);
     }
   };
-
-  // text and labels moved above for reuse in validation
-
-
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
@@ -228,12 +171,12 @@ export default function PDFExportModal({ trips, onClose, onExportComplete }: PDF
       </div>
 
       <div className="relative w-full max-w-5xl animate-scaleIn">
-        <div className="glass-panel bg-slate-900/90 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+        <div className="glass-panel bg-slate-900/90 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden" dir={direction}>
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800/80">
             <div className="flex items-center gap-3">
               <FileText className="w-6 h-6 text-sky-400" />
-              <h2 className="text-xl font-bold text-slate-50">{text.title}</h2>
+              <h2 className="text-xl font-bold text-slate-50">{t('trips.exportModal.title')}</h2>
             </div>
             <button
               onClick={onClose}
@@ -254,7 +197,7 @@ export default function PDFExportModal({ trips, onClose, onExportComplete }: PDF
               )}
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
-                  {text.fullName} *
+                  {t('trips.exportModal.fullName')} *
                 </label>
                 <input
                   type="text"
@@ -272,7 +215,7 @@ export default function PDFExportModal({ trips, onClose, onExportComplete }: PDF
                   autoFocus
                   className={`w-full px-4 py-3 rounded-lg bg-slate-900/70 border text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 ${errors.fullName ? 'border-rose-500/60' : 'border-slate-800'
                     }`}
-                  placeholder={text.fullName}
+                  placeholder={t('trips.exportModal.fullName')}
                   required
                 />
                 {errors.fullName && (
@@ -282,7 +225,7 @@ export default function PDFExportModal({ trips, onClose, onExportComplete }: PDF
 
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
-                  {text.phoneNumber} *
+                  {t('trips.exportModal.phoneNumber')} *
                 </label>
                 <input
                   type="tel"
@@ -299,7 +242,7 @@ export default function PDFExportModal({ trips, onClose, onExportComplete }: PDF
                   }}
                   className={`w-full px-4 py-3 rounded-lg bg-slate-900/70 border text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 ${errors.phone ? 'border-rose-500/60' : 'border-slate-800'
                     }`}
-                  placeholder={text.phoneNumber}
+                  placeholder={t('trips.exportModal.phoneNumber')}
                   required
                 />
                 {errors.phone && (
@@ -309,7 +252,7 @@ export default function PDFExportModal({ trips, onClose, onExportComplete }: PDF
 
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-3">
-                  {text.exportType} *
+                  {t('trips.exportModal.exportType')} *
                 </label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <button
@@ -322,7 +265,7 @@ export default function PDFExportModal({ trips, onClose, onExportComplete }: PDF
                   >
                     <div className="flex items-center gap-3">
                       <FileText className={`w-5 h-5 ${exportType === 'single' ? 'text-sky-400' : 'text-slate-400'}`} />
-                      <span className="font-medium text-slate-100">{text.singleTrip}</span>
+                      <span className="font-medium text-slate-100">{t('trips.exportModal.singleTrip')}</span>
                     </div>
                   </button>
 
@@ -336,7 +279,7 @@ export default function PDFExportModal({ trips, onClose, onExportComplete }: PDF
                   >
                     <div className="flex items-center gap-3">
                       <FileText className={`w-5 h-5 ${exportType === 'multiple' ? 'text-sky-400' : 'text-slate-400'}`} />
-                      <span className="font-medium text-slate-100">{text.multipleTrips}</span>
+                      <span className="font-medium text-slate-100">{t('trips.exportModal.multipleTrips')}</span>
                     </div>
                   </button>
                 </div>
@@ -345,7 +288,7 @@ export default function PDFExportModal({ trips, onClose, onExportComplete }: PDF
               {exportType === 'single' && (
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">
-                    {text.selectTrip} *
+                    {t('trips.exportModal.selectTrip')} *
                   </label>
                   <select
                     value={selectedTripId}
@@ -364,7 +307,7 @@ export default function PDFExportModal({ trips, onClose, onExportComplete }: PDF
               {exportType === 'multiple' && (
                 <div className="rounded-xl border border-sky-500/30 bg-sky-500/5 p-4">
                   <p className="text-sm font-medium text-slate-300 mb-2">
-                    {text.tripsToExport}:
+                    {t('trips.exportModal.tripsToExport')}:
                   </p>
                   <ul className="space-y-1">
                     {trips.map((trip: Trip) => (
@@ -388,7 +331,7 @@ export default function PDFExportModal({ trips, onClose, onExportComplete }: PDF
                   onClick={onClose}
                   className="px-5 py-3 rounded-lg border border-slate-800 text-slate-300 hover:bg-slate-800/50"
                 >
-                  {text.cancel}
+                  {t('trips.exportModal.cancel')}
                 </button>
                 <button
                   type="button"
@@ -399,12 +342,8 @@ export default function PDFExportModal({ trips, onClose, onExportComplete }: PDF
                   <Download className="w-5 h-5" />
                   <span>
                     {loading
-                      ? language === 'he'
-                        ? 'מייצא...'
-                        : language === 'ar'
-                          ? 'جاري التصدير...'
-                          : 'Exporting...'
-                      : text.export}
+                      ? t('trips.exportModal.exporting')
+                      : t('trips.exportModal.export')}
                   </span>
                 </button>
               </div>
@@ -414,7 +353,7 @@ export default function PDFExportModal({ trips, onClose, onExportComplete }: PDF
             <div className="hidden lg:block w-[45%] border-l border-slate-800/80 bg-slate-950/50 p-6">
               <div className="h-full flex flex-col">
                 <h3 className="text-sm font-medium text-slate-400 mb-4 uppercase tracking-wider">
-                  Live Preview
+                  {t('trips.exportModal.livePreview')}
                 </h3>
                 <div className="flex-1 rounded-xl border border-slate-800 bg-slate-900 overflow-hidden relative">
                   {generatingPreview ? (
@@ -431,7 +370,7 @@ export default function PDFExportModal({ trips, onClose, onExportComplete }: PDF
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 p-6 text-center">
                       <FileText className="w-12 h-12 mb-3 opacity-20" />
                       <p className="text-sm">
-                        Fill in your details to see a live preview of the PDF
+                        {t('trips.exportModal.previewInstructions')}
                       </p>
                     </div>
                   )}
