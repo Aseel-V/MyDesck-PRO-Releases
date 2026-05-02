@@ -838,16 +838,16 @@ export function useRestaurant() {
 
   const authorizeStaffAction = useMutation({
     mutationFn: async ({ pin, requiredRole }: { pin: string; requiredRole?: string }) => {
+      if (!businessId) throw new Error("No business context");
       const { data, error } = await supabase.rpc('authorize_staff_action', {
         p_pin_code: pin,
+        p_business_id: businessId,
         p_required_role: requiredRole || null,
       });
 
       if (error) throw error;
       
-      if (error) throw error;
-      
-      const result = data as StaffAuthorizationResult;
+      const result = data as unknown as StaffAuthorizationResult;
       if (!result.authorized) {
         throw new Error(result.error || 'Authorization Failed');
       }
@@ -908,8 +908,8 @@ export function useRestaurant() {
       const { data, error } = await supabase.rpc('close_business_day_secure', {
         p_auth_staff_id: staffId,
         p_date: date,
-        p_shifts: shifts,
-        p_expenses: expenses
+        p_shifts: shifts as any,
+        p_expenses: expenses as any
       });
 
       if (error) throw error;

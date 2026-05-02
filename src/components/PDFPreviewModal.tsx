@@ -84,6 +84,8 @@ export function PDFPreviewModal({
                         </div>
 
                         {/* Content */}
+                        {/* NOTE: pdfUrl must be a data: URL (not blob:) for Electron compatibility.
+                            blob: URLs are blocked inside iframes in Electron and render as black. */}
                         <div className="flex-1 bg-slate-950 relative overflow-hidden">
                             {loading && (
                                 <div className="absolute inset-0 flex items-center justify-center">
@@ -92,7 +94,7 @@ export function PDFPreviewModal({
                             )}
                             {pdfUrl && (
                                 <iframe
-                                    src={`${pdfUrl}#toolbar=0&navpanes=0`}
+                                    src={pdfUrl}
                                     className="w-full h-full border-none"
                                     onLoad={() => setLoading(false)}
                                     title="PDF Preview"

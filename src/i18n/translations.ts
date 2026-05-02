@@ -57,6 +57,8 @@ const englishDictionary = {
 
     navbar: {
       admin: 'Admin',
+      parts: 'Car Parts',
+      cars: 'Cars',
       close: 'Close',
       exitSafely: 'Exit safely',
       closeApp: 'Close App',
@@ -222,7 +224,13 @@ const englishDictionary = {
         active: 'Active',
         completed: 'Completed',
         cancelled: 'Cancelled',
+        archived: 'Archived',
       },
+      loadError: 'Failed to load trips',
+      loadErrorHelp: 'Please retry. This is a loading problem, not an empty result.',
+      amountPaidExceedsSalePrice: 'Amount paid cannot exceed the sale price after currency conversion.',
+      attachmentOpenError: 'Failed to open attachment',
+      attachmentDeleteError: 'Failed to delete attachment',
       totalLabel: '{count} trips',
       filtered: 'filtered',
       stats: {
@@ -711,6 +719,8 @@ const englishDictionary = {
       tripSaveError: 'Failed to save trip',
       tripDeleted: 'Trip deleted',
       tripDeleteError: 'Failed to delete trip',
+      tripArchived: 'Trip archived',
+      tripArchiveError: 'Failed to archive trip',
       paymentUpdated: 'Payment updated',
       paymentUpdateError: 'Failed to update payment',
       exportStatusError: 'Failed to update export status',
@@ -1433,13 +1443,51 @@ const englishDictionary = {
         }
       }
     },
+
+    carParts: {
+      title: 'Car Parts Inventory',
+      subtitle: 'Manage your car parts inventory',
+      addPart: 'Add Part',
+      searchPlaceholder: 'Search parts by name, serial number, or description...',
+      noParts: 'No parts found',
+      addFirst: 'Add your first part to get started',
+      partName: 'Part Name',
+      partNamePlaceholder: 'e.g. Brake Pads, Oil Filter...',
+      serialNumber: 'Serial Number',
+      serialNumberPlaceholder: 'e.g. SKU-12345',
+      quantity: 'Quantity',
+      purchasePriceUnit: 'Purchase Price (Unit)',
+      purchasePriceTotal: 'Purchase Total',
+      sellingPriceUnit: 'Selling Price (Unit)',
+      description: 'Description',
+      descriptionPlaceholder: 'Add details about this part...',
+      compatibleCars: 'Compatible Cars',
+      compatibleCarsPlaceholder: 'e.g. BMW 320i, Toyota Camry...',
+      editPart: 'Edit Part',
+      deletePart: 'Delete Part',
+      confirmDelete: 'Are you sure you want to delete this part?',
+      savePart: 'Save Part',
+      cancel: 'Cancel',
+      addSuccess: 'Part added successfully',
+      updateSuccess: 'Part updated successfully',
+      deleteSuccess: 'Part deleted successfully',
+      errorLoading: 'Failed to load parts',
+      errorSaving: 'Failed to save part',
+      errorDeleting: 'Failed to delete part',
+      totalValue: 'Total Inventory Value',
+      itemsCount: 'Total Items',
+      lowStock: 'Low Stock',
+      filters: {
+        all: 'All',
+        inStock: 'In Stock',
+        lowStock: 'Low Stock',
+        outOfStock: 'Out of Stock'
+      }
+    },
 };
 
 const hebrewDictionary = {
   ...englishDictionary,
-
-
-
 
   market: {
     title: 'קופה סופרמרקט',
@@ -1693,6 +1741,8 @@ const hebrewDictionary = {
 
     navbar: {
       admin: 'מנהל',
+      parts: 'חלקי חילוף',
+      cars: 'רכבים',
       close: 'סגור',
       exitSafely: 'יציאה בטוחה',
       closeApp: 'סגור אפליקציה',
@@ -2859,6 +2909,47 @@ const hebrewDictionary = {
         description: 'פתרונות מותאמים אישית למספרות, מוסכים ועסקי שירות אחרים.',
       }
     }
+  },
+
+  carParts: {
+    title: 'מלאי חלקי חילוף',
+    subtitle: 'ניהול מלאי חלקי החילוף שלך',
+    addPart: 'הוסף פריט',
+    searchPlaceholder: 'חיפוש לפי שם, מספר סידורי או תיאור...',
+    noParts: 'לא נמצאו פריטים',
+    addFirst: 'הוסף את הפריט הראשון שלך כדי להתחיל',
+    partName: 'שם החלק',
+    partNamePlaceholder: 'לדוגמה: רפידות בלם, מסנן שמן...',
+    serialNumber: 'מספר סידורי',
+    serialNumberPlaceholder: 'לדוגמה: SKU-12345',
+    quantity: 'כמות',
+    purchasePriceUnit: 'מחיר קנייה (יחידה)',
+    purchasePriceTotal: 'סה"כ קנייה',
+    sellingPriceUnit: 'מחיר מכירה (יחידה)',
+    description: 'תיאור',
+    descriptionPlaceholder: 'הוסף פרטים על חלק זה...',
+    compatibleCars: 'רכבים מתאימים',
+    compatibleCarsPlaceholder: 'לדוגמה: BMW 320i, טויוטה קאמרי...',
+    editPart: 'ערוך חלק',
+    deletePart: 'מחק חלק',
+    confirmDelete: 'האם אתה בטוח שברצונך למחוק חלק זה?',
+    savePart: 'שמור חלק',
+    cancel: 'ביטול',
+    addSuccess: 'החלק נוסף בהצלחה',
+    updateSuccess: 'החלק עודכן בהצלחה',
+    deleteSuccess: 'החלק נמחק בהצלחה',
+    errorLoading: 'טעינת החלקים נכשלה',
+    errorSaving: 'שמירת החלק נכשלה',
+    errorDeleting: 'מחיקת החלק נכשלה',
+    totalValue: 'שווי מלאי כולל',
+    itemsCount: 'סה"כ פריטים',
+    lowStock: 'מלאי נמוך',
+    filters: {
+      all: 'הכל',
+      inStock: 'במלאי',
+      lowStock: 'מלאי נמוך',
+      outOfStock: 'אזל מהמלאי'
+    }
   }
 };
 
@@ -2867,6 +2958,47 @@ const hebrewDictionary = {
 // ============================================================================
 const arabicDictionary = {
   ...englishDictionary,
+
+    carParts: {
+      title: 'مخزون قطع الغيار',
+      subtitle: 'إدارة مخزون قطع غيار السيارات الخاصة بك',
+      addPart: 'إضافة قطعة',
+      searchPlaceholder: 'البحث عن قطع بالاسم، الرقم التسلسلي، أو الوصف...',
+      noParts: 'لم يتم العثور على قطع',
+      addFirst: 'أضف قطعتك الأولى للبدء',
+      partName: 'اسم القطعة',
+      partNamePlaceholder: 'مثال: وسادات الفرامل، فلتر الزيت...',
+      serialNumber: 'الرقم التسلسلي',
+      serialNumberPlaceholder: 'مثال: SKU-12345',
+      quantity: 'الكمية',
+      purchasePriceUnit: 'سعر الشراء (للوحدة)',
+      purchasePriceTotal: 'إجمالي الشراء',
+      sellingPriceUnit: 'سعر البيع (للوحدة)',
+      description: 'الوصف',
+      descriptionPlaceholder: 'أضف تفاصيل حول هذه القطعة...',
+      compatibleCars: 'السيارات المتوافقة',
+      compatibleCarsPlaceholder: 'مثال: BMW 320i، تويوتا كامري...',
+      editPart: 'تعديل القطعة',
+      deletePart: 'حذف القطعة',
+      confirmDelete: 'هل أنت متأكد أنك تريد حذف هذه القطعة؟',
+      savePart: 'حفظ القطعة',
+      cancel: 'إلغاء',
+      addSuccess: 'تم إضافة القطعة بنجاح',
+      updateSuccess: 'تم تحديث القطعة بنجاح',
+      deleteSuccess: 'تم حذف القطعة بنجاح',
+      errorLoading: 'فشل تحميل القطع',
+      errorSaving: 'فشل حفظ القطعة',
+      errorDeleting: 'فشل حذف القطعة',
+      totalValue: 'إجمالي قيمة المخزون',
+      itemsCount: 'إجمالي العناصر',
+      lowStock: 'مخزون منخفض',
+      filters: {
+        all: 'الكل',
+        inStock: 'متوفر',
+        lowStock: 'مخزون منخفض',
+        outOfStock: 'غير متوفر'
+      }
+    },
 
     auth: {
       login: 'تسجيل الدخول',
@@ -2936,6 +3068,8 @@ const arabicDictionary = {
   },
   navbar: {
     admin: 'إدارة',
+    parts: 'قطع غيار',
+    cars: 'سيارات',
     close: 'إغلاق',
     exitSafely: 'خروج آمن',
     closeApp: 'إغلاق التطبيق',
@@ -3914,7 +4048,48 @@ const arabicDictionary = {
         description: 'حلول مصممة خصيصاً للصالونات وورش الإصلاح وأنشطة الخدمات الأخرى.',
         badge: 'قريباً'
       }
-    }
+    },
+
+    carParts: {
+      title: 'مخزون قطع غيار السيارات',
+      subtitle: 'إدارة مخزون قطع غيار السيارات',
+      addPart: 'إضافة قطعة',
+      searchPlaceholder: 'البحث عن القطع بالاسم أو الرقم التسلسلي أو الوصف...',
+      noParts: 'لم يتم العثور على قطع',
+      addFirst: 'أضف قطعتك الأولى للبدء',
+      partName: 'اسم القطعة',
+      partNamePlaceholder: 'مثلاً تيل فرامل، فلتر زيت...',
+      serialNumber: 'الرقم التسلسلي',
+      serialNumberPlaceholder: 'مثلاً SKU-12345',
+      quantity: 'الكمية',
+      purchasePriceUnit: 'سعر الشراء (للوحدة)',
+      purchasePriceTotal: 'إجمالي الشراء',
+      sellingPriceUnit: 'سعر البيع (للوحدة)',
+      description: 'الوصف',
+      descriptionPlaceholder: 'أضف تفاصيل عن هذه القطعة...',
+      compatibleCars: 'السيارات المتوافقة',
+      compatibleCarsPlaceholder: 'مثلاً BMW 320i، Toyota Camry...',
+      editPart: 'تعديل القطعة',
+      deletePart: 'حذف القطعة',
+      confirmDelete: 'هل أنت متأكد من حذف هذه القطعة؟',
+      savePart: 'حفظ القطعة',
+      cancel: 'إلغاء',
+      addSuccess: 'تم إضافة القطعة بنجاح',
+      updateSuccess: 'تم تحديث القطعة بنجاح',
+      deleteSuccess: 'تم حذف القطعة بنجاح',
+      errorLoading: 'فشل تحميل القطع',
+      errorSaving: 'فشل حفظ القطعة',
+      errorDeleting: 'فشل حذف القطعة',
+      totalValue: 'إجمالي قيمة المخزون',
+      itemsCount: 'إجمالي القطع',
+      lowStock: 'مخزون منخفض',
+      filters: {
+        all: 'الكل',
+        inStock: 'متوفر',
+        lowStock: 'مخزون منخفض',
+        outOfStock: 'غير متوفر'
+      }
+    },
   }
 };
 

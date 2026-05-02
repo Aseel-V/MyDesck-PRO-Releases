@@ -50,21 +50,18 @@ export const tripSchema = z.object({
         file_name: z.string(),
         url: z.string(),
         type: z.enum(['ticket', 'visa', 'voucher', 'other']),
+        bucket: z.string().optional(),
+        storage_path: z.string().optional(),
     })),
 
     notes: z.string().optional(),
-    status: z.enum(['active', 'completed', 'cancelled']),
+    status: z.enum(['active', 'completed', 'cancelled', 'archived']),
 }).refine((data) => {
     if (!data.start_date || !data.end_date) return true;
     return new Date(data.end_date) >= new Date(data.start_date);
 }, {
     message: "End date must be after start date",
     path: ["end_date"],
-}).refine((data) => {
-    return data.amount_paid <= data.sale_price;
-}, {
-    message: "Amount paid cannot exceed sale price",
-    path: ["amount_paid"],
 });
 
 export type TripSchemaType = z.infer<typeof tripSchema>;

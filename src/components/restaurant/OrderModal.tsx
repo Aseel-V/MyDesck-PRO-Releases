@@ -4,6 +4,7 @@ import { useRestaurant } from '../../hooks/useRestaurant';
 import { X, Plus, Minus, Printer, CreditCard, ChefHat, Sparkles, Trash2, Percent, Clock } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { supabase } from '../../lib/supabase';
+import { safeImageSrc } from '../../lib/safeUrl';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'sonner';
 import BusinessLunchModal from './BusinessLunchModal';
@@ -298,7 +299,7 @@ export default function OrderModal({ table, isOpen, onClose, onToggleNavbar }: O
             await Promise.all(ops);
             
             // 3. Fire to Kitchen if requested
-            if (shouldFire) {
+            if (shouldFire && orderId) {
                 await sendToKitchen.mutateAsync({ orderId: orderId });
             }
 
@@ -519,8 +520,8 @@ export default function OrderModal({ table, isOpen, onClose, onToggleNavbar }: O
                                         >
                                             {/* Image placeholder or actual image */}
                                             <div className="aspect-video w-full bg-slate-100 dark:bg-slate-900 overflow-hidden relative">
-                                                {item.image_url ? (
-                                                    <img src={item.image_url} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                                {safeImageSrc(item.image_url) ? (
+                                                    <img src={safeImageSrc(item.image_url) || ''} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-700">
                                                         <Sparkles size={32} />

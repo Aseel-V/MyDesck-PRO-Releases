@@ -24,6 +24,8 @@ export interface Attachment {
   file_name: string;
   url: string;
   type: 'ticket' | 'visa' | 'voucher' | 'other';
+  bucket?: string;
+  storage_path?: string;
 }
 
 // Room configuration as JSONB for analytics
@@ -130,7 +132,7 @@ export interface TripFormData {
   attachments: Attachment[];
 
   notes?: string;
-  status: 'active' | 'completed' | 'cancelled';
+  status: 'active' | 'completed' | 'cancelled' | 'archived';
 }
 
 // Insert type for Supabase
@@ -169,7 +171,7 @@ export interface TripInsert {
   attachments?: Attachment[];
 
   notes?: string;
-  status?: 'active' | 'completed' | 'cancelled';
+  status?: 'active' | 'completed' | 'cancelled' | 'archived';
 
   // computed fields optional
   profit?: number;
@@ -210,7 +212,7 @@ export interface TripUpdate {
   attachments?: Attachment[];
 
   notes?: string;
-  status?: 'active' | 'completed' | 'cancelled';
+  status?: 'active' | 'completed' | 'cancelled' | 'archived';
 
   profit?: number;
   profit_percentage?: number;

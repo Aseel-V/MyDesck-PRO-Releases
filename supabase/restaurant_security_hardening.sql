@@ -49,6 +49,7 @@ CREATE POLICY "System can insert audit logs" ON public.restaurant_audit_logs
 -- Validates a PIN code and returns the staff ID if valid and has required permissions
 CREATE OR REPLACE FUNCTION public.authorize_staff_action(
     p_pin_code TEXT,
+    p_business_id UUID, -- Mandatory business_id
     p_required_role TEXT DEFAULT NULL -- e.g., 'Manager'
 )
 RETURNS JSONB
@@ -59,18 +60,14 @@ AS $$
 DECLARE
     v_staff_record public.restaurant_staff;
 BEGIN
-    -- Search for staff with this PIN.
-    -- We limit scope to the current business context? 
-    -- Ideally we should pass business_id, but PINs might be unique enough or we rely on the implementation.
-    -- For security, if multiple staff have same PIN in different businesses, we want the one belonging to THIS business.
-    -- But since we don't pass business_id, we'll have to rely on the PIN being correct.
-    -- A better approach (Phase 2) is to require business_id or derive it.
-    -- Current fix: Just find the active staff member.
-    
+    -- Search for staff with this PIN within the specific business
     SELECT * INTO v_staff_record
     FROM public.restaurant_staff
     WHERE pin_code = p_pin_code
+    AND business_id = p_business_id
     AND (status = 'active' OR status IS NULL) -- Handle nullable status
+    -- Also check is_active if it exists (it does in other migration)
+    AND (is_active = true OR is_active IS NULL)
     LIMIT 1;
 
     IF v_staff_record.id IS NULL THEN
@@ -122,6 +119,20 @@ BEGIN
     -- Verify Auth Staff Exists and is Manager+
     SELECT * INTO v_actor_staff FROM public.restaurant_staff WHERE id = p_auth_staff_id;
     
+    -- 1. Verify Manager belongs to the same business as the order
+    IF v_actor_staff.business_id != v_order.business_id THEN
+        RAISE EXCEPTION 'Security Violation: Manager does not belong to this business.';
+    END IF;
+
+    -- 2. Verify Caller (Waiter) belongs to the same business or is owner
+    IF v_order.business_id != auth.uid() AND NOT EXISTS (
+        SELECT 1 FROM public.restaurant_staff s
+        WHERE s.user_id = auth.uid()
+        AND s.business_id = v_order.business_id
+    ) THEN
+         RAISE EXCEPTION 'Security Violation: Caller does not have permission for this order.';
+    END IF;
+
     -- Robust Role Check
     IF v_actor_staff.role NOT IN ('Manager', 'Admin', 'Super Admin', 'Owner') 
        AND v_actor_staff.restaurant_role NOT IN ('branch_manager', 'super_admin') THEN
@@ -180,6 +191,20 @@ BEGIN
     IF p_auth_staff_id IS NOT NULL THEN
         SELECT * INTO v_actor_staff FROM public.restaurant_staff WHERE id = p_auth_staff_id;
         
+        -- 1. Verify Manager belongs to the same business as the order
+        IF v_actor_staff.business_id != v_order.business_id THEN
+            RAISE EXCEPTION 'Security Violation: Manager does not belong to this business.';
+        END IF;
+
+         -- 2. Verify Caller (Waiter) belongs to the same business or is owner
+        IF v_order.business_id != auth.uid() AND NOT EXISTS (
+            SELECT 1 FROM public.restaurant_staff s
+            WHERE s.user_id = auth.uid()
+            AND s.business_id = v_order.business_id
+        ) THEN
+            RAISE EXCEPTION 'Security Violation: Caller does not have permission for this order.';
+        END IF;
+
         IF v_actor_staff.role NOT IN ('Manager', 'Admin', 'Super Admin', 'Owner') 
            AND v_actor_staff.restaurant_role NOT IN ('branch_manager', 'super_admin') THEN
             RAISE EXCEPTION 'Authorization Denied: Approver must be a manager.';

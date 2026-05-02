@@ -9,6 +9,8 @@ interface TripFiltersProps {
   // ... other props remain the same (implied)
   paymentStatusFilter: string;
   onPaymentStatusFilterChange: (value: string) => void;
+  tripStatusFilter: string;
+  onTripStatusFilterChange: (value: string) => void;
   yearFilter: string;
   onYearFilterChange: (value: string) => void;
   monthFilter: string;
@@ -24,6 +26,8 @@ export default function TripFilters({
   onSearchChange,
   paymentStatusFilter,
   onPaymentStatusFilterChange,
+  tripStatusFilter,
+  onTripStatusFilterChange,
   yearFilter,
   onYearFilterChange,
   monthFilter,
@@ -131,7 +135,7 @@ export default function TripFilters({
       </div>
 
       {/* Filters grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Payment status */}
         <div>
           <label className={labelClasses}>{t('trips.paymentStatus')}</label>
@@ -147,7 +151,20 @@ export default function TripFilters({
           </select>
         </div>
 
-
+        <div>
+          <label className={labelClasses}>{t('trips.status')}</label>
+          <select
+            value={tripStatusFilter}
+            onChange={(e) => onTripStatusFilterChange(e.target.value)}
+            className={baseInputClasses}
+          >
+            <option value="">{t('trips.allStatuses')}</option>
+            <option value="active">{t('trips.statuses.active')}</option>
+            <option value="completed">{t('trips.statuses.completed')}</option>
+            <option value="cancelled">{t('trips.statuses.cancelled')}</option>
+            <option value="archived">Archived</option>
+          </select>
+        </div>
 
         {/* Year Selector - Segmented Control */}
         <div className="sm:col-span-2 lg:col-span-1">

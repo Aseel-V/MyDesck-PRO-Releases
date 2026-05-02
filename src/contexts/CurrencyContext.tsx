@@ -4,6 +4,7 @@ import { CurrencyService } from '../lib/currency';
 
 interface CurrencyContextType {
     currency: string; // User's preferred currency (for display target)
+    symbol: string;   // Currency symbol (e.g., $, ₪)
     rates: Record<string, number> | null;
     isLoading: boolean;
     isStale: boolean;
@@ -65,6 +66,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     return (
         <CurrencyContext.Provider value={{ 
             currency: userPreferredCurrency, 
+            symbol: CurrencyService.getSymbol(userPreferredCurrency),
             rates, 
             isLoading, 
             isStale,

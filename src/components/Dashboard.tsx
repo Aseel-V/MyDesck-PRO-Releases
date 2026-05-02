@@ -1,36 +1,54 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../contexts/AuthContext";
 import { useLanguage } from "../contexts/LanguageContext";
 import { supabase } from "../lib/supabase";
 import { Trip } from "../types/trip";
 import Navbar from "./Navbar";
-import Settings from "./Settings";
 import Footer from "./Footer";
-import Trips from "./trips/Trips";
-import Analytics from "./analytics/Analytics";
 import { AnimatePresence } from "framer-motion";
 import MotionWrapper from "./MotionWrapper";
-import AdminDashboard from "./admin/AdminDashboard";
-import RestaurantDashboard from "./dashboards/RestaurantDashboard";
-import SupermarketDashboard from "./dashboards/SupermarketDashboard";
-import PhoneShopDashboard from "./dashboards/PhoneShopDashboard";
-import CarPartsDashboard from "./dashboards/CarPartsDashboard";
-import ClothesShopDashboard from "./dashboards/ClothesShopDashboard";
-import FurnitureStoreDashboard from "./dashboards/FurnitureStoreDashboard";
 
 import { Toaster } from "sonner";
 import { CommandPalette } from "./CommandPalette";
 import { Skeleton } from "./ui/Skeleton";
-import NewTripForm from "./trips/NewTripForm";
 import { TripFormData } from "../types/trip";
 import { useTripMutations } from "../hooks/useTripMutations";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import NewYearOverlay from "./ui/NewYearOverlay";
 import { AlertTriangle, X, ArrowRight } from "lucide-react";
 import { ErrorBoundary } from "./ErrorBoundary";
+import {
+  getEffectiveTripDate,
+  isTripEligibleForAlert,
+  isTripIncludedInDashboardStats,
+} from "../lib/tripStatus";
 
-type Page = "home" | "trips" | "analytics" | "settings" | "admin";
+// Lazy load heavy components for better performance
+const Settings = lazy(() => import("./Settings"));
+const Trips = lazy(() => import("./trips/Trips"));
+const Analytics = lazy(() => import("./analytics/Analytics"));
+const AdminDashboard = lazy(() => import("./admin/AdminDashboard"));
+const NewTripForm = lazy(() => import("./trips/NewTripForm"));
+const Cars = lazy(() => import('./cars/Cars'));
+const CarPartsInventory = lazy(() => import('./parts/CarPartsInventory'));
+
+// Lazy load business-specific dashboards
+const RestaurantDashboard = lazy(() => import("./dashboards/RestaurantDashboard"));
+const SupermarketDashboard = lazy(() => import("./dashboards/SupermarketDashboard"));
+const PhoneShopDashboard = lazy(() => import("./dashboards/PhoneShopDashboard"));
+const CarPartsDashboard = lazy(() => import("./dashboards/CarPartsDashboard"));
+const ClothesShopDashboard = lazy(() => import("./dashboards/ClothesShopDashboard"));
+const FurnitureStoreDashboard = lazy(() => import("./dashboards/FurnitureStoreDashboard"));
+
+// Loading fallback component
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-[400px]">
+    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-sky-500"></div>
+  </div>
+);
+
+type Page = "home" | "trips" | "analytics" | "settings" | "admin" | "parts";
 
 
 
@@ -185,9 +203,9 @@ export default function Dashboard() {
     if (!trips || trips.length === 0) return [new Date().getFullYear().toString()];
     const years = new Set(
       trips
-        .filter(t => t.status !== 'cancelled')
+        .filter(isTripIncludedInDashboardStats)
         .map((tr) => {
-          const effDate = tr.payment_date || tr.start_date;
+          const effDate = getEffectiveTripDate(tr);
           return new Date(effDate).getFullYear().toString();
         })
     );
@@ -200,8 +218,8 @@ export default function Dashboard() {
   // Filter trips by year
   const filteredTrips = useMemo(() => {
     return trips.filter(trip => {
-      if (trip.status === 'cancelled') return false;
-      const effDate = trip.payment_date || trip.start_date;
+      if (!isTripIncludedInDashboardStats(trip)) return false;
+      const effDate = getEffectiveTripDate(trip);
       return new Date(effDate).getFullYear().toString() === yearFilter;
     });
   }, [trips, yearFilter]);
@@ -227,21 +245,7 @@ export default function Dashboard() {
   // Compute Alerts
   const alerts = trips.filter(trip => {
     if (dismissedAlerts.includes(trip.id)) return false;
-
-    // Check payment status
-    if (trip.payment_status === 'paid') return false;
-
-    // Check date (within next 7 days)
-    const tripDate = new Date(trip.start_date);
-    const todayDate = new Date();
-    // Reset time for accurate day comparison
-    todayDate.setHours(0, 0, 0, 0);
-    tripDate.setHours(0, 0, 0, 0);
-
-    const diffTime = tripDate.getTime() - todayDate.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    return diffDays >= 0 && diffDays <= 7;
+    return isTripEligibleForAlert(trip);
   });
 
   const handleDismissAlert = (tripId: string) => {
@@ -269,11 +273,13 @@ export default function Dashboard() {
       />
 
       {showNewTripForm && (
-        <NewTripForm
-          onClose={handleCloseNewTripForm}
-          onSave={handleSaveTrip}
-          editTrip={editingTrip}
-        />
+        <Suspense fallback={<PageLoader />}>
+          <NewTripForm
+            onClose={handleCloseNewTripForm}
+            onSave={handleSaveTrip}
+            editTrip={editingTrip}
+          />
+        </Suspense>
       )}
 
       {/* New Year Celebration Overlay */}
@@ -291,7 +297,7 @@ export default function Dashboard() {
 
       <main className="relative z-10 flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-10 space-y-6">
         <AnimatePresence mode="wait">
-          {currentPage === "home" && (!profile?.business_type || profile?.business_type === 'tourism' || isAdmin) && (
+          {currentPage === "home" && (!profile?.business_type || profile?.business_type === 'tourism' || profile?.business_type === 'auto_repair' || isAdmin) && (
             <MotionWrapper key="home" className="space-y-6">
               {/* Alerts Section */}
               {alerts.length > 0 && (
@@ -301,7 +307,7 @@ export default function Dashboard() {
                   </h2>
                   <div className="grid gap-3">
                     {alerts.map(trip => {
-                      const tripDate = new Date(trip.start_date);
+                      const tripDate = new Date(getEffectiveTripDate(trip));
                       const todayDate = new Date();
                       todayDate.setHours(0, 0, 0, 0);
                       tripDate.setHours(0, 0, 0, 0);
@@ -715,45 +721,65 @@ export default function Dashboard() {
             </MotionWrapper>
           )}
 
-          {currentPage === "trips" && !isAdmin && (!profile?.business_type || profile?.business_type === 'tourism') && (
+          {currentPage === "trips" && !isAdmin && (!profile?.business_type || profile?.business_type === 'tourism' || profile?.business_type === 'auto_repair') && (
             <MotionWrapper key="trips">
-              <Trips
-                filters={tripFilters}
-                onFiltersChange={setTripFilters}
-                initialViewTrip={selectedTrip}
-                onEditTrip={handleEditTrip}
-                onCreateTrip={handleCreateTrip}
-              />
+              <Suspense fallback={<PageLoader />}>
+                {profile?.business_type === 'auto_repair' ? (
+                    <Cars onToggleNavbar={setShowNavbar} />
+                ) : (
+                    <Trips
+                      filters={tripFilters}
+                      onFiltersChange={setTripFilters}
+                      initialViewTrip={selectedTrip}
+                      onEditTrip={handleEditTrip}
+                      onCreateTrip={handleCreateTrip}
+                    />
+                )}
+              </Suspense>
             </MotionWrapper>
           )}
 
           {currentPage === "analytics" && (
             <MotionWrapper key="analytics">
-              <Analytics
-                trips={trips}
-                onOpenTripsWithFilter={(opts: { month?: string; pendingOnly?: boolean }) => {
-                  if (opts) {
-                    setTripFilters(prev => ({
-                      ...prev,
-                      month: opts.month || prev.month,
-                      paymentStatus: opts.pendingOnly ? 'partial' : prev.paymentStatus
-                    }));
-                  }
-                  setCurrentPage("trips");
-                }}
-              />
+              <Suspense fallback={<PageLoader />}>
+                <Analytics
+                  trips={trips}
+                  onOpenTripsWithFilter={(opts: { month?: string; pendingOnly?: boolean }) => {
+                    if (opts) {
+                      setTripFilters(prev => ({
+                        ...prev,
+                        month: opts.month || prev.month,
+                        paymentStatus: opts.pendingOnly ? 'partial' : prev.paymentStatus
+                      }));
+                    }
+                    setCurrentPage("trips");
+                  }}
+                />
+              </Suspense>
+            </MotionWrapper>
+          )}
+
+          {currentPage === "parts" && profile?.business_type === 'auto_repair' && (
+            <MotionWrapper key="parts">
+              <Suspense fallback={<PageLoader />}>
+                <CarPartsInventory />
+              </Suspense>
             </MotionWrapper>
           )}
 
           {currentPage === "settings" && (
             <MotionWrapper key="settings">
-              <Settings />
+              <Suspense fallback={<PageLoader />}>
+                <Settings />
+              </Suspense>
             </MotionWrapper>
           )}
 
           {currentPage === "admin" && isAdmin && (
             <MotionWrapper key="admin">
-              <AdminDashboard />
+              <Suspense fallback={<PageLoader />}>
+                <AdminDashboard />
+              </Suspense>
             </MotionWrapper>
           )}
 
@@ -761,37 +787,50 @@ export default function Dashboard() {
           {profile?.business_type === 'restaurant' && !isAdmin && currentPage === 'home' && (
              <MotionWrapper key="restaurant">
                 <ErrorBoundary>
-                  <RestaurantDashboard 
-                    onToggleNavbar={(show: boolean) => setShowNavbar(show)} 
-                  />
+                  <Suspense fallback={<PageLoader />}>
+                    <RestaurantDashboard 
+                      onToggleNavbar={(show: boolean) => setShowNavbar(show)} 
+                    />
+                  </Suspense>
                 </ErrorBoundary>
              </MotionWrapper>
           )}
           {profile?.business_type === 'supermarket' && !isAdmin && currentPage === 'home' && (
              <MotionWrapper key="supermarket">
-               <SupermarketDashboard />
+               <Suspense fallback={<PageLoader />}>
+                 <SupermarketDashboard />
+               </Suspense>
              </MotionWrapper>
           )}
           {profile?.business_type === 'phone_shop' && !isAdmin && currentPage === 'home' && (
              <MotionWrapper key="phone_shop">
-               <PhoneShopDashboard />
+               <Suspense fallback={<PageLoader />}>
+                 <PhoneShopDashboard />
+               </Suspense>
              </MotionWrapper>
           )}
           {profile?.business_type === 'car_parts' && !isAdmin && currentPage === 'home' && (
              <MotionWrapper key="car_parts">
-               <CarPartsDashboard />
+               <Suspense fallback={<PageLoader />}>
+                 <CarPartsDashboard />
+               </Suspense>
              </MotionWrapper>
           )}
           {profile?.business_type === 'clothes_shop' && !isAdmin && currentPage === 'home' && (
              <MotionWrapper key="clothes_shop">
-               <ClothesShopDashboard />
+               <Suspense fallback={<PageLoader />}>
+                 <ClothesShopDashboard />
+               </Suspense>
              </MotionWrapper>
           )}
           {profile?.business_type === 'furniture_store' && !isAdmin && currentPage === 'home' && (
              <MotionWrapper key="furniture_store">
-               <FurnitureStoreDashboard />
+               <Suspense fallback={<PageLoader />}>
+                 <FurnitureStoreDashboard />
+               </Suspense>
              </MotionWrapper>
           )}
+          {/* Auto Repair removed from here as it is now integrated into generic structure */}
         </AnimatePresence>
       </main>
 

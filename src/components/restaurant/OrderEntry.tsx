@@ -9,6 +9,7 @@ import { useRestaurantRole } from '../../contexts/RestaurantRoleContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
+import { safeImageSrc } from '../../lib/safeUrl';
 import { toast } from 'sonner';
 import {
   MenuItem,
@@ -1256,9 +1257,9 @@ export default function OrderEntry({ tableId, sessionId, orderId, onClose }: Ord
                           ${item.is_popular ? 'border-amber-200 dark:border-amber-900/40' : 'border-slate-100 dark:border-slate-800'}
                         `}
                     >
-                        {item.image_url && (
+                        {safeImageSrc(item.image_url) && (
                           <div className="h-16 w-full overflow-hidden">
-                            <img src={item.image_url} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                            <img src={safeImageSrc(item.image_url) || ''} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                           </div>
                         )}
                         <div className="p-3">

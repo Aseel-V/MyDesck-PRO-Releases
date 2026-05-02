@@ -18,6 +18,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
   restartApp: () => ipcRenderer.send('restart_app'),
   unlockApp: () => ipcRenderer.send('unlock_app'),
   openExternal: (url) => ipcRenderer.send('open_external', url),
+  
+  // Car Price Check
+  fetchCarPrice: (plateNumber) => ipcRenderer.invoke('fetch-car-price', plateNumber),
+
+  // Currency Rates (CORS-safe via main process)
+  fetchCurrencyRates: (base) => ipcRenderer.invoke('fetch-currency-rates', base),
+
+  // PDF temp file (for preview - most reliable in Electron)
+  saveTempPdf: (uint8Array) => ipcRenderer.invoke('save-temp-pdf', uint8Array),
+  deleteTempPdf: (filePath) => ipcRenderer.invoke('delete-temp-pdf', filePath),
 
   removeAllUpdateListeners: () => {
     ipcRenderer.removeAllListeners('update_available');

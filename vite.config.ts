@@ -42,7 +42,32 @@ export default defineConfig({
   // CRITICAL FIX: Ensure relative paths for Electron
   base: './',
   optimizeDeps: {
-    exclude: ['lucide-react'],
+    // Pre-bundle these heavy dependencies for faster startup
+    include: [
+      'react',
+      'react-dom',
+      'react-router-dom',
+      'lucide-react',
+      '@tanstack/react-query',
+      'framer-motion',
+      'sonner',
+      'recharts',
+    ],
+  },
+  server: {
+    // Faster file watching (especially for OneDrive paths)
+    watch: {
+      usePolling: false,
+      interval: 1000,
+    },
+    // Faster HMR
+    hmr: {
+      overlay: true,
+    },
+    // Pre-warm frequently used files
+    warmup: {
+      clientFiles: ['./src/main.tsx', './src/App.tsx', './src/components/Dashboard.tsx'],
+    },
   },
   resolve: {
     alias: {

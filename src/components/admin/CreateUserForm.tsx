@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { UserPlus, Building2, User } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface BusinessOption {
     id: string;
@@ -62,6 +63,10 @@ export default function CreateUserForm({ onClose, onSuccess, existingBusinesses 
                 payload.businessId = selectedBusinessId;
             }
 
+            console.log("Sending Create User Payload:", JSON.stringify(payload, null, 2));
+
+            console.log("Sending Payload:", JSON.stringify(payload, null, 2));
+
             const { data, error } = await supabase.functions.invoke('create-user', {
                 body: payload,
             });
@@ -70,25 +75,65 @@ export default function CreateUserForm({ onClose, onSuccess, existingBusinesses 
             console.log('Response error:', error);
             
             if (error) {
-                // Try to get detailed error from response context
+                console.error("Functions Invoke Error Object:", error);
+                
                 let errorMessage = error.message || 'Unknown error';
+
+                // Handle Supabase FunctionsHttpError specifically
+                // The SDK might hide the body in the error message or context
+                
                 if ('context' in error && error.context) {
                     try {
-                        const errorBody = await (error.context as Response).json();
-                        console.log('Error body:', errorBody);
-                        errorMessage = errorBody?.error || errorMessage;
-                    } catch {
-                        console.log('Could not parse error body');
+                        const response = (error.context as Response);
+                         // New improved parsing attempt:
+                        if (typeof response.text === 'function' && !response.bodyUsed) {
+                             const rawText = await response.text();
+                             console.log("Raw Error Body:", rawText);
+                             try {
+                                 const json = JSON.parse(rawText);
+                                 // If the server returned { error: "..." }
+                                 if (json.error) errorMessage = json.error;
+                                 else if (json.message) errorMessage = json.message;
+                             } catch {
+                                 if (rawText && rawText.length < 500) errorMessage = rawText;
+                             }
+                        } else if (typeof response.json === 'function' && !response.bodyUsed) {
+                             // Some environments might prefer json() directly if text() isn't reliable/available
+                             const json = await response.json();
+                             if (json.error) errorMessage = json.error;
+                        }
+                    } catch (e) {
+                        console.warn('Could not parse error body:', e);
                     }
                 }
+                
+                // If we still have a generic message but the stringified error has more info
+                if (errorMessage === 'Unknown error' || errorMessage === 'Edge Function returned a non-2xx status code') {
+                     // Try to see if there's any other useful prop
+                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                     const errAny = error as any;
+                     if (errAny.details) errorMessage = errAny.details;
+                     else if (errAny.hint) errorMessage = errAny.hint;
+                }
+
                 throw new Error(errorMessage);
             }
             if (data?.error) throw new Error(data.error);
 
+            // Success
+            toast.success('User created successfully');
             onSuccess();
         } catch (err) {
             console.error('Error creating user:', err);
-            const message = err instanceof Error ? err.message : 'Failed to create user';
+            let message = err instanceof Error ? err.message : 'Failed to create user';
+            
+            // Refined heuristic for the known missing migration issue or general 400s
+            // The edge function returns 400 for validation errors (like invalid business_type enum).
+            if (message.includes('400') || message.includes('Unknown error') || message.includes('FunctionsHttpError')) {
+                 message += ". (Hint: If this is a new business type, check if the database migration 'update_business_type_enum' is applied.)";
+            }
+            
+            toast.error(message);
             setError(message);
         } finally {
             setLoading(false);
@@ -209,7 +254,7 @@ export default function CreateUserForm({ onClose, onSuccess, existingBusinesses 
                         <div>
                              <label className={labelClass}>Business Type</label>
                              <select
-                                 value={businessType}
+                                 value={businessType || 'tourism'}
                                  onChange={(e) => setBusinessType(e.target.value)}
                                  className={inputClass}
                              >
@@ -220,6 +265,7 @@ export default function CreateUserForm({ onClose, onSuccess, existingBusinesses 
                                  <option value="car_parts">Car Parts Shop</option>
                                  <option value="clothes_shop">Clothes Shop</option>
                                  <option value="furniture_store">Home Furniture Store</option>
+                                 <option value="auto_repair">Auto Repair Shop</option>
                              </select>
                         </div>
 

@@ -195,11 +195,26 @@ Deno.serve(async (req: Request) => {
             }
         );
 
-    } catch (error) {
-        const message = error instanceof Error ? error.message : 'Unknown error';
+    } catch (err: unknown) {
+        // Handle various error types
+        let message = 'Unknown error';
+        if (err instanceof Error) {
+            message = err.message;
+        } else if (typeof err === 'object' && err !== null && 'message' in err) {
+            message =String((err as { message: unknown }).message);
+            const errObj = err as { details?: string; hint?: string };
+            if (errObj.details) message += ` (${errObj.details})`;
+            if (errObj.hint) message += ` Hint: ${errObj.hint}`;
+        } else if (typeof err === 'string') {
+            message = err;
+        }
+        
+        console.error('Create User Error:', JSON.stringify(err));
+        
+        // Return 200 OK with error field to ensure client can read the body
         return new Response(JSON.stringify({ error: message }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 400,
+            status: 200, 
         });
     }
 });

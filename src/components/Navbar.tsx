@@ -15,13 +15,15 @@ import {
   Sun,
   Search,
   LucideIcon,
+  CarFront,
+  Wrench,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { twMerge } from 'tailwind-merge';
 
 interface NavbarProps {
-  onNavigate: (page: 'home' | 'trips' | 'analytics' | 'settings' | 'admin') => void;
-  currentPage: 'home' | 'trips' | 'analytics' | 'settings' | 'admin';
+  onNavigate: (page: 'home' | 'trips' | 'analytics' | 'settings' | 'admin' | 'parts') => void;
+  currentPage: 'home' | 'trips' | 'analytics' | 'settings' | 'admin' | 'parts';
   onOpenSearch: () => void;
 }
 
@@ -44,8 +46,19 @@ export default function Navbar({ onNavigate, currentPage, onOpenSearch }: Navbar
   
   const navItems = [
     { id: 'home', icon: Home, label: t('dashboard.home') },
-    { id: 'trips', icon: MapPin, label: t('dashboard.trips'), hidden: isAdmin || (profile?.business_type && profile.business_type !== 'tourism') },
+    { 
+      id: 'trips', 
+      icon: (profile?.business_type === 'auto_repair') ? CarFront : MapPin, 
+      label: (profile?.business_type === 'auto_repair') ? t('navbar.cars') : t('dashboard.trips'), 
+      hidden: isAdmin || (profile?.business_type && profile.business_type !== 'tourism' && profile.business_type !== 'auto_repair') 
+    },
     { id: 'analytics', icon: BarChart3, label: t('dashboard.analytics') },
+    { 
+      id: 'parts', 
+      icon: Wrench, 
+      label: t('navbar.parts'), 
+      hidden: profile?.business_type !== 'auto_repair'
+    },
     { id: 'settings', icon: Settings, label: t('dashboard.settings') },
     { id: 'admin', icon: Shield, label: t('navbar.admin'), hidden: !isAdmin },
   ].filter(item => !item.hidden) as { id: NavbarProps['currentPage']; icon: LucideIcon; label: string }[];

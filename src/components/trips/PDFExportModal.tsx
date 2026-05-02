@@ -8,6 +8,7 @@ import {
   generateSingleTripPDF,
   generateMultipleTripsPDF,
 } from '../../lib/pdfGenerator';
+import { sanitizeFilename } from '../../lib/utils';
 
 export interface PDFExportModalProps {
   trips: Trip[];
@@ -22,11 +23,23 @@ const isPhoneValid = (v: string) => {
   return /^\+?[0-9\s\-()]{6,}$/.test(s);
 };
 
+/** Convert Uint8Array → base64 data URL (browser fallback when not in Electron) */
+function assertPdfHasContent(bytes: Uint8Array) {
+  if (bytes.length < 1000) {
+    throw new Error(`Generated PDF is unexpectedly small (${bytes.length} bytes)`);
+  }
+}
+
+function toPdfBlobUrl(bytes: Uint8Array): string {
+  const blob = new Blob([bytes as unknown as BlobPart], { type: 'application/pdf' });
+  return window.URL.createObjectURL(blob);
+}
+
 export default function PDFExportModal({ trips, onClose, onExportComplete }: PDFExportModalProps) {
   const { language, t, direction } = useLanguage();
   const { profile, user, userProfile } = useAuth();
   const [loading, setLoading] = useState(false);
-  
+
   // Initialize state directly from context to avoid "pop-in" delay
   const [userFullName, setUserFullName] = useState(userProfile?.full_name || '');
   const [phoneNumber, setPhoneNumber] = useState(userProfile?.phone_number || '');
@@ -81,9 +94,11 @@ export default function PDFExportModal({ trips, onClose, onExportComplete }: PDF
           language,
         });
       }
-      const blob = new Blob([pdfBytes as unknown as BlobPart], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      setPreviewUrl(url);
+      assertPdfHasContent(pdfBytes);
+      setPreviewUrl((currentUrl) => {
+        if (currentUrl) window.URL.revokeObjectURL(currentUrl);
+        return toPdfBlobUrl(pdfBytes);
+      });
     } catch (error) {
       console.error('Preview generation error:', error);
     } finally {
@@ -99,6 +114,12 @@ export default function PDFExportModal({ trips, onClose, onExportComplete }: PDF
     }, 500);
     return () => clearTimeout(timer);
   }, [canExport, generatePreview]);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) window.URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
 
   const handleExport = async () => {
     if (!profile || !user) return;
@@ -123,9 +144,10 @@ export default function PDFExportModal({ trips, onClose, onExportComplete }: PDF
           language,
         });
 
-        filename = `trip_${trip.destination
-          .replace(/\s+/g, '_')
-          .toLowerCase()}_${new Date().toISOString().split('T')[0]}.pdf`;
+        filename = `${sanitizeFilename(
+          `trip_${trip.client_name}_${trip.destination}_${new Date().toISOString().split('T')[0]}`,
+          `trip_${trip.id.slice(0, 8)}`
+        )}.pdf`;
       } else {
         pdfBytes = await generateMultipleTripsPDF({
           profile,
@@ -135,11 +157,12 @@ export default function PDFExportModal({ trips, onClose, onExportComplete }: PDF
           language,
         });
 
-        filename = `trips_summary_${new Date()
-          .toISOString()
-          .split('T')[0]}.pdf`;
+        filename = `${sanitizeFilename(`trips_summary_${new Date().toISOString().split('T')[0]}`)}.pdf`;
       }
 
+      assertPdfHasContent(pdfBytes);
+
+      // For download, blob URL is fine (it's a direct anchor click, not an iframe)
       const blob = new Blob([pdfBytes as unknown as BlobPart], {
         type: 'application/pdf',
       });

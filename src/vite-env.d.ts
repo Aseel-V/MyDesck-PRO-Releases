@@ -75,6 +75,13 @@ interface Window {
 
         // Hardware: Cash Drawer Control
         openCashDrawer: (printerName: string, method?: 'printer' | 'serial') => Promise<{ success: boolean; error?: string }>;
+
+        // Currency: CORS-safe exchange rate fetching via main process
+        fetchCurrencyRates: (base: string) => Promise<{ success: boolean; data?: import('./lib/currency').ExchangeRates; error?: string }>;
+
+        // PDF temp file: write bytes to disk, return file:// URL for iframe preview
+        saveTempPdf: (uint8Array: Uint8Array) => Promise<{ success: boolean; url?: string; error?: string }>;
+        deleteTempPdf: (filePath: string) => Promise<{ success: boolean; error?: string }>;
     };
 }
 

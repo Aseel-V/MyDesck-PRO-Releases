@@ -14,6 +14,8 @@ import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
 import { useDebounce } from '../../hooks/useDebounce';
 import { FileUpload } from '../ui/FileUpload';
+import { removeTripAttachments, getTripAttachmentUrl } from '../../lib/tripAttachments';
+import { formatRoomConfiguration, normalizeRoomConfiguration, serializeRoomConfiguration } from '../../lib/tripRoom';
 
 interface NewTripFormProps {
   onClose: () => void;
@@ -22,13 +24,18 @@ interface NewTripFormProps {
 }
 
 type Tab = 'details' | 'travelers' | 'itinerary' | 'financials';
+const TRIP_DRAFT_TTL_MS = 1000 * 60 * 60 * 24 * 7;
 
 // IMPORTANT: use input type of the schema (matches resolver)
 type TripFormValues = z.input<typeof tripSchema>;
+type StoredTripDraft = {
+  savedAt?: number;
+  data?: Partial<TripFormValues>;
+};
 
 export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormProps) {
   const { t } = useLanguage();
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('details');
   const { rates, convert } = useCurrency(); // Added convert
@@ -40,6 +47,8 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
     watch,
     setValue,
     getValues,
+    setError,
+    clearErrors,
     formState: { errors },
   } = useForm<TripFormValues>({
     resolver: zodResolver(tripSchema),
@@ -67,7 +76,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
         (editTrip?.payment_status as TripFormValues['payment_status']) || 'unpaid',
       amount_paid: editTrip?.amount_paid || 0,
       payment_date: editTrip?.payment_date || '',
-      room_type: editTrip?.room_type || {}, // JSONB object for room configuration
+      room_type: normalizeRoomConfiguration(editTrip?.room_type), // JSONB object for room configuration
       board_basis: editTrip?.board_basis || '', // Ensure persistence
       attachments: editTrip?.attachments || [],
       notes: editTrip?.notes || '',
@@ -80,27 +89,51 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
   // ------------------------------------------------------------------
   const watchedValues = watch();
   const debouncedValues = useDebounce(watchedValues, 1000);
+  const draftStorageKey = user?.id ? `new_trip_draft:${user.id}` : null;
 
   useEffect(() => {
     // Only auto-save if it's a new trip (not editing)
-    if (!editTrip) {
-      localStorage.setItem('new_trip_draft', JSON.stringify(debouncedValues));
+    if (!editTrip && draftStorageKey) {
+      localStorage.setItem(
+        draftStorageKey,
+        JSON.stringify({
+          savedAt: Date.now(),
+          data: debouncedValues,
+        })
+      );
     }
-  }, [debouncedValues, editTrip]);
+  }, [debouncedValues, draftStorageKey, editTrip]);
 
   useEffect(() => {
+    localStorage.removeItem('new_trip_draft');
+
     // Load draft on mount
-    if (!editTrip) {
-      const savedDraft = localStorage.getItem('new_trip_draft');
+    if (!editTrip && draftStorageKey) {
+      const savedDraft = localStorage.getItem(draftStorageKey);
       if (savedDraft) {
         try {
-          const parsed = JSON.parse(savedDraft);
+          const parsed = JSON.parse(savedDraft) as StoredTripDraft | Partial<TripFormValues>;
+          const wrappedDraft = parsed as StoredTripDraft;
+          const savedAt = typeof wrappedDraft.savedAt === 'number' ? wrappedDraft.savedAt : undefined;
+          const draftData: Partial<TripFormValues> =
+            wrappedDraft.data && typeof wrappedDraft.data === 'object'
+              ? wrappedDraft.data
+              : (parsed as Partial<TripFormValues>);
+
+          if (savedAt && Date.now() - savedAt > TRIP_DRAFT_TTL_MS) {
+            localStorage.removeItem(draftStorageKey);
+            return;
+          }
+
           // We could ask the user if they want to restore, but for now let's just restore
           // or show a toast. Let's restore quietly or with a toast.
           // Ideally, we should check if the draft is empty or meaningful.
-          if (parsed.destination || parsed.client_name) {
-            Object.keys(parsed).forEach((key) => {
-              setValue(key as keyof TripFormValues, parsed[key]);
+          if (draftData?.destination || draftData?.client_name) {
+            (Object.keys(draftData) as Array<keyof TripFormValues>).forEach((key) => {
+              const value = draftData[key];
+              if (value !== undefined) {
+                setValue(key, value);
+              }
             });
             toast.info(t('notifications.draftRestored') || 'Draft restored');
           }
@@ -109,7 +142,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
         }
       }
     }
-  }, [editTrip, setValue, t]);
+  }, [draftStorageKey, editTrip, setValue, t]);
 
   // ------------------------------------------------------------------
   // 2. Autocomplete Logic
@@ -186,14 +219,16 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
     Suite: 0,
     Family: 0,
   });
+  const roomConfigPreview = formatRoomConfiguration(roomCounts, t('trips.notSpecified') || 'Not specified');
 
   // Parse initial room_type object to counts
   useEffect(() => { 
      // 1. Room Type Parsing from JSONB object
-     if (editTrip?.room_type && typeof editTrip.room_type === 'object') {
+     if (editTrip?.room_type) {
+         const normalizedRooms = normalizeRoomConfiguration(editTrip.room_type);
          setRoomCounts(prevCounts => {
              const newCounts = { ...prevCounts };
-             Object.entries(editTrip.room_type || {}).forEach(([type, count]) => {
+             Object.entries(normalizedRooms).forEach(([type, count]) => {
                  if (type in newCounts && typeof count === 'number') {
                      newCounts[type as RoomType] = count;
                  }
@@ -226,6 +261,8 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
           if (count > 0) roomConfig[type] = count;
         });
         setValue('room_type', roomConfig); // Store as JSONB object
+    } else {
+        setValue('room_type', {});
     }
   }, [roomCounts, setValue]);
 
@@ -363,6 +400,17 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
           data.amount_paid = convert(data.amount_paid, amountPaidCurrency, data.currency || 'USD');
       }
 
+      if (data.amount_paid > data.sale_price + 0.01) {
+        setError('amount_paid', {
+          type: 'manual',
+          message: 'Amount paid cannot exceed sale price after currency conversion',
+        });
+        return;
+      }
+      clearErrors('amount_paid');
+
+      data.room_type = serializeRoomConfiguration(data.room_type);
+
       // Sanitize date fields - convert empty strings to null to avoid Postgres "invalid input syntax" error
       const sanitizedData = {
         ...data,
@@ -374,8 +422,8 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
       await onSave(sanitizedData as unknown as TripFormData);
 
       // Clear draft on success
-      if (!editTrip) {
-        localStorage.removeItem('new_trip_draft');
+      if (!editTrip && draftStorageKey) {
+        localStorage.removeItem(draftStorageKey);
       }
 
       onClose();
@@ -404,11 +452,39 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
     } 
     // Always sync status
     syncPaymentStatusWithAmount(paid, valueInMain);
+    clearErrors('amount_paid');
   };
 
   const profitSign = profit >= 0 ? '+' : '';
   const profitColor = profit >= 0 ? 'text-emerald-300' : 'text-rose-300';
   const amountDueColor = amountDue > 0 ? 'text-rose-300' : 'text-emerald-300';
+
+  const handleOpenAttachment = async (file: Trip['attachments'][number]) => {
+    try {
+      const url = await getTripAttachmentUrl(file);
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } catch (error) {
+      console.error('Failed to open attachment:', error);
+      toast.error('Failed to open attachment');
+    }
+  };
+
+  const handleRemoveAttachment = async (index: number) => {
+    const current = getValues('attachments') || [];
+    const target = current[index];
+    if (!target) return;
+
+    setValue('attachments', current.filter((_, i) => i !== index));
+
+    if (target.storage_path && target.bucket) {
+      try {
+        await removeTripAttachments([target]);
+      } catch (error) {
+        console.error('Failed to remove attachment from storage:', error);
+        toast.error('Failed to delete attachment from storage');
+      }
+    }
+  };
 
   const baseInputClasses =
     'w-full text-slate-900 placeholder-slate-400 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm ' +
@@ -586,8 +662,9 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                        <label className="text-[10px] text-slate-500 mb-1 block dark:text-slate-500">{t('trips.finalText')}</label>
                        <input
                          type="text"
-                         {...register('room_type')}
-                         className={cn(baseInputClasses, 'text-xs py-2')}
+                         value={roomConfigPreview}
+                         readOnly
+                         className={cn(baseInputClasses, 'text-xs py-2 bg-slate-100 dark:bg-slate-900/50')}
                          placeholder="e.g. Single x1, Double x2"
                        />
                    </div>
@@ -652,16 +729,17 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                                 <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-200 dark:bg-slate-900/50 dark:border-slate-800">
                                     <div className="flex items-center gap-2 truncate">
                                         <FileText className="w-4 h-4 text-sky-500 shrink-0" />
-                                        <a href={file.url} target="_blank" rel="noreferrer" className="text-sm text-slate-600 truncate underline dark:text-slate-300">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleOpenAttachment(file)}
+                                            className="text-sm text-slate-600 truncate underline dark:text-slate-300"
+                                        >
                                             {file.file_name}
-                                        </a>
+                                        </button>
                                     </div>
                                     <button
                                         type="button"
-                                        onClick={() => {
-                                            const current = getValues('attachments');
-                                            setValue('attachments', current.filter((_, i) => i !== idx));
-                                        }}
+                                        onClick={() => void handleRemoveAttachment(idx)}
                                         className="p-1 hover:bg-rose-100 text-rose-500 rounded-full transition-colors"
                                     >
                                         <X className="w-4 h-4" />
@@ -673,7 +751,8 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                         {/* Uploader */}
                         <div>
                              <FileUpload 
-                                folderName={profile?.id || 'public'} 
+                                folderName={user?.id || 'anonymous'} 
+                                isPrivate
                                 onUploadComplete={(newFile) => {
                                     const current = getValues('attachments') || [];
                                     setValue('attachments', [...current, newFile]);
@@ -830,6 +909,9 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                                     const paidInMain = convert(finalVal, amountPaidCurrency, currency || 'USD');
                                     const sPrice = convert(salePrice || 0, saleCurrency, currency || 'USD');
                                     syncPaymentStatusWithAmount(paidInMain, sPrice);
+                                    if (paidInMain <= sPrice + 0.01) {
+                                      clearErrors('amount_paid');
+                                    }
                                 }}
                                 className={cn(
                                     baseInputClasses,

@@ -57,7 +57,7 @@ jobs:
       - name: Build and Release (Windows)
         if: matrix.os == 'windows-latest'
         env:
-          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         # Overriding output directory to 'release' to avoid absolute path issues
@@ -67,7 +67,7 @@ jobs:
       - name: Build and Release (macOS)
         if: matrix.os == 'macos-latest'
         env:
-          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         # Overriding output directory to 'release'

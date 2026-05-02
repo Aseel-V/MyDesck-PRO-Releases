@@ -1,9 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { TripFormData } from '../types/trip';
+import { Attachment, TripFormData } from '../types/trip';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { toast } from 'sonner';
+import { removeTripAttachments } from '../lib/tripAttachments';
 
 export function useTripMutations() {
     const { user } = useAuth();
@@ -31,6 +32,7 @@ export function useTripMutations() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['trips'] });
+            queryClient.invalidateQueries({ queryKey: ['trip-years'] });
             toast.success(t('notifications.tripSaved') || 'Trip saved successfully');
         },
         onError: (error: Error) => {
@@ -41,16 +43,49 @@ export function useTripMutations() {
 
     const deleteTripMutation = useMutation({
         mutationFn: async (id: string) => {
+            const { data: tripData } = await supabase
+                .from('trips')
+                .select('attachments')
+                .eq('id', id)
+                .maybeSingle();
+
             const { error } = await supabase.from('trips').delete().eq('id', id);
             if (error) throw error;
+
+            try {
+                const attachments = (tripData?.attachments as Attachment[] | null) || [];
+                await removeTripAttachments(attachments);
+            } catch (cleanupError) {
+                console.error('Failed to clean up trip attachments:', cleanupError);
+            }
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['trips'] });
+            queryClient.invalidateQueries({ queryKey: ['trip-years'] });
             toast.success(t('notifications.tripDeleted') || 'Trip deleted');
         },
         onError: (error: Error) => {
             console.error('Error deleting trip:', error);
             toast.error(t('notifications.tripDeleteError') || 'Failed to delete trip');
+        }
+    });
+
+    const archiveTripMutation = useMutation({
+        mutationFn: async (id: string) => {
+            const { error } = await supabase
+                .from('trips')
+                .update({ status: 'archived', updated_at: new Date().toISOString() })
+                .eq('id', id);
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['trips'] });
+            queryClient.invalidateQueries({ queryKey: ['trip-years'] });
+            toast.success('Trip archived');
+        },
+        onError: (error: Error) => {
+            console.error('Error archiving trip:', error);
+            toast.error('Failed to archive trip');
         }
     });
 
@@ -98,9 +133,11 @@ export function useTripMutations() {
     return {
         saveTrip: saveTripMutation.mutateAsync,
         deleteTrip: deleteTripMutation.mutate,
+        archiveTrip: archiveTripMutation.mutateAsync,
         updatePayment: updatePaymentMutation.mutateAsync,
         toggleExport: toggleExportMutation.mutate,
         isSaving: saveTripMutation.isPending,
         isDeleting: deleteTripMutation.isPending,
+        isArchiving: archiveTripMutation.isPending,
     };
 }

@@ -10,9 +10,15 @@ interface FileUploadProps {
   onUploadComplete: (attachment: Attachment) => void;
   folderName: string;
   bucketName?: string;
+  isPrivate?: boolean;
 }
 
-export function FileUpload({ onUploadComplete, folderName, bucketName = 'trip-attachments' }: FileUploadProps) {
+export function FileUpload({
+  onUploadComplete,
+  folderName,
+  bucketName = 'trip-attachments',
+  isPrivate = false,
+}: FileUploadProps) {
   const { t } = useLanguage();
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -45,11 +51,6 @@ export function FileUpload({ onUploadComplete, folderName, bucketName = 'trip-at
 
       if (uploadError) throw uploadError;
 
-      // 3. Get Public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from(bucketName)
-        .getPublicUrl(filePath);
-
       // 4. Determine type
       const type = file.type.startsWith('image/') 
         ? 'other' 
@@ -57,8 +58,10 @@ export function FileUpload({ onUploadComplete, folderName, bucketName = 'trip-at
 
       onUploadComplete({
         file_name: file.name,
-        url: publicUrl,
-        type: type as Attachment['type']
+        url: isPrivate ? `storage://${bucketName}/${filePath}` : supabase.storage.from(bucketName).getPublicUrl(filePath).data.publicUrl,
+        type: type as Attachment['type'],
+        bucket: isPrivate ? bucketName : undefined,
+        storage_path: isPrivate ? filePath : undefined,
       });
       
       toast.success('File uploaded successfully');

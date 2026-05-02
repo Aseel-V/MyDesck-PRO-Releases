@@ -18,6 +18,7 @@ import {
 import { RestaurantStaff, StaffRole, FloorZone, RestaurantTable } from '../../types/restaurant';
 import { ConfirmationModal } from '../ui/ConfirmationModal';
 import { FileUpload } from '../ui/FileUpload';
+import { safeImageSrc } from '../../lib/safeUrl';
 
 type SettingsTab = 'tables' | 'menu' | 'staff';
 
@@ -419,6 +420,7 @@ function MenuManager() {
       toast.error(t('settings.restaurantSetup.nameAndPriceRequired'));
       return;
     }
+    const imageUrl = safeImageSrc(newItem.imageUrl) || undefined;
     try {
       if (editingItemId) {
         await updateMenuItem.mutateAsync({
@@ -427,7 +429,7 @@ function MenuManager() {
           price: newItem.price,
           cost_price: newItem.cost_price,
           description: newItem.description || null,
-          image_url: newItem.imageUrl || undefined,
+          image_url: imageUrl,
           allergens: newItem.allergens
         });
         toast.success(t('settings.restaurantSetup.itemUpdated') || 'Item updated');
@@ -438,7 +440,7 @@ function MenuManager() {
           price: newItem.price,
           cost_price: newItem.cost_price,
           description: newItem.description || null,
-          image_url: newItem.imageUrl || undefined,
+          image_url: imageUrl,
           allergens: newItem.allergens
         });
         toast.success(t('settings.restaurantSetup.itemAdded'));
@@ -560,9 +562,9 @@ function MenuManager() {
                         >
                           <div className="flex items-center gap-3">
                             {/* Image or Placeholder */}
-                            {item.image_url ? (
+                            {safeImageSrc(item.image_url) ? (
                               <img 
-                                src={item.image_url} 
+                                src={safeImageSrc(item.image_url) || ''}
                                 alt={item.name}
                                 className={`w-10 h-10 rounded-lg object-cover bg-slate-100 dark:bg-slate-800 ${!item.is_available ? 'opacity-50 grayscale' : ''}`}
                               />
@@ -762,9 +764,9 @@ function MenuManager() {
                       )}
                       
                       {/* Preview if image exists */}
-                      {newItem.imageUrl && (
+                      {safeImageSrc(newItem.imageUrl) && (
                         <div className="relative w-full h-32 bg-slate-100 rounded-lg overflow-hidden">
-                          <img src={newItem.imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                          <img src={safeImageSrc(newItem.imageUrl) || ''} alt="Preview" className="w-full h-full object-cover" />
                           <button
                              onClick={() => setNewItem({ ...newItem, imageUrl: '' })}
                              className="absolute top-2 right-2 p-1 bg-black/50 text-white rounded-full hover:bg-black/70"

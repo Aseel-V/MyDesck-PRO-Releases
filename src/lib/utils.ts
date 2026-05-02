@@ -30,3 +30,14 @@ export function generateWhatsAppLink(phone: string, message: string): string {
     const encodedMessage = encodeURIComponent(message);
     return `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
 }
+
+export function sanitizeFilename(value: string, fallback: string = 'file'): string {
+    const cleaned = value
+        .normalize('NFKD')
+        .replace(/[<>:"/\\|?*\u0000-\u001F]/g, '')
+        .replace(/\s+/g, '_')
+        .replace(/\.+$/g, '')
+        .trim();
+
+    return cleaned || fallback;
+}

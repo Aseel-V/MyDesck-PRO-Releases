@@ -1,11 +1,14 @@
-import { app, BrowserWindow, ipcMain, Menu, globalShortcut, shell, screen } from 'electron';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
-import electronUpdater from 'electron-updater';
-const { autoUpdater } = electronUpdater;
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
+const { app, BrowserWindow, ipcMain, Menu, globalShortcut, shell, screen } = require('electron');
+const { autoUpdater } = require('electron-updater');
 
 const isDev = process.env.NODE_ENV === 'development';
+const DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL || 'http://127.0.0.1:5173';
 
 // __dirname replacement for ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -52,25 +55,37 @@ if (!isDev) {
 function setupAutoUpdater() {
   if (isDev) return;
 
-  // 1. Configure for silent update
+  const sendUpdateEvent = (channel, payload) => {
+    BrowserWindow.getAllWindows().forEach((win) => {
+      if (!win.isDestroyed()) {
+        win.webContents.send(channel, payload);
+      }
+    });
+  };
+
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
 
-  // 2. Check and Notify
-  // This fulfills "runs autoUpdater.checkForUpdatesAndNotify() when the app is ready"
-  autoUpdater.checkForUpdatesAndNotify();
+  autoUpdater.on('update-available', (info) => {
+    sendUpdateEvent('update_available', info);
+  });
 
-  // 3. Handle events to install the update silently if found
-  autoUpdater.on('update-downloaded', () => {
-    // Only notify renderer, let autoInstallOnAppQuit handle the actual install
-    const win = BrowserWindow.getAllWindows()[0];
-    if (win) {
-       win.webContents.send('update_downloaded');
-    }
+  autoUpdater.on('download-progress', (progress) => {
+    sendUpdateEvent('update_progress', progress);
+  });
+
+  autoUpdater.on('update-downloaded', (info) => {
+    sendUpdateEvent('update_downloaded', info);
   });
 
   autoUpdater.on('error', (err) => {
     console.error('Auto-updater error:', err);
+    sendUpdateEvent('update_error', err?.message || String(err));
+  });
+
+  autoUpdater.checkForUpdatesAndNotify().catch((err) => {
+    console.error('Auto-updater check failed:', err);
+    sendUpdateEvent('update_error', err?.message || String(err));
   });
 }
 
@@ -94,8 +109,10 @@ function createWindow() {
 
   // Load the app
   if (isDev) {
-    mainWindow.loadURL('http://localhost:5173');
-    mainWindow.webContents.openDevTools();
+    mainWindow.loadURL(DEV_SERVER_URL);
+    if (process.env.OPEN_DEVTOOLS === 'true') {
+      mainWindow.webContents.openDevTools();
+    }
   } else {
     // CRITICAL FIX: Robust production loading
     const indexHtml = path.join(__dirname, 'dist', 'index.html');
@@ -123,11 +140,144 @@ ipcMain.on('quit-app', () => {
 
 // Update IPCs
 ipcMain.on('download_update', () => {
-  autoUpdater.downloadUpdate();
+  if (isDev) return;
+  autoUpdater.downloadUpdate().catch((err) => {
+    BrowserWindow.getAllWindows().forEach((win) => {
+      win.webContents.send('update_error', err?.message || String(err));
+    });
+  });
+});
+
+ipcMain.on('retry_update', () => {
+  if (isDev) return;
+  autoUpdater.checkForUpdatesAndNotify().catch((err) => {
+    BrowserWindow.getAllWindows().forEach((win) => {
+      win.webContents.send('update_error', err?.message || String(err));
+    });
+  });
 });
 
 ipcMain.on('restart_app', () => {
   autoUpdater.quitAndInstall();
+});
+
+ipcMain.on('unlock_app', () => {
+  // Renderer owns the update modal state; this IPC intentionally acknowledges
+  // the emergency skip path exposed by the preload bridge.
+});
+
+// Fetch currency exchange rates (bypasses CORS via main process)
+ipcMain.handle('fetch-currency-rates', async (event, base = 'USD') => {
+  try {
+    const url = `https://api.frankfurter.app/latest?from=${base}`;
+    // Use Node's built-in fetch (available in Electron / Node 18+)
+    const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    return { success: true, data };
+  } catch (error) {
+    console.error('[Main] Failed to fetch currency rates:', error.message);
+    return { success: false, error: error.message };
+  }
+});
+
+// Save PDF bytes to a temp file and return its file:// URL
+// This is the most reliable way to preview PDFs in Electron iframes.
+// data: URLs can be slow/buggy for large PDFs; file:// paths are native.
+const tempPdfFiles = new Set();
+ipcMain.handle('save-temp-pdf', async (event, uint8Array) => {
+  try {
+    const buffer = Buffer.from(uint8Array);
+    const tempPath = path.join(app.getPath('temp'), `mydesck_preview_${Date.now()}.pdf`);
+    fs.writeFileSync(tempPath, buffer);
+    tempPdfFiles.add(tempPath);
+    // Return as file:// URL
+    return { success: true, url: `file:///${tempPath.replace(/\\/g, '/')}` };
+  } catch (error) {
+    console.error('[Main] Failed to save temp PDF:', error.message);
+    return { success: false, error: error.message };
+  }
+});
+
+// Clean up a specific temp PDF file
+ipcMain.handle('delete-temp-pdf', async (event, filePath) => {
+  try {
+    // Only delete files we created
+    if (tempPdfFiles.has(filePath)) {
+      fs.unlinkSync(filePath);
+      tempPdfFiles.delete(filePath);
+    }
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// Clean up all temp PDFs on quit
+app.on('before-quit', () => {
+  for (const f of tempPdfFiles) {
+    try { fs.unlinkSync(f); } catch {}
+  }
+});
+
+// Fetch car price from balcar.co.il (bypasses CORS via main process)
+ipcMain.handle('fetch-car-price', async (event, plateNumber) => {
+  const priceWindow = new BrowserWindow({
+    width: 800,
+    height: 600,
+    show: false,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+    },
+  });
+
+  try {
+    await priceWindow.loadURL(`https://balcar.co.il/car/${plateNumber}`);
+    
+    // Wait for React app to load and render
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    
+    // Extract price from the page
+    const price = await priceWindow.webContents.executeJavaScript(`
+      (function() {
+        // Try to find the loan amount (גובה ההלוואה) which represents car value
+        const elements = document.querySelectorAll('*');
+        for (let el of elements) {
+          const text = el.textContent || '';
+          // Look for price pattern like "55,000" after loan text
+          if (text.includes('גובה ההלוואה') || text.includes('שווי') || text.includes('מחיר')) {
+            const priceMatch = text.match(/([0-9]{1,3}(?:,[0-9]{3})*)/);
+            if (priceMatch) {
+              return parseInt(priceMatch[1].replace(/,/g, ''));
+            }
+          }
+        }
+        // Try looking for large numbers that look like car prices
+        const allText = document.body.innerText;
+        const priceMatches = allText.match(/([0-9]{2,3},[0-9]{3})/g);
+        if (priceMatches && priceMatches.length > 0) {
+          // Return the first reasonable car price (typically 20,000 - 500,000)
+          for (let match of priceMatches) {
+            const num = parseInt(match.replace(/,/g, ''));
+            if (num >= 10000 && num <= 1000000) {
+              return num;
+            }
+          }
+        }
+        return null;
+      })()
+    `);
+    
+    return { success: true, price };
+  } catch (error) {
+    console.error('Failed to fetch car price:', error);
+    return { success: false, error: error.message };
+  } finally {
+    if (priceWindow && !priceWindow.isDestroyed()) {
+      priceWindow.close();
+    }
+  }
 });
 
 ipcMain.on('open_external', (event, url) => {
@@ -246,7 +396,7 @@ ipcMain.handle('open-customer-display', async (event, displayIndex = 1) => {
   });
 
   const cfdUrl = isDev
-    ? 'http://localhost:5173/customer-display'
+    ? `${DEV_SERVER_URL}/customer-display`
     : `file://${path.join(__dirname, 'dist', 'index.html')}#/customer-display`;
 
   await customerDisplayWindow.loadURL(cfdUrl);
@@ -288,9 +438,10 @@ ipcMain.handle('print-to-pdf', async (event, data) => {
   });
 
   try {
+    const encodedPayload = encodeURIComponent(JSON.stringify(data));
     const invoiceUrl = isDev
-      ? 'http://localhost:5173?invoice=true'
-      : `file://${path.join(__dirname, 'dist', 'index.html')}?invoice=true`;
+      ? `${DEV_SERVER_URL}?invoice=true&data=${encodedPayload}`
+      : `file://${path.join(__dirname, 'dist', 'index.html')}?invoice=true&data=${encodedPayload}`;
     
     await pdfWindow.loadURL(invoiceUrl);
     const pdfWindowId = pdfWindow.webContents.id;
@@ -314,9 +465,6 @@ ipcMain.handle('print-to-pdf', async (event, data) => {
       ipcMain.on('invoice-ready', onReady);
     });
 
-    if (!pdfWindow.isDestroyed()) {
-        pdfWindow.webContents.send('invoice-data', data);
-    }
     await readyPromise;
     if (pdfWindow.isDestroyed()) {
         throw new Error('PDF Window was closed prematurely');

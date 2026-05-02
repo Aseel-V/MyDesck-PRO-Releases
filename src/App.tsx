@@ -8,6 +8,7 @@ import SplashScreen from './components/SplashScreen';
 import LandingPage from './pages/LandingPage';
 import ScrollToTop from './components/ScrollToTop';
 
+import { Toaster } from 'sonner';
 import InvoiceTemplate from './components/invoice/InvoiceTemplate';
 
 import { Routes, Route, Navigate } from 'react-router-dom';
@@ -113,6 +114,7 @@ function App() {
   return (
     <HelmetProvider>
       <ScrollToTop />
+      <Toaster richColors position="top-center" closeButton />
       {updateState.status !== 'idle' && (
         <UpdateModal 
           status={updateState.status}

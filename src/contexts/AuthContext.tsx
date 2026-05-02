@@ -3,12 +3,15 @@ import { User } from '@supabase/supabase-js';
 import { supabase, BusinessProfile } from '../lib/supabase';
 import type { Database } from '../types/supabase';
 import { RestaurantStaff } from '../types/restaurant';
+import { safeImageSrc } from '../lib/safeUrl';
 
 const CACHE_KEY_BUSINESS_PROFILE = 'app_business_profile';
 const CACHE_KEY_USER_PROFILE = 'app_user_profile';
 const CACHE_KEY_STAFF_USER = 'app_staff_user';
 
 type UserProfile = Database['public']['Tables']['user_profiles']['Row'];
+type PreferredCurrency = BusinessProfile['preferred_currency'];
+type PreferredLanguage = BusinessProfile['preferred_language'];
 
 interface AuthContextType {
   user: User | null;
@@ -22,8 +25,8 @@ interface AuthContextType {
     password: string,
     businessName: string,
     logoUrl?: string,
-    currency?: string,
-    language?: string
+    currency?: PreferredCurrency,
+    language?: PreferredLanguage
   ) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signInStaff: (email: string, password: string) => Promise<void>;
@@ -34,6 +37,28 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const sanitizeBusinessProfile = (profile: BusinessProfile | null): BusinessProfile | null => {
+  if (!profile) return null;
+
+  return {
+    ...profile,
+    logo_url: safeImageSrc(profile.logo_url),
+    signature_url: safeImageSrc(profile.signature_url),
+  };
+};
+
+const sanitizeBusinessProfileUpdates = (
+  updates: Partial<BusinessProfile>
+): Partial<BusinessProfile> => ({
+  ...updates,
+  ...(Object.prototype.hasOwnProperty.call(updates, 'logo_url')
+    ? { logo_url: safeImageSrc(updates.logo_url) }
+    : {}),
+  ...(Object.prototype.hasOwnProperty.call(updates, 'signature_url')
+    ? { signature_url: safeImageSrc(updates.signature_url) }
+    : {}),
+});
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<BusinessProfile | null>(null);
@@ -43,6 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
   // Track current user ID to avoid redundant fetches
   const lastUserIdRef = useRef<string | null>(null);
+  const refreshInFlightRef = useRef<{ userId: string; promise: Promise<void> } | null>(null);
 
   // Helper: Load from cache safely
   const loadFromCache = useCallback(() => {
@@ -51,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const cachedUser = localStorage.getItem(CACHE_KEY_USER_PROFILE);
       const cachedStaff = localStorage.getItem(CACHE_KEY_STAFF_USER);
       
-      if (cachedBusiness) setProfile(JSON.parse(cachedBusiness));
+      if (cachedBusiness) setProfile(sanitizeBusinessProfile(JSON.parse(cachedBusiness)));
       if (cachedUser) setUserProfile(JSON.parse(cachedUser));
       if (cachedStaff) setStaffUser(JSON.parse(cachedStaff));
     } catch (e) {
@@ -80,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('user_id', userId)
         .maybeSingle();
       if (error) throw error;
-      return data as BusinessProfile | null;
+      return sanitizeBusinessProfile(data as BusinessProfile | null);
     } catch (e) {
       console.error('Error fetching profile:', e);
       return null;
@@ -104,36 +130,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // دالة لتحديث البيانات وحفظها في الكاش (تعمل في الخلفية)
   const refreshUserData = useCallback(async (userId: string) => {
-    console.log('[Auth] Refreshing data in background...');
-    const [profileData, userProfileData] = await Promise.all([
-      fetchWithTimeoutOrNull(fetchProfile(userId)),
-      fetchWithTimeoutOrNull(fetchUserProfile(userId)),
-    ]);
-
-    if (profileData) {
-      setProfile(prev => {
-        if (JSON.stringify(prev) !== JSON.stringify(profileData)) {
-          localStorage.setItem(CACHE_KEY_BUSINESS_PROFILE, JSON.stringify(profileData));
-          return profileData;
-        }
-        return prev;
-      });
+    if (refreshInFlightRef.current?.userId === userId) {
+      return refreshInFlightRef.current.promise;
     }
 
-    if (userProfileData) {
-      setUserProfile(prev => {
-        if (JSON.stringify(prev) !== JSON.stringify(userProfileData)) {
-          localStorage.setItem(CACHE_KEY_USER_PROFILE, JSON.stringify(userProfileData));
-          return userProfileData;
-        }
-        return prev;
-      });
+    const refreshPromise = (async () => {
+      console.log('[Auth] Refreshing data in background...');
+      const [profileData, userProfileData] = await Promise.all([
+        fetchWithTimeoutOrNull(fetchProfile(userId)),
+        fetchWithTimeoutOrNull(fetchUserProfile(userId)),
+      ]);
 
-      if (userProfileData.is_suspended) {
-        await supabase.auth.signOut();
-        window.location.reload();
+      if (profileData) {
+        setProfile((prev: BusinessProfile | null) => {
+          if (JSON.stringify(prev) !== JSON.stringify(profileData)) {
+            localStorage.setItem(CACHE_KEY_BUSINESS_PROFILE, JSON.stringify(profileData));
+            return profileData;
+          }
+          return prev;
+        });
       }
-    }
+
+      if (userProfileData) {
+        setUserProfile((prev: UserProfile | null) => {
+          if (JSON.stringify(prev) !== JSON.stringify(userProfileData)) {
+            localStorage.setItem(CACHE_KEY_USER_PROFILE, JSON.stringify(userProfileData));
+            return userProfileData;
+          }
+          return prev;
+        });
+
+        if (userProfileData.is_suspended) {
+          await supabase.auth.signOut();
+          window.location.reload();
+        }
+      }
+    })().finally(() => {
+      if (refreshInFlightRef.current?.promise === refreshPromise) {
+        refreshInFlightRef.current = null;
+      }
+    });
+
+    refreshInFlightRef.current = { userId, promise: refreshPromise };
+    return refreshPromise;
   }, [fetchProfile, fetchUserProfile]);
 
   useEffect(() => {
@@ -247,7 +286,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [loadFromCache, refreshUserData]);
 
   const signUp = useCallback(async (
-    email: string, password: string, businessName: string, logoUrl?: string, currency = 'USD', language = 'en'
+    email: string,
+    password: string,
+    businessName: string,
+    logoUrl?: string,
+    currency: PreferredCurrency = 'USD',
+    language: PreferredLanguage = 'en'
   ) => {
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) throw error;
@@ -256,12 +300,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await supabase.from('business_profiles').insert([{
         user_id: data.user.id,
         business_name: businessName,
-        logo_url: logoUrl || null,
-        preferred_currency: currency as 'USD' | 'EUR' | 'ILS',
-        preferred_language: language as 'en' | 'ar' | 'he'
+        logo_url: safeImageSrc(logoUrl),
+        preferred_currency: currency || 'USD',
+        preferred_language: language || 'en'
       }]);
       await supabase.from('user_profiles').insert([{
-        user_id: data.user.id, full_name: businessName || email, role: 'user', is_suspended: false
+        user_id: data.user.id, 
+        full_name: businessName || email, 
+        role: 'user' as const, 
+        is_suspended: false
       }]);
       // Refresh immediately
       await refreshUserData(data.user.id);
@@ -298,7 +345,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Set persistence
     const staff = result.staff;
-    const businessProfile = result.business_profile;
+    const businessProfile = sanitizeBusinessProfile(result.business_profile);
 
     setStaffUser(staff);
     setProfile(businessProfile); // Reuse profile for business settings context
@@ -324,9 +371,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem(CACHE_KEY_BUSINESS_PROFILE);
       localStorage.removeItem(CACHE_KEY_USER_PROFILE);
       localStorage.removeItem(CACHE_KEY_STAFF_USER);
+      localStorage.removeItem('new_trip_draft');
       // Clean trip cache
       Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('elite_travels_')) localStorage.removeItem(key);
+        if (key.startsWith('elite_travels_') || key.startsWith('new_trip_draft:')) {
+          localStorage.removeItem(key);
+        }
       });
     }
   }, []);
@@ -335,15 +385,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) throw new Error('No user');
     
     // We no longer filter out these fields as they are now in the schema
+    const sanitizedUpdates = sanitizeBusinessProfileUpdates(updates);
     const { error } = await supabase.from('business_profiles').update({ 
-      ...updates, 
+      ...sanitizedUpdates,
       updated_at: new Date().toISOString() 
     }).eq('user_id', user.id);
     
     if (error) throw error;
     
     // We update the local state manually with ALL fields so the UI reflects the change (until refresh)
-    setProfile(prev => prev ? ({ ...prev, ...updates }) : null);
+    setProfile((prev: BusinessProfile | null) => prev ? ({ ...prev, ...sanitizedUpdates }) : null);
     
     // await refreshUserData(user.id); // This would overwrite our optimistic update if DB doesn't have fields
   }, [user]);

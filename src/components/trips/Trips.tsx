@@ -23,10 +23,15 @@ import TripFilters from './TripFilters';
 import PDFExportModal from './PDFExportModal';
 import ViewTripModal from './ViewTripModal';
 import JSZip from 'jszip';
-import { generateTripInvoice } from '../../lib/pdfGenerator';
-import { formatDate } from '../../lib/utils';
+import { generateMultipleTripsPDF, generateTripInvoice } from '../../lib/pdfGenerator';
+import { formatDate, sanitizeFilename } from '../../lib/utils';
 import { Skeleton } from '../ui/Skeleton';
 import { AnimatePresence, motion } from 'framer-motion';
+import {
+  getEffectiveTripDate,
+  isTripIncludedInDashboardStats,
+  isTripVisibleInTripList,
+} from '../../lib/tripStatus';
 
 interface TripsProps {
   filters: {
@@ -51,7 +56,7 @@ interface TripsProps {
 }
 
 export default function Trips({ filters, onFiltersChange, initialViewTrip, onEditTrip, onCreateTrip }: TripsProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { user, profile, userProfile } = useAuth();
   const { convert, format, currency, isLoading: isCurrencyLoading } = useCurrency();
   const { deleteTrip, toggleExport } = useTripMutations();
@@ -65,6 +70,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
   // Filter setters
   const setSearchTerm = (val: string) => onFiltersChange(prev => ({ ...prev, search: val }));
   const setPaymentStatusFilter = (val: string) => onFiltersChange(prev => ({ ...prev, paymentStatus: val }));
+  const setTripStatusFilter = (val: string) => onFiltersChange(prev => ({ ...prev, tripStatus: val }));
   const setYearFilter = (val: string) => onFiltersChange(prev => ({ ...prev, year: val }));
   const setMonthFilter = (val: string) => onFiltersChange(prev => ({ ...prev, month: val }));
   const setDestinationFilter = (val: string) => onFiltersChange(prev => ({ ...prev, destination: val }));
@@ -117,7 +123,12 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
   });
 
   // 2. جلب الرحلات للسنة المحددة باستخدام get_trips_by_year
-  const { data: { data: rawTrips, count } = { data: [], count: 0 }, isLoading: loading } = useQuery({
+  const {
+    data: { data: rawTrips, count } = { data: [], count: 0 },
+    isLoading: loading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ['trips', user?.id, filters.search, filters.paymentStatus, filters.tripStatus, filters.year],
     queryFn: async () => {
       if (!user?.id) return { data: [], count: 0 };
@@ -143,7 +154,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
     let filtered = rawTrips;
 
     // Filter out archived trips by default unless searching specifically (optional, but strictly hiding for now)
-    filtered = filtered.filter(t => t.status !== 'archived');
+    filtered = filtered.filter(isTripVisibleInTripList);
 
     if (filters.search) {
       const lowerSearch = filters.search.toLowerCase();
@@ -171,7 +182,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
     if (filters.month) {
       filtered = filtered.filter(trip => {
          // Priority: Payment Date -> Start Date
-         const effDate = trip.payment_date || trip.start_date;
+         const effDate = getEffectiveTripDate(trip);
          if (!effDate) return false;
          const d = new Date(effDate);
          const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -216,17 +227,16 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
   const stats = useMemo(() => {
     if (!trips || trips.length === 0) return { totalTrips: 0, totalRevenue: 0, totalProfit: 0, unpaidAmount: 0, upcoming: 0 };
     
-    const totalTrips = count || 0; 
+    const statTrips = trips.filter(isTripIncludedInDashboardStats);
+    const totalTrips = statTrips.length;
     
-    const totalRevenue = trips.reduce((sum, trip) => {
-      if (trip.status === 'cancelled') return sum;
+    const totalRevenue = statTrips.reduce((sum, trip) => {
       const tripCurrency = trip.currency || currency; 
       const price = trip.sale_price || 0;
       return sum + convert(price, tripCurrency, currency);
     }, 0);
 
-    const totalProfit = trips.reduce((sum, trip) => {
-       if (trip.status === 'cancelled') return sum;
+    const totalProfit = statTrips.reduce((sum, trip) => {
        const tripCurrency = trip.currency || currency;
        const profit = typeof trip.profit === 'number'
           ? trip.profit
@@ -234,8 +244,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
        return sum + convert(profit, tripCurrency, currency);
     }, 0);
 
-    const unpaidAmount = trips.reduce((sum, trip) => {
-       if (trip.status === 'cancelled') return sum;
+    const unpaidAmount = statTrips.reduce((sum, trip) => {
        const tripCurrency = trip.currency || currency;
        const due = (trip.sale_price || 0) - (trip.amount_paid || 0);
        const positiveDue = due > 0 ? due : 0;
@@ -243,7 +252,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
     }, 0);
 
     const now = new Date();
-    const upcomingTrips = trips.filter((trip) => {
+    const upcomingTrips = statTrips.filter((trip) => {
       if (!trip.start_date) return false;
       const start = new Date(trip.start_date);
       return start >= now;
@@ -256,7 +265,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
       unpaidAmount,
       upcoming: upcomingTrips,
     };
-  }, [trips, count, convert, currency]);
+  }, [trips, convert, currency]);
 
   const handleEditTrip = (trip: Trip) => {
     onEditTrip?.(trip);
@@ -271,48 +280,17 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
   // PDF Export Logic - Opens in new window for print preview
   const handleExportPDF = async () => {
     try {
-        const { jsPDF } = await import('jspdf');
-        const { default: autoTable } = await import('jspdf-autotable');
-        
-        const doc = new jsPDF();
-        
-        // Title
-        doc.setFontSize(18);
-        doc.text(`Financial Summary - ${filters.month || 'All Months'} ${filters.year || new Date().getFullYear()}`, 14, 22);
-        
-        // Table Data
-        const tableData = filteredTrips.map(t => {
-            const sale = t.sale_price || 0;
-            const cost = t.wholesale_cost || 0;
-            const profit = sale - cost;
-            // Convert everything to Main Currency (View) for consistency in PDF
-            const tripCurr = t.currency || 'USD';
-            
-            return [
-                t.destination,
-                t.client_name,
-                format(convert(sale, tripCurr, currency), currency),
-                format(convert(cost, tripCurr, currency), currency),
-                format(convert(profit, tripCurr, currency), currency),
-                t.payment_status
-            ];
+        if (!filteredTrips.length || !profile || !user) return;
+
+        const pdfBytes = await generateMultipleTripsPDF({
+          profile,
+          trips: filteredTrips,
+          userFullName: userProfile?.full_name || profile.business_name || '',
+          phoneNumber: userProfile?.phone_number || profile.phone_number || '',
+          language: (language as 'en' | 'ar' | 'he') || 'en',
         });
 
-        // Generate Table
-        autoTable(doc, {
-            head: [['Destination', 'Client', 'Sale', 'Cost', 'Profit', 'Status']],
-            body: tableData,
-            startY: 30,
-        });
-
-        // Footer / Totals
-        const finalY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
-        doc.setFontSize(10);
-        doc.text(`Total Revenue: ${format(stats.totalRevenue, currency)}`, 14, finalY);
-        doc.text(`Total Profit: ${format(stats.totalProfit, currency)}`, 14, finalY + 6);
-        
-        // Open PDF in new window for print preview
-        const pdfBlob = doc.output('blob');
+        const pdfBlob = new Blob([pdfBytes as unknown as BlobPart], { type: 'application/pdf' });
         const pdfUrl = URL.createObjectURL(pdfBlob);
         const printWindow = window.open(pdfUrl, '_blank');
         
@@ -349,7 +327,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
               phoneNumber,
               language
             );
-            const fileName = `Invoice_${trip.client_name}_${trip.destination}.pdf`;
+            const fileName = `${sanitizeFilename(`Invoice_${trip.client_name}_${trip.destination}`, `trip_${trip.id.slice(0, 8)}`)}.pdf`;
             folder.file(fileName, pdfBytes);
           } catch (e) {
             console.error(`Failed to generate PDF for trip ${trip.id}`, e);
@@ -573,6 +551,8 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
           onSearchChange={setSearchTerm}
           paymentStatusFilter={filters.paymentStatus}
           onPaymentStatusFilterChange={setPaymentStatusFilter}
+          tripStatusFilter={filters.tripStatus}
+          onTripStatusFilterChange={setTripStatusFilter}
           yearFilter={filters.year}
           onYearFilterChange={setYearFilter}
           monthFilter={filters.month}
@@ -586,7 +566,45 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
 
       {/* List / empty state */}
       <div className="min-h-[400px]">
+      {error && (
+        <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-700 dark:border-rose-900/40 dark:bg-rose-950/20 dark:text-rose-300">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="font-semibold">Failed to load trips</p>
+              <p className="text-sm opacity-80">Please retry. This is a loading problem, not an empty result.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void refetch()}
+              className="px-4 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-500 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      )}
       {filteredTrips.length === 0 ? (
+        error ? (
+          <div className="rounded-2xl bg-white border border-slate-200/90 p-12 text-center shadow-sm dark:bg-slate-950/95 dark:border-slate-800/90 dark:shadow-lg dark:shadow-slate-950/70">
+            <div className="flex justify-center mb-4">
+              <div className="bg-rose-100 border border-rose-200/80 p-6 rounded-full dark:bg-rose-950/30 dark:border-rose-900/50">
+                <AlertCircle className="w-12 h-12 text-rose-500 dark:text-rose-400" />
+              </div>
+            </div>
+            <h3 className="text-xl font-semibold text-slate-900 mb-2 dark:text-slate-100">
+              Failed to load trips
+            </h3>
+            <p className="text-slate-500 mb-6 dark:text-slate-300">
+              Please retry. This is a loading problem, not an empty result.
+            </p>
+            <button
+              onClick={() => void refetch()}
+              className={primaryActionBtn}
+            >
+              <span>Retry</span>
+            </button>
+          </div>
+        ) : (
         <div className="rounded-2xl bg-white border border-slate-200/90 p-12 text-center shadow-sm dark:bg-slate-950/95 dark:border-slate-800/90 dark:shadow-lg dark:shadow-slate-950/70">
           <div className="flex justify-center mb-4">
             <div className="bg-slate-100 border border-slate-200/80 p-6 rounded-full dark:bg-slate-900/80 dark:border-slate-700/80">
@@ -605,6 +623,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
             <span>{t('trips.newTrip')}</span>
           </button>
         </div>
+        )
       ) : viewMode === 'grid' ? (
         <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <AnimatePresence mode="popLayout">
@@ -708,7 +727,11 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
 
       {
         viewTrip && (
-          <ViewTripModal trip={viewTrip} onClose={() => setViewTrip(undefined)} />
+          <ViewTripModal
+            trip={viewTrip}
+            onClose={() => setViewTrip(undefined)}
+            onUpdate={() => void refetch()}
+          />
         )
       }
 

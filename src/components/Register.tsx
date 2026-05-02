@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { UserPlus } from 'lucide-react';
+import { safeImageSrc } from '../lib/safeUrl';
 
 interface RegisterProps {
   onSwitchToLogin: () => void;
@@ -16,10 +17,11 @@ export default function Register({ onSwitchToLogin, variant = 'full' }: Register
   const [password, setPassword] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
-  const [currency, setCurrency] = useState('USD');
+  const [currency, setCurrency] = useState<'USD' | 'EUR' | 'ILS'>('USD');
   const [language, setLanguage] = useState<'en' | 'ar' | 'he'>('en');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const previewLogoUrl = safeImageSrc(logoUrl);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -162,11 +164,11 @@ export default function Register({ onSwitchToLogin, variant = 'full' }: Register
                   placeholder={t('auth.logoPlaceholder')}
                   className={`${inputClass} placeholder-slate-400 dark:placeholder-slate-500`}
                 />
-                {logoUrl && (
+                {previewLogoUrl && (
                   <div className="mt-3 flex items-center gap-3">
                     <div className="h-12 w-12 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden dark:bg-slate-950/80 dark:border-slate-700">
                       <img
-                        src={logoUrl}
+                        src={previewLogoUrl}
                         alt="Logo preview"
                         className="h-10 w-10 object-contain"
                         onError={(e) => {
@@ -189,7 +191,7 @@ export default function Register({ onSwitchToLogin, variant = 'full' }: Register
                   </label>
                   <select
                     value={currency}
-                    onChange={(e) => setCurrency(e.target.value)}
+                    onChange={(e) => setCurrency(e.target.value as 'USD' | 'EUR' | 'ILS')}
                     className={inputClass}
                   >
                     <option value="USD">{t('currencies.USD')}</option>

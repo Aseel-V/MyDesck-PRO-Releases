@@ -20,6 +20,7 @@ import RestaurantSettings from './restaurant/RestaurantSettings';
 import { PostgrestError } from '@supabase/supabase-js';
 import { resizeImage } from '../lib/imageUtils';
 import { CurrencyService } from '../lib/currency';
+import { safeImageSrc } from '../lib/safeUrl';
 
 type NoticeType = 'success' | 'error' | 'info';
 
@@ -52,6 +53,8 @@ export default function Settings() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [refreshingRates, setRefreshingRates] = useState(false);
   const noticeTimeoutRef = useRef<number | null>(null);
+  const previewLogoUrl = safeImageSrc(logoUrl || profile?.logo_url);
+  const previewSignatureUrl = safeImageSrc(signatureUrl);
 
   // Simple toast helper
   const showNotice = (type: NoticeType, message: string, timeout = 3500) => {
@@ -157,12 +160,12 @@ export default function Settings() {
     try {
       await updateProfile({
         business_name: businessName,
-        logo_url: logoUrl || null,
+        logo_url: safeImageSrc(logoUrl),
         preferred_currency: currency,
         preferred_language: language,
         business_registration_number: businessRegNumber || null,
         address: businessAddress || null,
-        signature_url: signatureUrl || null,
+        signature_url: safeImageSrc(signatureUrl),
       });
 
       setLanguage(language);
@@ -474,9 +477,9 @@ export default function Settings() {
           </div>
           <div className="flex flex-col items-start md:items-end gap-2 text-xs">
             <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-900/80">
-              {logoUrl || profile?.logo_url ? (
+              {previewLogoUrl ? (
                 <img
-                  src={logoUrl || profile?.logo_url || ''}
+                  src={previewLogoUrl}
                   alt="Business Logo"
                   className="w-5 h-5 object-contain rounded-md"
                 />
@@ -683,9 +686,9 @@ export default function Settings() {
                           disabled={uploading}
                         />
                       </div>
-                      {signatureUrl && (
+                      {previewSignatureUrl && (
                         <div className="p-2 bg-white rounded-lg">
-                          <img src={signatureUrl} alt={t('settings.business.signaturePreview')} className="h-12 object-contain" />
+                          <img src={previewSignatureUrl} alt={t('settings.business.signaturePreview')} className="h-12 object-contain" />
                         </div>
                       )}
                     </div>
@@ -717,9 +720,9 @@ export default function Settings() {
                           disabled={uploading}
                         />
                       </div>
-                      {logoUrl && (
+                      {previewLogoUrl && (
                         <img
-                          src={logoUrl}
+                          src={previewLogoUrl}
                           alt={t('settings.business.logoPreview')}
                           className="h-12 w-12 object-contain rounded-lg border border-slate-800 bg-slate-900/60"
                         />

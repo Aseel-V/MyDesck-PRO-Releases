@@ -11,6 +11,11 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'restaurant_staff_email_key') THEN
         ALTER TABLE restaurant_staff ADD CONSTRAINT restaurant_staff_email_key UNIQUE (email);
     END IF;
+
+    -- Enable pgcrypto for password hashing
+    IF NOT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pgcrypto') THEN
+        CREATE EXTENSION pgcrypto;
+    END IF;
 END $$;
 
 -- Drop existing function if exists to update it
@@ -31,7 +36,7 @@ BEGIN
     SELECT * INTO v_staff
     FROM restaurant_staff
     WHERE email = p_email 
-    AND password = p_password
+    AND password = crypt(p_password, password) -- Verify hashed password
     AND is_active = true;
 
     IF v_staff IS NULL THEN
@@ -44,9 +49,20 @@ BEGIN
     WHERE user_id = v_staff.business_id;
 
     -- Return success with staff and business info
+    -- Remove password from staff object before returning
     RETURN json_build_object(
         'success', true,
-        'staff', row_to_json(v_staff),
+        'staff', json_build_object(
+            'id', v_staff.id,
+            'business_id', v_staff.business_id,
+            'full_name', v_staff.full_name,
+            'role', v_staff.role,
+            'restaurant_role', v_staff.restaurant_role,
+            'email', v_staff.email,
+            'pin_code', v_staff.pin_code,
+            'is_active', v_staff.is_active,
+            'hourly_rate', v_staff.hourly_rate
+        ),
         'business_id', v_staff.business_id,
         'business_profile', row_to_json(v_business_profile)
     );
@@ -100,7 +116,7 @@ BEGIN
         'Kitchen',
         'kitchen',
         v_kitchen_email,
-        v_kitchen_pass,
+        crypt(v_kitchen_pass, gen_salt('bf')), -- Hash password
         '0000',
         true,
         0
@@ -124,7 +140,7 @@ BEGIN
         'Waiter',
         'waiter',
         v_waiter_email,
-        v_waiter_pass,
+        crypt(v_waiter_pass, gen_salt('bf')), -- Hash password
         '1111',
         true,
         0

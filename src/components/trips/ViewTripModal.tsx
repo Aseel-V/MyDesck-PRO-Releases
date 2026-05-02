@@ -15,18 +15,11 @@ import {
 import { formatDate } from '../../lib/utils';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
-import { Trip, RoomConfiguration } from '../../types/trip';
-import { supabase } from '../../lib/supabase'; // Import supabase
+import { Trip } from '../../types/trip';
 import { toast } from 'sonner';
-
-// Helper to format RoomConfiguration object for display
-const formatRoomType = (roomType: RoomConfiguration | undefined): string => {
-  if (!roomType || typeof roomType !== 'object') return 'No Room Config';
-  const parts = Object.entries(roomType)
-    .filter(([, count]) => count && count > 0)
-    .map(([type, count]) => `${type} x${count}`);
-  return parts.length > 0 ? parts.join(', ') : 'No Room Config';
-};
+import { useTripMutations } from '../../hooks/useTripMutations';
+import { formatRoomConfiguration } from '../../lib/tripRoom';
+import { getTripAttachmentUrl } from '../../lib/tripAttachments';
 
 interface ViewTripModalProps {
   trip: Trip;
@@ -38,23 +31,29 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
   const { t } = useLanguage();
   const { format } = useCurrency();
   const [trip] = useState(initialTrip);
-  const [updating, setUpdating] = useState(false);
+  const { archiveTrip, isArchiving } = useTripMutations();
 
 
   const handleArchive = async () => {
       if(!confirm('Are you sure you want to archive this trip? It will be hidden from the main list.')) return;
-      
-      setUpdating(true);
-      const { error } = await supabase.from('trips').update({ status: 'archived' }).eq('id', trip.id);
-      
-      if (error) {
-          toast.error('Failed to archive trip');
-          setUpdating(false);
-      } else {
-          toast.success('Trip archived');
+
+      try {
+          await archiveTrip(trip.id);
           onClose();
           if(onUpdate) onUpdate();
+      } catch (error) {
+          console.error('Failed to archive trip:', error);
       }
+  };
+
+  const handleOpenAttachment = async (file: Trip['attachments'][number]) => {
+    try {
+      const url = await getTripAttachmentUrl(file);
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } catch (error) {
+      console.error('Failed to open attachment:', error);
+      toast.error('Failed to open attachment');
+    }
   };
 
   // ... (calcs)
@@ -94,13 +93,13 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
             </div>
             <div className="flex items-center gap-2">
                 {trip.status !== 'archived' && (
-                    <button
+                <button
                         onClick={handleArchive}
-                        disabled={updating}
+                        disabled={isArchiving}
                         className="p-2 rounded-full text-slate-400 hover:bg-amber-50 hover:text-amber-600 transition-colors"
                         title="Archive Trip (Soft Delete)"
                     >
-                        {updating ? <Loader2 className="w-5 h-5 animate-spin"/> : <Archive className="w-5 h-5" />}
+                        {isArchiving ? <Loader2 className="w-5 h-5 animate-spin"/> : <Archive className="w-5 h-5" />}
                     </button>
                 )}
                 <button
@@ -135,7 +134,7 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
                 <span className="text-xs uppercase tracking-wider font-semibold">{t('trips.accommodation')}</span>
               </div>
               <p className="text-slate-900 font-medium dark:text-slate-100">
-                {formatRoomType(trip.room_type)}
+                {formatRoomConfiguration(trip.room_type, 'No Room Config')}
               </p>
               <p className="text-slate-500 text-sm">
                 {trip.board_basis || 'No Board Basis'}
@@ -283,11 +282,10 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {trip.attachments.map((file, idx) => (
-                    <a 
+                    <button 
                       key={idx}
-                      href={file.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      type="button"
+                      onClick={() => void handleOpenAttachment(file)}
                       className="flex items-center gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-sky-500/30 hover:shadow-lg hover:shadow-sky-500/10 transition-all group dark:border-slate-800 dark:bg-slate-900/50 dark:hover:bg-slate-800"
                     >
                       <div className="p-2.5 rounded-lg bg-slate-200 group-hover:bg-sky-500/20 group-hover:text-sky-600 text-slate-500 transition-colors dark:bg-slate-800 dark:group-hover:text-sky-400 dark:text-slate-400">
@@ -297,7 +295,7 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
                         <p className="text-sm font-medium text-slate-700 truncate group-hover:text-sky-600 dark:text-slate-200 dark:group-hover:text-sky-300">{file.file_name}</p>
                         <p className="text-xs text-slate-500 uppercase tracking-wider">{file.type}</p>
                       </div>
-                    </a>
+                    </button>
                   ))}
                 </div>
              </section>

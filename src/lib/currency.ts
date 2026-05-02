@@ -20,6 +20,28 @@ const BASE_URL = 'https://api.frankfurter.app';
 const CACHE_KEY = 'mydesck_currency_cache';
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
+/**
+ * Fetches live exchange rates.
+ * - In Electron: routes through the main process via IPC to bypass CORS.
+ * - In browser: uses fetch() directly.
+ */
+async function fetchRatesFromAPI(base: string): Promise<ExchangeRates> {
+    // Electron context: use IPC bridge
+    if (typeof window !== 'undefined' && window.electronAPI?.fetchCurrencyRates) {
+        const result = await window.electronAPI.fetchCurrencyRates(base);
+        if (!result.success || !result.data) {
+            throw new Error(result.error || 'IPC fetch failed');
+        }
+        return result.data;
+    }
+    // Browser / web context: direct fetch
+    const response = await fetch(`${BASE_URL}/latest?from=${base}`, {
+        signal: AbortSignal.timeout(8000),
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return response.json() as Promise<ExchangeRates>;
+}
+
 export const CurrencyService = {
     /**
      * Get cached rates or fetch from API.
@@ -47,10 +69,7 @@ export const CurrencyService = {
 
             // 2. Try to fetch fresh rates
             try {
-                const response = await fetch(`${BASE_URL}/latest?from=${base}`);
-                if (!response.ok) throw new Error('API request failed');
-                
-                const rates: ExchangeRates = await response.json();
+                const rates: ExchangeRates = await fetchRatesFromAPI(base);
                 CurrencyService.saveCache(base, rates);
                 console.log(`[Currency] Fetched fresh rates for ${base}`);
                 
@@ -79,14 +98,7 @@ export const CurrencyService = {
      */
     refreshRates: async (base: string = 'USD'): Promise<{ rates: ExchangeRates | null; isStale: boolean; lastUpdated: number | null }> => {
         try {
-            const response = await fetch(`${BASE_URL}/latest?from=${base}`, {
-                cache: 'no-cache',
-                signal: AbortSignal.timeout(5000),
-            });
-
-            if (!response.ok) throw new Error('Failed to fetch rates');
-
-            const rates: ExchangeRates = await response.json();
+            const rates: ExchangeRates = await fetchRatesFromAPI(base);
             CurrencyService.saveCache(base, rates);
             console.log('[Currency] Rates refreshed successfully');
             return { rates, isStale: false, lastUpdated: Date.now() };
@@ -122,21 +134,28 @@ export const CurrencyService = {
     convert: (amount: number, from: string, to: string, rates: Record<string, number>): number => {
         if (from === to) return amount;
         
-        // Ensure rates exist (1 for base currency if strictly base=USD, but technically rates.USD might be missing if source excludes it, though Frankfurter usually includes it? No, Frankfurter API excludes self)
-        // Check strict existence or handle base
         const fromRate = from === 'USD' ? 1 : rates[from];
         const toRate = to === 'USD' ? 1 : rates[to];
 
         if (fromRate === undefined || toRate === undefined) {
              console.warn(`[Currency] Missing rate for conversion: ${from} -> ${to}`);
-             // Return original amount to avoid returning 0 or NaN which ruins data display.
-             // Or throw? Requirement says "Show rates unavailable state". 
-             // Ideally we shouldn't call this if rates missing.
-             // Let's return amount but the caller should check `rates` existence.
              return amount; 
         }
 
         return amount * (toRate / fromRate);
+    },
+
+    /**
+     * Get currency symbol for a code
+     */
+    getSymbol: (code: string): string => {
+        switch (code) {
+            case 'ILS': return '₪';
+            case 'USD': return '$';
+            case 'EUR': return '€';
+            case 'GBP': return '£';
+            default: return '$';
+        }
     },
     
     // Explicitly expose last updated for UI

@@ -45,7 +45,7 @@ interface UserProfile {
   created_at: string;
   business_name?: string | null;
   business_type?: string | null;
-  subscription_status?: 'trial' | 'active' | 'past_due';
+  subscription_status?: 'trial' | 'active' | 'expired' | 'suspended' | 'past_due';
   trial_start_date?: string;
   is_suspended?: boolean;
 }
@@ -258,7 +258,6 @@ const AnalyticsContent = ({ trips, onOpenTripsWithFilter }: AnalyticsProps) => {
 
   const fetchYearlyStats = async () => {
     try {
-      // @ts-expect-error: RPC function not yet in types
       const { data, error } = await supabase.rpc('get_yearly_stats_overview');
       if (error) throw error;
 

@@ -108,6 +108,7 @@ export default function TripCard({
         day: 'numeric', month: 'short', year: 'numeric'
     });
   };
+  const statusLabel = trip.status === 'archived' ? 'Archived' : t(`trips.statuses.${trip.status}`);
 
   return (
     <motion.div
@@ -160,7 +161,7 @@ export default function TripCard({
                             trip.status === 'completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800' :
                             'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400'
                         )}>
-                            {t(`trips.statuses.${trip.status}`)}
+                            {statusLabel}
                         </span>
                     </div>
                     
