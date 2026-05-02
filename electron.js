@@ -101,9 +101,11 @@ function createWindow() {
       contextIsolation: true,
       enableRemoteModule: false,
       preload: path.join(__dirname, 'preload.cjs'),
-      devTools: isDev
+      devTools: true // Enable DevTools even in production for easier debugging
     },
-    icon: path.join(__dirname, 'assets/app-icon.png'),
+    icon: fs.existsSync(path.join(__dirname, 'assets/app-icon.png')) 
+      ? path.join(__dirname, 'assets/app-icon.png')
+      : path.join(__dirname, 'app-icon.png'), // Fallback if flattened
     show: false,
   });
 
@@ -114,11 +116,19 @@ function createWindow() {
       mainWindow.webContents.openDevTools();
     }
   } else {
-    // CRITICAL FIX: Robust production loading
-    const indexHtml = path.join(__dirname, 'dist', 'index.html');
-    mainWindow.loadFile(indexHtml);
+    // Robust production loading: Check both dist/index.html and root index.html
+    const distPath = path.join(__dirname, 'dist', 'index.html');
+    const rootPath = path.join(__dirname, 'index.html');
     
-    // Optional: open devtools also in production to debug if needed
+    if (fs.existsSync(distPath)) {
+      mainWindow.loadFile(distPath);
+    } else if (fs.existsSync(rootPath)) {
+      mainWindow.loadFile(rootPath);
+    } else {
+      console.error('Could not find index.html in dist or root!');
+    }
+    
+    // Auto-open devtools in production if needed for debugging
     // mainWindow.webContents.openDevTools({ mode: 'detach' });
   }
 
@@ -395,9 +405,13 @@ ipcMain.handle('open-customer-display', async (event, displayIndex = 1) => {
     },
   });
 
+  const distPath = path.join(__dirname, 'dist', 'index.html');
+  const rootPath = path.join(__dirname, 'index.html');
+  const actualPath = fs.existsSync(distPath) ? distPath : rootPath;
+
   const cfdUrl = isDev
     ? `${DEV_SERVER_URL}/customer-display`
-    : `file://${path.join(__dirname, 'dist', 'index.html')}#/customer-display`;
+    : `file:///${actualPath.replace(/\\/g, '/')}#/customer-display`;
 
   await customerDisplayWindow.loadURL(cfdUrl);
   
@@ -424,10 +438,10 @@ ipcMain.on('update-customer-display', (event, data) => {
   }
 });
 
+
 // Handle PDF generation
 ipcMain.handle('print-to-pdf', async (event, data) => {
   const pdfWindow = new BrowserWindow({
-    width: 800,
     height: 600,
     show: false,
     webPreferences: {

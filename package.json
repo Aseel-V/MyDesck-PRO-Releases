@@ -18,11 +18,10 @@
       "output": "release"
     },
     "files": [
-      "dist/**/*",
+      "dist",
       "electron.js",
       "preload.cjs",
-      "assets/**/*",
-      "node_modules/**/*"
+      "assets"
     ],
     "win": {
       "target": [
