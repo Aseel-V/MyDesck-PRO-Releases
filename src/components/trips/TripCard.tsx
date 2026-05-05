@@ -16,6 +16,12 @@ import { useCurrency } from '../../contexts/CurrencyContext';
 import { Trip } from '../../types/trip';
 import { motion, AnimatePresence } from 'framer-motion';
 import { twMerge } from 'tailwind-merge';
+import {
+  getPaymentStatusDescription,
+  getPaymentStatusLabel,
+  getTripStatusDescription,
+  getTripStatusLabel,
+} from '../../lib/tripStatus';
 
 interface TripCardProps {
   trip: Trip;
@@ -108,7 +114,15 @@ export default function TripCard({
         day: 'numeric', month: 'short', year: 'numeric'
     });
   };
-  const statusLabel = trip.status === 'archived' ? 'Archived' : t(`trips.statuses.${trip.status}`);
+
+  const handleCardKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleCardClick();
+    }
+  };
+  const statusLabel = getTripStatusLabel(trip.status, t);
+  const paymentStatusLabel = getPaymentStatusLabel(trip.payment_status, t);
 
   return (
     <motion.div
@@ -119,8 +133,11 @@ export default function TripCard({
       transition={{ type: 'spring', stiffness: 300, damping: 20 }}
       className="group relative w-full"
       onClick={handleCardClick}
+      onKeyDown={handleCardKeyDown}
       role="button"
+      tabIndex={0}
       dir={direction}
+      aria-label={`${trip.destination} - ${trip.client_name}`}
     >
       <div className={twMerge(
           "flex flex-col w-full bg-white dark:bg-slate-950 rounded-[2rem] shadow-sm overflow-hidden hover:shadow-xl transition-all duration-300",
@@ -159,11 +176,16 @@ export default function TripCard({
                             "flex-shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border shadow-sm",
                             trip.status === 'active' ? 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-900/20 dark:text-sky-300 dark:border-sky-800' :
                             trip.status === 'completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800' :
-                            'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400'
+                            trip.status === 'cancelled'
+                              ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/20 dark:text-rose-300 dark:border-rose-800'
+                              : 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400'
                         )}>
                             {statusLabel}
                         </span>
                     </div>
+                    <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+                      {getTripStatusDescription(trip.status, t)}
+                    </p>
                     
                     <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-sm mt-1.5">
                          <Users className="w-4 h-4" />
@@ -262,7 +284,7 @@ export default function TripCard({
                      <span className={twMerge("text-xs font-bold", amountDue > 0 ? "text-rose-500" : "text-emerald-600")}>
                         {amountDue > 0 
                             ? `${t('trips.amountDue')}: ${format(amountDue, trip.currency || 'USD')}` 
-                            : t('trips.paymentStatuses.paid')}
+                            : paymentStatusLabel}
                      </span>
                  </div>
                  <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden ring-1 ring-slate-200 dark:ring-slate-700">
@@ -271,6 +293,9 @@ export default function TripCard({
                         style={{ width: `${Math.max(5, paymentPercentage)}%` }}
                     />
                  </div>
+                 <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">
+                    {getPaymentStatusDescription(trip.payment_status, t)}
+                 </p>
             </div>
             
             <AnimatePresence>
@@ -309,6 +334,7 @@ export default function TripCard({
                         : "text-slate-400 hover:bg-sky-50 hover:text-sky-600"
                     )}
                     title={t('trips.exportToPdf')}
+                    aria-label={t('trips.exportToPdf') || 'Export to PDF'}
                 >
                     <FileText className="w-4 h-4" />
                 </button>
@@ -318,6 +344,7 @@ export default function TripCard({
                     onClick={(e) => { stopPropagation(e); onEdit(trip); }}
                     className={twMerge(actionBtnClass, "text-slate-400 hover:bg-amber-50 hover:text-amber-600")}
                     title={t('trips.edit')}
+                    aria-label={t('trips.edit') || 'Edit trip'}
                 >
                     <Edit className="w-4 h-4" />
                 </button>
@@ -334,6 +361,7 @@ export default function TripCard({
                     }}
                     className={twMerge(actionBtnClass, "text-slate-400 hover:bg-emerald-50 hover:text-emerald-600")}
                     title={t('trips.share') || "Share"}
+                    aria-label={t('trips.share') || 'Share trip'}
                 >
                     <Share2 className="w-4 h-4" />
                 </button>
@@ -343,6 +371,7 @@ export default function TripCard({
                      onClick={(e) => { stopPropagation(e); onDelete(trip.id); }}
                      className={twMerge(actionBtnClass, "text-slate-400 hover:bg-rose-50 hover:text-rose-600")}
                      title={t('trips.delete')}
+                     aria-label={t('trips.delete') || 'Delete trip'}
                 >
                     <Trash2 className="w-4 h-4" />
                 </button>

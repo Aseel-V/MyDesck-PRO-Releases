@@ -9,6 +9,15 @@ const { autoUpdater } = require('electron-updater');
 
 const isDev = process.env.NODE_ENV === 'development';
 const DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL || 'http://127.0.0.1:5173';
+const currentAppVersion = app.getVersion();
+let autoUpdaterInitialized = false;
+let updateState = {
+  status: 'idle',
+  currentVersion: currentAppVersion,
+  availableVersion: null,
+  progress: 0,
+  error: null,
+};
 
 // __dirname replacement for ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -51,42 +60,104 @@ if (!isDev) {
   app.commandLine.appendSwitch('disable-logging');
 }
 
-// --- Task 2: Implement Auto-Updater ---
-function setupAutoUpdater() {
-  if (isDev) return;
+function sendUpdateEvent(channel, payload) {
+  BrowserWindow.getAllWindows().forEach((win) => {
+    if (!win.isDestroyed()) {
+      win.webContents.send(channel, payload);
+    }
+  });
+}
 
-  const sendUpdateEvent = (channel, payload) => {
-    BrowserWindow.getAllWindows().forEach((win) => {
-      if (!win.isDestroyed()) {
-        win.webContents.send(channel, payload);
-      }
-    });
+function broadcastUpdateState(partialState) {
+  updateState = {
+    ...updateState,
+    ...partialState,
+    currentVersion: app.getVersion(),
   };
+  sendUpdateEvent('update_state', updateState);
+}
 
+function runUpdateCheck() {
+  if (isDev || !app.isPackaged) return;
+
+  broadcastUpdateState({
+    status: 'checking',
+    error: null,
+    progress: 0,
+    availableVersion: null,
+  });
+
+  autoUpdater.checkForUpdates().catch((err) => {
+    console.error('Auto-updater check failed:', err);
+    const message = err?.message || String(err);
+    broadcastUpdateState({ status: 'error', error: message });
+    sendUpdateEvent('update_error', message);
+  });
+}
+
+function setupAutoUpdater() {
+  if (isDev || !app.isPackaged || autoUpdaterInitialized) return;
+
+  autoUpdaterInitialized = true;
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
 
+  autoUpdater.on('checking-for-update', () => {
+    broadcastUpdateState({
+      status: 'checking',
+      error: null,
+      progress: 0,
+      availableVersion: null,
+    });
+  });
+
   autoUpdater.on('update-available', (info) => {
+    const nextState = {
+      status: 'available',
+      availableVersion: info?.version || null,
+      error: null,
+      progress: 0,
+    };
+    broadcastUpdateState(nextState);
     sendUpdateEvent('update_available', info);
   });
 
+  autoUpdater.on('update-not-available', () => {
+    broadcastUpdateState({
+      status: 'idle',
+      availableVersion: null,
+      error: null,
+      progress: 0,
+    });
+  });
+
   autoUpdater.on('download-progress', (progress) => {
+    broadcastUpdateState({
+      status: 'downloading',
+      progress: progress?.percent || 0,
+      error: null,
+    });
     sendUpdateEvent('update_progress', progress);
   });
 
   autoUpdater.on('update-downloaded', (info) => {
+    broadcastUpdateState({
+      status: 'downloaded',
+      availableVersion: info?.version || updateState.availableVersion,
+      progress: 100,
+      error: null,
+    });
     sendUpdateEvent('update_downloaded', info);
   });
 
   autoUpdater.on('error', (err) => {
     console.error('Auto-updater error:', err);
-    sendUpdateEvent('update_error', err?.message || String(err));
+    const message = err?.message || String(err);
+    broadcastUpdateState({ status: 'error', error: message });
+    sendUpdateEvent('update_error', message);
   });
 
-  autoUpdater.checkForUpdatesAndNotify().catch((err) => {
-    console.error('Auto-updater check failed:', err);
-    sendUpdateEvent('update_error', err?.message || String(err));
-  });
+  runUpdateCheck();
 }
 
 function createWindow() {
@@ -150,24 +221,21 @@ ipcMain.on('quit-app', () => {
 
 // Update IPCs
 ipcMain.on('download_update', () => {
-  if (isDev) return;
+  if (isDev || !app.isPackaged) return;
   autoUpdater.downloadUpdate().catch((err) => {
-    BrowserWindow.getAllWindows().forEach((win) => {
-      win.webContents.send('update_error', err?.message || String(err));
-    });
+    const message = err?.message || String(err);
+    broadcastUpdateState({ status: 'error', error: message });
+    sendUpdateEvent('update_error', message);
   });
 });
 
 ipcMain.on('retry_update', () => {
-  if (isDev) return;
-  autoUpdater.checkForUpdatesAndNotify().catch((err) => {
-    BrowserWindow.getAllWindows().forEach((win) => {
-      win.webContents.send('update_error', err?.message || String(err));
-    });
-  });
+  if (isDev || !app.isPackaged) return;
+  runUpdateCheck();
 });
 
 ipcMain.on('restart_app', () => {
+  if (isDev || !app.isPackaged) return;
   autoUpdater.quitAndInstall();
 });
 
@@ -175,6 +243,12 @@ ipcMain.on('unlock_app', () => {
   // Renderer owns the update modal state; this IPC intentionally acknowledges
   // the emergency skip path exposed by the preload bridge.
 });
+
+ipcMain.handle('get-app-version', () => app.getVersion());
+ipcMain.handle('get-update-state', () => ({
+  ...updateState,
+  currentVersion: app.getVersion(),
+}));
 
 // Fetch currency exchange rates (bypasses CORS via main process)
 ipcMain.handle('fetch-currency-rates', async (event, base = 'USD') => {

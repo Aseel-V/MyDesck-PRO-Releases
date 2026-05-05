@@ -52,6 +52,7 @@ export default function Settings() {
   const [notice, setNotice] = useState<null | { type: NoticeType; message: string }>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [refreshingRates, setRefreshingRates] = useState(false);
+  const [appVersion, setAppVersion] = useState(__APP_VERSION__);
   const noticeTimeoutRef = useRef<number | null>(null);
   const previewLogoUrl = safeImageSrc(logoUrl || profile?.logo_url);
   const previewSignatureUrl = safeImageSrc(signatureUrl);
@@ -98,6 +99,17 @@ export default function Settings() {
   useEffect(() => {
     const updated = CurrencyService.getLastUpdated();
     setLastUpdated(updated);
+  }, []);
+
+  useEffect(() => {
+    const api = window.electronAPI;
+    if (!api) return;
+
+    void api.getAppVersion().then((version) => {
+      if (version) {
+        setAppVersion(version);
+      }
+    });
   }, []);
 
 
@@ -271,7 +283,8 @@ export default function Settings() {
       if (error) throw error;
 
       const exportData = {
-        version: '1.0.0',
+        backupSchemaVersion: '1.0.0',
+        appVersion,
         exportDate: new Date().toISOString(),
         profile,
         userProfile: { full_name: fullName, phone_number: phoneNumber },
@@ -491,6 +504,10 @@ export default function Settings() {
             <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-900/80">
               <span className="text-slate-500">{t('settings.signedInAs')}</span>
               <span className="text-sky-600 font-medium text-[11px] truncate max-w-[180px] dark:text-sky-300">{email}</span>
+            </div>
+            <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-900/80">
+              <span className="text-slate-500">App version</span>
+              <span className="text-slate-900 font-medium text-[11px] dark:text-slate-100">v{appVersion}</span>
             </div>
           </div>
         </div>

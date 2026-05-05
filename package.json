@@ -1,7 +1,7 @@
 {
   "name": "my-desck-pro",
   "private": true,
-  "version": "0.0.38",
+  "version": "0.0.40",
   "description": "Professional Travel Agency Dashboard",
   "repository": "https://github.com/Aseel-V/MyDesck-PRO-Releases",
   "type": "module",
@@ -17,6 +17,7 @@
     "directories": {
       "output": "release"
     },
+    "npmRebuild": false,
     "files": [
       "dist",
       "electron.js",
@@ -65,9 +66,9 @@
     "electron:dev": "node scripts/stop-dev.cjs && concurrently \"npm run dev\" \"wait-on http://127.0.0.1:5173 && node scripts/launch-electron.cjs development\"",
     "electron:start": "node scripts/launch-electron.cjs production",
     "electron:build-start": "npm run build && node scripts/launch-electron.cjs production",
-    "dist": "npm run build && dotenv electron-builder",
-    "dist:win": "npm run build && dotenv electron-builder --win",
-    "dist:mac": "node -e \"if (process.platform === 'win32') { console.log('\\x1b[31mError: macOS builds cannot be run on Windows.\\x1b[0m\\n\\x1b[33mPlease push a tag (e.g. v0.0.35) to GitHub to trigger the cloud build.\\x1b[0m'); process.exit(1); }\" && npm run build && electron-builder --mac",
+    "dist": "npm run build && dotenv electron-builder --publish never",
+    "dist:win": "npm run build && dotenv electron-builder --win --publish never",
+    "dist:mac": "node -e \"if (process.platform === 'win32') { console.log('\\x1b[31mError: macOS builds cannot be run on Windows.\\x1b[0m\\n\\x1b[33mPlease push a tag (e.g. v0.0.40) to GitHub to trigger the cloud build.\\x1b[0m'); process.exit(1); }\" && npm run build && electron-builder --mac --publish never",
     "release": "npm run build && dotenv electron-builder --win --publish always",
     "release:ci:win": "npm run build && electron-builder --win --publish always",
     "release:patch": "npm version patch && npm run release",

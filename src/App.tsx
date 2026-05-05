@@ -64,41 +64,47 @@ function LoginWrapper() {
 
 function App() {
   const [updateState, setUpdateState] = useState<{
-    status: 'idle' | 'downloading' | 'downloaded' | 'error';
+    status: 'idle' | 'checking' | 'available' | 'downloading' | 'downloaded' | 'error';
     progress: number;
-    version?: string;
-    error?: string;
-  }>({ status: 'idle', progress: 0 });
+    currentVersion: string;
+    availableVersion?: string | null;
+    error?: string | null;
+  }>({ status: 'idle', progress: 0, currentVersion: __APP_VERSION__, availableVersion: null, error: null });
 
   useEffect(() => {
     const api = window.electronAPI;
     if (!api) return;
 
-    // Listeners
-    const onAvailable = (info: { version: string; [key: string]: unknown }) => {
-      setUpdateState(prev => ({ ...prev, status: 'downloading', version: info.version, progress: 0 }));
-    };
-    const onProgress = (info: { percent: number; [key: string]: unknown }) => {
-      setUpdateState(prev => ({ ...prev, status: 'downloading', progress: info.percent }));
-    };
-    const onDownloaded = (info: { version: string; [key: string]: unknown }) => {
-      setUpdateState(prev => ({ ...prev, status: 'downloaded', version: info.version }));
-    };
-    const onError = (err: string) => {
-      setUpdateState(prev => ({ ...prev, status: 'error', error: err }));
-    };
+    api.getUpdateState()
+      .then((state) => setUpdateState({
+        status: state.status,
+        progress: state.progress,
+        currentVersion: state.currentVersion || __APP_VERSION__,
+        availableVersion: state.availableVersion ?? null,
+        error: state.error ?? null,
+      }))
+      .catch(() => {
+        void api.getAppVersion().then((version) => {
+          setUpdateState((prev) => ({ ...prev, currentVersion: version || __APP_VERSION__ }));
+        });
+      });
 
-    api.onUpdateAvailable(onAvailable);
-    api.onUpdateProgress(onProgress);
-    api.onUpdateDownloaded(onDownloaded);
-    api.onUpdateError(onError);
+    api.onUpdateState((state) => {
+      setUpdateState({
+        status: state.status,
+        progress: state.progress,
+        currentVersion: state.currentVersion || __APP_VERSION__,
+        availableVersion: state.availableVersion ?? null,
+        error: state.error ?? null,
+      });
+    });
 
     return () => {
       api.removeAllUpdateListeners();
     };
   }, []);
 
-  const handleSkip = () => {
+  const handleDismissUpdate = () => {
     setUpdateState(prev => ({ ...prev, status: 'idle' }));
     window.electronAPI?.unlockApp();
   };
@@ -119,9 +125,10 @@ function App() {
         <UpdateModal 
           status={updateState.status}
           progress={updateState.progress}
-          version={updateState.version}
-          error={updateState.error}
-          onSkip={handleSkip}
+          currentVersion={updateState.currentVersion}
+          availableVersion={updateState.availableVersion ?? undefined}
+          error={updateState.error ?? undefined}
+          onDismiss={handleDismissUpdate}
         />
       )}
       <Routes>

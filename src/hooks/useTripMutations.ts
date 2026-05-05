@@ -132,7 +132,7 @@ export function useTripMutations() {
 
     return {
         saveTrip: saveTripMutation.mutateAsync,
-        deleteTrip: deleteTripMutation.mutate,
+        deleteTrip: deleteTripMutation.mutateAsync,
         archiveTrip: archiveTripMutation.mutateAsync,
         updatePayment: updatePaymentMutation.mutateAsync,
         toggleExport: toggleExportMutation.mutate,

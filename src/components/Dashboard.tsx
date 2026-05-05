@@ -16,6 +16,7 @@ import { TripFormData } from "../types/trip";
 import { useTripMutations } from "../hooks/useTripMutations";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import NewYearOverlay from "./ui/NewYearOverlay";
+import { DEFAULT_TRIP_FILTERS } from "./trips/tripFiltersState";
 import { AlertTriangle, X, ArrowRight } from "lucide-react";
 import { ErrorBoundary } from "./ErrorBoundary";
 import {
@@ -87,20 +88,14 @@ export default function Dashboard() {
   const { saveTrip } = useTripMutations();
 
   // Trip Filters State (Lifted for Persistence)
-  const [tripFilters, setTripFilters] = useState({
-    search: '',
-    paymentStatus: '',
-    tripStatus: '',
-    year: new Date().getFullYear().toString(),
-    month: '',
-    destination: ''
-  });
+  const [tripFilters, setTripFilters] = useState(DEFAULT_TRIP_FILTERS);
 
   // Alert System State
   const [dismissedAlerts, setDismissedAlerts] = useState<string[]>([]);
 
   const handleCreateTrip = () => {
     setSelectedTrip(undefined);
+    setEditingTrip(undefined);
     setShowNewTripForm(true); // Assuming setIsNewTripModalOpen is a typo and setShowNewTripForm is intended
   };
 

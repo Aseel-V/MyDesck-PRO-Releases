@@ -1,10 +1,21 @@
 import { useState, useEffect } from 'react';
-import { Search } from 'lucide-react';
+import { BookmarkPlus, Search, Trash2 } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
+import type { TripFilterPreset } from './tripFiltersState';
+import {
+  getPaymentStatusDescription,
+  getTripStatusDescription,
+} from '../../lib/tripStatus';
 
 interface TripFiltersProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
+  onClearFilters: () => void;
+  hasActiveFilters: boolean;
+  presets: TripFilterPreset[];
+  onSavePreset: (name: string) => boolean;
+  onApplyPreset: (presetId: string) => void;
+  onDeletePreset: (presetId: string) => void;
   filters?: Record<string, unknown>;
   // ... other props remain the same (implied)
   paymentStatusFilter: string;
@@ -24,6 +35,12 @@ interface TripFiltersProps {
 export default function TripFilters({
   searchTerm,
   onSearchChange,
+  onClearFilters,
+  hasActiveFilters,
+  presets,
+  onSavePreset,
+  onApplyPreset,
+  onDeletePreset,
   paymentStatusFilter,
   onPaymentStatusFilterChange,
   tripStatusFilter,
@@ -39,8 +56,10 @@ export default function TripFilters({
 }: TripFiltersProps) {
   const { t } = useLanguage();
 
-  // Local state for search input to allow "Enter" to trigger search
   const [localSearch, setLocalSearch] = useState(searchTerm);
+  const [selectedPresetId, setSelectedPresetId] = useState('');
+  const [isSavingPreset, setIsSavingPreset] = useState(false);
+  const [presetName, setPresetName] = useState('');
 
   // Sync local state if parent updates searchTerm externally (e.g. clear filters)
   useEffect(() => {
@@ -51,6 +70,12 @@ export default function TripFilters({
     if (e.key === 'Enter') {
       onSearchChange(localSearch);
     }
+  };
+
+  const handleSavePreset = () => {
+    if (!onSavePreset(presetName)) return;
+    setPresetName('');
+    setIsSavingPreset(false);
   };
 
   const months = [
@@ -118,24 +143,145 @@ export default function TripFilters({
     <div className="space-y-4">
       {/* Search */}
       <div className="rounded-2xl bg-white border border-slate-200 px-3.5 py-2.5 shadow-sm dark:bg-slate-950/95 dark:border-slate-800/90 dark:shadow-md dark:shadow-slate-950/60">
-        <div className="relative">
-          <Search 
-            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 cursor-pointer hover:text-sky-500 transition-colors" 
-            onClick={() => onSearchChange(localSearch)}
-          />
-          <input
-            type="text"
-            value={localSearch}
-            onChange={(e) => setLocalSearch(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={t('trips.search')}
-            className={`${baseInputClasses} pl-10`}
-          />
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
+          <div className="relative flex-1">
+            <Search 
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 cursor-pointer hover:text-sky-500 transition-colors" 
+              onClick={() => onSearchChange(localSearch)}
+            />
+            <input
+              type="text"
+              value={localSearch}
+              onChange={(e) => {
+                const value = e.target.value;
+                setLocalSearch(value);
+                onSearchChange(value);
+              }}
+              onKeyDown={handleKeyDown}
+              placeholder={t('trips.search')}
+              className={`${baseInputClasses} pl-10`}
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setIsSavingPreset((prev) => !prev)}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition-all hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900/70"
+            >
+              <BookmarkPlus className="w-4 h-4" />
+              <span>{t('trips.savePreset') || 'Save preset'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={onClearFilters}
+              disabled={!hasActiveFilters}
+              className="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition-all hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900/70"
+            >
+              {t('trips.clearFilters') || 'Clear filters'}
+            </button>
+          </div>
+        </div>
+
+        {isSavingPreset && (
+          <div className="mt-3 flex flex-col gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900/50">
+            <label className={labelClasses}>{t('trips.presetName') || 'Preset name'}</label>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <input
+                type="text"
+                value={presetName}
+                onChange={(e) => setPresetName(e.target.value)}
+                placeholder={t('trips.presetNamePlaceholder') || 'Example: Unpaid trips'}
+                className={baseInputClasses}
+              />
+              <button
+                type="button"
+                onClick={handleSavePreset}
+                className="inline-flex items-center justify-center rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-sky-500 transition-colors"
+              >
+                {t('trips.savePreset') || 'Save preset'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {presets.length > 0 && (
+          <div className="mt-3 flex flex-col gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900/50">
+            <label className={labelClasses}>{t('trips.savedPresets') || 'Saved presets'}</label>
+            <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
+              <select
+                value={selectedPresetId}
+                onChange={(e) => setSelectedPresetId(e.target.value)}
+                className={baseInputClasses}
+              >
+                <option value="">{t('trips.choosePreset') || 'Choose a saved preset'}</option>
+                {presets.map((preset) => (
+                  <option key={preset.id} value={preset.id}>
+                    {preset.name}
+                  </option>
+                ))}
+              </select>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  disabled={!selectedPresetId}
+                  onClick={() => onApplyPreset(selectedPresetId)}
+                  className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+                >
+                  {t('trips.applyPreset') || 'Apply'}
+                </button>
+                <button
+                  type="button"
+                  disabled={!selectedPresetId}
+                  onClick={() => {
+                    onDeletePreset(selectedPresetId);
+                    setSelectedPresetId('');
+                  }}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-300 px-4 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-50 disabled:cursor-not-allowed dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/30"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>{t('trips.deletePreset') || 'Delete'}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900/40">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            {t('trips.statusLegendTitle') || 'Trip statuses'}
+          </p>
+          <div className="mt-2 grid gap-2">
+            {(['active', 'completed', 'cancelled', 'archived'] as const).map((status) => (
+              <div key={status} className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
+                <span className="mt-0.5 inline-flex rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                  {t(`trips.statuses.${status}`) || status}
+                </span>
+                <span>{getTripStatusDescription(status, t)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900/40">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            {t('trips.paymentLegendTitle') || 'Payment statuses'}
+          </p>
+          <div className="mt-2 grid gap-2">
+            {(['paid', 'partial', 'unpaid'] as const).map((status) => (
+              <div key={status} className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
+                <span className="mt-0.5 inline-flex rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                  {t(`trips.paymentStatuses.${status}`) || status}
+                </span>
+                <span>{getPaymentStatusDescription(status, t)}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Filters grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
         {/* Payment status */}
         <div>
           <label className={labelClasses}>{t('trips.paymentStatus')}</label>
@@ -149,6 +295,11 @@ export default function TripFilters({
             <option value="partial">{t('trips.paymentStatuses.partial')}</option>
             <option value="unpaid">{t('trips.paymentStatuses.unpaid')}</option>
           </select>
+          <p className="mt-1 text-xs text-slate-400">
+            {paymentStatusFilter
+              ? getPaymentStatusDescription(paymentStatusFilter as 'paid' | 'partial' | 'unpaid', t)
+              : (t('trips.paymentFilterHelper') || 'Filter by whether the trip is fully paid, partially paid, or unpaid.')}
+          </p>
         </div>
 
         <div>
@@ -162,8 +313,13 @@ export default function TripFilters({
             <option value="active">{t('trips.statuses.active')}</option>
             <option value="completed">{t('trips.statuses.completed')}</option>
             <option value="cancelled">{t('trips.statuses.cancelled')}</option>
-            <option value="archived">Archived</option>
+            <option value="archived">{t('trips.statuses.archived') || 'Archived'}</option>
           </select>
+          <p className="mt-1 text-xs text-slate-400">
+            {tripStatusFilter
+              ? getTripStatusDescription(tripStatusFilter as 'active' | 'completed' | 'cancelled' | 'archived', t)
+              : (t('trips.statusFilterHelper') || 'Use this filter to focus on ongoing, completed, cancelled, or archived trips.')}
+          </p>
         </div>
 
         {/* Year Selector - Segmented Control */}

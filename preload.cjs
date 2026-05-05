@@ -8,6 +8,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   invoiceReady: () => ipcRenderer.send('invoice-ready'),
 
   // Auto-Update API
+  getAppVersion: () => ipcRenderer.invoke('get-app-version'),
+  getUpdateState: () => ipcRenderer.invoke('get-update-state'),
+  onUpdateState: (callback) => ipcRenderer.on('update_state', (_, state) => callback(state)),
   onUpdateAvailable: (callback) => ipcRenderer.on('update_available', (_, info) => callback(info)),
   onUpdateProgress: (callback) => ipcRenderer.on('update_progress', (_, progress) => callback(progress)),
   onUpdateDownloaded: (callback) => ipcRenderer.on('update_downloaded', (_, info) => callback(info)),
@@ -30,6 +33,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   deleteTempPdf: (filePath) => ipcRenderer.invoke('delete-temp-pdf', filePath),
 
   removeAllUpdateListeners: () => {
+    ipcRenderer.removeAllListeners('update_state');
     ipcRenderer.removeAllListeners('update_available');
     ipcRenderer.removeAllListeners('update_progress');
     ipcRenderer.removeAllListeners('update_downloaded');

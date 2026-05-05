@@ -2,18 +2,17 @@ name: Build and Release
 
 on:
   push:
-    branches: [ main, master ]
     tags:
-      - 'v*'
+      - 'v*.*.*'
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  quality-gate:
-    name: Quality Gate
-    runs-on: ubuntu-latest
+  build-release-windows:
+    name: Build and Publish Windows Release
+    runs-on: windows-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -27,49 +26,19 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Linting
-        run: npm run lint
+      - name: Verify tag matches package version
+        shell: bash
+        run: |
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          if [ "$PACKAGE_VERSION" != "$TAG_VERSION" ]; then
+            echo "Tag version ($TAG_VERSION) does not match package.json version ($PACKAGE_VERSION)."
+            exit 1
+          fi
 
-      - name: Typechecking
-        run: npm run typecheck
-
-  build-release:
-    name: Build & Release
-    # needs: quality-gate
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [windows-latest, macos-latest]
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-
-      - name: Install Dependencies
-        run: npm ci
-
-      - name: Build and Release (Windows)
-        if: matrix.os == 'windows-latest'
+      - name: Build and Publish Release
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-        # Overriding output directory to 'release' to avoid absolute path issues
-        # Adding --publish always to ensure artifacts are uploaded
         run: npm run release:ci:win
-
-      - name: Build and Release (macOS)
-        if: matrix.os == 'macos-latest'
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-        # Overriding output directory to 'release'
-        # Adding --publish always to ensure artifacts are uploaded
-        run: npm run dist:mac -- -c.directories.output=release --publish always

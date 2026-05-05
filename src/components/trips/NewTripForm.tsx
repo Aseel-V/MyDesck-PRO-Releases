@@ -16,6 +16,8 @@ import { useDebounce } from '../../hooks/useDebounce';
 import { FileUpload } from '../ui/FileUpload';
 import { removeTripAttachments, getTripAttachmentUrl } from '../../lib/tripAttachments';
 import { formatRoomConfiguration, normalizeRoomConfiguration, serializeRoomConfiguration } from '../../lib/tripRoom';
+import { ConfirmationModal } from '../ui/ConfirmationModal';
+import { getPaymentStatusDescription, getTripStatusDescription } from '../../lib/tripStatus';
 
 interface NewTripFormProps {
   onClose: () => void;
@@ -38,6 +40,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
   const { profile, user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('details');
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
   const { rates, convert } = useCurrency(); // Added convert
 
   const {
@@ -49,7 +52,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
     getValues,
     setError,
     clearErrors,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<TripFormValues>({
     resolver: zodResolver(tripSchema),
     defaultValues: {
@@ -143,6 +146,18 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
       }
     }
   }, [draftStorageKey, editTrip, setValue, t]);
+
+  useEffect(() => {
+    if (!isDirty || loading) return;
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty, loading]);
 
   // ------------------------------------------------------------------
   // 2. Autocomplete Logic
@@ -434,6 +449,23 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
     }
   };
 
+  const handleRequestClose = () => {
+    if (loading) return;
+    if (isDirty) {
+      setShowDiscardConfirm(true);
+      return;
+    }
+    onClose();
+  };
+
+  const handleConfirmDiscard = () => {
+    if (!editTrip && draftStorageKey) {
+      localStorage.removeItem(draftStorageKey);
+    }
+    setShowDiscardConfirm(false);
+    onClose();
+  };
+
   const handleSalePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Logic for sale price auto-updates (like payment status)
     // We deal with the Raw Value here (in saleCurrency)
@@ -458,6 +490,8 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
   const profitSign = profit >= 0 ? '+' : '';
   const profitColor = profit >= 0 ? 'text-emerald-300' : 'text-rose-300';
   const amountDueColor = amountDue > 0 ? 'text-rose-300' : 'text-emerald-300';
+  const currentTripStatus = watch('status');
+  const currentPaymentStatus = watch('payment_status');
 
   const handleOpenAttachment = async (file: Trip['attachments'][number]) => {
     try {
@@ -501,7 +535,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
 
   return (
     <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-xl flex items-center justify-center z-50 p-4 animate-fadeIn">
-      <div className="relative max-w-4xl w-full max-h-[90vh] my-6 rounded-2xl bg-white border border-slate-200 shadow-2xl overflow-hidden flex flex-col dark:bg-slate-950/95 dark:border-slate-800/80 dark:shadow-[0_22px_65px_rgba(15,23,42,0.95)]">
+      <div className="relative max-w-4xl w-full max-h-[92vh] my-4 rounded-2xl bg-white border border-slate-200 shadow-2xl overflow-hidden flex flex-col dark:bg-slate-950/95 dark:border-slate-800/80 dark:shadow-[0_22px_65px_rgba(15,23,42,0.95)]">
         {/* gradient line top */}
         <div className="h-[2px] bg-gradient-to-r from-sky-500/70 via-fuchsia-500/50 to-sky-400/70" />
 
@@ -514,9 +548,15 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
             <h2 className="text-lg md:text-xl font-bold text-slate-900 dark:text-slate-50">
               {editTrip ? t('trips.edit') : t('trips.newTrip')}
             </h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              {editTrip
+                ? (t('trips.editTripSubtitle') || 'Review the trip details before saving your changes.')
+                : (t('trips.newTripSubtitle') || 'Add the main trip details first, then complete the financial section.')}
+            </p>
           </div>
           <button
-            onClick={onClose}
+            type="button"
+            onClick={handleRequestClose}
             className="p-2 rounded-full border border-slate-200 bg-slate-100 hover:bg-slate-200 text-slate-500 transition-all dark:border-slate-700/80 dark:bg-slate-950/90 dark:hover:bg-slate-800/80 dark:text-slate-300"
           >
             <X className="w-4 h-4" />
@@ -558,6 +598,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                     type="text"
                     {...register('destination')}
                     className={cn(baseInputClasses, errors.destination && errorInputClasses)}
+                    placeholder={t('trips.destinationPlaceholder') || 'Example: Dubai, Istanbul, Rome'}
                   />
                   {errors.destination && (
                     <p className="text-xs text-rose-400 mt-1">
@@ -573,6 +614,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                     {...register('client_name')}
                     className={cn(baseInputClasses, errors.client_name && errorInputClasses)}
                     list="client-names"
+                    placeholder={t('trips.clientNamePlaceholder') || 'Enter the lead traveler or customer name'}
                     onChange={(e) => {
                       register('client_name').onChange(e);
                       // If we had phone number logic, we'd call it here
@@ -598,6 +640,9 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                     className={baseInputClasses}
                     placeholder="+1234567890"
                   />
+                  <p className="mt-1 text-xs text-slate-400">
+                    {t('trips.clientPhoneHelper') || 'Optional, but helpful for sharing the trip details later.'}
+                  </p>
                 </div>
 
                 <div>
@@ -607,6 +652,9 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                     <option value="completed">{t('trips.statuses.completed')}</option>
                     <option value="cancelled">{t('trips.statuses.cancelled')}</option>
                   </select>
+                  <p className="mt-1 text-xs text-slate-400">
+                    {getTripStatusDescription(currentTripStatus, t)}
+                  </p>
                 </div>
 
                 <div>
@@ -617,6 +665,9 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                     className={cn(baseInputClasses, errors.travelers_count && errorInputClasses)}
                     min={1}
                   />
+                  <p className="mt-1 text-xs text-slate-400">
+                    {t('trips.travelersCountHelper') || 'Use the total number of travelers if you do not need to enter each traveler separately.'}
+                  </p>
                   {errors.travelers_count && (
                     <p className="text-xs text-rose-400 mt-1">
                       {errors.travelers_count.message as string}
@@ -667,6 +718,9 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                          className={cn(baseInputClasses, 'text-xs py-2 bg-slate-100 dark:bg-slate-900/50')}
                          placeholder="e.g. Single x1, Double x2"
                        />
+                       <p className="mt-1 text-xs text-slate-400">
+                         {t('trips.roomConfigurationHelper') || 'This summary updates automatically as you change the room counts.'}
+                       </p>
                    </div>
                 </div>
 
@@ -718,6 +772,9 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                     className={cn(baseInputClasses, 'min-h-[100px] resize-y')}
                     placeholder={t('trips.descriptionPlaceholder') || 'Add trip description...'}
                   />
+                  <p className="mt-1 text-xs text-slate-400">
+                    {t('trips.descriptionHelper') || 'Use notes for reminders, inclusions, or anything the team should not miss.'}
+                  </p>
                 </div>
 
                 <div className="md:col-span-2 space-y-2">
@@ -924,6 +981,9 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                                 {errors.amount_paid.message as string}
                             </p>
                         )}
+                        <p className="mt-1 text-xs text-slate-400">
+                          {getPaymentStatusDescription(currentPaymentStatus, t)}
+                        </p>
                     </div>
                     <div>
                         <label className={labelClasses}>
@@ -960,18 +1020,18 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
           </div>
 
           {/* Footer */}
-          <div className="flex-shrink-0 flex items-center justify-end gap-3 px-5 py-4 md:px-6 border-t border-slate-200 bg-white/95 shrink-0 dark:border-slate-800/80 dark:bg-slate-950/95">
+          <div className="flex-shrink-0 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3 px-5 py-4 md:px-6 border-t border-slate-200 bg-white/95 shrink-0 dark:border-slate-800/80 dark:bg-slate-950/95">
             <button
               type="button"
-              onClick={onClose}
-              className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-medium border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 transition-all dark:border-slate-600/80 dark:text-slate-200 dark:bg-slate-950/90 dark:hover:bg-slate-900/90"
+              onClick={handleRequestClose}
+              className="inline-flex w-full sm:w-auto items-center justify-center px-4 py-2.5 rounded-xl text-sm font-medium border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 transition-all dark:border-slate-600/80 dark:text-slate-200 dark:bg-slate-950/90 dark:hover:bg-slate-900/90"
             >
               {t('trips.cancel')}
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white 
+              className="inline-flex w-full sm:w-auto items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white 
               bg-gradient-to-r from-sky-500 to-sky-400 hover:from-sky-400 hover:to-sky-300 
               border border-sky-400/80 shadow-[0_10px_30px_rgba(56,189,248,0.55)]
               disabled:opacity-60 disabled:cursor-not-allowed transition-all"
@@ -982,6 +1042,20 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
           </div>
         </form>
       </div>
+      <ConfirmationModal
+        isOpen={showDiscardConfirm}
+        onClose={() => setShowDiscardConfirm(false)}
+        onConfirm={handleConfirmDiscard}
+        title={t('trips.discardChangesTitle') || 'Discard your changes?'}
+        description={
+          editTrip
+            ? (t('trips.discardChangesDescription') || 'You have unsaved trip changes. If you close now, they will be lost.')
+            : (t('trips.discardDraftDescription') || 'You have an unsaved trip draft. If you close now, this draft will be removed.')
+        }
+        confirmText={t('trips.discardChanges') || 'Discard changes'}
+        cancelText={t('trips.keepEditing') || 'Keep editing'}
+        variant="warning"
+      />
     </div>
   );
 }

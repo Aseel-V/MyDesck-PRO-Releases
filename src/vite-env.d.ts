@@ -41,6 +41,21 @@ interface Window {
         invoiceReady: () => void;
         
         // Auto-Update API
+        getAppVersion: () => Promise<string>;
+        getUpdateState: () => Promise<{
+            status: 'idle' | 'checking' | 'available' | 'downloading' | 'downloaded' | 'error';
+            currentVersion: string;
+            availableVersion?: string | null;
+            progress: number;
+            error?: string | null;
+        }>;
+        onUpdateState: (callback: (state: {
+            status: 'idle' | 'checking' | 'available' | 'downloading' | 'downloaded' | 'error';
+            currentVersion: string;
+            availableVersion?: string | null;
+            progress: number;
+            error?: string | null;
+        }) => void) => void;
         onUpdateAvailable: (callback: (info: { version: string; [key: string]: unknown }) => void) => void;
         onUpdateProgress: (callback: (progress: { percent: number; [key: string]: unknown }) => void) => void;
         onUpdateDownloaded: (callback: (info: { version: string; [key: string]: unknown }) => void) => void;
