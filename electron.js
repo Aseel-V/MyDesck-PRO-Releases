@@ -184,9 +184,8 @@ function createWindow() {
   // Load the app
   if (isDev) {
     mainWindow.loadURL(DEV_SERVER_URL);
-    if (process.env.OPEN_DEVTOOLS === 'true') {
-      mainWindow.webContents.openDevTools();
-    }
+    // Always open DevTools in dev mode for easier debugging of network issues
+    mainWindow.webContents.openDevTools();
   } else {
     // Robust production loading: Check both dist/index.html and root index.html
     const distPath = path.join(__dirname, 'dist', 'index.html');
