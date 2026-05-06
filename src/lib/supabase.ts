@@ -8,9 +8,19 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.error('Supabase credentials missing! Check your .env file or build settings.');
 }
 
+console.log('[Supabase] Initializing with URL:', supabaseUrl);
+
 export const supabase = createClient(
   supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder-key'
+  supabaseAnonKey || 'placeholder-key',
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      flowType: 'pkce',
+    }
+  }
 );
 // Admin client is removed for security. Use Edge Functions instead.
 

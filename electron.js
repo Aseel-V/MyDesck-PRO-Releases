@@ -172,7 +172,8 @@ function createWindow() {
       contextIsolation: true,
       enableRemoteModule: false,
       preload: path.join(__dirname, 'preload.cjs'),
-      devTools: true // Enable DevTools even in production for easier debugging
+      devTools: true,
+      webSecurity: !isDev // Allow CORS in development
     },
     icon: fs.existsSync(path.join(__dirname, 'assets/app-icon.png')) 
       ? path.join(__dirname, 'assets/app-icon.png')
