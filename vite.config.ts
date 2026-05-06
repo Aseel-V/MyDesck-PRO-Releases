@@ -55,6 +55,8 @@ export default defineConfig({
     ],
   },
   server: {
+    // Allow access from other devices on the LAN during debugging/testing.
+    host: '0.0.0.0',
     // Faster file watching (especially for OneDrive paths)
     watch: {
       usePolling: false,
@@ -68,6 +70,10 @@ export default defineConfig({
     warmup: {
       clientFiles: ['./src/main.tsx', './src/App.tsx', './src/components/Dashboard.tsx'],
     },
+  },
+  preview: {
+    host: '0.0.0.0',
+    port: 4173,
   },
   resolve: {
     alias: {

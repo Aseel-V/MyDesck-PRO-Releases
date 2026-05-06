@@ -6,6 +6,7 @@ import {Eye, EyeOff, ShieldCheck, Sun, Moon, Globe, X, Check, BrainCircuit, Spar
 import { motion, AnimatePresence } from 'framer-motion';
 
 import ForgotPassword from './ForgotPassword';
+import { getFriendlyAuthError, shouldAttemptStaffFallback } from '../lib/authNetwork';
 
 // --- Neural Network Background Component ---
 const NeuralBackground = ({ isDark }: { isDark: boolean }) => {
@@ -159,15 +160,20 @@ export default function Login() {
       try {
         await signIn(email, password);
       } catch (signInError) {
-        console.log('Standard auth failed, trying staff auth...', signInError);
+        if (!shouldAttemptStaffFallback(signInError)) {
+          throw signInError;
+        }
+
+        console.log('Primary auth was rejected, trying staff auth...');
+
         try {
-            await signInStaff(email, password);
+          await signInStaff(email, password);
         } catch (staffError) {
-            throw new Error((staffError as Error).message || 'Invalid credentials');
+          throw new Error(getFriendlyAuthError(staffError));
         }
       }
     } catch (err: unknown) {
-      setError((err as Error).message);
+      setError(getFriendlyAuthError(err));
     } finally {
       setLoading(false);
     }

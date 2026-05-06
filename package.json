@@ -1,7 +1,7 @@
 {
   "name": "my-desck-pro",
   "private": true,
-  "version": "0.0.43",
+  "version": "0.0.44",
   "description": "Professional Travel Agency Dashboard",
   "repository": "https://github.com/Aseel-V/MyDesck-PRO-Releases",
   "type": "module",
@@ -58,10 +58,10 @@
     }
   },
   "scripts": {
-    "dev": "vite --host 127.0.0.1 --port 5173 --strictPort",
+    "dev": "vite --host 0.0.0.0 --port 5173 --strictPort",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
+    "preview": "vite preview --host 0.0.0.0 --port 4173",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "electron:dev": "node scripts/stop-dev.cjs && concurrently \"npm run dev\" \"wait-on http://127.0.0.1:5173 && node scripts/launch-electron.cjs development\"",
     "electron:start": "node scripts/launch-electron.cjs production",

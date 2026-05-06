@@ -4,6 +4,7 @@ import { supabase, BusinessProfile } from '../lib/supabase';
 import type { Database } from '../types/supabase';
 import { RestaurantStaff } from '../types/restaurant';
 import { safeImageSrc } from '../lib/safeUrl';
+import { getFriendlyAuthError } from '../lib/authNetwork';
 
 const CACHE_KEY_BUSINESS_PROFILE = 'app_business_profile';
 const CACHE_KEY_USER_PROFILE = 'app_user_profile';
@@ -318,9 +319,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = useCallback(async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      console.warn('[Auth] SignIn failed:', error.message);
-      // We throw to keep existing behavior for now, but logged warning above helps debugging
-      throw error; 
+      console.warn('[Auth] Primary sign-in failed:', {
+        message: error.message,
+        status: 'status' in error ? error.status : undefined,
+      });
+      throw new Error(getFriendlyAuthError(error));
     }
     if (data.user) {
        await refreshUserData(data.user.id);
@@ -334,7 +337,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       p_password: password
     });
 
-    if (error) throw error;
+    if (error) {
+      console.warn('[Auth] Staff sign-in RPC failed:', {
+        message: error.message,
+        status: 'status' in error ? error.status : undefined,
+      });
+      throw new Error(getFriendlyAuthError(error));
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = data as any;
