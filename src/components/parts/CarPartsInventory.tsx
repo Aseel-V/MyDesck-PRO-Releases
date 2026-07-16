@@ -34,7 +34,6 @@ export default function CarPartsInventory() {
     if (!profile?.id) return;
     setLoading(true);
     try {
-      // @ts-ignore - car_parts table will be added after migration
       const { data, error } = await supabase
         .from('car_parts')
         .select('*')
@@ -54,7 +53,6 @@ export default function CarPartsInventory() {
   const handleAddPart = async (partData: CarPartInput) => {
     if (!profile?.id) return;
     try {
-      // @ts-ignore - car_parts table will be added after migration
       const { data, error } = await supabase
         .from('car_parts')
         .insert({ ...partData, business_id: profile.id })
@@ -73,7 +71,6 @@ export default function CarPartsInventory() {
 
   const handleUpdatePart = async (id: string, partData: CarPartInput) => {
     try {
-      // @ts-ignore - car_parts table will be added after migration
       const { data, error } = await supabase
         .from('car_parts')
         .update(partData)
@@ -93,7 +90,6 @@ export default function CarPartsInventory() {
 
   const handleDeletePart = async (id: string) => {
     try {
-      // @ts-ignore - car_parts table will be added after migration
       const { error } = await supabase
         .from('car_parts')
         .delete()
@@ -144,7 +140,7 @@ export default function CarPartsInventory() {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-6 w-full">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
@@ -210,7 +206,7 @@ export default function CarPartsInventory() {
           ].map((filter) => (
             <button
               key={filter.id}
-              onClick={() => setSelectedFilter(filter.id as any)}
+              onClick={() => setSelectedFilter(filter.id as 'all' | 'inStock' | 'lowStock' | 'outOfStock')}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
                 selectedFilter === filter.id
                   ? `bg-${filter.color}-500 text-white shadow-lg ring-2 ring-${filter.color}-500/20`

@@ -17,6 +17,7 @@ import { Trip } from '../../types/trip';
 import { motion, AnimatePresence } from 'framer-motion';
 import { twMerge } from 'tailwind-merge';
 import {
+  getEffectivePaymentStatus,
   getPaymentStatusDescription,
   getPaymentStatusLabel,
   getTripStatusDescription,
@@ -60,6 +61,7 @@ export default function TripCard({
 
   const amountDue = Math.max(sale - paid, 0);
   const paymentPercentage = sale > 0 ? Math.min((paid / sale) * 100, 100) : 0;
+  const effectivePaymentStatus = getEffectivePaymentStatus(trip);
 
   const getPaymentColor = (status: string) => {
     switch (status) {
@@ -70,7 +72,7 @@ export default function TripCard({
     }
   };
 
-  const statusColor = getPaymentColor(trip.payment_status);
+  const statusColor = getPaymentColor(effectivePaymentStatus);
   const isRtl = direction === 'rtl';
 
   const handleCardClick = () => {
@@ -100,7 +102,7 @@ export default function TripCard({
         destination: trip.destination, 
         date: formatDate(trip.start_date),
         price: format(sale, trip.currency || 'USD')
-    }) || `Trip to ${trip.destination} on ${formatDate(trip.start_date)}.`;
+    });
     
     const url = `https://wa.me/?text=${encodeURIComponent(msgTemplate)}`;
     window.open(url, '_blank');
@@ -122,7 +124,7 @@ export default function TripCard({
     }
   };
   const statusLabel = getTripStatusLabel(trip.status, t);
-  const paymentStatusLabel = getPaymentStatusLabel(trip.payment_status, t);
+  const paymentStatusLabel = getPaymentStatusLabel(effectivePaymentStatus, t);
 
   return (
     <motion.div
@@ -150,7 +152,7 @@ export default function TripCard({
         {isUrgent && (
             <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-rose-500 text-white text-[10px] uppercase font-bold px-3 py-1 rounded-b-lg shadow-md z-20 flex items-center gap-1">
                 <AlertCircle className="w-3 h-3" />
-                <span>Payment Overdue</span>
+                <span>{t('trips.paymentOverdue')}</span>
             </div>
         )}
 
@@ -174,11 +176,11 @@ export default function TripCard({
                         </h3>
                          <span className={twMerge(
                             "flex-shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border shadow-sm",
-                            trip.status === 'active' ? 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-900/20 dark:text-sky-300 dark:border-sky-800' :
-                            trip.status === 'completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800' :
+                            trip.status === 'active' ? 'bg-emerald-50 text-emerald-750 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-350 dark:border-emerald-800' :
+                            trip.status === 'completed' ? 'bg-emerald-50 text-emerald-750 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-350 dark:border-emerald-800' :
                             trip.status === 'cancelled'
-                              ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/20 dark:text-rose-300 dark:border-rose-800'
-                              : 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400'
+                              ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/20 dark:text-rose-350 dark:border-rose-800'
+                              : 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800'
                         )}>
                             {statusLabel}
                         </span>
@@ -294,7 +296,7 @@ export default function TripCard({
                     />
                  </div>
                  <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">
-                    {getPaymentStatusDescription(trip.payment_status, t)}
+                    {getPaymentStatusDescription(effectivePaymentStatus, t)}
                  </p>
             </div>
             
@@ -334,7 +336,7 @@ export default function TripCard({
                         : "text-slate-400 hover:bg-sky-50 hover:text-sky-600"
                     )}
                     title={t('trips.exportToPdf')}
-                    aria-label={t('trips.exportToPdf') || 'Export to PDF'}
+                    aria-label={t('trips.exportToPdf')}
                 >
                     <FileText className="w-4 h-4" />
                 </button>
@@ -344,7 +346,7 @@ export default function TripCard({
                     onClick={(e) => { stopPropagation(e); onEdit(trip); }}
                     className={twMerge(actionBtnClass, "text-slate-400 hover:bg-amber-50 hover:text-amber-600")}
                     title={t('trips.edit')}
-                    aria-label={t('trips.edit') || 'Edit trip'}
+                    aria-label={t('trips.edit')}
                 >
                     <Edit className="w-4 h-4" />
                 </button>
@@ -354,14 +356,19 @@ export default function TripCard({
                     onClick={(e) => {
                         stopPropagation(e);
                         if (trip.client_phone) {
-                            const msgTemplate = `Hello ${trip.client_name}, trip details for ${trip.destination}...`;
+                            const msgTemplate = t('trips.shareMessage', {
+                              clientName: trip.client_name,
+                              destination: trip.destination,
+                              date: formatDate(trip.start_date),
+                              price: format(sale, trip.currency || 'USD'),
+                            });
                             const url = generateWhatsAppLink(trip.client_phone, msgTemplate);
                             window.open(url, '_blank');
                         } else handleShare(e);
                     }}
                     className={twMerge(actionBtnClass, "text-slate-400 hover:bg-emerald-50 hover:text-emerald-600")}
-                    title={t('trips.share') || "Share"}
-                    aria-label={t('trips.share') || 'Share trip'}
+                    title={t('trips.share')}
+                    aria-label={t('trips.share')}
                 >
                     <Share2 className="w-4 h-4" />
                 </button>
@@ -371,7 +378,7 @@ export default function TripCard({
                      onClick={(e) => { stopPropagation(e); onDelete(trip.id); }}
                      className={twMerge(actionBtnClass, "text-slate-400 hover:bg-rose-50 hover:text-rose-600")}
                      title={t('trips.delete')}
-                     aria-label={t('trips.delete') || 'Delete trip'}
+                     aria-label={t('trips.delete')}
                 >
                     <Trash2 className="w-4 h-4" />
                 </button>

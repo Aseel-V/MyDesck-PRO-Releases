@@ -104,7 +104,7 @@ function parsePriceEmbeddedBarcode(code: string, prefix: string): PriceEmbeddedB
 
 export function useMarketLogic(options: UseMarketLogicOptions): UseMarketLogicReturn {
   const { settings, onPaymentComplete, onProcessPayment } = options;
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { playSuccess, playError } = useMarketSounds();
 
   // State
@@ -432,12 +432,13 @@ export function useMarketLogic(options: UseMarketLogicOptions): UseMarketLogicRe
       }
 
       // 2. Fallback to old simple recording (Legacy)
-      if (!user?.id) return;
+      if (!user?.id || !profile?.id) return;
       
       const { error } = await supabase
         .from('restaurant_orders')
         .insert({
-           business_id: user.id,
+           business_id: profile.id,
+           order_number: Date.now(),
            // ... (rest of old logic)
            order_type: 'takeaway',
            status: 'closed',
@@ -469,7 +470,7 @@ export function useMarketLogic(options: UseMarketLogicOptions): UseMarketLogicRe
     } finally {
       setIsLoading(false);
     }
-  }, [cart, subtotal, total, playSuccess, clearCart, onPaymentComplete, onProcessPayment, user?.id, playError]);
+  }, [cart, subtotal, total, playSuccess, clearCart, onPaymentComplete, onProcessPayment, user?.id, profile?.id, playError]);
 
   const payCash = useCallback(() => recordTransaction('cash'), [recordTransaction]);
   const payCard = useCallback(() => recordTransaction('card'), [recordTransaction]);

@@ -53,7 +53,7 @@ export default function Cars({ onToggleNavbar }: { onToggleNavbar?: (show: boole
     queryFn: async () => {
       if (!profile?.id) return [];
       const { data, error } = await supabase
-        .from('repair_orders' as any)
+        .from('repair_orders')
         .select(`
             *,
             vehicle:customer_vehicles(*),

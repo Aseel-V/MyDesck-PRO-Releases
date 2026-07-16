@@ -10,6 +10,8 @@ import {
   Landmark,
   LayoutGrid,
   List,
+  HelpCircle,
+  X,
 } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -34,6 +36,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ConfirmationModal } from '../ui/ConfirmationModal';
 import {
   getEffectiveTripDate,
+  getEffectivePaymentStatus,
+  getPaymentStatusDescription,
   getTripStatusDescription,
   getTripStatusLabel,
   isTripIncludedInDashboardStats,
@@ -71,7 +75,7 @@ interface TripsProps {
 }
 
 export default function Trips({ filters, onFiltersChange, initialViewTrip, onEditTrip, onCreateTrip }: TripsProps) {
-  const { t, language } = useLanguage();
+  const { t, language, direction } = useLanguage();
   const { user, profile, userProfile } = useAuth();
   const { convert, format, currency, isLoading: isCurrencyLoading } = useCurrency();
   const { deleteTrip, toggleExport, isDeleting } = useTripMutations();
@@ -82,6 +86,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isExportingBatch, setIsExportingBatch] = useState(false);
   const [savedPresets, setSavedPresets] = useState<TripFilterPreset[]>([]);
+  const [showStatusHelp, setShowStatusHelp] = useState(false);
 
   const presetStorageKey = user?.id ? `trip_filter_presets:${user.id}` : null;
 
@@ -124,6 +129,19 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
     localStorage.setItem(presetStorageKey, JSON.stringify(savedPresets));
   }, [presetStorageKey, savedPresets]);
 
+  useEffect(() => {
+    if (!showStatusHelp) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowStatusHelp(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showStatusHelp]);
+
   const baseActionBtn =
     'inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium rounded-xl transition-all border-b-2';
   const primaryActionBtn =
@@ -132,6 +150,14 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
   const secondaryActionBtn =
     baseActionBtn +
     ' border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-100/50 hover:border-slate-300 dark:text-slate-300 dark:hover:text-slate-50 dark:hover:bg-slate-900/50 dark:hover:border-slate-500/80';
+  const statCardClasses =
+    'h-full min-h-[132px] rounded-2xl bg-white border border-slate-200/90 p-4 sm:p-5 flex items-start justify-between gap-3 overflow-hidden shadow-sm dark:bg-slate-950/95 dark:border-slate-800/90 dark:shadow-md dark:shadow-slate-950/70';
+  const statLabelClasses =
+    'text-[11px] sm:text-xs uppercase text-slate-500 dark:text-slate-400 font-semibold leading-snug break-words';
+  const statValueClasses =
+    'mt-2 text-xl sm:text-2xl font-extrabold leading-tight break-words [overflow-wrap:anywhere]';
+  const statIconClasses =
+    'shrink-0 p-3 rounded-2xl border';
 
   const { data: availableYears = [] } = useQuery({
     queryKey: ['trip-years', user?.id],
@@ -177,7 +203,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
     enabled: !!user?.id,
   });
 
-  const searchableTrips = useMemo(() => {
+  const tripsBeforeDestinationFilter = useMemo(() => {
     if (!rawTrips) return [];
 
     let filtered = rawTrips;
@@ -206,8 +232,8 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
           trip.notes,
           trip.status,
           getTripStatusLabel(trip.status, t),
-          trip.payment_status,
-          t(`trips.paymentStatuses.${trip.payment_status}`),
+          getEffectivePaymentStatus(trip),
+          t(`trips.paymentStatuses.${getEffectivePaymentStatus(trip)}`),
           trip.board_basis,
           ...travelerFields,
           ...attachmentFields,
@@ -221,11 +247,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
     }
 
     if (filters.paymentStatus) {
-      if (filters.paymentStatus === 'unpaid') {
-        filtered = filtered.filter((trip) => !trip.payment_status || trip.payment_status === 'unpaid');
-      } else {
-        filtered = filtered.filter((trip) => trip.payment_status === filters.paymentStatus);
-      }
+      filtered = filtered.filter((trip) => getEffectivePaymentStatus(trip) === filters.paymentStatus);
     }
 
     if (filters.tripStatus) {
@@ -241,12 +263,13 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
       });
     }
 
-    if (filters.destination) {
-      filtered = filtered.filter((trip) => trip.destination === filters.destination);
-    }
-
     return filtered;
-  }, [filters.destination, filters.month, filters.paymentStatus, filters.search, filters.tripStatus, rawTrips, t]);
+  }, [filters.month, filters.paymentStatus, filters.search, filters.tripStatus, rawTrips, t]);
+
+  const searchableTrips = useMemo(() => {
+    if (!filters.destination) return tripsBeforeDestinationFilter;
+    return tripsBeforeDestinationFilter.filter((trip) => trip.destination === filters.destination);
+  }, [filters.destination, tripsBeforeDestinationFilter]);
 
   const archivedTripsMatchingCurrentFilters = useMemo(
     () => searchableTrips.filter((trip) => trip.status === 'archived'),
@@ -263,9 +286,9 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
 
   const trips = filteredTrips;
   const availableDestinations = useMemo(() => {
-    const destinations = new Set(searchableTrips.map((trip) => trip.destination));
+    const destinations = new Set(tripsBeforeDestinationFilter.map((trip) => trip.destination));
     return Array.from(destinations).sort();
-  }, [searchableTrips]);
+  }, [tripsBeforeDestinationFilter]);
 
   const tripsMarkedForExport = useMemo(
     () => trips.filter((trip) => trip.export_to_pdf),
@@ -448,7 +471,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
 
   if (loading) {
     return (
-      <div className="space-y-6 animate-fadeIn">
+      <div className="w-full space-y-6 animate-fadeIn">
         <div className="flex items-center justify-between gap-4">
           <div>
             <Skeleton className="h-10 w-48 mb-2" />
@@ -459,13 +482,13 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
             <Skeleton className="h-10 w-32 rounded-xl" />
           </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-4 items-stretch">
           {[...Array(5)].map((_, index) => (
-            <Skeleton key={index} className="h-24 w-full rounded-2xl" />
+            <Skeleton key={index} className="h-[132px] w-full rounded-2xl" />
           ))}
         </div>
         <Skeleton className="h-20 w-full rounded-2xl" />
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5">
           {[...Array(6)].map((_, index) => (
             <Skeleton key={index} className="h-[280px] w-full rounded-2xl" />
           ))}
@@ -478,10 +501,8 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
   const hasSearchTerm = Boolean(normalizeSearchValue(filters.search));
   const archivedHiddenCount = filters.tripStatus === 'archived' ? 0 : archivedTripsMatchingCurrentFilters.length;
 
-  let emptyStateTitle = t('trips.emptyStates.noTripsTitle') || 'No trips yet';
-  let emptyStateDescription =
-    t('trips.emptyStates.noTripsDescription') ||
-    'Start by creating your first trip so you can track dates, payments, and files in one place.';
+  let emptyStateTitle = t('trips.emptyStates.noTripsTitle');
+  let emptyStateDescription = t('trips.emptyStates.noTripsDescription');
   let showCreateAction = count === 0;
   let showClearAction = hasActiveFilters;
   let secondaryAction: { label: string; onClick: () => void } | null = null;
@@ -489,32 +510,28 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
   if (count > 0) {
     showCreateAction = true;
     if (hasSearchTerm) {
-      emptyStateTitle = t('trips.emptyStates.noSearchResultsTitle') || 'No trips matched your search';
-      emptyStateDescription =
-        t('trips.emptyStates.noSearchResultsDescription') ||
-        'Try a shorter search, a different keyword, or clear the current filters.';
+      emptyStateTitle = t('trips.emptyStates.noSearchResultsTitle');
+      emptyStateDescription = t('trips.emptyStates.noSearchResultsDescription');
     } else if (archivedHiddenCount > 0 && !filters.tripStatus) {
-      emptyStateTitle = t('trips.emptyStates.archivedHiddenTitle') || 'Only archived trips match right now';
-      emptyStateDescription =
-        t('trips.emptyStates.archivedHiddenDescription') ||
-        'Archived trips are hidden from the main list until you filter for them.';
+      emptyStateTitle = t('trips.emptyStates.archivedHiddenTitle');
+      emptyStateDescription = t('trips.emptyStates.archivedHiddenDescription');
       secondaryAction = {
-        label: t('trips.showArchived') || 'Show archived trips',
+        label: t('trips.showArchived'),
         onClick: () => setTripStatusFilter('archived'),
       };
     } else if (hasActiveFilters) {
-      emptyStateTitle = t('trips.noMatchingTrips') || 'No trips match these filters';
-      emptyStateDescription = t('trips.tryAdjustingFilters') || 'Try clearing or adjusting the current filters.';
+      emptyStateTitle = t('trips.noMatchingTrips');
+      emptyStateDescription = t('trips.tryAdjustingFilters');
     } else {
-      emptyStateTitle = t('trips.noTrips') || 'No trips found';
-      emptyStateDescription = t('trips.createFirst') || 'Create your first trip to get started.';
+      emptyStateTitle = t('trips.noTrips');
+      emptyStateDescription = t('trips.createFirst');
       showCreateAction = true;
       showClearAction = false;
     }
   }
 
   return (
-    <div className="space-y-6 animate-fadeIn">
+    <div className="w-full space-y-6 animate-fadeIn">
       <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-4">
         <div className="min-w-0">
           <h2 className="text-2xl sm:text-3xl font-extrabold gradient-title drop-shadow dark:drop-shadow-none text-slate-900 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-slate-50 dark:via-sky-100 dark:to-slate-200">
@@ -522,8 +539,8 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
           </h2>
           <p className="text-sm text-slate-500 mt-1 break-words dark:text-slate-300">
             {count === 0
-              ? (t('trips.emptyStates.noTripsTitle') || 'No trips yet')
-              : (t('trips.resultsSummary', { shown: displayTrips.length, total: filteredTrips.length }) || `Showing ${displayTrips.length} of ${filteredTrips.length} trips`)}
+              ? t('trips.emptyStates.noTripsTitle')
+              : t('trips.resultsSummary', { shown: displayTrips.length, total: filteredTrips.length })}
             {currency !== 'USD' && (
               <span className="ml-2 text-xs text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-full border border-sky-500/20">
                 {currency} {isCurrencyLoading && '...'}
@@ -533,11 +550,23 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
         </div>
 
         <div className="flex items-center gap-2 flex-wrap xl:justify-end">
+          <button
+            type="button"
+            onClick={() => setShowStatusHelp(true)}
+            aria-label={t('trips.help')}
+            aria-haspopup="dialog"
+            aria-expanded={showStatusHelp}
+            title={t('trips.help')}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition-all hover:border-sky-300 hover:bg-sky-50 hover:text-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300 dark:hover:border-sky-500/60 dark:hover:bg-sky-500/10 dark:hover:text-sky-200 dark:focus:ring-offset-slate-950"
+          >
+            <HelpCircle className="h-5 w-5" />
+          </button>
+
           <div className="flex items-center bg-slate-100 rounded-xl p-1 border border-slate-200/80 dark:bg-slate-900/80 dark:border-slate-800/80">
             <button
               onClick={() => setViewMode('grid')}
               type="button"
-              aria-label="Grid view"
+              aria-label={t('trips.gridView')}
               aria-pressed={viewMode === 'grid'}
               className={`p-1.5 rounded-lg transition-all ${viewMode === 'grid'
                 ? 'bg-white text-sky-600 shadow-sm dark:bg-slate-800 dark:text-sky-400'
@@ -549,7 +578,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
             <button
               onClick={() => setViewMode('list')}
               type="button"
-              aria-label="List view"
+              aria-label={t('trips.listView')}
               aria-pressed={viewMode === 'list'}
               className={`p-1.5 rounded-lg transition-all ${viewMode === 'list'
                 ? 'bg-white text-sky-600 shadow-sm dark:bg-slate-800 dark:text-sky-400'
@@ -565,11 +594,11 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
               onClick={handleDownloadAllInvoices}
               disabled={isExportingBatch}
               className={secondaryActionBtn}
-              title="Download all displayed invoices"
+              title={t('trips.downloadAllInvoices')}
             >
               <FileText className="w-5 h-5" />
               <span className="hidden md:inline">
-                {isExportingBatch ? 'Zipping...' : 'Download All'}
+                {isExportingBatch ? t('trips.zippingInvoices') : t('trips.downloadAll')}
               </span>
             </button>
           )}
@@ -591,7 +620,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
             className={secondaryActionBtn}
           >
             <FileText className="w-5 h-5" />
-            <span className="hidden md:inline">Export PDF</span>
+            <span className="hidden md:inline">{t('trips.exportPdf')}</span>
           </button>
 
           <button
@@ -604,63 +633,69 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
-        <div className="rounded-2xl bg-white border border-slate-200/90 p-4 flex items-center justify-between shadow-sm dark:bg-slate-950/95 dark:border-slate-800/90 dark:shadow-md dark:shadow-slate-950/70">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              {t('trips.stats.totalTrips') ?? 'Total Trips'}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-4 items-stretch">
+        <div className={statCardClasses}>
+          <div className="min-w-0 flex-1">
+            <p className={statLabelClasses}>
+              {t('trips.stats.totalTrips')}
             </p>
-            <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">{stats.totalTrips}</p>
+            <p className={`${statValueClasses} text-slate-900 dark:text-slate-50`}>{stats.totalTrips}</p>
           </div>
-          <div className="p-3 rounded-full bg-sky-100 border border-sky-200 text-sky-600 dark:bg-sky-500/10 dark:border-sky-500/40 dark:text-sky-400">
+          <div className={`${statIconClasses} bg-sky-100 border-sky-200 text-sky-600 dark:bg-sky-500/10 dark:border-sky-500/40 dark:text-sky-400`}>
             <BarChart3 className="w-6 h-6" />
           </div>
         </div>
 
-        <div className="rounded-2xl bg-white border border-slate-200/90 p-4 flex items-center justify-between shadow-sm dark:bg-slate-950/95 dark:border-slate-800/90 dark:shadow-md dark:shadow-slate-950/70">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              {t('trips.stats.totalRevenue') ?? 'Revenue (Page)'}
+        <div className={statCardClasses}>
+          <div className="min-w-0 flex-1">
+            <p className={statLabelClasses}>
+              {t('trips.stats.totalRevenue')}
             </p>
-            <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">{format(stats.totalRevenue, currency)}</p>
+            <p className={`${statValueClasses} text-slate-900 dark:text-slate-50`} title={format(stats.totalRevenue, currency)}>
+              {format(stats.totalRevenue, currency)}
+            </p>
           </div>
-          <div className="p-3 rounded-full bg-indigo-100 border border-indigo-200 text-indigo-600 dark:bg-indigo-500/10 dark:border-indigo-500/40 dark:text-indigo-300">
+          <div className={`${statIconClasses} bg-indigo-100 border-indigo-200 text-indigo-600 dark:bg-indigo-500/10 dark:border-indigo-500/40 dark:text-indigo-300`}>
             <Landmark className="w-6 h-6" />
           </div>
         </div>
 
-        <div className="rounded-2xl bg-white border border-slate-200/90 p-4 flex items-center justify-between shadow-sm dark:bg-slate-950/95 dark:border-slate-800/90 dark:shadow-md dark:shadow-slate-950/70">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              {t('trips.stats.totalProfit') ?? 'Profit (Page)'}
+        <div className={statCardClasses}>
+          <div className="min-w-0 flex-1">
+            <p className={statLabelClasses}>
+              {t('trips.stats.totalProfit')}
             </p>
-            <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-300">{format(stats.totalProfit, currency)}</p>
+            <p className={`${statValueClasses} text-emerald-600 dark:text-emerald-300`} title={format(stats.totalProfit, currency)}>
+              {format(stats.totalProfit, currency)}
+            </p>
           </div>
-          <div className="p-3 rounded-full bg-emerald-100 border border-emerald-200 text-emerald-600 dark:bg-emerald-500/10 dark:border-emerald-500/40 dark:text-emerald-400">
+          <div className={`${statIconClasses} bg-emerald-100 border-emerald-200 text-emerald-600 dark:bg-emerald-500/10 dark:border-emerald-500/40 dark:text-emerald-400`}>
             <Wallet className="w-6 h-6" />
           </div>
         </div>
 
-        <div className="rounded-2xl bg-white border border-slate-200/90 p-4 flex items-center justify-between shadow-sm dark:bg-slate-950/95 dark:border-slate-800/90 dark:shadow-md dark:shadow-slate-950/70">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              {t('trips.stats.unpaidAmount') ?? 'Unpaid (Page)'}
+        <div className={statCardClasses}>
+          <div className="min-w-0 flex-1">
+            <p className={statLabelClasses}>
+              {t('trips.stats.unpaidAmount')}
             </p>
-            <p className="text-2xl font-bold text-rose-600 dark:text-rose-300">{format(stats.unpaidAmount, currency)}</p>
+            <p className={`${statValueClasses} text-rose-600 dark:text-rose-300`} title={format(stats.unpaidAmount, currency)}>
+              {format(stats.unpaidAmount, currency)}
+            </p>
           </div>
-          <div className="p-3 rounded-full bg-rose-100 border border-rose-200 text-rose-600 dark:bg-rose-500/10 dark:border-rose-500/40 dark:text-rose-400">
+          <div className={`${statIconClasses} bg-rose-100 border-rose-200 text-rose-600 dark:bg-rose-500/10 dark:border-rose-500/40 dark:text-rose-400`}>
             <AlertCircle className="w-6 h-6" />
           </div>
         </div>
 
-        <div className="rounded-2xl bg-white border border-slate-200/90 p-4 flex items-center justify-between shadow-sm dark:bg-slate-950/95 dark:border-slate-800/90 dark:shadow-md dark:shadow-slate-950/70">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              {t('trips.stats.upcoming') ?? 'Upcoming'}
+        <div className={statCardClasses}>
+          <div className="min-w-0 flex-1">
+            <p className={statLabelClasses}>
+              {t('trips.stats.upcoming')}
             </p>
-            <p className="text-2xl font-bold text-sky-600 dark:text-sky-200">{stats.upcoming}</p>
+            <p className={`${statValueClasses} text-sky-600 dark:text-sky-200`}>{stats.upcoming}</p>
           </div>
-          <div className="p-3 rounded-full bg-indigo-100 border border-indigo-200 text-indigo-600 dark:bg-indigo-500/10 dark:border-indigo-500/40 dark:text-indigo-300">
+          <div className={`${statIconClasses} bg-indigo-100 border-indigo-200 text-indigo-600 dark:bg-indigo-500/10 dark:border-indigo-500/40 dark:text-indigo-300`}>
             <CalendarCheck2 className="w-6 h-6" />
           </div>
         </div>
@@ -696,15 +731,15 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
           <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-700 dark:border-rose-900/40 dark:bg-rose-950/20 dark:text-rose-300">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="font-semibold">Failed to load trips</p>
-                <p className="text-sm opacity-80">Please retry. This is a loading problem, not an empty result.</p>
+                <p className="font-semibold">{t('trips.loadError')}</p>
+                <p className="text-sm opacity-80">{t('trips.loadErrorHelp')}</p>
               </div>
               <button
                 type="button"
                 onClick={() => void refetch()}
                 className="px-4 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-500 transition-colors"
               >
-                Retry
+                {t('trips.retry')}
               </button>
             </div>
           </div>
@@ -718,13 +753,13 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
                   <AlertCircle className="w-12 h-12 text-rose-500 dark:text-rose-400" />
                 </div>
               </div>
-              <h3 className="text-xl font-semibold text-slate-900 mb-2 dark:text-slate-100">Failed to load trips</h3>
-              <p className="text-slate-500 mb-6 dark:text-slate-300">Please retry. This is a loading problem, not an empty result.</p>
+              <h3 className="text-xl font-semibold text-slate-900 mb-2 dark:text-slate-100">{t('trips.loadError')}</h3>
+              <p className="text-slate-500 mb-6 dark:text-slate-300">{t('trips.loadErrorHelp')}</p>
               <button
                 onClick={() => void refetch()}
                 className={primaryActionBtn}
               >
-                <span>Retry</span>
+                <span>{t('trips.retry')}</span>
               </button>
             </div>
           ) : (
@@ -743,7 +778,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
                     onClick={clearFilters}
                     className={secondaryActionBtn}
                   >
-                    <span>{t('trips.clearFilters') || 'Clear filters'}</span>
+                    <span>{t('trips.clearFilters')}</span>
                   </button>
                 )}
                 {secondaryAction && (
@@ -768,7 +803,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
             </div>
           )
         ) : viewMode === 'grid' ? (
-          <motion.div layout className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <motion.div layout className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5">
             <AnimatePresence mode="popLayout">
               {displayTrips.map((trip) => (
                 <motion.div
@@ -793,7 +828,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
             {filteredTrips.length > 50 && (
               <div className="col-span-full text-center py-6">
                 <span className="text-slate-500 text-sm bg-slate-100 px-4 py-2 rounded-full border border-slate-200 dark:text-slate-400 dark:bg-slate-900/50 dark:border-slate-800">
-                  {t('trips.limitNotice') || 'Showing the first 50 trips for faster browsing. Use search or filters to narrow the list.'}
+                  {t('trips.limitNotice')}
                 </span>
               </div>
             )}
@@ -804,12 +839,12 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
               <table className="min-w-full text-sm">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200/80 sticky top-0 z-10 backdrop-blur-md dark:bg-slate-900/50 dark:border-slate-800/80">
-                    <th className="text-left py-3 px-4 font-medium text-slate-500 dark:text-slate-400">Destination</th>
-                    <th className="text-left py-3 px-4 font-medium text-slate-500 dark:text-slate-400">Client</th>
-                    <th className="text-left py-3 px-4 font-medium text-slate-500 dark:text-slate-400">Dates</th>
-                    <th className="text-left py-3 px-4 font-medium text-slate-500 dark:text-slate-400">Price</th>
-                    <th className="text-left py-3 px-4 font-medium text-slate-500 dark:text-slate-400">Status</th>
-                    <th className="text-right py-3 px-4 font-medium text-slate-500 dark:text-slate-400">Actions</th>
+                    <th className="text-left py-3 px-4 font-medium text-slate-500 dark:text-slate-400">{t('trips.destination')}</th>
+                    <th className="text-left py-3 px-4 font-medium text-slate-500 dark:text-slate-400">{t('trips.clientName')}</th>
+                    <th className="text-left py-3 px-4 font-medium text-slate-500 dark:text-slate-400">{t('trips.dateRange')}</th>
+                    <th className="text-left py-3 px-4 font-medium text-slate-500 dark:text-slate-400">{t('trips.salePrice')}</th>
+                    <th className="text-left py-3 px-4 font-medium text-slate-500 dark:text-slate-400">{t('trips.status')}</th>
+                    <th className="text-right py-3 px-4 font-medium text-slate-500 dark:text-slate-400">{t('admin.table.actions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200/80 dark:divide-slate-800/80">
@@ -835,12 +870,12 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
                         <td className="py-3 px-4">
                           <span
                             className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${trip.status === 'active'
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                              ? 'bg-emerald-500/10 text-emerald-650 border border-emerald-500/20 dark:text-emerald-400'
                               : trip.status === 'completed'
-                                ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20'
+                                ? 'bg-emerald-500/10 text-emerald-650 border border-emerald-500/20 dark:text-emerald-400'
                                 : trip.status === 'archived'
-                                  ? 'bg-slate-500/10 text-slate-400 border border-slate-500/20'
-                                  : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                                  ? 'bg-slate-500/10 text-slate-500 border border-slate-500/20 dark:text-slate-400'
+                                  : 'bg-rose-500/10 text-rose-650 border border-rose-500/20 dark:text-rose-400'
                               }`}
                             title={getTripStatusDescription(trip.status, t)}
                           >
@@ -852,7 +887,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
                             onClick={() => handleViewTrip(trip)}
                             className="text-sky-600 hover:text-sky-500 font-medium text-xs dark:text-sky-400 dark:hover:text-sky-300"
                           >
-                            {t('trips.viewTrip') || 'View'}
+                            {t('trips.viewTrip')}
                           </button>
                         </td>
                       </motion.tr>
@@ -864,13 +899,81 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
             {filteredTrips.length > 50 && (
               <div className="p-4 text-center border-t border-slate-200 dark:border-slate-800">
                 <span className="text-slate-500 text-sm dark:text-slate-400">
-                  {t('trips.limitNotice') || 'Showing the first 50 trips for faster browsing. Use search or filters to narrow the list.'}
+                  {t('trips.limitNotice')}
                 </span>
               </div>
             )}
           </div>
         )}
       </div>
+
+      {showStatusHelp && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="trips-status-help-title"
+          dir={direction}
+        >
+          <button
+            type="button"
+            className="absolute inset-0 bg-slate-950/55 backdrop-blur-sm"
+            aria-label={t('trips.closeHelp')}
+            onClick={() => setShowStatusHelp(false)}
+          />
+          <div className="relative w-full max-w-3xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-950 dark:shadow-slate-950/80">
+            <div className="flex items-center justify-between gap-4 border-b border-slate-200 px-5 py-4 dark:border-slate-800">
+              <div className="min-w-0">
+                <p id="trips-status-help-title" className="text-lg font-bold text-slate-900 dark:text-slate-50">
+                  {t('trips.helpTitle')}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowStatusHelp(false)}
+                aria-label={t('trips.closeHelp')}
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-slate-50"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="grid gap-4 p-5 md:grid-cols-2">
+              <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900/50">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-50">
+                  {t('trips.statusLegendTitle')}
+                </h3>
+                <div className="mt-3 grid gap-3">
+                  {(['active', 'completed', 'cancelled', 'archived'] as const).map((status) => (
+                    <div key={status} className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
+                      <span className="mt-0.5 inline-flex shrink-0 rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                        {t(`trips.statuses.${status}`)}
+                      </span>
+                      <span>{getTripStatusDescription(status, t)}</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900/50">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-50">
+                  {t('trips.paymentLegendTitle')}
+                </h3>
+                <div className="mt-3 grid gap-3">
+                  {(['paid', 'partial', 'unpaid'] as const).map((status) => (
+                    <div key={status} className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
+                      <span className="mt-0.5 inline-flex shrink-0 rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                        {t(`trips.paymentStatuses.${status}`)}
+                      </span>
+                      <span>{getPaymentStatusDescription(status, t)}</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+      )}
 
       {viewTrip && (
         <ViewTripModal
@@ -896,8 +999,8 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
             ? `${tripPendingDelete.destination} - ${tripPendingDelete.client_name}. ${t('trips.deleteWarning')}`
             : t('trips.deleteWarning')
         }
-        confirmText={t('trips.delete') || 'Delete'}
-        cancelText={t('trips.cancel') || 'Cancel'}
+        confirmText={t('trips.delete')}
+        cancelText={t('trips.cancel')}
         variant="danger"
         isLoading={isDeleting}
       />

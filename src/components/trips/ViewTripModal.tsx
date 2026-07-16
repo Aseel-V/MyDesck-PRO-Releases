@@ -21,6 +21,7 @@ import { formatRoomConfiguration } from '../../lib/tripRoom';
 import { getTripAttachmentUrl } from '../../lib/tripAttachments';
 import { ConfirmationModal } from '../ui/ConfirmationModal';
 import {
+  getEffectivePaymentStatus,
   getPaymentStatusDescription,
   getPaymentStatusLabel,
   getTripStatusDescription,
@@ -57,7 +58,7 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
       window.open(url, '_blank', 'noopener,noreferrer');
     } catch (error) {
       console.error('Failed to open attachment:', error);
-      toast.error('Failed to open attachment');
+      toast.error(t('trips.attachmentOpenError'));
     }
   };
 
@@ -67,7 +68,8 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
   const profitValue = typeof trip.profit === 'number' ? trip.profit : sale - wholesale;
   const amountDue = Math.max(sale - paid, 0);
   const statusLabel = getTripStatusLabel(trip.status, t);
-  const paymentStatusLabel = getPaymentStatusLabel(trip.payment_status, t);
+  const effectivePaymentStatus = getEffectivePaymentStatus(trip);
+  const paymentStatusLabel = getPaymentStatusLabel(effectivePaymentStatus, t);
 
   return (
     <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-xl flex items-center justify-center z-50 p-4 animate-fadeIn">
@@ -82,10 +84,11 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
                     {t('trips.viewTrip')}
                   </span>
                   <span className={`px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded-full border ${
-                    trip.status === 'completed' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' :
-                    trip.status === 'cancelled' ? 'bg-rose-500/10 border-rose-500/30 text-rose-400' :
-                    trip.status === 'archived' ? 'bg-slate-500/10 border-slate-500/30 text-slate-400' :
-                    'bg-sky-500/10 border-sky-500/30 text-sky-400'
+                    trip.status === 'active' || trip.status === 'completed'
+                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                      : trip.status === 'cancelled'
+                        ? 'bg-rose-500/10 border-rose-500/30 text-rose-400'
+                        : 'bg-slate-500/10 border-slate-500/30 text-slate-400'
                   }`}>
                     {statusLabel}
                   </span>
@@ -105,13 +108,15 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
                     onClick={() => setShowArchiveConfirm(true)}
                     disabled={isArchiving}
                     className="p-2 rounded-full text-slate-400 hover:bg-amber-50 hover:text-amber-600 transition-colors"
-                    title="Archive Trip (Soft Delete)"
+                    title={t('trips.archiveTrip')}
+                    aria-label={t('trips.archiveTrip')}
                   >
                     {isArchiving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Archive className="w-5 h-5" />}
                   </button>
                 )}
                 <button
                   onClick={onClose}
+                  aria-label={t('trips.close')}
                   className="p-2 rounded-full border border-slate-200 bg-slate-100 hover:bg-slate-200 text-slate-500 transition-all dark:border-slate-700/80 dark:bg-slate-950/90 dark:hover:bg-slate-800/80 dark:text-slate-300"
                 >
                   <X className="w-5 h-5" />
@@ -129,7 +134,7 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
                 <span className="text-xs uppercase tracking-wider font-semibold">{t('trips.duration')}</span>
               </div>
               <p className="text-slate-900 font-medium dark:text-slate-100">{formatDate(trip.start_date)}</p>
-              <p className="text-slate-500 text-sm">to {formatDate(trip.end_date)}</p>
+              <p className="text-slate-500 text-sm">{t('trips.dateRangeTo', { date: formatDate(trip.end_date) })}</p>
             </div>
 
             <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 dark:bg-slate-900/60 dark:border-slate-800">
@@ -138,10 +143,10 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
                 <span className="text-xs uppercase tracking-wider font-semibold">{t('trips.accommodation')}</span>
               </div>
               <p className="text-slate-900 font-medium dark:text-slate-100">
-                {formatRoomConfiguration(trip.room_type, t('trips.notSpecified') || 'Not specified')}
+                {formatRoomConfiguration(trip.room_type, t('trips.notSpecified'))}
               </p>
               <p className="text-slate-500 text-sm">
-                {trip.board_basis || t('trips.notSpecified') || 'Not specified'}
+                {trip.board_basis || t('trips.notSpecified')}
               </p>
             </div>
 
@@ -159,7 +164,7 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
                 <span className="text-xs uppercase tracking-wider font-semibold">{t('trips.paymentStatus')}</span>
               </div>
               <p className="text-slate-900 font-medium dark:text-slate-100">{paymentStatusLabel}</p>
-              <p className="text-slate-500 text-sm">{getPaymentStatusDescription(trip.payment_status, t)}</p>
+              <p className="text-slate-500 text-sm">{getPaymentStatusDescription(effectivePaymentStatus, t)}</p>
             </div>
           </section>
 
@@ -214,9 +219,9 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
                     {trip.travelers.map((traveler, index) => (
                       <tr key={index} className="hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/30">
                         <td className="px-4 py-3 text-slate-900 font-medium dark:text-slate-200">{traveler.full_name}</td>
-                        <td className="px-4 py-3 text-slate-500 font-mono dark:text-slate-400">{traveler.passport_number || '-'}</td>
-                        <td className="px-4 py-3 text-slate-500 dark:text-slate-400">{traveler.nationality || '-'}</td>
-                        <td className="px-4 py-3 text-slate-500 dark:text-slate-400">{traveler.room_type || '-'}</td>
+                        <td className="px-4 py-3 text-slate-500 font-mono dark:text-slate-400">{traveler.passport_number || t('trips.notSpecified')}</td>
+                        <td className="px-4 py-3 text-slate-500 dark:text-slate-400">{traveler.nationality || t('trips.notSpecified')}</td>
+                        <td className="px-4 py-3 text-slate-500 dark:text-slate-400">{traveler.room_type || t('trips.notSpecified')}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -227,7 +232,7 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
             <section className="space-y-2">
               <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('trips.travelerDetails')}</h3>
               <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-5 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
-                {t('trips.emptyStates.noTravelerDetailsInTrip') || 'No detailed traveler entries were added to this trip.'}
+                {t('trips.emptyStates.noTravelerDetailsInTrip')}
               </div>
             </section>
           )}
@@ -260,7 +265,7 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
             <section className="space-y-2">
               <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('trips.itinerary')}</h3>
               <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-5 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
-                {t('trips.emptyStates.noItineraryInTrip') || 'No itinerary steps were added for this trip.'}
+                {t('trips.emptyStates.noItineraryInTrip')}
               </div>
             </section>
           )}
@@ -287,7 +292,7 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
                         <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{formatDate(payment.date)}</td>
                         <td className="px-4 py-3 text-emerald-600 font-medium dark:text-emerald-400">{format(payment.amount, trip.currency)}</td>
                         <td className="px-4 py-3 text-slate-500 capitalize dark:text-slate-400">{payment.method}</td>
-                        <td className="px-4 py-3 text-slate-500 font-mono text-xs dark:text-slate-500">{payment.receipt_id || '-'}</td>
+                        <td className="px-4 py-3 text-slate-500 font-mono text-xs dark:text-slate-500">{payment.receipt_id || t('trips.notSpecified')}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -308,6 +313,7 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
                     key={index}
                     type="button"
                     onClick={() => void handleOpenAttachment(file)}
+                    aria-label={t('trips.openAttachment', { fileName: file.file_name })}
                     className="flex items-center gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-sky-500/30 hover:shadow-lg hover:shadow-sky-500/10 transition-all group dark:border-slate-800 dark:bg-slate-900/50 dark:hover:bg-slate-800"
                   >
                     <div className="p-2.5 rounded-lg bg-slate-200 group-hover:bg-sky-500/20 group-hover:text-sky-600 text-slate-500 transition-colors dark:bg-slate-800 dark:group-hover:text-sky-400 dark:text-slate-400">
@@ -325,7 +331,7 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
             <section className="space-y-2">
               <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('trips.attachments')}</h3>
               <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-5 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
-                {t('trips.emptyStates.noAttachmentsInTrip') || 'No files were added to this trip yet.'}
+                {t('trips.emptyStates.noAttachmentsInTrip')}
               </div>
             </section>
           )}
@@ -341,7 +347,7 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
             <section className="space-y-2">
               <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('trips.notesAndRequirements')}</h3>
               <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-5 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
-                {t('trips.emptyStates.noNotesInTrip') || 'No notes or extra trip requirements were added yet.'}
+                {t('trips.emptyStates.noNotesInTrip')}
               </div>
             </section>
           )}
@@ -352,7 +358,7 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
             onClick={onClose}
             className="w-full sm:w-auto px-6 py-2.5 rounded-xl text-sm font-medium border border-slate-300 hover:bg-slate-100 text-slate-700 transition-colors dark:border-slate-700 dark:hover:bg-slate-800 dark:text-slate-200"
           >
-            {t('trips.close') || 'Close'}
+            {t('trips.close')}
           </button>
         </div>
       </div>
@@ -360,10 +366,10 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
         isOpen={showArchiveConfirm}
         onClose={() => setShowArchiveConfirm(false)}
         onConfirm={() => void handleArchive()}
-        title={t('trips.archiveTrip') || 'Archive trip?'}
-        description={t('trips.archiveTripDescription') || 'This trip will be hidden from the main list, but kept in your records.'}
-        confirmText={t('trips.archive') || 'Archive'}
-        cancelText={t('trips.cancel') || 'Cancel'}
+        title={t('trips.archiveTrip')}
+        description={t('trips.archiveTripDescription')}
+        confirmText={t('trips.archive')}
+        cancelText={t('trips.cancel')}
         variant="warning"
         isLoading={isArchiving}
       />

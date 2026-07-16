@@ -237,6 +237,263 @@ export interface Database {
           }
         ];
       };
+
+      car_parts: {
+        Row: {
+          id: string;
+          business_id: string;
+          part_name: string;
+          description: string | null;
+          serial_number: string | null;
+          compatible_cars: string[] | null;
+          quantity: number;
+          purchase_price_unit: number | null;
+          purchase_price_total: number | null;
+          selling_price_unit: number | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          business_id?: string;
+          part_name: string;
+          description?: string | null;
+          serial_number?: string | null;
+          compatible_cars?: string[] | null;
+          quantity?: number;
+          purchase_price_unit?: number | null;
+          purchase_price_total?: number | null;
+          selling_price_unit?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<{
+          id: string;
+          business_id: string;
+          part_name: string;
+          description: string | null;
+          serial_number: string | null;
+          compatible_cars: string[] | null;
+          quantity: number;
+          purchase_price_unit: number | null;
+          purchase_price_total: number | null;
+          selling_price_unit: number | null;
+          created_at: string;
+          updated_at: string;
+        }>;
+        Relationships: [];
+      };
+
+      customer_vehicles: {
+        Row: {
+          id: string;
+          business_id: string;
+          plate_number: string;
+          owner_name: string;
+          owner_phone: string;
+          model: string | null;
+          vin: string | null;
+          color: string | null;
+          year: number | null;
+          last_odometer: number | null;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          business_id: string;
+          plate_number: string;
+          owner_name: string;
+          owner_phone: string;
+          model?: string | null;
+          vin?: string | null;
+          color?: string | null;
+          year?: number | null;
+          last_odometer?: number | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<{
+          id: string;
+          business_id: string;
+          plate_number: string;
+          owner_name: string;
+          owner_phone: string;
+          model: string | null;
+          vin: string | null;
+          color: string | null;
+          year: number | null;
+          last_odometer: number | null;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        }>;
+        Relationships: [];
+      };
+
+      customers_ledger: {
+        Row: {
+          id: string;
+          business_id: string;
+          customer_phone: string;
+          customer_name: string | null;
+          transaction_type: 'invoice' | 'payment' | 'adjustment' | 'opening_balance';
+          debit: number | null;
+          credit: number | null;
+          balance: number | null;
+          ref_order_id: string | null;
+          notes: string | null;
+          created_at: string;
+          created_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          business_id: string;
+          customer_phone: string;
+          customer_name?: string | null;
+          transaction_type: 'invoice' | 'payment' | 'adjustment' | 'opening_balance';
+          debit?: number | null;
+          credit?: number | null;
+          balance?: number | null;
+          ref_order_id?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+        };
+        Update: Partial<{
+          id: string;
+          business_id: string;
+          customer_phone: string;
+          customer_name: string | null;
+          transaction_type: 'invoice' | 'payment' | 'adjustment' | 'opening_balance';
+          debit: number | null;
+          credit: number | null;
+          balance: number | null;
+          ref_order_id: string | null;
+          notes: string | null;
+          created_at: string;
+          created_by: string | null;
+        }>;
+        Relationships: [];
+      };
+
+      repair_orders: {
+        Row: {
+          id: string;
+          business_id: string;
+          vehicle_id: string;
+          customer_id: string | null;
+          status: 'pending' | 'diagnostics' | 'waiting_parts' | 'working' | 'completed' | 'cancelled';
+          odometer_reading: number | null;
+          problem_description: string | null;
+          technician_notes: string | null;
+          estimated_completion: string | null;
+          completed_at: string | null;
+          parts_total: number | null;
+          labor_total: number | null;
+          discount: number | null;
+          total_amount: number | null;
+          paid_amount: number | null;
+          payment_status: 'paid' | 'partial' | 'unpaid';
+          payment_method: string | null;
+          currency: string | null;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          business_id: string;
+          vehicle_id: string;
+          customer_id?: string | null;
+          status?: 'pending' | 'diagnostics' | 'waiting_parts' | 'working' | 'completed' | 'cancelled';
+          odometer_reading?: number | null;
+          problem_description?: string | null;
+          technician_notes?: string | null;
+          estimated_completion?: string | null;
+          completed_at?: string | null;
+          parts_total?: number | null;
+          labor_total?: number | null;
+          discount?: number | null;
+          total_amount?: number | null;
+          paid_amount?: number | null;
+          payment_status?: 'paid' | 'partial' | 'unpaid';
+          payment_method?: string | null;
+          currency?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<{
+          id: string;
+          business_id: string;
+          vehicle_id: string;
+          customer_id: string | null;
+          status: 'pending' | 'diagnostics' | 'waiting_parts' | 'working' | 'completed' | 'cancelled';
+          odometer_reading: number | null;
+          problem_description: string | null;
+          technician_notes: string | null;
+          estimated_completion: string | null;
+          completed_at: string | null;
+          parts_total: number | null;
+          labor_total: number | null;
+          discount: number | null;
+          total_amount: number | null;
+          paid_amount: number | null;
+          payment_status: 'paid' | 'partial' | 'unpaid';
+          payment_method: string | null;
+          currency: string | null;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        }>;
+        Relationships: [];
+      };
+
+      repair_order_items: {
+        Row: {
+          id: string;
+          order_id: string;
+          type: 'part' | 'labor';
+          inventory_item_id: string | null;
+          name: string;
+          quantity: number | null;
+          cost: number | null;
+          price: number | null;
+          warranty_days: number | null;
+          mechanic_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          order_id: string;
+          type: 'part' | 'labor';
+          inventory_item_id?: string | null;
+          name: string;
+          quantity?: number | null;
+          cost?: number | null;
+          price?: number | null;
+          warranty_days?: number | null;
+          mechanic_id?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<{
+          id: string;
+          order_id: string;
+          type: 'part' | 'labor';
+          inventory_item_id: string | null;
+          name: string;
+          quantity: number | null;
+          cost: number | null;
+          price: number | null;
+          warranty_days: number | null;
+          mechanic_id: string | null;
+          created_at: string;
+        }>;
+        Relationships: [];
+      };
       
       // Restaurant Tables
       restaurant_tables: {
@@ -435,6 +692,7 @@ export interface Database {
         Row: {
           id: string;
           business_id: string;
+          user_id: string | null;
           full_name: string;
           role: 'Manager' | 'Waiter' | 'Chef' | 'Other' | 'Host' | 'Cashier' | 'Kitchen';
           restaurant_role: 'super_admin' | 'branch_manager' | 'head_chef' | 'waiter' | 'kitchen_staff' | 'cashier' | 'host';
@@ -447,11 +705,13 @@ export interface Database {
           is_clocked_in: boolean;
           clocked_in_at: string | null;
           assigned_station: string | null;
+          assigned_tables: string[] | null;
           created_at: string;
         };
         Insert: {
           id?: string;
           business_id: string;
+          user_id?: string | null;
           full_name: string;
           role?: 'Manager' | 'Waiter' | 'Chef' | 'Other' | 'Host' | 'Cashier' | 'Kitchen';
           restaurant_role?: 'super_admin' | 'branch_manager' | 'head_chef' | 'waiter' | 'kitchen_staff' | 'cashier' | 'host';
@@ -464,11 +724,13 @@ export interface Database {
           is_clocked_in?: boolean;
           clocked_in_at?: string | null;
           assigned_station?: string | null;
+          assigned_tables?: string[] | null;
           created_at?: string;
         };
         Update: Partial<{
           id: string;
           business_id: string;
+          user_id: string | null;
           full_name: string;
           role: 'Manager' | 'Waiter' | 'Chef' | 'Other' | 'Host' | 'Cashier' | 'Kitchen';
           restaurant_role: 'super_admin' | 'branch_manager' | 'head_chef' | 'waiter' | 'kitchen_staff' | 'cashier' | 'host';
@@ -481,6 +743,7 @@ export interface Database {
           is_clocked_in: boolean;
           clocked_in_at: string | null;
           assigned_station: string | null;
+          assigned_tables: string[] | null;
           created_at: string;
         }>;
         Relationships: [];
@@ -1543,6 +1806,107 @@ export interface Database {
         Relationships: [];
       };
 
+      restaurant_historical_data: {
+        Row: {
+          id: string;
+          business_id: string;
+          date: string;
+          day_of_week: number;
+          covers: number;
+          revenue: number;
+          orders: number;
+          weather: string | null;
+          temperature: number | null;
+          was_holiday: boolean | null;
+          special_notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          business_id: string;
+          date: string;
+          day_of_week: number;
+          covers: number;
+          revenue: number;
+          orders: number;
+          weather?: string | null;
+          temperature?: number | null;
+          was_holiday?: boolean | null;
+          special_notes?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<{
+          id: string;
+          business_id: string;
+          date: string;
+          day_of_week: number;
+          covers: number;
+          revenue: number;
+          orders: number;
+          weather: string | null;
+          temperature: number | null;
+          was_holiday: boolean | null;
+          special_notes: string | null;
+          created_at: string;
+        }>;
+        Relationships: [];
+      };
+
+      restaurant_demand_forecasts: {
+        Row: {
+          id: string;
+          business_id: string;
+          forecast_date: string;
+          day_of_week: number;
+          predicted_covers: number;
+          predicted_revenue: number;
+          predicted_orders: number;
+          confidence_score: number | null;
+          weather_condition: string | null;
+          temperature: number | null;
+          local_events: string[] | null;
+          is_holiday: boolean | null;
+          staffing_recommendation: Json | null;
+          prep_recommendations: Json | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          business_id: string;
+          forecast_date: string;
+          day_of_week: number;
+          predicted_covers: number;
+          predicted_revenue: number;
+          predicted_orders: number;
+          confidence_score?: number | null;
+          weather_condition?: string | null;
+          temperature?: number | null;
+          local_events?: string[] | null;
+          is_holiday?: boolean | null;
+          staffing_recommendation?: Json | null;
+          prep_recommendations?: Json | null;
+          created_at?: string;
+        };
+        Update: Partial<{
+          id: string;
+          business_id: string;
+          forecast_date: string;
+          day_of_week: number;
+          predicted_covers: number;
+          predicted_revenue: number;
+          predicted_orders: number;
+          confidence_score: number | null;
+          weather_condition: string | null;
+          temperature: number | null;
+          local_events: string[] | null;
+          is_holiday: boolean | null;
+          staffing_recommendation: Json | null;
+          prep_recommendations: Json | null;
+          created_at: string;
+        }>;
+        Relationships: [];
+      };
+
     };
 
     Views: {
@@ -1624,7 +1988,14 @@ export interface Database {
       };
       check_email_exists: {
         Args: {
-          p_email: string;
+          email_input: string;
+        };
+        Returns: boolean;
+      };
+      add_repair_service_transaction: {
+        Args: {
+          p_order_id: string;
+          p_items: Json;
         };
         Returns: Json;
       };

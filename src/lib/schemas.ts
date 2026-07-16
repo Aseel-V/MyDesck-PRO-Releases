@@ -11,7 +11,10 @@ export const tripSchema = z.object({
         nationality: z.string().optional(),
         room_type: z.enum(['single', 'double', 'triple', 'suite']).optional(),
     })).default([]),
-    travelers_count: z.number().min(1, 'At least 1 traveler is required'),
+    travelers_count: z.preprocess(
+        (val) => (val === '' || val === null || val === undefined || isNaN(Number(val)) ? 1 : Number(val)),
+        z.number().min(1, 'At least 1 traveler is required')
+    ),
     room_type: z.record(z.string(), z.number()).optional(),
     board_basis: z.string().optional(),
 
@@ -27,8 +30,14 @@ export const tripSchema = z.object({
 
     currency: z.enum(['USD', 'EUR', 'ILS']).default('USD'),
     exchange_rate: z.number().default(1),
-    wholesale_cost: z.number().min(0, 'Cost cannot be negative'),
-    sale_price: z.number().min(0, 'Price cannot be negative'),
+    wholesale_cost: z.preprocess(
+        (val) => (val === '' || val === null || val === undefined || isNaN(Number(val)) ? 0 : Number(val)),
+        z.number().min(0, 'Cost cannot be negative')
+    ),
+    sale_price: z.preprocess(
+        (val) => (val === '' || val === null || val === undefined || isNaN(Number(val)) ? 0 : Number(val)),
+        z.number().min(0, 'Price cannot be negative')
+    ),
 
     // Stored Original Values
     wholesale_original_amount: z.number().optional(),
@@ -43,7 +52,10 @@ export const tripSchema = z.object({
         receipt_id: z.string().optional(),
     })),
     payment_status: z.enum(['paid', 'partial', 'unpaid']),
-    amount_paid: z.number().min(0, 'Amount paid cannot be negative'),
+    amount_paid: z.preprocess(
+        (val) => (val === '' || val === null || val === undefined || isNaN(Number(val)) ? 0 : Number(val)),
+        z.number().min(0, 'Amount paid cannot be negative')
+    ),
     payment_date: z.string().optional(),
 
     attachments: z.array(z.object({

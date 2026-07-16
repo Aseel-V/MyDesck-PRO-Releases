@@ -45,40 +45,49 @@ export function isTripEligibleForAlert(
 }
 
 export function getTripStatusLabel(status: Trip['status'], t: TranslateFn): string {
-  if (status === 'archived') {
-    return t('trips.statuses.archived') || 'Archived';
-  }
-
-  return t(`trips.statuses.${status}`) || status;
+  return t(`trips.statuses.${status}`);
 }
 
 export function getTripStatusDescription(status: Trip['status'], t: TranslateFn): string {
   switch (status) {
     case 'active':
-      return t('trips.statusDescriptions.active') || 'The trip is ongoing, upcoming, or still being managed.';
+      return t('trips.statusDescriptions.active');
     case 'completed':
-      return t('trips.statusDescriptions.completed') || 'The trip finished successfully and remains in your normal records.';
+      return t('trips.statusDescriptions.completed');
     case 'cancelled':
-      return t('trips.statusDescriptions.cancelled') || 'The trip will stay in records, but it should not count as an active booking.';
+      return t('trips.statusDescriptions.cancelled');
     case 'archived':
-      return t('trips.statusDescriptions.archived') || 'The trip is hidden from the main list, but still kept for reference.';
+      return t('trips.statusDescriptions.archived');
     default:
       return status;
   }
 }
 
 export function getPaymentStatusLabel(status: Trip['payment_status'], t: TranslateFn): string {
-  return t(`trips.paymentStatuses.${status}`) || status;
+  return t(`trips.paymentStatuses.${status}`);
+}
+
+export function getEffectivePaymentStatus(
+  trip: Pick<Trip, 'payment_status' | 'sale_price' | 'amount_paid'>
+): Trip['payment_status'] {
+  const rawSale = Number(trip.sale_price ?? 0);
+  const rawPaid = Number(trip.amount_paid ?? 0);
+  const sale = Number.isFinite(rawSale) ? Math.max(0, rawSale) : 0;
+  const paid = Number.isFinite(rawPaid) ? Math.max(0, rawPaid) : 0;
+
+  if (paid <= 0) return 'unpaid';
+  if (paid < sale) return 'partial';
+  return 'paid';
 }
 
 export function getPaymentStatusDescription(status: Trip['payment_status'], t: TranslateFn): string {
   switch (status) {
     case 'paid':
-      return t('trips.paymentStatusDescriptions.paid') || 'The full amount has been received.';
+      return t('trips.paymentStatusDescriptions.paid');
     case 'partial':
-      return t('trips.paymentStatusDescriptions.partial') || 'Part of the payment was received, but there is still a remaining balance.';
+      return t('trips.paymentStatusDescriptions.partial');
     case 'unpaid':
-      return t('trips.paymentStatusDescriptions.unpaid') || 'No payment has been received yet.';
+      return t('trips.paymentStatusDescriptions.unpaid');
     default:
       return status;
   }

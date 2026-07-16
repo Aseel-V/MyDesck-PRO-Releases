@@ -115,6 +115,7 @@ export default function UpdatePaymentForm({
             </div>
             <button
               onClick={onClose}
+              aria-label={t('trips.close')}
               className="p-2 rounded-lg hover:bg-slate-800/80 text-slate-300 transition-all"
             >
               <X className="w-5 h-5" />
@@ -148,13 +149,13 @@ export default function UpdatePaymentForm({
             <div className="space-y-4">
               <h3 className="text-sm font-medium text-slate-200 flex items-center gap-2">
                 <Plus className="w-4 h-4 text-emerald-400" />
-                Add New Payment
+                {t('trips.addNewPayment')}
               </h3>
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <label className="block text-xs font-semibold text-slate-400 mb-1.5">
-                    Amount
+                    {t('trips.amount')}
                   </label>
                   <div className="flex gap-2">
                       <select
@@ -181,7 +182,7 @@ export default function UpdatePaymentForm({
 
                 <div>
                    <label className="block text-xs font-semibold text-slate-400 mb-1.5">
-                    Date
+                    {t('trips.date')}
                   </label>
                   <input
                     type="date"
@@ -193,17 +194,17 @@ export default function UpdatePaymentForm({
 
                 <div>
                    <label className="block text-xs font-semibold text-slate-400 mb-1.5">
-                    Method
+                    {t('trips.method')}
                   </label>
                   <select
                     value={paymentMethod}
                     onChange={(e) => setPaymentMethod(e.target.value as 'cash' | 'transfer' | 'card' | 'check')}
                     className="w-full px-3 py-2.5 rounded-lg bg-slate-950/50 border border-slate-700 text-slate-100 focus:ring-2 focus:ring-emerald-500/50 outline-none"
                   >
-                    <option value="transfer">Transfer</option>
-                    <option value="cash">Cash</option>
-                    <option value="card">Card</option>
-                    <option value="check">Check</option>
+                    <option value="transfer">{t('trips.paymentMethods.transfer')}</option>
+                    <option value="cash">{t('trips.paymentMethods.cash')}</option>
+                    <option value="card">{t('trips.paymentMethods.card')}</option>
+                    <option value="check">{t('trips.paymentMethods.check')}</option>
                   </select>
                 </div>
               </div>
@@ -212,7 +213,7 @@ export default function UpdatePaymentForm({
             {/* Total Preview */}
              {amountToAdd > 0 && (
                 <div className="py-2 flex justify-between items-center text-sm border-t border-slate-800/50">
-                  <span className="text-slate-400">New Total Will Be:</span>
+                  <span className="text-slate-400">{t('trips.newTotalWillBe')}</span>
                   <span className="font-bold text-emerald-400">
                     {currencySymbol}
                     {(currentPaid + convert(amountToAdd, inputCurrency, tripCurrency)).toFixed(2)}
@@ -234,7 +235,7 @@ export default function UpdatePaymentForm({
                 className="flex-[2] py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_4px_14px_rgba(16,185,129,0.4)] transition-all flex items-center justify-center gap-2"
               >
                 <Save className="w-4 h-4" />
-                {loading ? t('auth.loading') : 'Add Payment'}
+                {loading ? t('auth.loading') : t('trips.addPayment')}
               </button>
             </div>
 

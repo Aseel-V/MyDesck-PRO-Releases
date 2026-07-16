@@ -1,0 +1,99 @@
+- generic [ref=e2]:
+  - region "Notifications alt+T"
+  - generic [ref=e5]:
+    - region "Notifications alt+T"
+    - navigation [ref=e6]:
+      - generic [ref=e8]:
+        - generic [ref=e9] [cursor=pointer]:
+          - img "MyDesck PRO" [ref=e12]
+          - generic [ref=e13]: MyDesck PRO
+        - generic [ref=e14]:
+          - button "בטיחות ותמיכה" [ref=e15] [cursor=pointer]
+          - generic [ref=e18]:
+            - button "התחברות" [ref=e19] [cursor=pointer]
+            - generic [ref=e20]:
+              - button [ref=e21] [cursor=pointer]
+              - button "HE" [ref=e29] [cursor=pointer]
+    - generic [ref=e35]:
+      - generic [ref=e36]: V 0.0.35 Available Now
+      - heading "היפרדו לשלום מפנקסי הקבלות" [level=1] [ref=e41]
+      - paragraph [ref=e42]: מערכת הנהלת חשבונות חכמה
+      - generic [ref=e43]:
+        - generic [ref=e44]:
+          - link "הורד ל-Windows" [ref=e45] [cursor=pointer]:
+            - /url: https://github.com/Aseel-V/MyDesck-PRO-Releases/releases/latest/download/MyDesck-PRO-Setup.exe
+          - link "הורד ל-Mac" [ref=e50] [cursor=pointer]:
+            - /url: https://github.com/Aseel-V/MyDesck-PRO-Releases/releases/latest/download/MyDesck-PRO-0.0.34.dmg
+          - link "צור קשר" [ref=e55] [cursor=pointer]:
+            - /url: https://mail.google.com/mail/?view=cm&fs=1&to=aseelshaheen621@gmail.com
+        - button "View all versions & release notes" [ref=e60] [cursor=pointer]
+      - paragraph [ref=e61]: חוו את השליטה האולטימטיבית בכספים של העסק שלכם. MyDesck PRO מציעה שילוב מושלם של עוצמה ופשטות, שנועד לעזור לכם לצמוח בביטחון.
+      - img "Dashboard Preview" [ref=e63]
+    - generic [ref=e66]:
+      - heading "פתרונות לפי תעשייה" [level=2] [ref=e69]
+      - generic [ref=e71]:
+        - generic [ref=e73] [cursor=pointer]:
+          - heading "סופרמרקטים וקמעונאות" [level=3] [ref=e79]
+          - paragraph [ref=e80]: הפתרון המושלם לניהול קמעונאי. קופה מהירה, ניהול מלאי חכם, וניתוח רווחים מפורט.
+          - generic [ref=e81]:
+            - generic [ref=e82]: סריקת ברקוד
+            - generic [ref=e88]: ניהול מלאי
+            - generic [ref=e94]: ניתוח רווחים
+            - generic [ref=e100]: הדפסת קבלות
+            - generic [ref=e106]: ניהול מרכזי
+        - generic [ref=e113] [cursor=pointer]:
+          - heading "תיירות ופיננסים" [level=3] [ref=e119]
+          - paragraph [ref=e120]: ניהול מלא של טיולים ועלויות. טיפול בהצעות מחיר, נתוני לקוחות וחשבוניות בפלטפורמה אחת.
+          - generic [ref=e121]:
+            - generic [ref=e122]: ניהול טיולים
+            - generic [ref=e128]: מעקב פיננסי
+            - generic [ref=e134]: מסמכי PDF
+            - generic [ref=e140]: ספר לקוחות
+        - generic [ref=e147] [cursor=pointer]:
+          - heading "מסעדות ובתי קפה" [level=3] [ref=e152]
+          - paragraph [ref=e153]: ייעל את פעילות המסעדה שלך עם ניהול שולחנות, מסכי מטבח ותפריטים דיגיטליים.
+          - generic [ref=e154]:
+            - generic [ref=e155]: תצוגת שולחנות ויזואלית
+            - generic [ref=e161]: מערכת תצוגת מטבח (KDS)
+            - generic [ref=e167]: ניהול תפריט
+            - generic [ref=e173]: סגירת יום (דו"ח Z)
+        - generic [ref=e185]:
+          - generic [ref=e186]:
+            - heading "פתרונות מותאמים" [level=3] [ref=e187]
+            - generic [ref=e188]: בקרוב
+          - paragraph [ref=e189]: פתרונות מותאמים אישית למספרות, מוסכים ועסקי שירות אחרים.
+    - generic [ref=e191]:
+      - heading "כל מה שצריך לניהול העסק" [level=2] [ref=e192]
+      - generic [ref=e193]:
+        - 'heading "לוח בקרה ורווחים: מעקב אחר הכנסות וצמיחה" [level=3] [ref=e202]'
+        - 'heading "ייצוא לרואה חשבון: דו״חות כספיים בקליק" [level=3] [ref=e209]'
+        - heading "3 חודשי ניסיון חינם, ואז $20/חודש בלבד" [level=3] [ref=e216]
+    - generic [ref=e218]:
+      - heading "פתרונות משולבים ומודרניים לעסק שלך" [level=2] [ref=e220]
+      - generic [ref=e222]:
+        - generic [ref=e223]:
+          - heading "ניהול מכירות ולקוחות" [level=3] [ref=e228]
+          - paragraph [ref=e229]: ייעל את תהליך המכירה שלך, עקוב אחר חובות לקוחות ללא מאמץ ונהל חוזים דיגיטליים בפלטפורמה אחת מאוחדת.
+        - generic [ref=e230]:
+          - heading "חשבוניות מס מיידיות" [level=3] [ref=e235]
+          - paragraph [ref=e236]: הפק חשבוניות מס, קבלות והצעות מחיר מקצועיות באופן מיידי. תואם מלא ומוכן לרואה החשבון שלך.
+        - generic [ref=e237]:
+          - heading "דוחות רווח וצמיחה" [level=3] [ref=e242]
+          - paragraph [ref=e243]: הצג את הביצועים שלך באמצעות לוחות מחוונים מקיפים לניתוח רווחים, הכנסות וצמיחה.
+    - generic [ref=e246]:
+      - generic [ref=e248]:
+        - heading "ראה את המערכת בפעולה" [level=2] [ref=e249]
+        - paragraph [ref=e250]: הממשק שלנו תוכנן למהירות ופשטות. מותאם לביצועים וקלות שימוש.
+        - generic [ref=e251]:
+          - generic [ref=e252]: תמיכה במצב כהה למשמרות לילה
+          - generic [ref=e258]: עבודה ללא אינטרנט (Offline Mode)
+          - generic [ref=e264]: תמיכה מלאה בעברית, אנגלית וערבית
+      - paragraph [ref=e276] [cursor=pointer]: סרטון הדרכה רשמי - בקרוב
+    - generic [ref=e280]:
+      - heading "הצטרפות והתאמה אישית" [level=2] [ref=e288]
+      - paragraph [ref=e289]: להרשמה ופתיחת חשבון, אנא צרו קשר וציינו את סוג העסק. הפלטפורמה מותאמת מלא לתיירות, מסעדות וסופרמרקטים.
+      - link "aseelshaheen621@gmail.com" [ref=e290] [cursor=pointer]:
+        - /url: https://mail.google.com/mail/?view=cm&fs=1&to=aseelshaheen621@gmail.com
+    - contentinfo [ref=e294]:
+      - generic [ref=e295]: בטיחות ותמיכה
+      - paragraph [ref=e297]: © 2026 MyDesck PRO. כל הזכויות שמורות.

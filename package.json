@@ -63,7 +63,7 @@
     "lint": "eslint .",
     "preview": "vite preview --host 0.0.0.0 --port 4173",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
-    "electron:dev": "node scripts/stop-dev.cjs && concurrently \"npm run dev\" \"wait-on http://127.0.0.1:5173 && node scripts/launch-electron.cjs development\"",
+    "electron:dev": "node scripts/dev.cjs",
     "electron:start": "node scripts/launch-electron.cjs production",
     "electron:build-start": "npm run build && node scripts/launch-electron.cjs production",
     "dist": "npm run build && dotenv electron-builder --publish never",

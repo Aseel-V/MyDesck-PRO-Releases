@@ -101,13 +101,13 @@ export default function NewCarForm({ onClose, onSave }: NewCarFormProps) {
     try {
       // 1. Upsert Vehicle (Identify by plate + business_id)
       const { data: existingVehicle } = await supabase
-        .from('customer_vehicles')
+        .from('customer_vehicles' as any)
         .select('id')
         .eq('business_id', profile.id)
         .eq('plate_number', data.plate_number)
         .maybeSingle();
 
-      let vehicleId = existingVehicle?.id;
+      let vehicleId = (existingVehicle as any)?.id;
 
       let testExpiryDate = null;
       if (data.test_expiry) {
@@ -140,24 +140,24 @@ export default function NewCarForm({ onClose, onSave }: NewCarFormProps) {
       if (!vehicleId) {
         // Create new vehicle
         const { data: newVehicle, error: vehicleError } = await supabase
-          .from('customer_vehicles')
+          .from('customer_vehicles' as any)
           .insert([{ ...vehicleData, created_at: new Date().toISOString() }])
           .select()
           .single();
 
         if (vehicleError) throw vehicleError;
-        vehicleId = newVehicle.id;
+        vehicleId = (newVehicle as any).id;
       } else {
         // Update existing
          await supabase
-          .from('customer_vehicles')
+          .from('customer_vehicles' as any)
           .update(vehicleData)
           .eq('id', vehicleId);
       }
 
       // 2. Create Repair Order
       const { error: orderError } = await supabase
-        .from('repair_orders')
+        .from('repair_orders' as any)
         .insert([{
             business_id: profile.id,
             vehicle_id: vehicleId,

@@ -449,8 +449,7 @@ export default function Settings() {
 
       await updateProfile({ signature_url: newSigUrl });
       await refreshProfile();
-
-      showNotice('success', 'Signature uploaded successfully');
+      showNotice('success', 'Signature uploaded successfully');
     } catch (error) {
       console.error('Signature upload failed:', error);
       const message = error instanceof Error ? error.message : "Upload failed. Ensure bucket 'logos' exists";
@@ -462,7 +461,7 @@ export default function Settings() {
 
   return (
     <div className="animate-fadeIn">
-      <div className="max-w-5xl mx-auto space-y-6">
+      <div className="w-full space-y-6">
         {/* Toast / Notice */}
         {notice && (
           <div

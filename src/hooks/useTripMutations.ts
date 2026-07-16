@@ -13,7 +13,7 @@ export function useTripMutations() {
 
     const saveTripMutation = useMutation({
         mutationFn: async ({ formData, editTripId }: { formData: TripFormData; editTripId?: string }) => {
-            if (!user?.id) throw new Error('User not authenticated');
+            if (!user?.id) throw new Error('USER_NOT_AUTHENTICATED');
 
             if (editTripId) {
                 const { error } = await supabase
@@ -33,11 +33,11 @@ export function useTripMutations() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['trips'] });
             queryClient.invalidateQueries({ queryKey: ['trip-years'] });
-            toast.success(t('notifications.tripSaved') || 'Trip saved successfully');
+            toast.success(t('notifications.tripSaved'));
         },
         onError: (error: Error) => {
             console.error('Error saving trip:', error);
-            toast.error(t('notifications.tripSaveError') || 'Failed to save trip');
+            toast.error(t('notifications.tripSaveError'));
         }
     });
 
@@ -62,11 +62,11 @@ export function useTripMutations() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['trips'] });
             queryClient.invalidateQueries({ queryKey: ['trip-years'] });
-            toast.success(t('notifications.tripDeleted') || 'Trip deleted');
+            toast.success(t('notifications.tripDeleted'));
         },
         onError: (error: Error) => {
             console.error('Error deleting trip:', error);
-            toast.error(t('notifications.tripDeleteError') || 'Failed to delete trip');
+            toast.error(t('notifications.tripDeleteError'));
         }
     });
 
@@ -81,11 +81,11 @@ export function useTripMutations() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['trips'] });
             queryClient.invalidateQueries({ queryKey: ['trip-years'] });
-            toast.success('Trip archived');
+            toast.success(t('notifications.tripArchived'));
         },
         onError: (error: Error) => {
             console.error('Error archiving trip:', error);
-            toast.error('Failed to archive trip');
+            toast.error(t('notifications.tripArchiveError'));
         }
     });
 
@@ -105,11 +105,11 @@ export function useTripMutations() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['trips'] });
-            toast.success(t('notifications.paymentUpdated') || 'Payment updated');
+            toast.success(t('notifications.paymentUpdated'));
         },
         onError: (error: Error) => {
             console.error('Error updating payment:', error);
-            toast.error(t('notifications.paymentUpdateError') || 'Failed to update payment');
+            toast.error(t('notifications.paymentUpdateError'));
         }
     });
 
@@ -126,7 +126,7 @@ export function useTripMutations() {
         },
         onError: (error: Error) => {
             console.error('Error toggling export:', error);
-            toast.error(t('notifications.exportStatusError') || 'Failed to update export status');
+            toast.error(t('notifications.exportStatusError'));
         }
     });
 

@@ -26,7 +26,7 @@ const isPhoneValid = (v: string) => {
 /** Convert Uint8Array → base64 data URL (browser fallback when not in Electron) */
 function assertPdfHasContent(bytes: Uint8Array) {
   if (bytes.length < 1000) {
-    throw new Error(`Generated PDF is unexpectedly small (${bytes.length} bytes)`);
+    throw new Error('PDF_TOO_SMALL');
   }
 }
 
@@ -134,7 +134,7 @@ export default function PDFExportModal({ trips, onClose, onExportComplete }: PDF
 
       if (exportType === 'single') {
         const trip = trips.find((t: Trip) => t.id === selectedTripId);
-        if (!trip) throw new Error('Trip not found');
+        if (!trip) throw new Error('TRIP_NOT_FOUND');
 
         pdfBytes = await generateSingleTripPDF({
           profile,
@@ -203,6 +203,7 @@ export default function PDFExportModal({ trips, onClose, onExportComplete }: PDF
             </div>
             <button
               onClick={onClose}
+              aria-label={t('trips.close')}
               className="p-2 rounded-lg hover:bg-slate-800/80 text-slate-300 transition-all"
             >
               <X className="w-5 h-5" />
@@ -387,7 +388,7 @@ export default function PDFExportModal({ trips, onClose, onExportComplete }: PDF
                     <iframe
                       src={previewUrl}
                       className="w-full h-full"
-                      title="PDF Preview"
+                      title={t('trips.exportModal.livePreview')}
                     />
                   ) : (
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 p-6 text-center">

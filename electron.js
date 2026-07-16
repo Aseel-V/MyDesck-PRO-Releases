@@ -9,6 +9,7 @@ const { autoUpdater } = require('electron-updater');
 
 const isDev = process.env.NODE_ENV === 'development';
 const DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL || 'http://127.0.0.1:5173';
+const DEV_SERVER_ORIGIN = new URL(DEV_SERVER_URL).origin;
 const currentAppVersion = app.getVersion();
 let autoUpdaterInitialized = false;
 let updateState = {
@@ -24,21 +25,119 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // --- Security Helpers ---
-const ALLOWED_PROTOCOLS = ['https:', 'http:', 'mailto:', 'tel:'];
+const EXPLICIT_EXTERNAL_ORIGINS = new Set([
+  'https://github.com',
+  'https://mail.google.com',
+  'https://wa.me',
+]);
 
-function isSafeUrl(urlStr) {
+function isAllowedExternalUrl(urlStr) {
   try {
     const url = new URL(urlStr);
-    return ALLOWED_PROTOCOLS.includes(url.protocol);
+    if (url.protocol === 'mailto:' || url.protocol === 'tel:') {
+      return true;
+    }
+
+    return url.protocol === 'https:' && EXPLICIT_EXTERNAL_ORIGINS.has(url.origin);
   } catch (e) {
     return false;
   }
+}
+
+function isAllowedNavigationUrl(urlStr, allowedOrigins = [], allowedProtocols = []) {
+  try {
+    const url = new URL(urlStr);
+
+    if (url.protocol === 'about:') {
+      return true;
+    }
+
+    if (allowedProtocols.includes(url.protocol)) {
+      return true;
+    }
+
+    if (url.protocol === 'file:') {
+      return allowedProtocols.includes('file:');
+    }
+
+    return allowedOrigins.includes(url.origin);
+  } catch (e) {
+    return false;
+  }
+}
+
+function getSecureWebPreferences(overrides = {}) {
+  const preferences = {
+    preload: path.join(__dirname, 'preload.cjs'),
+    contextIsolation: true,
+    nodeIntegration: false,
+    sandbox: true,
+    webSecurity: true,
+    allowRunningInsecureContent: false,
+    ...overrides,
+  };
+
+  if (!preferences.preload) {
+    delete preferences.preload;
+  }
+
+  return preferences;
+}
+
+function attachWindowSecurityHandlers(win, options = {}) {
+  const {
+    allowedOrigins = [],
+    allowedProtocols = ['file:'],
+    openAllowedExternals = false,
+  } = options;
+
+  win.webContents.on('will-navigate', (event, url) => {
+    if (isAllowedNavigationUrl(url, allowedOrigins, allowedProtocols)) {
+      return;
+    }
+
+    event.preventDefault();
+
+    if (openAllowedExternals && isAllowedExternalUrl(url)) {
+      shell.openExternal(url);
+    } else {
+      console.warn(`Blocked unexpected navigation: ${url}`);
+    }
+  });
+
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (openAllowedExternals && isAllowedExternalUrl(url)) {
+      shell.openExternal(url);
+    } else {
+      console.warn(`Blocked unexpected new window: ${url}`);
+    }
+
+    return { action: 'deny' };
+  });
 }
 
 function sanitizeString(str) {
   if (typeof str !== 'string') return '';
   // Remove common shell metacharacters to prevent command injection
   return str.replace(/[&|;$`<>\\!"']/g, '');
+}
+
+function withPrintContentSecurityPolicy(html) {
+  const csp = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'none'; style-src 'unsafe-inline'; img-src data: blob: https:; font-src data:; connect-src 'none'; object-src 'none'; base-uri 'none';">`;
+
+  if (typeof html !== 'string') {
+    return csp;
+  }
+
+  if (/<meta[^>]+http-equiv=["']Content-Security-Policy["']/i.test(html)) {
+    return html;
+  }
+
+  if (/<head[^>]*>/i.test(html)) {
+    return html.replace(/<head[^>]*>/i, (match) => `${match}${csp}`);
+  }
+
+  return `<!doctype html><html><head>${csp}</head><body>${html}</body></html>`;
 }
 
 // --- User Data Path Logic ---
@@ -167,18 +266,19 @@ function createWindow() {
     frame: false,
     fullscreen: true,
     autoHideMenuBar: true,
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      enableRemoteModule: false,
-      preload: path.join(__dirname, 'preload.cjs'),
+    webPreferences: getSecureWebPreferences({
       devTools: true,
-      webSecurity: !isDev // Allow CORS in development
-    },
+    }),
     icon: fs.existsSync(path.join(__dirname, 'assets/app-icon.png')) 
       ? path.join(__dirname, 'assets/app-icon.png')
       : path.join(__dirname, 'app-icon.png'), // Fallback if flattened
     show: false,
+  });
+
+  attachWindowSecurityHandlers(mainWindow, {
+    allowedOrigins: isDev ? [DEV_SERVER_ORIGIN] : [],
+    allowedProtocols: ['file:'],
+    openAllowedExternals: true,
   });
 
   // Load the app
@@ -310,10 +410,12 @@ ipcMain.handle('fetch-car-price', async (event, plateNumber) => {
     width: 800,
     height: 600,
     show: false,
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-    },
+    webPreferences: getSecureWebPreferences({ preload: undefined }),
+  });
+
+  attachWindowSecurityHandlers(priceWindow, {
+    allowedOrigins: ['https://balcar.co.il'],
+    allowedProtocols: [],
   });
 
   try {
@@ -365,7 +467,7 @@ ipcMain.handle('fetch-car-price', async (event, plateNumber) => {
 });
 
 ipcMain.on('open_external', (event, url) => {
-  if (isSafeUrl(url)) {
+  if (isAllowedExternalUrl(url)) {
     shell.openExternal(url);
   } else {
     console.warn(`Blocked attempt to open unsafe URL: ${url}`);
@@ -400,15 +502,16 @@ ipcMain.handle('print-ticket', async (event, { html, printerName, options = {} }
     width: 300,
     height: 600,
     show: false,
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-    },
+    webPreferences: getSecureWebPreferences({ preload: undefined }),
+  });
+
+  attachWindowSecurityHandlers(printWindow, {
+    allowedProtocols: ['data:'],
   });
 
   try {
     // Load the HTML content
-    await printWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
+    await printWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(withPrintContentSecurityPolicy(html))}`);
     
     // Wait for content to render
     await new Promise(resolve => setTimeout(resolve, 300));
@@ -472,11 +575,12 @@ ipcMain.handle('open-customer-display', async (event, displayIndex = 1) => {
     fullscreen: true,
     frame: false,
     alwaysOnTop: true,
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      preload: path.join(__dirname, 'preload.cjs'),
-    },
+    webPreferences: getSecureWebPreferences(),
+  });
+
+  attachWindowSecurityHandlers(customerDisplayWindow, {
+    allowedOrigins: isDev ? [DEV_SERVER_ORIGIN] : [],
+    allowedProtocols: ['file:'],
   });
 
   const distPath = path.join(__dirname, 'dist', 'index.html');
@@ -518,11 +622,12 @@ ipcMain.handle('print-to-pdf', async (event, data) => {
   const pdfWindow = new BrowserWindow({
     height: 600,
     show: false,
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      preload: path.join(__dirname, 'preload.cjs'),
-    },
+    webPreferences: getSecureWebPreferences(),
+  });
+
+  attachWindowSecurityHandlers(pdfWindow, {
+    allowedOrigins: isDev ? [DEV_SERVER_ORIGIN] : [],
+    allowedProtocols: ['file:'],
   });
 
   try {
@@ -843,7 +948,8 @@ app.on('window-all-closed', () => {
 });
 
 app.on('web-contents-created', (event, contents) => {
-  contents.on('new-window', (navigationEvent) => {
-    navigationEvent.preventDefault();
+  contents.setWindowOpenHandler(({ url }) => {
+    console.warn(`Blocked unexpected new window: ${url}`);
+    return { action: 'deny' };
   });
 });
