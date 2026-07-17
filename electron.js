@@ -6,12 +6,15 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const { app, BrowserWindow, ipcMain, Menu, globalShortcut, shell, screen } = require('electron');
 const { autoUpdater } = require('electron-updater');
+const { isHigherStableVersion, normalizeProgress } = require('./updater-policy.cjs');
 
 const isDev = process.env.NODE_ENV === 'development';
 const DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL || 'http://127.0.0.1:5173';
 const DEV_SERVER_ORIGIN = new URL(DEV_SERVER_URL).origin;
 const currentAppVersion = app.getVersion();
 let autoUpdaterInitialized = false;
+let updateCheckPromise = null;
+let updateDownloadPromise = null;
 let updateState = {
   status: 'idle',
   currentVersion: currentAppVersion,
@@ -177,7 +180,11 @@ function broadcastUpdateState(partialState) {
 }
 
 function runUpdateCheck() {
-  if (isDev || !app.isPackaged) return;
+  if (isDev || !app.isPackaged) {
+    return Promise.resolve(updateState);
+  }
+
+  if (updateCheckPromise) return updateCheckPromise;
 
   broadcastUpdateState({
     status: 'checking',
@@ -186,20 +193,29 @@ function runUpdateCheck() {
     availableVersion: null,
   });
 
-  autoUpdater.checkForUpdates().catch((err) => {
-    console.error('Auto-updater check failed:', err);
-    const message = err?.message || String(err);
-    broadcastUpdateState({ status: 'error', error: message });
-    sendUpdateEvent('update_error', message);
-  });
+  updateCheckPromise = autoUpdater.checkForUpdates()
+    .then(() => updateState)
+    .catch((err) => {
+      console.error('Auto-updater check failed:', err);
+      broadcastUpdateState({ status: 'error', error: 'UPDATE_CHECK_FAILED' });
+      return updateState;
+    })
+    .finally(() => {
+      updateCheckPromise = null;
+    });
+
+  return updateCheckPromise;
 }
 
 function setupAutoUpdater() {
   if (isDev || !app.isPackaged || autoUpdaterInitialized) return;
 
   autoUpdaterInitialized = true;
-  autoUpdater.autoDownload = true;
-  autoUpdater.autoInstallOnAppQuit = true;
+  autoUpdater.autoDownload = false;
+  autoUpdater.autoInstallOnAppQuit = false;
+  autoUpdater.allowPrerelease = false;
+  autoUpdater.allowDowngrade = false;
+  autoUpdater.channel = 'latest';
 
   autoUpdater.on('checking-for-update', () => {
     broadcastUpdateState({
@@ -211,6 +227,16 @@ function setupAutoUpdater() {
   });
 
   autoUpdater.on('update-available', (info) => {
+    if (!isHigherStableVersion(info?.version, app.getVersion())) {
+      broadcastUpdateState({
+        status: /^\d+\.\d+\.\d+$/.test(info?.version || '') ? 'up-to-date' : 'error',
+        availableVersion: null,
+        error: /^\d+\.\d+\.\d+$/.test(info?.version || '') ? null : 'INVALID_UPDATE_METADATA',
+        progress: 0,
+      });
+      return;
+    }
+
     const nextState = {
       status: 'available',
       availableVersion: info?.version || null,
@@ -223,7 +249,7 @@ function setupAutoUpdater() {
 
   autoUpdater.on('update-not-available', () => {
     broadcastUpdateState({
-      status: 'idle',
+      status: 'up-to-date',
       availableVersion: null,
       error: null,
       progress: 0,
@@ -233,7 +259,7 @@ function setupAutoUpdater() {
   autoUpdater.on('download-progress', (progress) => {
     broadcastUpdateState({
       status: 'downloading',
-      progress: progress?.percent || 0,
+      progress: normalizeProgress(progress?.percent),
       error: null,
     });
     sendUpdateEvent('update_progress', progress);
@@ -251,9 +277,10 @@ function setupAutoUpdater() {
 
   autoUpdater.on('error', (err) => {
     console.error('Auto-updater error:', err);
-    const message = err?.message || String(err);
-    broadcastUpdateState({ status: 'error', error: message });
-    sendUpdateEvent('update_error', message);
+    const errorCode = updateState.status === 'downloading'
+      ? 'UPDATE_DOWNLOAD_FAILED'
+      : 'UPDATE_CHECK_FAILED';
+    broadcastUpdateState({ status: 'error', error: errorCode });
   });
 
   runUpdateCheck();
@@ -319,29 +346,38 @@ ipcMain.on('quit-app', () => {
   app.quit();
 });
 
-// Update IPCs
-ipcMain.on('download_update', () => {
-  if (isDev || !app.isPackaged) return;
-  autoUpdater.downloadUpdate().catch((err) => {
-    const message = err?.message || String(err);
-    broadcastUpdateState({ status: 'error', error: message });
-    sendUpdateEvent('update_error', message);
-  });
+// Update IPCs. The renderer can request actions, but updater ownership remains
+// in the main process and no release credentials are exposed through IPC.
+ipcMain.handle('check-for-updates', () => runUpdateCheck());
+
+ipcMain.handle('download-update', () => {
+  if (isDev || !app.isPackaged || updateState.status !== 'available') {
+    return Promise.resolve(updateState);
+  }
+
+  if (updateDownloadPromise) return updateDownloadPromise;
+
+  broadcastUpdateState({ status: 'downloading', error: null, progress: 0 });
+  updateDownloadPromise = autoUpdater.downloadUpdate()
+    .then(() => updateState)
+    .catch((err) => {
+      console.error('Auto-updater download failed:', err);
+      broadcastUpdateState({ status: 'error', error: 'UPDATE_DOWNLOAD_FAILED' });
+      return updateState;
+    })
+    .finally(() => {
+      updateDownloadPromise = null;
+    });
+
+  return updateDownloadPromise;
 });
 
-ipcMain.on('retry_update', () => {
-  if (isDev || !app.isPackaged) return;
-  runUpdateCheck();
-});
-
-ipcMain.on('restart_app', () => {
-  if (isDev || !app.isPackaged) return;
+ipcMain.handle('install-update', () => {
+  if (isDev || !app.isPackaged || updateState.status !== 'downloaded') {
+    return false;
+  }
   autoUpdater.quitAndInstall();
-});
-
-ipcMain.on('unlock_app', () => {
-  // Renderer owns the update modal state; this IPC intentionally acknowledges
-  // the emergency skip path exposed by the preload bridge.
+  return true;
 });
 
 ipcMain.handle('get-app-version', () => app.getVersion());

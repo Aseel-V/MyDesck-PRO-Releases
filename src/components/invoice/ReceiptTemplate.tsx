@@ -1,7 +1,7 @@
 import { RestaurantOrder, RestaurantTable } from '../../types/restaurant';
 import { BusinessProfile } from '../../lib/supabase';
 import { UtensilsCrossed } from 'lucide-react';
-import { translations, Language } from '../../i18n/translations';
+import { translations, type Language } from '../../i18n/locales';
 
 interface ReceiptTemplateProps {
   order: RestaurantOrder;

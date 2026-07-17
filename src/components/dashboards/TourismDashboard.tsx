@@ -23,6 +23,9 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
 import { Trip } from '../../types/trip';
 import { getEffectiveTripDate, getEffectivePaymentStatus } from '../../lib/tripStatus';
+import { Button } from '../travel-ui/Button';
+import { StatusBadge } from '../travel-ui/StatusBadge';
+import { TravelOperationsDashboard } from './TravelOperationsDashboard';
 
 interface UserProfile {
   full_name?: string | null;
@@ -173,6 +176,36 @@ export default function TourismDashboard({
     return data;
   }, [filteredTrips, currency, convert, language]);
 
+  const upcomingTrips = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    return filteredTrips
+      .filter((trip) => getEffectiveTripDate(trip) >= today)
+      .sort((a, b) => getEffectiveTripDate(a).localeCompare(getEffectiveTripDate(b)))
+      .slice(0, 5);
+  }, [filteredTrips]);
+
+  const financialPosition = useMemo(() => {
+    return filteredTrips.reduce(
+      (totals, trip) => {
+        const from = trip.currency || currency;
+        const toDashboardCurrency = (value: number) => from === currency ? value : (convert ? convert(value, from, currency) : value);
+        const revenue = Number(trip.sale_price) || 0;
+        const paid = Number(trip.amount_paid) || 0;
+        const wholesale = Number(trip.wholesale_cost) || 0;
+        const profit = trip.profit !== null && trip.profit !== undefined && Number.isFinite(Number(trip.profit))
+          ? Number(trip.profit)
+          : revenue - wholesale;
+
+        totals.revenue += toDashboardCurrency(revenue);
+        totals.collected += toDashboardCurrency(paid);
+        totals.outstanding += toDashboardCurrency(Math.max(0, revenue - paid));
+        totals.profit += toDashboardCurrency(profit);
+        return totals;
+      },
+      { revenue: 0, collected: 0, outstanding: 0, profit: 0 }
+    );
+  }, [filteredTrips, currency, convert]);
+
   // Animation Options
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -201,17 +234,17 @@ export default function TourismDashboard({
     return (
       <div
         dir={direction}
-        className="rounded-xl border border-slate-800 bg-slate-950/95 p-3 text-xs text-slate-100 shadow-xl backdrop-blur-md"
+        className="rounded-xl border border-slate-200 bg-white p-3 text-xs text-slate-700 shadow-lg dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
       >
-        <p className="mb-2 font-bold text-slate-400">{label}</p>
+        <p className="mb-2 font-bold text-slate-500 dark:text-slate-400">{label}</p>
         <div className="space-y-1">
           {payload.map((entry) => (
             <div key={entry.name} className="flex items-center justify-between gap-4">
-              <span className="inline-flex items-center gap-2 text-slate-400">
+              <span className="inline-flex items-center gap-2 text-slate-500 dark:text-slate-400">
                 <span className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
                 {entry.name}
               </span>
-              <span className="font-semibold text-slate-100">
+              <span className="font-semibold text-slate-900 dark:text-slate-100">
                 {formatCurrency(Number(entry.value) || 0)}
               </span>
             </div>
@@ -221,23 +254,18 @@ export default function TourismDashboard({
     );
   };
 
-  // Reusable BentoCard Component with Slate theme boundaries and RTL mirrored glows
+  // Shared dashboard section surface. Visual treatment stays intentionally restrained.
   const BentoCard = ({ 
     children, 
-    className = '', 
-    glowColor = 'from-sky-500/10 to-indigo-500/10'
+    className = ''
   }: { 
     children: React.ReactNode; 
     className?: string;
-    glowColor?: string;
   }) => (
     <motion.div
       variants={itemVariants}
-      whileHover={{ y: -4, transition: { duration: 0.2 } }}
-      className={`relative overflow-hidden rounded-3xl border border-slate-800/60 bg-slate-900/40 backdrop-blur-md p-6 shadow-xl transition-all ${className}`}
+      className={`rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-colors dark:border-slate-800 dark:bg-slate-900 ${className}`}
     >
-      {/* Radial ambient glow - RTL mirrored */}
-      <div className={`absolute -top-16 end-[-4rem] w-32 h-32 bg-gradient-to-tr ${glowColor} blur-3xl opacity-40 rounded-full pointer-events-none`} />
       {children}
     </motion.div>
   );
@@ -252,13 +280,13 @@ export default function TourismDashboard({
           {Array.from({ length: Math.min(count, 3) }).map((_, i) => (
             <div 
               key={i} 
-              className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-sky-500/15 border border-sky-500/30 text-[9px] font-bold text-sky-400"
+              className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-sky-200 bg-sky-50 text-[9px] font-bold text-sky-700 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-300"
             >
               {t('dashboard.passengerInitial', { count: i + 1 })}
             </div>
           ))}
           {count > 3 && (
-            <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-800 border border-slate-700 text-[9px] font-bold text-slate-400">
+            <div className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-[9px] font-bold text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
               +{count - 3}
             </div>
           )}
@@ -268,12 +296,12 @@ export default function TourismDashboard({
 
     return (
       <div className="flex -space-x-1.5 rtl:space-x-reverse overflow-hidden">
-        {list.slice(0, 3).map((traveler: any, i: number) => {
+        {list.slice(0, 3).map((traveler, i) => {
           const initials = traveler.full_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'P';
           return (
             <div 
               key={i} 
-              className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-800 border border-slate-700 text-[9px] font-bold text-slate-200" 
+              className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-[9px] font-bold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
               title={traveler.full_name}
             >
               {initials}
@@ -281,7 +309,7 @@ export default function TourismDashboard({
           );
         })}
         {list.length > 3 && (
-          <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-900 border border-slate-800 text-[9px] font-bold text-slate-400">
+          <div className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-[9px] font-bold text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
             +{list.length - 3}
           </div>
         )}
@@ -292,39 +320,39 @@ export default function TourismDashboard({
   // Render Shimmer Skeleton loading screen
   if (isLoading) {
     return (
-      <div dir={direction} className="space-y-6 bg-slate-950 text-slate-50 p-1 rounded-3xl min-h-screen">
+      <div dir={direction} className="space-y-8 text-slate-900 dark:text-slate-100">
         {/* Header Skeleton */}
-        <div className="flex flex-col lg:flex-row rtl:lg:flex-row-reverse justify-between items-start lg:items-center gap-4 bg-slate-900/20 border border-slate-800/40 p-6 rounded-3xl animate-pulse">
+        <div className="flex flex-col items-start justify-between gap-4 border-b border-slate-200 pb-6 lg:flex-row lg:items-center rtl:lg:flex-row-reverse dark:border-slate-800">
           <div className="space-y-2 w-1/3">
-            <div className="h-2 w-16 bg-slate-800 rounded animate-pulse" />
-            <div className="h-6 w-48 bg-slate-800 rounded animate-pulse" />
-            <div className="h-3 w-32 bg-slate-800 rounded animate-pulse" />
+            <div className="h-2 w-16 rounded bg-slate-200 dark:bg-slate-800" />
+            <div className="h-6 w-48 rounded bg-slate-200 dark:bg-slate-800" />
+            <div className="h-3 w-32 rounded bg-slate-200 dark:bg-slate-800" />
           </div>
-          <div className="h-8 w-44 bg-slate-800 rounded-xl animate-pulse" />
+          <div className="h-9 w-44 rounded-xl bg-slate-200 dark:bg-slate-800" />
         </div>
 
         {/* Bento Grid Skeleton */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" dir={direction}>
           {/* Chart Card Skeleton */}
-          <div className="lg:col-span-2 rtl:lg:col-start-2 rounded-3xl border border-slate-800/60 bg-slate-900/20 p-6 h-[350px] animate-pulse flex flex-col justify-between">
+          <div className="flex h-[350px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-2 rtl:lg:col-start-2 dark:border-slate-800 dark:bg-slate-900">
             <div className="flex justify-between items-center">
               <div className="space-y-2">
-                <div className="h-4 w-32 bg-slate-800 rounded" />
-                <div className="h-3 w-48 bg-slate-800 rounded" />
+                <div className="h-4 w-32 rounded bg-slate-200 dark:bg-slate-800" />
+                <div className="h-3 w-48 rounded bg-slate-200 dark:bg-slate-800" />
               </div>
-              <div className="h-4 w-16 bg-slate-800 rounded" />
+              <div className="h-4 w-16 rounded bg-slate-200 dark:bg-slate-800" />
             </div>
-            <div className="h-48 w-full bg-slate-800/30 rounded-2xl" />
+            <div className="h-48 w-full rounded-xl bg-slate-100 dark:bg-slate-800/60" />
           </div>
 
           {/* KPI Cards Skeleton */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="rounded-3xl border border-slate-800/60 bg-slate-900/20 p-6 h-[105px] animate-pulse flex flex-col justify-between">
-                <div className="h-6 w-6 bg-slate-800 rounded-lg" />
+              <div key={i} className="flex h-[105px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <div className="h-6 w-6 rounded-lg bg-slate-200 dark:bg-slate-800" />
                 <div className="space-y-2 mt-2">
-                  <div className="h-3 w-20 bg-slate-800 rounded" />
-                  <div className="h-4 w-12 bg-slate-800 rounded" />
+                  <div className="h-3 w-20 rounded bg-slate-200 dark:bg-slate-800" />
+                  <div className="h-4 w-12 rounded bg-slate-200 dark:bg-slate-800" />
                 </div>
               </div>
             ))}
@@ -333,24 +361,70 @@ export default function TourismDashboard({
 
         {/* Bottom Section Skeleton */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" dir={direction}>
-          <div className="lg:col-span-2 rtl:lg:col-start-2 rounded-3xl border border-slate-800/60 bg-slate-900/20 p-6 h-[300px] animate-pulse">
-            <div className="h-6 w-32 bg-slate-800 rounded mb-6" />
+          <div className="h-[300px] rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-2 rtl:lg:col-start-2 dark:border-slate-800 dark:bg-slate-900">
+            <div className="mb-6 h-6 w-32 rounded bg-slate-200 dark:bg-slate-800" />
             <div className="space-y-4">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-10 w-full bg-slate-800/40 rounded-xl" />
+                <div key={i} className="h-10 w-full rounded-xl bg-slate-100 dark:bg-slate-800/60" />
               ))}
             </div>
           </div>
-          <div className="rounded-3xl border border-slate-800/60 bg-slate-900/20 p-6 h-[300px] animate-pulse">
-            <div className="h-6 w-32 bg-slate-800 rounded mb-6" />
+          <div className="h-[300px] rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="mb-6 h-6 w-32 rounded bg-slate-200 dark:bg-slate-800" />
             <div className="space-y-3">
               {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="h-10 w-full bg-slate-800/40 rounded-xl" />
+                <div key={i} className="h-10 w-full rounded-xl bg-slate-100 dark:bg-slate-800/60" />
               ))}
             </div>
           </div>
         </div>
       </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="show"
+        dir={direction}
+        className="relative mx-auto max-w-[1440px] space-y-6 text-slate-900 dark:text-slate-100"
+      >
+        <motion.header variants={itemVariants} className="flex flex-col gap-4 border-b border-slate-200 pb-5 lg:flex-row lg:items-end lg:justify-between dark:border-slate-800">
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-sky-700 dark:text-sky-300">{profile?.business_name || t('appName')}</p>
+            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl dark:text-white">{greeting}</h1>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t('dashboard.summaryLine', { upcoming: stats.upcoming, travelers: stats.travelers })}</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))} className="inline-flex min-h-9 items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-500 hover:border-slate-400 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:text-slate-100"><Search size={14} /><span>{t('dashboard.searchEverywhere')}</span><kbd className="hidden rounded border border-slate-200 px-1 text-[10px] sm:inline dark:border-slate-700">{t('dashboard.searchShortcut')}</kbd></button>
+            <div className="relative"><select value={yearFilter} onChange={(event) => setYearFilter(event.target.value)} className="min-h-9 appearance-none rounded-xl border border-slate-300 bg-white py-2 ps-3 pe-8 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">{availableYears.map((year) => <option key={year} value={year}>{year}</option>)}</select><ChevronDown size={14} className="pointer-events-none absolute end-2 top-1/2 -translate-y-1/2 text-slate-400" /></div>
+            <Button onClick={onCreateTrip} variant="primary" size="sm"><Plus size={15} />{t('dashboard.newTrip')}</Button>
+          </div>
+        </motion.header>
+        <TravelOperationsDashboard
+          alerts={alerts}
+          recentTrips={recentTrips}
+          upcomingTrips={upcomingTrips}
+          monthlyData={monthlyData}
+          financialPosition={financialPosition}
+          direction={direction}
+          language={language}
+          currency={currency}
+          showBanner={showBanner}
+          t={t}
+          itemVariants={itemVariants}
+          formatCurrency={formatCurrency}
+          formatCompactNumber={formatCompactNumber}
+          onDismissBanner={() => setShowBanner(false)}
+          onDismissAlert={onDismissAlert}
+          onSelectTrip={onSelectTrip}
+          onNavigate={onNavigate}
+          onCreateTrip={onCreateTrip}
+          renderTravelers={renderTravelersAvatars}
+        />
+      </motion.div>
     );
   }
 
@@ -360,13 +434,13 @@ export default function TourismDashboard({
       initial="hidden"
       animate="show"
       dir={direction}
-      className="space-y-6 bg-slate-950 text-slate-50 p-1 rounded-3xl min-h-screen relative"
+      className="relative mx-auto max-w-[1600px] space-y-8 text-slate-900 dark:text-slate-100"
     >
       {/* 1. Smart Notification Banner */}
       {showBanner && (
         <motion.div 
           variants={itemVariants}
-          className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200 shadow-sm"
+          className="flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800 dark:border-amber-900/70 dark:bg-amber-950/25 dark:text-amber-200"
         >
           <div className="flex items-center gap-2">
             <AlertTriangle size={16} className="shrink-0" />
@@ -377,7 +451,7 @@ export default function TourismDashboard({
           <button 
             onClick={() => setShowBanner(false)}
             aria-label={t('dashboard.dismissBanner')}
-            className="p-1 rounded hover:bg-amber-500/20 text-amber-400 hover:text-amber-200 transition-colors"
+            className="rounded p-1 text-amber-700 transition-colors hover:bg-amber-100 dark:text-amber-300 dark:hover:bg-amber-900/30"
           >
             &times;
           </button>
@@ -397,22 +471,22 @@ export default function TourismDashboard({
             return (
               <div 
                 key={trip.id}
-                className="relative overflow-hidden bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex flex-col md:flex-row rtl:md:flex-row-reverse gap-4 items-start md:items-center justify-between transition-all hover:bg-amber-500/15"
+                className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-amber-200 bg-amber-50/70 p-4 transition-colors md:flex-row md:items-center rtl:md:flex-row-reverse dark:border-amber-900/70 dark:bg-amber-950/20"
               >
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400 shrink-0">
+                    <div className="shrink-0 rounded-xl bg-amber-100 p-2 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
                     <AlertTriangle size={18} />
                   </div>
                   <div>
-                    <h4 className="text-xs font-semibold text-amber-300 uppercase tracking-wider flex items-center gap-2">
+                    <h4 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-800 dark:text-amber-200">
                       {t('notifications.paymentReminder')}
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/30 text-amber-200">
+                        <span className="rounded bg-amber-200 px-1.5 py-0.5 text-[10px] font-bold text-amber-800 dark:bg-amber-900/50 dark:text-amber-100">
                         {daysUntil === 0 
                           ? t('notifications.today') 
                           : t('notifications.inDays', { count: daysUntil })}
                       </span>
                     </h4>
-                    <p className="text-sm text-slate-300 mt-1">
+                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
                       {t('notifications.paymentDueMessage', {
                         clientName: trip.client_name,
                         destination: trip.destination
@@ -423,14 +497,14 @@ export default function TourismDashboard({
                 <div className="flex items-center gap-2 w-full md:w-auto mt-2 md:mt-0">
                   <button 
                     onClick={() => onSelectTrip(trip)}
-                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-200 bg-amber-500/20 hover:bg-amber-500/30 rounded-lg transition-colors"
+                    className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-amber-200 px-3 py-1.5 text-xs font-semibold text-amber-900 transition-colors hover:bg-amber-300 sm:flex-none dark:bg-amber-900/50 dark:text-amber-100 dark:hover:bg-amber-900/70"
                   >
                     {t('notifications.viewTrip')}
                   </button>
                   <button 
                     onClick={() => onDismissAlert(trip.id)}
                     aria-label={t('dashboard.dismissAlert')}
-                    className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 rounded-lg transition-colors"
+                    className="rounded-lg p-1.5 text-slate-500 transition-colors hover:bg-amber-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                   >
                     &times;
                   </button>
@@ -444,16 +518,16 @@ export default function TourismDashboard({
       {/* SECTION A: Smart Header */}
       <motion.div 
         variants={itemVariants} 
-        className="flex flex-col lg:flex-row rtl:lg:flex-row-reverse justify-between items-start lg:items-center gap-4 bg-slate-900/30 border border-slate-800/50 backdrop-blur-md p-6 rounded-3xl"
+        className="flex flex-col items-start justify-between gap-5 border-b border-slate-200 pb-6 lg:flex-row lg:items-end rtl:lg:flex-row-reverse dark:border-slate-800"
       >
         <div className="space-y-1">
-          <p className="text-[10px] uppercase font-bold tracking-[0.25em] text-sky-400">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-sky-700 dark:text-sky-300">
             {isAdmin ? t('admin.overview') : (profile?.business_name || t('appName'))}
           </p>
-          <h1 className="text-2xl sm:text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-slate-50 via-slate-100 to-slate-300 leading-tight">
+          <h1 className="text-3xl font-bold leading-tight tracking-tight text-slate-950 sm:text-4xl dark:text-white">
             {greeting}
           </h1>
-          <p className="text-xs text-slate-400 font-medium">
+          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
             {!isAdmin && (
               <>
                 {t('dashboard.summaryLine', {
@@ -471,13 +545,13 @@ export default function TourismDashboard({
           {/* Command Palette Search Trigger Button */}
           <button 
             onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-400 hover:text-slate-200 transition-all hover:bg-slate-850 w-full sm:w-44 justify-between cursor-pointer"
+            className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-500 transition-colors hover:border-slate-400 hover:text-slate-900 sm:w-44 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:text-slate-100"
           >
             <span className="flex items-center gap-1.5 truncate">
-              <Search size={14} className="text-slate-500 shrink-0" />
+              <Search size={14} className="shrink-0 text-slate-400" />
               <span className="truncate">{t('dashboard.searchEverywhere')}</span>
             </span>
-            <kbd className="px-1.5 py-0.5 rounded bg-slate-850 border border-slate-700 text-[9px] text-slate-400 font-bold leading-none">{t('dashboard.searchShortcut')}</kbd>
+            <kbd className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[9px] font-bold leading-none text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">{t('dashboard.searchShortcut')}</kbd>
           </button>
 
           {!isAdmin && (
@@ -485,34 +559,35 @@ export default function TourismDashboard({
               <select
                 value={yearFilter}
                 onChange={(e) => setYearFilter(e.target.value)}
-                className="appearance-none bg-slate-900 border border-slate-800/80 rounded-xl ps-3 pe-8 py-2 text-xs font-semibold text-slate-300 focus:outline-none focus:ring-1 focus:ring-sky-500/50 cursor-pointer transition-all"
+                className="cursor-pointer appearance-none rounded-xl border border-slate-300 bg-white py-2 ps-3 pe-8 text-xs font-semibold text-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
               >
                 {availableYears.map(year => (
                   <option key={year} value={year}>{year}</option>
                 ))}
               </select>
-              <div className="absolute inset-y-0 end-2 flex items-center pointer-events-none text-slate-500">
+              <div className="pointer-events-none absolute inset-y-0 end-2 flex items-center text-slate-400">
                 <ChevronDown size={14} />
               </div>
             </div>
           )}
 
           {!isAdmin && (
-            <button
+            <Button
               onClick={onCreateTrip}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-sky-500 to-sky-400 hover:from-sky-400 hover:to-sky-300 border border-sky-400/80 rounded-xl shadow-[0_10px_25px_rgba(56,189,248,0.3)] hover:shadow-sky-500/40 transition-all"
+              variant="primary"
+              size="sm"
             >
               <Plus size={14} />
               <span>{t('dashboard.newTrip')}</span>
-            </button>
+            </Button>
           )}
         </div>
       </motion.div>
 
       {/* SECTION B: Bento Grid Layout */}
       {isAdmin && adminStats ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <BentoCard glowColor="from-sky-500/10 to-blue-500/5">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <BentoCard>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="p-2.5 rounded-2xl bg-sky-500/10 text-sky-400 border border-sky-500/20 shrink-0">
@@ -523,15 +598,15 @@ export default function TourismDashboard({
                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                   {t('admin.totalUsers')}
                 </p>
-                <p className="text-2xl font-black text-white leading-none">{adminStats.totalUsers}</p>
-                <p className="text-[10px] text-slate-505">
+                <p className="text-2xl font-bold leading-none text-slate-950 dark:text-white">{adminStats.totalUsers}</p>
+                <p className="text-[10px] text-slate-500 dark:text-slate-500">
                   {t('admin.platformRegistrations')}
                 </p>
               </div>
             </div>
           </BentoCard>
 
-          <BentoCard glowColor="from-violet-500/10 to-purple-500/5">
+          <BentoCard>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="p-2.5 rounded-2xl bg-violet-500/10 text-violet-400 border border-violet-500/20 shrink-0">
@@ -543,14 +618,14 @@ export default function TourismDashboard({
                   {t('admin.administrators')}
                 </p>
                 <p className="text-2xl font-black text-violet-400 leading-none">{adminStats.totalAdmins}</p>
-                <p className="text-[10px] text-slate-505">
+                <p className="text-[10px] text-slate-500 dark:text-slate-500">
                   {t('admin.systemManagers')}
                 </p>
               </div>
             </div>
           </BentoCard>
 
-          <BentoCard glowColor="from-emerald-500/10 to-teal-500/5">
+          <BentoCard>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="p-2.5 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
@@ -562,14 +637,14 @@ export default function TourismDashboard({
                   {t('admin.regularUsers')}
                 </p>
                 <p className="text-2xl font-black text-emerald-400 leading-none">{adminStats.totalRegularUsers}</p>
-                <p className="text-[10px] text-slate-505">
+                <p className="text-[10px] text-slate-500 dark:text-slate-500">
                   {t('admin.standardTenants')}
                 </p>
               </div>
             </div>
           </BentoCard>
 
-          <BentoCard glowColor="from-amber-500/10 to-orange-500/5">
+          <BentoCard>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 shrink-0">
@@ -581,7 +656,7 @@ export default function TourismDashboard({
                   {t('admin.newThisMonth')}
                 </p>
                 <p className="text-2xl font-black text-amber-400 leading-none">{adminStats.newUsersThisMonth}</p>
-                <p className="text-[10px] text-slate-505">
+                <p className="text-[10px] text-slate-500 dark:text-slate-500">
                   {t('admin.joinedThisMonth')}
                 </p>
               </div>
@@ -590,27 +665,27 @@ export default function TourismDashboard({
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" dir={direction}>
+          <div className="grid grid-cols-1 gap-5 xl:grid-cols-12" dir={direction}>
         
         {/* Left Side: Stripe-style Area Chart (Double width) */}
-        <div className="lg:col-span-2 rtl:lg:col-start-2">
-          <BentoCard glowColor="from-sky-500/10 to-blue-500/5" className="h-full flex flex-col justify-between min-h-[350px]">
+        <div className="xl:col-span-8">
+          <BentoCard className="flex h-full min-h-[350px] flex-col justify-between">
             <div>
               <div className="flex flex-col gap-3 sm:flex-row rtl:sm:flex-row-reverse sm:justify-between sm:items-center mb-4">
                 <div>
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400">
-                    {t('analytics.performanceOverview')}
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                    {t('analytics.businessInsights')}
                   </h3>
-                  <p className="text-[11px] text-slate-505 mt-0.5">
-                    {t('analytics.monthlyRevenueProfit')}
+                  <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                    {t('analytics.subtitle')}
                   </p>
                 </div>
                 <div className="flex items-center gap-3 text-xs rtl:flex-row-reverse">
-                  <span className="flex items-center gap-1 text-slate-400 font-semibold">
+                    <span className="flex items-center gap-1 font-semibold text-slate-600 dark:text-slate-400">
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
                     {t('analytics.revenue')}
                   </span>
-                  <span className="flex items-center gap-1 text-slate-400 font-semibold">
+                    <span className="flex items-center gap-1 font-semibold text-slate-600 dark:text-slate-400">
                     <span className="w-2.5 h-2.5 rounded-full bg-sky-500 inline-block" />
                     {t('analytics.profit')}
                   </span>
@@ -631,17 +706,17 @@ export default function TourismDashboard({
                         <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0}/>
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} className="opacity-40" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" vertical={false} className="dark:opacity-30" />
                     <XAxis 
                       dataKey="name" 
-                      stroke="#64748b" 
+                      stroke="#94a3b8"
                       tick={{ fill: '#64748b', fontSize: 10, fontWeight: 500 }} 
                       reversed={isRtl}
                       axisLine={false}
                       tickLine={false}
                     />
                     <YAxis 
-                      stroke="#64748b" 
+                      stroke="#94a3b8"
                       tick={{ fill: '#64748b', fontSize: 10, fontWeight: 500 }} 
                       orientation={isRtl ? 'right' : 'left'}
                       axisLine={false}
@@ -679,9 +754,9 @@ export default function TourismDashboard({
         </div>
 
         {/* Right Side: KPI Grid Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3 xl:col-span-4 xl:grid-cols-2 xl:content-start">
           
-          <BentoCard glowColor="from-sky-500/10 to-indigo-500/5">
+          <BentoCard>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="p-2.5 rounded-2xl bg-sky-500/10 text-sky-400 border border-sky-500/20 shrink-0">
@@ -692,15 +767,15 @@ export default function TourismDashboard({
                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                   {t('dashboard.totalBookings')}
                 </p>
-                <p className="text-2xl font-black text-white leading-none">{stats.totalTrips}</p>
-                <p className="text-[10px] text-slate-505">
+                <p className="text-2xl font-bold leading-none text-slate-950 dark:text-white">{stats.totalTrips}</p>
+                <p className="text-[10px] text-slate-500 dark:text-slate-500">
                   {t('dashboard.totalManagedRecords')}
                 </p>
               </div>
             </div>
           </BentoCard>
 
-          <BentoCard glowColor="from-emerald-500/10 to-teal-500/5">
+          <BentoCard>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="p-2.5 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
@@ -712,14 +787,14 @@ export default function TourismDashboard({
                   {t('dashboard.upcoming')}
                 </p>
                 <p className="text-2xl font-black text-emerald-400 leading-none">{stats.upcoming}</p>
-                <p className="text-[10px] text-slate-505">
+                <p className="text-[10px] text-slate-500 dark:text-slate-500">
                   {t('dashboard.departuresPending')}
                 </p>
               </div>
             </div>
           </BentoCard>
 
-          <BentoCard glowColor="from-amber-500/10 to-orange-500/5">
+          <BentoCard>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 shrink-0">
@@ -731,7 +806,7 @@ export default function TourismDashboard({
                   {t('dashboard.activeClients')}
                 </p>
                 <p className="text-2xl font-black text-amber-400 leading-none">{stats.clients}</p>
-                <p className="text-[10px] text-slate-505">
+                <p className="text-[10px] text-slate-500 dark:text-slate-500">
                   {t('dashboard.uniqueClientsDesc')}
                 </p>
               </div>
@@ -742,24 +817,24 @@ export default function TourismDashboard({
       </div>
 
       {/* SECTION C: Recent Trips Feed & Operations Quick links */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" dir={direction}>
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-3" dir={direction}>
         
         {/* Activity Feed (Double width) */}
         <div className="lg:col-span-2 rtl:lg:col-start-2">
-          <BentoCard glowColor="from-violet-500/10 to-indigo-500/5" className="h-full flex flex-col justify-between">
+          <BentoCard className="flex h-full flex-col justify-between">
             <div>
               <div className="flex flex-col gap-3 sm:flex-row rtl:sm:flex-row-reverse sm:justify-between sm:items-center mb-6">
                 <div>
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
                     {t('dashboard.liveActivityFeed')}
                   </h3>
-                  <p className="text-[11px] text-slate-505 mt-0.5">
+                  <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
                     {t('dashboard.realtimeStatus')}
                   </p>
                 </div>
                 <button
                   onClick={() => onNavigate('trips')}
-                  className="text-xs font-semibold text-sky-400 hover:text-sky-350 hover:underline transition-all"
+                  className="text-xs font-semibold text-sky-700 transition-colors hover:underline dark:text-sky-300"
                 >
                   {t('dashboard.viewAll')}
                 </button>
@@ -772,11 +847,11 @@ export default function TourismDashboard({
                   ))}
                 </div>
               ) : recentTrips.length === 0 ? (
-                <div className="text-sm text-slate-550 py-10 text-center">
+                <div className="py-10 text-center text-sm text-slate-500 dark:text-slate-400">
                   {t('dashboard.noTripsYet')}
                 </div>
               ) : (
-                <div className="divide-y divide-slate-800/60">
+                <div className="divide-y divide-slate-200 dark:divide-slate-800">
                   {recentTrips.map((trip) => {
                     const status = getEffectivePaymentStatus(trip);
                     const steps = [
@@ -789,19 +864,19 @@ export default function TourismDashboard({
                       <div 
                         key={trip.id} 
                         onClick={() => onSelectTrip(trip)}
-                        className="py-4 flex flex-col lg:flex-row rtl:lg:flex-row-reverse justify-between items-start lg:items-center gap-4 hover:bg-slate-800/20 px-2 rounded-xl transition-all cursor-pointer group"
+                        className="group flex cursor-pointer flex-col items-start justify-between gap-4 rounded-xl px-2 py-4 transition-colors hover:bg-slate-50 lg:flex-row lg:items-center rtl:lg:flex-row-reverse dark:hover:bg-slate-800/50"
                       >
                         <div className="flex items-center gap-3">
                           {/* Flag visual cue */}
-                          <div className="w-10 h-10 rounded-xl bg-slate-800/80 border border-slate-700/50 flex items-center justify-center text-lg shadow-inner group-hover:scale-105 transition-transform shrink-0">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-lg dark:border-slate-700 dark:bg-slate-800">
                             {getDestinationFlag(trip.destination)}
                           </div>
                           <div>
-                            <h4 className="text-sm font-semibold text-slate-100 group-hover:text-sky-400 transition-colors">
+                            <h4 className="text-sm font-semibold text-slate-900 transition-colors group-hover:text-sky-700 dark:text-slate-100 dark:group-hover:text-sky-300">
                               {trip.destination}
                             </h4>
-                            <p className="text-xs text-slate-400 mt-0.5">
-                              {trip.client_name} {t('dashboard.metaSeparator')} <span className="text-[10px] text-slate-500">{trip.start_date}</span>
+                            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                              {trip.client_name} {t('dashboard.metaSeparator')} <span className="text-[10px] text-slate-400 dark:text-slate-500">{trip.start_date}</span>
                             </p>
                           </div>
                         </div>
@@ -814,17 +889,17 @@ export default function TourismDashboard({
                               <React.Fragment key={idx}>
                                 <div className="flex items-center gap-1">
                                   <span className={`w-1.5 h-1.5 rounded-full ${
-                                    step.completed ? 'bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.5)]' : 'bg-slate-800'
+                                    step.completed ? 'bg-sky-500' : 'bg-slate-200 dark:bg-slate-700'
                                   }`} />
                                   <span className={`text-[8px] font-bold uppercase tracking-wider ${
-                                    step.completed ? 'text-slate-350' : 'text-slate-505'
+                                    step.completed ? 'text-slate-600 dark:text-slate-300' : 'text-slate-400 dark:text-slate-500'
                                   }`}>
                                     {step.label}
                                   </span>
                                 </div>
                                 {idx < steps.length - 1 && (
                                   <span className={`w-3 h-[1px] ${
-                                    step.completed && steps[idx + 1].completed ? 'bg-sky-500/45' : 'bg-slate-800'
+                                    step.completed && steps[idx + 1].completed ? 'bg-sky-400' : 'bg-slate-200 dark:bg-slate-700'
                                   }`} />
                                 )}
                               </React.Fragment>
@@ -833,7 +908,7 @@ export default function TourismDashboard({
 
                           {/* Travelers avatar group representation */}
                           <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-slate-550 font-medium hidden md:inline">
+                            <span className="hidden text-[10px] font-medium text-slate-500 dark:text-slate-400 md:inline">
                               {t('dashboard.travelersCountLabel', { count: trip.travelers_count })}
                             </span>
                             {renderTravelersAvatars(trip)}
@@ -841,29 +916,16 @@ export default function TourismDashboard({
 
                           {/* Pulsed status Badge Capsule */}
                           <div className="flex items-center gap-3.5 shrink-0">
-                            <span className="text-xs font-bold text-slate-200">
+                            <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
                               {formatCurrency(Number(trip.sale_price) || 0)}
                             </span>
-                            <span className={`relative inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
-                              status === 'paid'
-                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                                : status === 'partial'
-                                  ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                                  : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
-                            }`}>
-                              <span className={`w-1.5 h-1.5 rounded-full ${
-                                status === 'paid'
-                                  ? 'bg-emerald-400'
-                                  : status === 'partial'
-                                    ? 'bg-amber-400'
-                                    : 'bg-rose-400'
-                              } inline-block`} />
+                            <StatusBadge tone={status === 'paid' ? 'success' : status === 'partial' ? 'warning' : 'danger'} className="gap-1.5 text-[10px] uppercase tracking-wider">
                               {status === 'paid' 
                                 ? t('trips.paymentStatuses.paid') 
                                 : status === 'partial' 
                                   ? t('trips.paymentStatuses.partial') 
                                   : t('trips.paymentStatuses.unpaid')}
-                            </span>
+                            </StatusBadge>
                           </div>
                         </div>
                       </div>
@@ -877,13 +939,13 @@ export default function TourismDashboard({
 
         {/* Fast Action Panels */}
         <div className="space-y-4">
-          <BentoCard glowColor="from-indigo-500/10 to-purple-500/5" className="h-full flex flex-col justify-between">
+          <BentoCard className="flex h-full flex-col justify-between">
             <div className="space-y-4">
               <div>
-                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
                   {t('dashboard.systemShortcuts')}
                 </h3>
-                <p className="text-[11px] text-slate-550 mt-0.5">
+                  <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
                   {t('dashboard.navigateFeatures')}
                 </p>
               </div>
@@ -891,7 +953,7 @@ export default function TourismDashboard({
               <div className="space-y-3">
                 <button
                   onClick={() => onNavigate('trips')}
-                  className="w-full text-xs font-bold inline-flex items-center justify-between px-4 py-3 rounded-xl bg-sky-600/90 hover:bg-sky-500 text-white shadow-[0_4px_14px_rgba(56,189,248,0.3)] hover:shadow-sky-400/40 transition-all border border-sky-400/20"
+                  className="inline-flex w-full items-center justify-between rounded-xl bg-sky-600 px-4 py-3 text-xs font-bold text-white transition-colors hover:bg-sky-500"
                 >
                   <span>{t('dashboard.openBookingDesk')}</span>
                   <span className="text-[10px] bg-sky-500/25 px-2 py-0.5 rounded-md text-sky-200">{t('dashboard.newTripShortcut')}</span>
@@ -899,7 +961,7 @@ export default function TourismDashboard({
 
                 <button
                   onClick={() => onNavigate('analytics')}
-                  className="w-full text-xs font-bold inline-flex items-center justify-between px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800/80 text-slate-200 hover:text-white transition-all shadow-sm"
+                  className="inline-flex w-full items-center justify-between rounded-xl border border-slate-300 bg-white px-4 py-3 text-xs font-bold text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:border-slate-600 dark:hover:bg-slate-900"
                 >
                   <span>{t('dashboard.intelligencePanel')}</span>
                   <span className="text-[10px] text-slate-500">{t('dashboard.biConsole')}</span>
@@ -907,10 +969,10 @@ export default function TourismDashboard({
 
                 <button
                   onClick={() => onNavigate('settings')}
-                  className="w-full text-xs font-bold inline-flex items-center justify-between px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800/80 text-slate-200 hover:text-white transition-all shadow-sm"
+                  className="inline-flex w-full items-center justify-between rounded-xl border border-slate-300 bg-white px-4 py-3 text-xs font-bold text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:border-slate-600 dark:hover:bg-slate-900"
                 >
                   <span>{t('dashboard.platformSettings')}</span>
-                  <span className="text-[10px] text-slate-505">{t('dashboard.manageProfiles')}</span>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500">{t('dashboard.manageProfiles')}</span>
                 </button>
               </div>
             </div>

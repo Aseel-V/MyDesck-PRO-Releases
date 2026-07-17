@@ -10,7 +10,13 @@ import {
 } from 'lucide-react';
 import SEO from '../../components/SEO';
 import { DownloadModal } from '../../components/DownloadModal';
-import { useGitHubRelease } from '../../hooks/useGitHubRelease';
+import {
+  getMacInstallerAsset,
+  getVisibleReleaseVersion,
+  getWindowsInstallerAsset,
+  STABLE_WINDOWS_DOWNLOAD_URL,
+  useGitHubRelease,
+} from '../../hooks/useGitHubRelease';
 import FloatingHeader from '../../components/FloatingHeader';
 import LanguageAnimationWrapper from '../../components/LanguageAnimationWrapper';
 
@@ -56,10 +62,12 @@ const SolutionPage = () => {
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
 
   // Fetch latest release
-  const { data: releaseData } = useGitHubRelease();
-  const windowsAsset = releaseData?.assets.find(a => a.name.endsWith('.exe'))?.browser_download_url;
-  const macAsset = releaseData?.assets.find(a => a.name.endsWith('.dmg'))?.browser_download_url;
-  const versionTag = releaseData?.tag_name;
+  const { data: releaseData, loading: releaseLoading, error: releaseError } = useGitHubRelease();
+  const windowsAsset = getWindowsInstallerAsset(releaseData);
+  const macAsset = getMacInstallerAsset(releaseData);
+  const visibleVersion = windowsAsset ? getVisibleReleaseVersion(releaseData) : null;
+  const windowsDownloadUrl = windowsAsset?.browser_download_url
+    ?? (releaseLoading || releaseError ? STABLE_WINDOWS_DOWNLOAD_URL : null);
 
   // Configuration for each industry
   const config: Record<string, IndustryConfig> = {
@@ -147,10 +155,11 @@ const SolutionPage = () => {
                  <div className="flex flex-col items-start gap-4">
                    <div className="flex flex-wrap gap-4">
                      {/* Windows Button */}
-                     <motion.a 
+                     {windowsDownloadUrl ? <motion.a
                        whileHover={{ scale: 1.05 }}
                        whileTap={{ scale: 0.95 }}
-                       href={windowsAsset || "https://github.com/Aseel-V/MyDesck-PRO-Releases/releases/latest/download/MyDesck-PRO-Setup.exe"} 
+                       href={windowsDownloadUrl}
+                       aria-label={t('landing.download.windowsAccessibleName')}
                        className={`
                          px-8 py-4 rounded-full flex items-center gap-3
                          bg-gradient-to-r ${c.gradient} text-white font-bold
@@ -160,15 +169,23 @@ const SolutionPage = () => {
                        <Monitor className="w-5 h-5" />
                        <div className="flex flex-col items-start leading-none">
                           <span>{t('landing.hero.download')}</span>
-                          {versionTag && <span className="text-[10px] opacity-80 font-normal mt-1">{versionTag} • Installer</span>}
+                          <span className="mt-1 text-[10px] font-normal opacity-80" dir="ltr">
+                            {visibleVersion
+                              ? t('landing.download.versionAndPlatform', { version: visibleVersion })
+                              : t('landing.download.windows64')}
+                          </span>
                        </div>
-                     </motion.a>
+                     </motion.a> : <button type="button" disabled aria-label={t('landing.download.downloadUnavailable')} className="flex cursor-not-allowed items-center gap-3 rounded-full bg-slate-300 px-8 py-4 font-bold text-slate-600 opacity-80 dark:bg-slate-700 dark:text-slate-300">
+                       <Monitor className="h-5 w-5" />
+                       <span>{t('landing.download.downloadUnavailable')}</span>
+                     </button>}
                      
                      {/* Mac Button */}
-                     <motion.a 
+                     {macAsset && <motion.a
                        whileHover={{ scale: 1.05 }}
                        whileTap={{ scale: 0.95 }}
-                       href={macAsset || "https://github.com/Aseel-V/MyDesck-PRO-Releases/releases/latest/download/MyDesck-PRO-0.0.34.dmg"} 
+                       href={macAsset.browser_download_url}
+                       aria-label={t('landing.download.macAccessibleName')}
                        className="
                          px-8 py-4 rounded-full flex items-center gap-3
                          bg-white dark:bg-slate-800 text-slate-700 dark:text-white font-bold
@@ -179,22 +196,22 @@ const SolutionPage = () => {
                        <Laptop className="w-5 h-5" />
                        <div className="flex flex-col items-start leading-none">
                           <span>{t('landing.hero.downloadMac')}</span>
-                          {versionTag && <span className="text-[10px] opacity-70 font-normal mt-1 text-slate-500 dark:text-slate-400">Apple Silicon Support</span>}
+                          <span className="mt-1 text-[10px] font-normal text-slate-500 opacity-70 dark:text-slate-400">{t('landing.download.macInstaller')}</span>
                        </div>
-                     </motion.a>
+                     </motion.a>}
                    </div>
                    
                    <button 
                      onClick={() => setIsDownloadModalOpen(true)}
                      className="text-sm font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors underline decoration-dotted underline-offset-4 pl-2"
                    >
-                     View all versions & release notes
+                     {t('landing.download.viewReleaseNotes')}
                    </button>
                  </div>
 
                  <div className="mt-6 flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
                     <HelpCircle className="w-4 h-4" />
-                    <span>Need help? <a href="#" className="underline hover:text-slate-900 dark:hover:text-white">Read installation guide</a></span>
+                    <span>{t('landing.download.needHelp')} {t('landing.download.installationGuide')}</span>
                  </div>
 
               </motion.div>

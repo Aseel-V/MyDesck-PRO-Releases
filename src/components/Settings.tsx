@@ -14,6 +14,12 @@ import {
   RotateCcw,
   RefreshCw,
   UtensilsCrossed,
+  Palette,
+  Info,
+  CheckCircle2,
+  AlertCircle,
+  Database,
+  LogOut,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import RestaurantSettings from './restaurant/RestaurantSettings';
@@ -23,10 +29,11 @@ import { CurrencyService } from '../lib/currency';
 import { safeImageSrc } from '../lib/safeUrl';
 
 type NoticeType = 'success' | 'error' | 'info';
+type UpdateStatus = 'idle' | 'checking' | 'up-to-date' | 'available' | 'downloading' | 'downloaded' | 'error';
 
 export default function Settings() {
   const { profile, userProfile, updateProfile, user, refreshProfile, signOut } = useAuth();
-  const { t, setLanguage } = useLanguage();
+  const { t, setLanguage, direction } = useLanguage();
   const { theme, toggleTheme } = useTheme();
 
   const [businessName, setBusinessName] = useState(profile?.business_name || '');
@@ -47,12 +54,18 @@ export default function Settings() {
 
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [activeTab, setActiveTab] = useState<'profile' | 'business' | 'security' | 'data' | 'restaurant'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'business' | 'preferences' | 'security' | 'data' | 'restaurant' | 'about'>('profile');
   const [uploading, setUploading] = useState(false);
   const [notice, setNotice] = useState<null | { type: NoticeType; message: string }>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [refreshingRates, setRefreshingRates] = useState(false);
   const [appVersion, setAppVersion] = useState(__APP_VERSION__);
+  const [updateState, setUpdateState] = useState<{
+    status: UpdateStatus;
+    availableVersion?: string | null;
+    progress: number;
+    error?: string | null;
+  }>({ status: 'idle', availableVersion: null, progress: 0, error: null });
   const noticeTimeoutRef = useRef<number | null>(null);
   const previewLogoUrl = safeImageSrc(logoUrl || profile?.logo_url);
   const previewSignatureUrl = safeImageSrc(signatureUrl);
@@ -105,12 +118,32 @@ export default function Settings() {
     const api = window.electronAPI;
     if (!api) return;
 
-    void api.getAppVersion().then((version) => {
-      if (version) {
-        setAppVersion(version);
-      }
+    void api.getUpdateState().then((state) => {
+      setAppVersion(state.currentVersion || __APP_VERSION__);
+      setUpdateState(state);
     });
+
+    const unsubscribe = api.onUpdateState((state) => {
+      setAppVersion(state.currentVersion || __APP_VERSION__);
+      setUpdateState(state);
+    });
+
+    return unsubscribe;
   }, []);
+
+  const handleCheckForUpdates = () => void window.electronAPI?.checkForUpdates();
+  const handleDownloadUpdate = () => void window.electronAPI?.startDownload();
+  const handleInstallUpdate = () => void window.electronAPI?.restartApp();
+
+  const updateStatusKey: Record<UpdateStatus, string> = {
+    idle: 'updates.status.idle.title',
+    checking: 'updates.status.checking.title',
+    'up-to-date': 'updates.status.up-to-date.title',
+    available: 'updates.status.available.title',
+    downloading: 'updates.status.downloading.title',
+    downloaded: 'updates.status.downloaded.title',
+    error: 'updates.status.error.title',
+  };
 
 
 
@@ -120,7 +153,7 @@ export default function Settings() {
 
   const handleSaveProfile = async () => {
     if (!user) {
-      showNotice('error', 'User not found');
+      showNotice('error', t('settings.messages.userNotFound'));
       return;
     }
 
@@ -156,10 +189,10 @@ export default function Settings() {
 
       await refreshProfile();
       setSuccess(true);
-      showNotice('success', 'Profile saved successfully', 2500);
+      showNotice('success', t('settings.profile.success'), 2500);
     } catch (error) {
       console.error('Failed to update profile:', error);
-      showNotice('error', 'Failed to save profile');
+      showNotice('error', t('settings.messages.profileSaveFailed'));
     } finally {
       setLoading(false);
     }
@@ -185,7 +218,7 @@ export default function Settings() {
       showNotice('success', t('settings.saved'), 2500);
     } catch (error) {
       console.error('Failed to update settings:', error);
-      showNotice('error', 'Failed to update business settings');
+      showNotice('error', t('settings.messages.businessSaveFailed'));
     } finally {
       setLoading(false);
     }
@@ -193,11 +226,11 @@ export default function Settings() {
 
   const handleResetBranding = async () => {
     if (!user) {
-      showNotice('error', 'User not found');
+      showNotice('error', t('settings.messages.userNotFound'));
       return;
     }
 
-    if (confirm('Are you sure you want to reset to default branding?')) {
+    if (confirm(t('settings.messages.confirmResetBranding'))) {
       setBusinessName('MyDesck PRO');
       setLogoUrl('');
 
@@ -213,10 +246,10 @@ export default function Settings() {
           .eq('user_id', user.id);
 
         if (error) throw error;
-        showNotice('success', 'Branding reset to defaults', 2500);
+        showNotice('success', t('settings.messages.brandingReset'), 2500);
       } catch (error) {
         console.error('Failed to reset branding:', error);
-        showNotice('error', 'Failed to reset branding');
+        showNotice('error', t('settings.messages.brandingResetFailed'));
       }
     }
   };
@@ -227,34 +260,34 @@ export default function Settings() {
 
   const handleSavePassword = async () => {
     if (newPassword.length < 6) {
-      showNotice('error', 'Password must be at least 6 characters');
+      showNotice('error', t('settings.messages.passwordTooShort'));
       return;
     }
     if (newPassword !== confirmPassword) {
-      showNotice('error', 'Passwords do not match');
+      showNotice('error', t('settings.messages.passwordMismatch'));
       return;
     }
 
     try {
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
-      showNotice('success', 'Password changed successfully');
+      showNotice('success', t('settings.messages.passwordChanged'));
       setShowPasswordModal(false);
       setNewPassword('');
       setConfirmPassword('');
     } catch (error) {
       console.error('Error changing password:', error);
-      showNotice('error', 'Failed to change password');
+      showNotice('error', t('settings.messages.passwordChangeFailed'));
     }
   };
 
   const handleRefreshProfile = async () => {
     try {
       await refreshProfile();
-      showNotice('success', 'Profile refreshed successfully! Role updated.', 3000);
+      showNotice('success', t('settings.messages.profileRefreshed'), 3000);
     } catch (error) {
       console.error('Error refreshing profile:', error);
-      showNotice('error', 'Failed to refresh profile');
+      showNotice('error', t('settings.messages.profileRefreshFailed'));
     }
   };
 
@@ -263,10 +296,10 @@ export default function Settings() {
     try {
       await CurrencyService.refreshRates('USD');
       setLastUpdated(CurrencyService.getLastUpdated());
-      showNotice('success', 'Exchange rates updated successfully', 2500);
+      showNotice('success', t('settings.messages.ratesUpdated'), 2500);
     } catch (error) {
       console.error('Error refreshing rates:', error);
-      showNotice('error', 'Failed to refresh exchange rates');
+      showNotice('error', t('settings.messages.ratesUpdateFailed'));
     } finally {
       setRefreshingRates(false);
     }
@@ -274,7 +307,7 @@ export default function Settings() {
 
   const handleExportData = async () => {
     if (!user) {
-      showNotice('error', 'User not found');
+      showNotice('error', t('settings.messages.userNotFound'));
       return;
     }
 
@@ -301,16 +334,16 @@ export default function Settings() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      showNotice('success', 'Data exported successfully');
+      showNotice('success', t('settings.messages.dataExported'));
     } catch (error) {
       console.error('Export failed:', error);
-      showNotice('error', 'Failed to export data');
+      showNotice('error', t('settings.messages.dataExportFailed'));
     }
   };
 
   const handleImportData = async (event: ChangeEvent<HTMLInputElement>) => {
     if (!user) {
-      showNotice('error', 'User not found');
+      showNotice('error', t('settings.messages.userNotFound'));
       return;
     }
 
@@ -322,11 +355,11 @@ export default function Settings() {
       try {
         const data = JSON.parse(e.target?.result as string);
         if (!data.trips || !Array.isArray(data.trips)) {
-          showNotice('error', 'Invalid backup file');
+          showNotice('error', t('settings.messages.invalidBackup'));
           return;
         }
 
-        if (confirm(`Import ${data.trips.length} trips? This will not delete existing data.`)) {
+        if (confirm(t('settings.messages.confirmImport', { count: data.trips.length }))) {
           for (const trip of data.trips) {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { id: _id, user_id: _uid, created_at: _ca, updated_at: _ua, ...tripData } = trip;
@@ -334,12 +367,12 @@ export default function Settings() {
             if (error) throw error;
           }
 
-          showNotice('success', 'Data imported successfully');
+          showNotice('success', t('settings.messages.dataImported'));
           window.location.reload();
         }
       } catch (error) {
         console.error('Import failed:', error);
-        showNotice('error', 'Failed to import data');
+        showNotice('error', t('settings.messages.dataImportFailed'));
       }
     };
     reader.readAsText(file);
@@ -347,7 +380,7 @@ export default function Settings() {
 
   const handleLogoUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     if (!user) {
-      showNotice('error', 'User not found');
+      showNotice('error', t('settings.messages.userNotFound'));
       return;
     }
 
@@ -355,13 +388,13 @@ export default function Settings() {
     if (!file) return;
 
     if (file.size > 2 * 1024 * 1024) {
-      showNotice('error', 'File is too large. Max size is 2MB.');
+      showNotice('error', t('settings.messages.fileTooLarge'));
       return;
     }
 
     const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'];
     if (!allowedTypes.includes(file.type)) {
-      showNotice('error', 'Unsupported file type. Use SVG, PNG, or JPG.');
+      showNotice('error', t('settings.messages.unsupportedLogoType'));
       return;
     }
 
@@ -396,11 +429,10 @@ export default function Settings() {
       await updateProfile({ logo_url: newLogoUrl });
       await refreshProfile();
 
-      showNotice('success', 'Logo uploaded successfully');
+      showNotice('success', t('settings.messages.logoUploaded'));
     } catch (error) {
       console.error('Logo upload failed:', error);
-      const message = error instanceof Error ? error.message : "Upload failed. Ensure bucket 'logos' exists";
-      showNotice('error', message);
+      showNotice('error', t('settings.messages.signatureUploadFailed'));
     } finally {
       setUploading(false);
     }
@@ -408,7 +440,7 @@ export default function Settings() {
 
   const handleSignatureUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     if (!user) {
-      showNotice('error', 'User not found');
+      showNotice('error', t('settings.messages.userNotFound'));
       return;
     }
 
@@ -416,13 +448,13 @@ export default function Settings() {
     if (!file) return;
 
     if (file.size > 2 * 1024 * 1024) {
-      showNotice('error', 'File is too large. Max size is 2MB.');
+      showNotice('error', t('settings.messages.fileTooLarge'));
       return;
     }
 
     const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
     if (!allowedTypes.includes(file.type)) {
-      showNotice('error', 'Unsupported file type. Use PNG or JPG.');
+      showNotice('error', t('settings.messages.unsupportedSignatureType'));
       return;
     }
 
@@ -449,489 +481,320 @@ export default function Settings() {
 
       await updateProfile({ signature_url: newSigUrl });
       await refreshProfile();
-      showNotice('success', 'Signature uploaded successfully');
+      showNotice('success', t('settings.messages.signatureUploaded'));
     } catch (error) {
       console.error('Signature upload failed:', error);
-      const message = error instanceof Error ? error.message : "Upload failed. Ensure bucket 'logos' exists";
-      showNotice('error', message);
+      showNotice('error', t('settings.messages.logoUploadFailed'));
     } finally {
       setUploading(false);
     }
   };
 
+  const fieldClass = 'h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:disabled:bg-slate-900/60 dark:disabled:text-slate-500';
+  const labelClass = 'mb-1.5 block text-sm font-medium text-slate-800 dark:text-slate-200';
+  const secondaryButtonClass = 'inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-sky-500/30 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800';
+  const primaryButtonClass = 'inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-sky-600 px-4 text-sm font-semibold text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:ring-offset-slate-950';
+
+  const navItems = [
+    { id: 'profile' as const, icon: User, title: t('settings.tabs.profile'), description: t('settings.navigation.profile') },
+    { id: 'business' as const, icon: Building2, title: t('settings.tabs.business'), description: t('settings.navigation.business') },
+    { id: 'preferences' as const, icon: Palette, title: t('settings.tabs.preferences'), description: t('settings.navigation.preferences') },
+    { id: 'security' as const, icon: Key, title: t('settings.tabs.security'), description: t('settings.navigation.security') },
+    { id: 'data' as const, icon: Database, title: t('settings.tabs.data'), description: t('settings.navigation.data') },
+    ...(profile?.business_type === 'restaurant'
+      ? [{ id: 'restaurant' as const, icon: UtensilsCrossed, title: t('settings.tabs.restaurant'), description: t('settings.navigation.restaurant') }]
+      : []),
+    { id: 'about' as const, icon: Info, title: t('settings.tabs.about'), description: t('settings.navigation.about') },
+  ];
+  const activeItem = navItems.find((item) => item.id === activeTab) || navItems[0];
+
+  const getLocale = () => language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-IL' : 'en-US';
+
   return (
-    <div className="animate-fadeIn">
-      <div className="w-full space-y-6">
+    <div className="mx-auto w-full max-w-[1400px] animate-fadeIn" dir={direction}>
+      <div className="space-y-4">
         {/* Toast / Notice */}
         {notice && (
           <div
+            role={notice.type === 'error' ? 'alert' : 'status'}
+            aria-live={notice.type === 'error' ? 'assertive' : 'polite'}
             className={
-              `rounded-xl border px-4 py-3 text-sm shadow-lg shadow-slate-950/60 ` +
+              `flex items-start gap-2 rounded-lg border px-3 py-2.5 text-sm ` +
               (notice.type === 'success'
-                ? 'bg-emerald-500/10 border-emerald-400/40 text-emerald-100'
+                ? 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200'
                 : notice.type === 'error'
-                ? 'bg-rose-500/10 border-rose-400/40 text-rose-100'
-                : 'bg-sky-500/10 border-sky-400/40 text-sky-100')
+                ? 'border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200'
+                : 'border-sky-200 bg-sky-50 text-sky-800 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-200')
             }
           >
-            {notice.message}
+            {notice.type === 'success' ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" /> : <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />}
+            <span>{notice.message}</span>
           </div>
         )}
 
-        {/* Header card */}
-        <div className="glass-panel bg-white/95 border border-slate-200 rounded-2xl shadow-xl p-6 md:p-7 flex flex-col md:flex-row md:items-center md:justify-between gap-4 dark:bg-slate-950/80 dark:border-slate-800/80 dark:shadow-slate-950/70">
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.26em] text-sky-600/80 mb-1.5 dark:text-sky-400/80">{t('settings.titlePreferences')}</p>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-1 dark:text-slate-50">{t('settings.workspaceSettings')}</h1>
-            <p className="text-sm text-slate-500 max-w-xl dark:text-slate-300">
+        <header className="border-b border-slate-200 pb-4 dark:border-slate-800">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-950 dark:text-white">{t('settings.workspaceSettings')}</h1>
+          <p className="mt-1 max-w-2xl text-sm text-slate-600 dark:text-slate-400">
               {t('settings.manageSubtitle')}
-            </p>
-          </div>
-          <div className="flex flex-col items-start md:items-end gap-2 text-xs">
-            <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-900/80">
-              {previewLogoUrl ? (
-                <img
-                  src={previewLogoUrl}
-                  alt="Business Logo"
-                  className="w-5 h-5 object-contain rounded-md"
-                />
-              ) : (
-                <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-              )}
-              <span className="text-slate-700 dark:text-slate-300">{businessName || profile?.business_name || 'MyDesck PRO'}</span>
-            </div>
-            <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-900/80">
-              <span className="text-slate-500">{t('settings.signedInAs')}</span>
-              <span className="text-sky-600 font-medium text-[11px] truncate max-w-[180px] dark:text-sky-300">{email}</span>
-            </div>
-            <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-900/80">
-              <span className="text-slate-500">App version</span>
-              <span className="text-slate-900 font-medium text-[11px] dark:text-slate-100">v{appVersion}</span>
-            </div>
-          </div>
+          </p>
+        </header>
+
+        <div className="lg:hidden">
+          <label htmlFor="settings-category" className={labelClass}>{t('settings.mobileCategory')}</label>
+          <select
+            id="settings-category"
+            value={activeTab}
+            onChange={(event) => setActiveTab(event.target.value as typeof activeTab)}
+            className={fieldClass}
+          >
+            {navItems.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}
+          </select>
         </div>
 
-        {/* Main settings panel with tabs */}
-        <div className="glass-panel bg-white/95 border border-slate-200 rounded-2xl shadow-xl overflow-hidden dark:bg-slate-950/70 dark:border-slate-800/80 dark:shadow-slate-950/60">
-          {/* Tabs */}
-          <div className="flex items-center gap-1 p-2 border-b border-slate-800/60 overflow-x-auto">
-            <button
-              onClick={() => setActiveTab('profile')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                activeTab === 'profile'
-                  ? 'bg-sky-500/15 text-sky-700 border border-sky-500/30 shadow-sm dark:bg-sky-500/15 dark:text-sky-200 dark:border-sky-500/60 dark:shadow-sky-900/60'
-                  : 'text-slate-500 hover:bg-slate-100 border border-transparent dark:text-slate-300 dark:hover:bg-slate-900/70'
-              }`}
-            >
-              <User className="w-4 h-4" />
-              <span>{t('settings.tabs.profile')}</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('business')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                activeTab === 'business'
-                  ? 'bg-sky-500/15 text-sky-700 border border-sky-500/30 shadow-sm dark:bg-sky-500/15 dark:text-sky-200 dark:border-sky-500/60 dark:shadow-sky-900/60'
-                  : 'text-slate-500 hover:bg-slate-100 border border-transparent dark:text-slate-300 dark:hover:bg-slate-900/70'
-              }`}
-            >
-              <Building2 className="w-4 h-4" />
-              <span>{t('settings.tabs.business')}</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('security')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                activeTab === 'security'
-                  ? 'bg-sky-500/15 text-sky-700 border border-sky-500/30 shadow-sm dark:bg-sky-500/15 dark:text-sky-200 dark:border-sky-500/60 dark:shadow-sky-900/60'
-                  : 'text-slate-500 hover:bg-slate-100 border border-transparent dark:text-slate-300 dark:hover:bg-slate-900/70'
-              }`}
-            >
-              <Key className="w-4 h-4" />
-              <span>{t('settings.tabs.security')}</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('data')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                activeTab === 'data'
-                  ? 'bg-sky-500/15 text-sky-700 border border-sky-500/30 shadow-sm dark:bg-sky-500/15 dark:text-sky-200 dark:border-sky-500/60 dark:shadow-sky-900/60'
-                  : 'text-slate-500 hover:bg-slate-100 border border-transparent dark:text-slate-300 dark:hover:bg-slate-900/70'
-              }`}
-            >
-              <RotateCcw className="w-4 h-4" />
-              <span>{t('settings.tabs.data')}</span>
-            </button>
-
-            {/* Restaurant Tab - Only for Restaurant users */}
-            {profile?.business_type === 'restaurant' && (
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
+          <aside className="hidden border-e border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/40 lg:block">
+            <nav aria-label={t('settings.navigationLabel')} className="space-y-1">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const active = activeTab === item.id;
+                return (
               <button
-                onClick={() => setActiveTab('restaurant')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                  activeTab === 'restaurant'
-                    ? 'bg-emerald-500/15 text-emerald-700 border border-emerald-500/30 shadow-sm dark:bg-emerald-500/15 dark:text-emerald-200 dark:border-emerald-500/60 dark:shadow-emerald-900/60'
-                    : 'text-slate-500 hover:bg-slate-100 border border-transparent dark:text-slate-300 dark:hover:bg-slate-900/70'
-                }`}
+                    key={item.id}
+                    type="button"
+                    onClick={() => setActiveTab(item.id)}
+                    aria-current={active ? 'page' : undefined}
+                    className={`flex w-full items-start gap-3 rounded-lg border px-3 py-2.5 text-start transition focus:outline-none focus:ring-2 focus:ring-sky-500/30 ${active ? 'border-sky-200 bg-sky-50 text-sky-900 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-100' : 'border-transparent text-slate-700 hover:bg-white dark:text-slate-300 dark:hover:bg-slate-900'}`}
               >
-                <UtensilsCrossed className="w-4 h-4" />
-                <span>{t('Restaurant')}</span>
+                    <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${active ? 'text-sky-600 dark:text-sky-400' : 'text-slate-400'}`} />
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold">{item.title}</span>
+                      <span className="mt-0.5 block text-xs leading-4 text-slate-500 dark:text-slate-400">{item.description}</span>
+                    </span>
               </button>
-            )}
-          </div>
+                );
+              })}
+            </nav>
+          </aside>
 
-          {/* Content */}
-          <div className="p-6 md:p-8 text-slate-900 dark:text-slate-100">
+          <main className="min-w-0">
+            <div className="border-b border-slate-200 px-4 py-4 dark:border-slate-800 sm:px-6">
+              <div className="flex items-start gap-3">
+                <activeItem.icon className="mt-0.5 h-5 w-5 shrink-0 text-sky-600 dark:text-sky-400" />
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-950 dark:text-white">{activeItem.title}</h2>
+                  <p className="mt-0.5 text-sm text-slate-600 dark:text-slate-400">{activeItem.description}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 text-slate-900 dark:text-slate-100 sm:p-6">
             {activeTab === 'profile' && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-bold">{t('settings.profile.header')}</h2>
-
-                <div className="space-y-4">
+              <section aria-labelledby="profile-settings" className="space-y-5">
+                <h3 id="profile-settings" className="sr-only">{t('settings.profile.header')}</h3>
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-200">{t('settings.profile.fullName')}</label>
+                    <label htmlFor="settings-full-name" className={labelClass}>{t('settings.profile.fullName')}</label>
                     <input
+                      id="settings-full-name"
                       type="text"
+                      autoComplete="name"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       placeholder={t('settings.profile.fullNamePlaceholder')}
-                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all dark:bg-slate-900/80 dark:border-slate-700 dark:text-slate-100 dark:placeholder-slate-500"
+                      className={fieldClass}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-200">{t('settings.profile.email')}</label>
+                    <label htmlFor="settings-email" className={labelClass}>{t('settings.profile.email')}</label>
                     <input
+                      id="settings-email"
                       type="email"
+                      dir="ltr"
+                      autoComplete="email"
                       value={email}
                       disabled
-                      className="w-full px-4 py-3 rounded-xl bg-slate-100 border border-slate-200 text-slate-500 cursor-not-allowed dark:bg-slate-900/60 dark:border-slate-700 dark:text-slate-500"
+                      className={fieldClass}
                     />
-                    <p className="text-xs text-slate-500 mt-1">{t('settings.profile.emailCannotChange')}</p>
+                    <p className="mt-1 text-xs text-slate-500">{t('settings.profile.emailCannotChange')}</p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-200">{t('settings.profile.phone')}</label>
+                    <label htmlFor="settings-phone" className={labelClass}>{t('settings.profile.phone')}</label>
                     <input
+                      id="settings-phone"
                       type="tel"
+                      dir="ltr"
+                      autoComplete="tel"
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
                       placeholder={t('settings.profile.phonePlaceholder')}
-                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all dark:bg-slate-900/80 dark:border-slate-700 dark:text-slate-100 dark:placeholder-slate-500"
+                      className={fieldClass}
                     />
                   </div>
                 </div>
-
-                {success && (
-                  <div className="bg-emerald-500/10 border border-emerald-500/60 text-emerald-200 px-4 py-3 rounded-xl text-sm">
-                    {t('settings.profile.success')}
-                  </div>
-                )}
-
-                <button
-                  onClick={handleSaveProfile}
-                  disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 bg-sky-600 text-white py-3 rounded-xl font-semibold hover:bg-sky-700 focus:ring-4 focus:ring-sky-500/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.01]"
-                >
-                  <Save className="w-5 h-5" />
-                  <span>{loading ? t('settings.profile.saving') : t('settings.profile.save')}</span>
-                </button>
-              </div>
+              </section>
             )}
 
             {activeTab === 'business' && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-bold">{t('settings.business.header')}</h2>
-
-                <div className="space-y-4">
+              <section aria-labelledby="business-settings" className="space-y-6">
+                <h3 id="business-settings" className="sr-only">{t('settings.business.header')}</h3>
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-200">{t('settings.businessName')}</label>
+                    <label htmlFor="business-name" className={labelClass}>{t('settings.businessName')}</label>
                     <input
+                      id="business-name"
                       type="text"
                       value={businessName}
                       onChange={(e) => setBusinessName(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all dark:bg-slate-900/80 dark:border-slate-700 dark:text-slate-100 dark:placeholder-slate-500"
+                      className={fieldClass}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-200">
-                      {t('settings.business.address')}
-                    </label>
+                    <label htmlFor="business-address" className={labelClass}>{t('settings.business.address')}</label>
                     <input
+                      id="business-address"
                       type="text"
                       value={businessAddress}
                       onChange={(e) => setBusinessAddress(e.target.value)}
                       placeholder={t('settings.business.addressPlaceholder')}
-                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all dark:bg-slate-900/80 dark:border-slate-700 dark:text-slate-100 dark:placeholder-slate-500"
+                      className={fieldClass}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-200">
-                      {t('settings.business.regNumber')}
-                    </label>
+                    <label htmlFor="business-number" className={labelClass}>{t('settings.business.regNumber')}</label>
                     <input
+                      id="business-number"
                       type="text"
+                      dir="ltr"
                       value={businessRegNumber}
                       onChange={(e) => setBusinessRegNumber(e.target.value)}
                       placeholder={t('settings.business.regNumberPlaceholder')}
-                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all dark:bg-slate-900/80 dark:border-slate-700 dark:text-slate-100 dark:placeholder-slate-500"
+                      className={fieldClass}
                     />
                   </div>
 
-                  {/* Signature Upload */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-200">
-                      {t('settings.business.signatureLabel')}
-                    </label>
-                    <div className="flex items-center gap-4">
-                      <div className="flex-1">
-                        <label
-                          htmlFor="signature-upload"
-                          className="w-full flex flex-col items-center justify-center px-4 py-6 rounded-xl border-2 border-dashed bg-slate-50 border-slate-300 text-slate-500 hover:border-sky-500 hover:text-sky-600 cursor-pointer transition-all dark:bg-slate-900/80 dark:border-slate-700 dark:text-slate-400 dark:hover:text-sky-300"
-                        >
-                          <Upload className="w-8 h-8 mb-2 opacity-50" />
-                          <span className="text-sm font-semibold">{t('settings.business.uploadSignature')}</span>
-                          <span className="text-xs text-slate-500 mt-1">{t('settings.business.signatureFormat')}</span>
-                        </label>
-                        <input
-                          id="signature-upload"
-                          type="file"
-                          accept="image/png, image/jpeg"
-                          onChange={handleSignatureUpload}
-                          className="hidden"
-                          disabled={uploading}
-                        />
-                      </div>
-                      {previewSignatureUrl && (
-                        <div className="p-2 bg-white rounded-lg">
-                          <img src={previewSignatureUrl} alt={t('settings.business.signaturePreview')} className="h-12 object-contain" />
-                        </div>
+                    <span className={labelClass}>{t('settings.business.statusLabel')}</span>
+                    <div className="flex min-h-10 items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 dark:border-slate-800 dark:bg-slate-900/60">
+                      <span aria-hidden="true" className={`h-2 w-2 rounded-full ${profile?.subscription_status === 'active' ? 'bg-emerald-500' : profile?.subscription_status === 'past_due' ? 'bg-rose-500' : 'bg-amber-500'}`} />
+                      <span className="text-sm font-medium">{t(`settings.business.status.${profile?.subscription_status || 'trial'}`)}</span>
+                      {(profile?.subscription_status === 'trial' || !profile?.subscription_status) && (
+                        <span className="ms-auto text-xs text-slate-500">
+                          {t('settings.business.trialEnds')}: <span dir="ltr">{(() => { const start = new Date(profile?.trial_start_date || profile?.created_at || Date.now()); const end = new Date(start); end.setMonth(end.getMonth() + 3); return end.toLocaleDateString(getLocale()); })()}</span>
+                        </span>
                       )}
                     </div>
                   </div>
+                </div>
 
-                  {/* Logo upload */}
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-200">{t('settings.logoUrl')}</label>
-                    <div className="flex items-center gap-4">
-                      <div className="flex-1">
+                <div className="divide-y divide-slate-200 rounded-lg border border-slate-200 dark:divide-slate-800 dark:border-slate-800">
+                  <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-slate-900 dark:text-white">{t('settings.logoUrl')}</p>
+                      <p className="mt-0.5 text-xs text-slate-500">{t('settings.business.logoFormats')}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {previewLogoUrl && <img src={previewLogoUrl} alt={t('settings.business.logoPreview')} className="h-10 w-10 rounded-md border border-slate-200 bg-white object-contain dark:border-slate-700" />}
                         <label
                           htmlFor="logo-upload"
-                          className={`w-full flex flex-col items-center justify-center px-4 py-6 rounded-xl border-2 border-dashed transition-all ${
-                            uploading
-                              ? 'bg-slate-100 border-slate-300 text-slate-400 cursor-not-allowed dark:bg-slate-900/60 dark:border-slate-800 dark:text-slate-500'
-                              : 'bg-slate-50 border-slate-300 text-slate-500 hover:border-sky-500 hover:text-sky-600 cursor-pointer dark:bg-slate-900/80 dark:border-slate-700 dark:text-slate-400 dark:hover:text-sky-300'
-                          }`}
+                          className={`${secondaryButtonClass} ${uploading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
                         >
-                          <Upload className={`w-8 h-8 mb-2 ${uploading ? 'animate-pulse' : ''}`} />
+                          <Upload className={`h-4 w-4 ${uploading ? 'animate-pulse' : ''}`} />
                           <span className="text-sm font-semibold">{uploading ? t('settings.business.updating') : t('settings.business.logoUpload')}</span>
-                          <span className="text-xs text-slate-500 mt-1">{t('settings.business.logoFormats')}</span>
                         </label>
-                        <input
-                          id="logo-upload"
-                          type="file"
-                          accept="image/png, image/jpeg, image/svg+xml"
-                          onChange={handleLogoUpload}
-                          className="hidden"
-                          disabled={uploading}
-                        />
-                      </div>
-                      {previewLogoUrl && (
-                        <img
-                          src={previewLogoUrl}
-                          alt={t('settings.business.logoPreview')}
-                          className="h-12 w-12 object-contain rounded-lg border border-slate-800 bg-slate-900/60"
-                        />
-                      )}
-                    </div>
-
-                    <div className="mt-4">
-                      <label className="block text-xs font-medium text-slate-500 mb-1 dark:text-slate-400">{t('settings.business.logoUrlFallback')}</label>
-                      <input
-                        type="text"
-                        value={logoUrl}
-                        onChange={(e) => setLogoUrl(e.target.value)}
-                        placeholder={t('auth.logoPlaceholder')}
-                        className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:ring-1 focus:ring-sky-500 focus:border-transparent transition-all dark:bg-slate-800/70 dark:border-slate-700 dark:text-slate-200 dark:placeholder-slate-500"
-                      />
+                      <input id="logo-upload" type="file" accept="image/png, image/jpeg, image/svg+xml" onChange={handleLogoUpload} className="hidden" disabled={uploading} />
                     </div>
                   </div>
 
-
-                  {/* Subscription Status */}
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-200">
-                      {t('settings.business.statusLabel')}
-                    </label>
-                    <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 dark:bg-slate-900/80 dark:border-slate-700">
-                      <div className={`w-3 h-3 rounded-full ${
-                        profile?.subscription_status === 'active' ? 'bg-emerald-500' : 
-                        profile?.subscription_status === 'past_due' ? 'bg-rose-500' : 'bg-amber-400'
-                      }`} />
-                      <div className="flex-1">
-                        <span className="font-medium text-slate-900 dark:text-slate-100 block">
-                          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                          {t(`settings.business.status.${profile?.subscription_status || 'trial'}` as any)}
-                        </span>
-                        {/* Show trial end date if in trial */}
-                        {(profile?.subscription_status === 'trial' || !profile?.subscription_status) && (
-                           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                             {t('settings.business.trialEnds')}: {(() => {
-                               const startDate = new Date(profile?.trial_start_date || profile?.created_at || Date.now());
-                               const endDate = new Date(startDate);
-                               endDate.setMonth(endDate.getMonth() + 3);
-                               return endDate.toLocaleDateString();
-                             })()}
-                           </p>
-                        )}
-                      </div>
+                  <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-slate-900 dark:text-white">{t('settings.business.signatureLabel')}</p>
+                      <p className="mt-0.5 text-xs text-slate-500">{t('settings.business.signatureFormat')}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {previewSignatureUrl && <img src={previewSignatureUrl} alt={t('settings.business.signaturePreview')} className="h-10 max-w-24 rounded-md border border-slate-200 bg-white object-contain p-1 dark:border-slate-700" />}
+                      <label htmlFor="signature-upload" className={`${secondaryButtonClass} cursor-pointer`}>
+                        <Upload className="h-4 w-4" />
+                        <span>{t('settings.business.uploadSignature')}</span>
+                      </label>
+                      <input id="signature-upload" type="file" accept="image/png, image/jpeg" onChange={handleSignatureUpload} className="hidden" disabled={uploading} />
                     </div>
                   </div>
+                </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-200">{t('settings.currency')}</label>
-                    <select
-                      value={currency}
-                      onChange={(e) => handleCurrencyChange(e.target.value as 'USD' | 'EUR' | 'ILS')}
-                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all dark:bg-slate-900/80 dark:border-slate-700 dark:text-slate-100"
-                    >
-                      <option value="USD">{t('currencies.USD')}</option>
-                      <option value="EUR">{t('currencies.EUR')}</option>
-                      <option value="ILS">{t('currencies.ILS')}</option>
-                    </select>
-                  </div>
+                <div>
+                  <label htmlFor="logo-url" className={labelClass}>{t('settings.business.logoUrlFallback')}</label>
+                  <input id="logo-url" type="url" dir="ltr" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder={t('auth.logoPlaceholder')} className={fieldClass} />
+                </div>
+              </section>
+            )}
 
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-200">{t('settings.language')}</label>
-                    <select
-                      value={language}
-                      onChange={(e) => setLanguageState(e.target.value as 'en' | 'ar' | 'he')}
-                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all dark:bg-slate-900/80 dark:border-slate-700 dark:text-slate-100"
-                    >
-                      <option value="en">{t('languages.en')}</option>
-                      <option value="ar">{t('languages.ar')}</option>
-                      <option value="he">{t('languages.he')}</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-200">{t('settings.business.darkMode')}</label>
-                    <button
-                      onClick={toggleTheme}
-                      className="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-all w-full dark:bg-slate-900/80 dark:border-slate-700 dark:hover:bg-slate-800/80"
-                    >
-                      {theme === 'dark' ? <Moon className="w-5 h-5 text-sky-400" /> : <Sun className="w-5 h-5 text-amber-500" />}
-                      <span className="font-medium text-slate-900 dark:text-slate-100">{theme === 'dark' ? t('settings.business.darkModeOn') : t('settings.business.lightModeOn')}</span>
+            {activeTab === 'preferences' && (
+              <section aria-labelledby="preference-settings" className="space-y-6">
+                <h3 id="preference-settings" className="sr-only">{t('settings.tabs.preferences')}</h3>
+                <div className="divide-y divide-slate-200 rounded-lg border border-slate-200 dark:divide-slate-800 dark:border-slate-800">
+                  <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div><p className="text-sm font-medium">{t('settings.business.darkMode')}</p><p className="mt-0.5 text-xs text-slate-500">{t('settings.descriptions.theme')}</p></div>
+                    <button type="button" onClick={toggleTheme} aria-pressed={theme === 'dark'} className={secondaryButtonClass}>
+                      {theme === 'dark' ? <Moon className="h-4 w-4 text-sky-500" /> : <Sun className="h-4 w-4 text-amber-500" />}
+                      <span>{theme === 'dark' ? t('settings.business.darkModeOn') : t('settings.business.lightModeOn')}</span>
                     </button>
                   </div>
-
-                  {/* Exchange Rates Management */}
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-200">{t('settings.business.exchangeRates')}</label>
-                    <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/70">
-                      <div className="flex items-center justify-between gap-4">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-slate-900 text-sm mb-1 dark:text-slate-100">{t('settings.business.liveConversion')}</h3>
-                          <p className="text-xs text-slate-500 dark:text-slate-400">
-                            {t('settings.business.lastUpdated')}{' '}
-                            {lastUpdated ? (
-                              <span className="text-slate-300">{lastUpdated.toLocaleString()}</span>
-                            ) : (
-                              <span className="text-slate-500">{t('settings.business.never')}</span>
-                            )}
-                          </p>
-                          <p className="text-xs text-slate-500 mt-1">{t('settings.business.autoRefresh')}</p>
-                        </div>
-                        <button
-                          onClick={handleRefreshRates}
-                          disabled={refreshingRates}
-                          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-600 text-white text-sm font-medium hover:bg-sky-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <RefreshCw className={`w-4 h-4 ${refreshingRates ? 'animate-spin' : ''}`} />
-                          <span>{refreshingRates ? t('settings.business.updating') : t('settings.business.refreshNow')}</span>
-                        </button>
-                      </div>
-                    </div>
+                  <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div><label htmlFor="settings-language" className="text-sm font-medium">{t('settings.language')}</label><p className="mt-0.5 text-xs text-slate-500">{t('settings.descriptions.language')}</p></div>
+                    <select id="settings-language" value={language} onChange={(e) => setLanguageState(e.target.value as 'en' | 'ar' | 'he')} className={`${fieldClass} sm:w-52`}>
+                      <option value="en">{t('languages.en')}</option><option value="ar">{t('languages.ar')}</option><option value="he">{t('languages.he')}</option>
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div><label htmlFor="settings-currency" className="text-sm font-medium">{t('settings.currency')}</label><p className="mt-0.5 text-xs text-slate-500">{t('settings.descriptions.currency')}</p></div>
+                    <select id="settings-currency" dir="ltr" value={currency} onChange={(e) => handleCurrencyChange(e.target.value as 'USD' | 'EUR' | 'ILS')} className={`${fieldClass} sm:w-52`}>
+                      <option value="USD">{t('currencies.USD')}</option><option value="EUR">{t('currencies.EUR')}</option><option value="ILS">{t('currencies.ILS')}</option>
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div><p className="text-sm font-medium">{t('settings.business.liveConversion')}</p><p className="mt-0.5 text-xs text-slate-500">{t('settings.business.autoRefresh')}</p><p className="mt-1 text-xs text-slate-500">{t('settings.business.lastUpdated')} <span dir="ltr">{lastUpdated ? lastUpdated.toLocaleString(getLocale()) : t('settings.business.never')}</span></p></div>
+                    <button type="button" onClick={handleRefreshRates} disabled={refreshingRates} className={secondaryButtonClass}><RefreshCw className={`h-4 w-4 ${refreshingRates ? 'animate-spin' : ''}`} /><span>{refreshingRates ? t('settings.business.updating') : t('settings.business.refreshNow')}</span></button>
                   </div>
                 </div>
-
-                {success && (
-                  <div className="bg-emerald-500/10 border border-emerald-500/60 text-emerald-200 px-4 py-3 rounded-xl text-sm">
-                    {t('settings.saved')}
-                  </div>
-                )}
-
-                <div className="flex flex-col md:flex-row gap-3">
-                  <button
-                    onClick={handleSaveBusiness}
-                    disabled={loading}
-                    className="flex-1 flex items-center justify-center gap-2 bg-sky-600 text-white py-3 rounded-xl font-semibold hover:bg-sky-700 focus:ring-4 focus:ring-sky-500/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.01]"
-                  >
-                    <Save className="w-5 h-5" />
-                    <span>{loading ? t('settings.profile.saving') : t('settings.business.saveBusiness')}</span>
-                  </button>
-
-                  <button
-                    onClick={handleResetBranding}
-                    className="flex-1 flex items-center justify-center gap-2 bg-slate-100 text-slate-700 py-3 rounded-xl font-semibold hover:bg-slate-200 transition-all dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
-                  >
-                    <RotateCcw className="w-5 h-5" />
-                    <span>{t('settings.business.resetBranding')}</span>
-                  </button>
-                </div>
-              </div>
+              </section>
             )}
 
             {activeTab === 'security' && (
-              <div className="space-y-6">
-                <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/70">
+              <section aria-labelledby="security-settings" className="space-y-4">
+                <h3 id="security-settings" className="sr-only">{t('settings.tabs.security')}</h3>
+                <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-800">
                   <div className={`flex flex-col gap-4 ${!showPasswordModal ? 'sm:flex-row sm:items-center sm:justify-between' : ''}`}>
                     <div>
                       <h3 className="font-semibold text-slate-900 dark:text-slate-100">{t('settings.security.changePassword')}</h3>
                       <p className="text-sm text-slate-500 dark:text-slate-400">{t('settings.security.changePasswordDesc')}</p>
                     </div>
                     {!showPasswordModal ? (
-                      <button
-                        onClick={() => setShowPasswordModal(true)}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-600 text-white text-sm font-medium hover:bg-sky-700 transition-all"
-                      >
-                        <Key className="w-4 h-4" />
+                      <button type="button" onClick={() => setShowPasswordModal(true)} className={secondaryButtonClass}>
+                        <Key className="h-4 w-4" />
                         <span>{t('settings.security.change')}</span>
                       </button>
                     ) : (
-                      <div className="w-full bg-slate-100 rounded-xl p-4 dark:bg-slate-900 animate-fadeIn">
-                        <div className="space-y-3">
-                          <input
-                            type="password"
-                            placeholder="New Password"
-                            value={newPassword}
-                            onChange={(e) => setNewPassword(e.target.value)}
-                            className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                          />
-                          <input
-                            type="password"
-                            placeholder="Confirm New Password"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                          />
-                          <div className="flex gap-2 justify-end">
+                      <div className="w-full rounded-lg bg-slate-50 p-4 dark:bg-slate-900/60">
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div><label htmlFor="new-password" className={labelClass}>{t('settings.security.newPassword')}</label><input id="new-password" type="password" autoComplete="new-password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className={fieldClass} /></div>
+                          <div><label htmlFor="confirm-password" className={labelClass}>{t('settings.security.confirmPassword')}</label><input id="confirm-password" type="password" autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={fieldClass} /></div>
+                          <div className="flex justify-end gap-2 sm:col-span-2">
                             <button
+                              type="button"
                               onClick={() => {
                                 setShowPasswordModal(false);
                                 setNewPassword('');
                                 setConfirmPassword('');
                               }}
-                              className="px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-200 rounded-lg dark:text-slate-300 dark:hover:bg-slate-800"
+                              className={secondaryButtonClass}
                             >
-                              Cancel
+                              {t('settings.cancel')}
                             </button>
-                            <button
-                              onClick={handleSavePassword}
-                              className="px-3 py-1.5 text-sm bg-sky-600 text-white rounded-lg hover:bg-sky-700"
-                            >
-                              Save Password
-                            </button>
+                            <button type="button" onClick={handleSavePassword} className={primaryButtonClass}>{t('settings.security.savePassword')}</button>
                           </div>
                         </div>
                       </div>
@@ -940,9 +803,9 @@ export default function Settings() {
                 </div>
 
 
-                <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/70">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div className="w-full sm:w-auto">
+                <div className="divide-y divide-slate-200 rounded-lg border border-slate-200 dark:divide-slate-800 dark:border-slate-800">
+                  <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
                       <h3 className="font-semibold text-slate-900 dark:text-slate-100">{t('settings.security.signOut')}</h3>
                       <p className="text-sm text-slate-500 dark:text-slate-400">{t('settings.security.signOutDesc')}</p>
                     </div>
@@ -954,77 +817,127 @@ export default function Settings() {
                           console.error(e);
                         }
                       }}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-200 text-slate-700 text-sm font-medium hover:bg-slate-300 transition-all dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600"
+                      className={secondaryButtonClass}
                     >
-                      <RotateCcw className="w-4 h-4" />
+                      <LogOut className="h-4 w-4" />
                       <span>{t('settings.security.signOut')}</span>
                     </button>
                   </div>
-                </div>
-
-                <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/70">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div className="w-full sm:w-auto">
+                  <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
                       <h3 className="font-semibold text-slate-900 dark:text-slate-100">{t('settings.security.refreshProfile')}</h3>
                       <p className="text-sm text-slate-500 dark:text-slate-400">{t('settings.security.refreshProfileDesc')}</p>
                     </div>
-                    <button
-                      onClick={handleRefreshProfile}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition-all"
-                    >
-                      <RotateCcw className="w-4 h-4" />
+                    <button type="button" onClick={handleRefreshProfile} className={secondaryButtonClass}>
+                      <RotateCcw className="h-4 w-4" />
                       <span>{t('settings.security.refresh')}</span>
                     </button>
                   </div>
                 </div>
-              </div>
+              </section>
             )}
 
             {activeTab === 'data' && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-bold">{t('settings.data.header')}</h2>
-
-                <div className="space-y-4">
-                  <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/70">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                      <div className="w-full sm:w-auto">
+              <section aria-labelledby="data-settings">
+                <h3 id="data-settings" className="sr-only">{t('settings.data.header')}</h3>
+                <div className="divide-y divide-slate-200 rounded-lg border border-slate-200 dark:divide-slate-800 dark:border-slate-800">
+                  <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
                         <h3 className="font-semibold text-slate-900 dark:text-slate-100">{t('settings.data.export')}</h3>
                         <p className="text-sm text-slate-500 dark:text-slate-400">{t('settings.data.exportDesc')}</p>
                       </div>
-                      <button
-                        onClick={handleExportData}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition-all"
-                      >
-                        <Download className="w-4 h-4" />
+                      <button type="button" onClick={handleExportData} className={secondaryButtonClass}>
+                        <Download className="h-4 w-4" />
                         <span>{t('settings.data.exportBtn')}</span>
                       </button>
-                    </div>
                   </div>
 
-                  <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/70">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                      <div className="w-full sm:w-auto">
+                  <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
                         <h3 className="font-semibold text-slate-900 dark:text-slate-100">{t('settings.data.import')}</h3>
                         <p className="text-sm text-slate-500 dark:text-slate-400">{t('settings.data.importDesc')}</p>
                       </div>
-                      <label className="flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-600 text-white text-sm font-medium hover:bg-sky-700 transition-all cursor-pointer">
-                        <Upload className="w-4 h-4" />
+                      <label className={`${secondaryButtonClass} cursor-pointer`}>
+                        <Upload className="h-4 w-4" />
                         <span>{t('settings.data.importBtn')}</span>
                         <input type="file" accept=".json" onChange={handleImportData} className="hidden" />
                       </label>
-                    </div>
                   </div>
                 </div>
-              </div>
+              </section>
             )}
 
-            {/* Restaurant Settings Tab */}
             {activeTab === 'restaurant' && profile?.business_type === 'restaurant' && (
               <RestaurantSettings />
             )}
-          </div>
-        </div>
 
+            {activeTab === 'about' && (
+              <section aria-labelledby="about-settings">
+                <h3 id="about-settings" className="sr-only">{t('settings.tabs.about')}</h3>
+                <dl className="divide-y divide-slate-200 rounded-lg border border-slate-200 dark:divide-slate-800 dark:border-slate-800">
+                  <div className="flex flex-col gap-1 p-4 sm:flex-row sm:items-center sm:justify-between"><dt className="text-sm font-medium">{t('settings.about.application')}</dt><dd className="text-sm text-slate-600 dark:text-slate-400">MyDesck PRO</dd></div>
+                  <div className="flex flex-col gap-1 p-4 sm:flex-row sm:items-center sm:justify-between"><dt className="text-sm font-medium">{t('settings.about.version')}</dt><dd dir="ltr" className="font-mono text-sm tabular-nums text-slate-600 dark:text-slate-400">v{appVersion}</dd></div>
+                  <div className="flex flex-col gap-1 p-4 sm:flex-row sm:items-center sm:justify-between"><dt className="text-sm font-medium">{t('settings.signedInAs')}</dt><dd dir="ltr" className="max-w-full truncate text-sm text-slate-600 dark:text-slate-400">{email}</dd></div>
+                </dl>
+                {window.electronAPI && (
+                  <div className="mt-4 rounded-lg border border-slate-200 p-4 dark:border-slate-800" aria-live="polite">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0">
+                        <h4 className="font-semibold text-slate-900 dark:text-slate-100">{t('updates.heading')}</h4>
+                        <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                          {t(updateStatusKey[updateState.status])}
+                          {updateState.availableVersion && (
+                            <span dir="ltr" className="ms-1 font-mono tabular-nums">v{updateState.availableVersion}</span>
+                          )}
+                        </p>
+                        {updateState.status === 'downloading' && (
+                          <div className="mt-3 h-2 max-w-sm overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800" role="progressbar" aria-label={t('updates.downloadProgress')} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(updateState.progress)}>
+                            <div className="h-full bg-sky-600 transition-[width]" style={{ width: `${Math.round(updateState.progress)}%` }} />
+                          </div>
+                        )}
+                        {updateState.status === 'error' && (
+                          <p className="mt-2 text-sm text-rose-700 dark:text-rose-300">
+                            {t(`updates.errors.${updateState.error === 'UPDATE_DOWNLOAD_FAILED' ? 'download' : updateState.error === 'INVALID_UPDATE_METADATA' ? 'metadata' : 'check'}`)}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex shrink-0 flex-wrap gap-2">
+                        {updateState.status === 'available' && (
+                          <button type="button" onClick={handleDownloadUpdate} className={primaryButtonClass}>
+                            <Download className="h-4 w-4" />{t('updates.download')}
+                          </button>
+                        )}
+                        {updateState.status === 'downloaded' && (
+                          <button type="button" onClick={handleInstallUpdate} className={primaryButtonClass}>
+                            <RefreshCw className="h-4 w-4" />{t('updates.restartToInstall')}
+                          </button>
+                        )}
+                        {!['available', 'downloaded', 'downloading', 'checking'].includes(updateState.status) && (
+                          <button type="button" onClick={handleCheckForUpdates} className={secondaryButtonClass}>
+                            <RefreshCw className="h-4 w-4" />{t('updates.checkNow')}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </section>
+            )}
+            </div>
+
+            {(activeTab === 'profile' || activeTab === 'business' || activeTab === 'preferences') && (
+              <div className="sticky bottom-0 z-10 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-950/95 sm:px-6">
+                <div className="min-h-5 text-xs text-slate-500" aria-live="polite">
+                  {loading ? t('settings.profile.saving') : success ? <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-300"><CheckCircle2 className="h-4 w-4" />{t('settings.saved')}</span> : t('settings.explicitSaveHint')}
+                </div>
+                <div className="flex items-center gap-2">
+                  {activeTab === 'business' && <button type="button" onClick={handleResetBranding} className={secondaryButtonClass}><RotateCcw className="h-4 w-4" />{t('settings.business.resetBranding')}</button>}
+                  <button type="button" onClick={activeTab === 'profile' ? handleSaveProfile : handleSaveBusiness} disabled={loading} className={primaryButtonClass}><Save className="h-4 w-4" /><span>{loading ? t('settings.profile.saving') : activeTab === 'profile' ? t('settings.profile.save') : t('settings.business.saveBusiness')}</span></button>
+                </div>
+              </div>
+            )}
+          </main>
+        </div>
 
       </div>
     </div>

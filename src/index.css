@@ -61,6 +61,20 @@
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
   }
+
+  body.pdf-preview-open {
+    overflow: hidden;
+  }
+
+  body.pdf-preview-open #root {
+    overflow: hidden;
+  }
+
+  body.pdf-preview-open .app-navbar,
+  body.pdf-preview-open .app-exchange-rate,
+  body.pdf-preview-open [data-sonner-toaster] {
+    display: none !important;
+  }
 }
 
 /* Custom Scrollbar - dark glass */

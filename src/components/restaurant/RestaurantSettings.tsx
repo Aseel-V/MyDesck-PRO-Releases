@@ -104,7 +104,7 @@ function TableManager() {
 
   const handleAddTable = async () => {
     if (!formData.name.trim()) {
-      toast.error(t('settings.restaurantSetup.tableNameRequired'));
+      toast.error(t('settings.restaurant.tableNameRequired'));
       return;
     }
     try {
@@ -115,7 +115,7 @@ function TableManager() {
         position_x: tables.length * 100, // naive positioning
         position_y: 100
       });
-      toast.success(t('settings.restaurantSetup.tableAdded'));
+      toast.success(t('settings.restaurant.tableAdded'));
       setFormData({ name: '', seats: 4, zone: 'indoor' });
       setIsAdding(false);
     } catch (err) {
@@ -133,7 +133,7 @@ function TableManager() {
         seats: formData.seats,
         zone: formData.zone
       });
-      toast.success(t('settings.restaurantSetup.tableUpdated'));
+      toast.success(t('settings.restaurant.tableUpdated'));
       setEditingId(null);
     } catch (err) {
       console.error(err);
@@ -142,10 +142,10 @@ function TableManager() {
   };
 
   const handleDeleteTable = async (id: string) => {
-    if (!confirm(t('settings.restaurantSetup.confirmDeleteTable'))) return;
+    if (!confirm(t('settings.restaurant.confirmDeleteTable'))) return;
     try {
       await deleteTable.mutateAsync(id);
-      toast.success(t('settings.restaurantSetup.tableDeleted'));
+      toast.success(t('settings.restaurant.tableDeleted'));
     } catch (err) {
       console.error(err);
       toast.error(t('settings.restaurantSetup.failed'));
@@ -178,19 +178,19 @@ function TableManager() {
       {isAdding && (
         <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 space-y-4">
           <h3 className="font-semibold">{t('settings.restaurantSetup.addTable')}</h3>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div>
-              <label className="block text-sm font-medium mb-1">{t('settings.restaurantSetup.tableName')}</label>
+              <label className="block text-sm font-medium mb-1">{t('settings.restaurant.tableName')}</label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="w-full px-3 py-2 rounded-lg border dark:bg-slate-900 dark:border-slate-700"
-                placeholder="Table 1"
+                placeholder={t('settings.restaurantSetup.tableNamePlaceholder')}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">{t('settings.restaurantSetup.tableSeats')}</label>
+              <label className="block text-sm font-medium mb-1">{t('settings.restaurant.tableSeats')}</label>
               <input
                 type="number"
                 value={formData.seats}
@@ -200,17 +200,17 @@ function TableManager() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Zone</label>
+              <label className="block text-sm font-medium mb-1">{t('settings.restaurantSetup.zone')}</label>
               <select
                 value={formData.zone}
                 onChange={(e) => setFormData({ ...formData, zone: e.target.value as FloorZone })}
                 className="w-full px-3 py-2 rounded-lg border dark:bg-slate-900 dark:border-slate-700"
               >
-                <option value="indoor">Indoor</option>
-                <option value="outdoor">Outdoor</option>
-                <option value="patio">Patio</option>
-                <option value="bar_area">Bar</option>
-                <option value="private">Private</option>
+                <option value="indoor">{t('settings.restaurantSetup.zones.indoor')}</option>
+                <option value="outdoor">{t('settings.restaurantSetup.zones.outdoor')}</option>
+                <option value="patio">{t('settings.restaurantSetup.zones.patio')}</option>
+                <option value="bar_area">{t('settings.restaurantSetup.zones.bar')}</option>
+                <option value="private">{t('settings.restaurantSetup.zones.private')}</option>
               </select>
             </div>
           </div>
@@ -220,7 +220,7 @@ function TableManager() {
               disabled={createTable.isPending}
               className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg"
             >
-              <Save size={16} /> {createTable.isPending ? t('settings.restaurantSetup.saving') : t('settings.restaurantSetup.save')}
+              <Save size={16} /> {createTable.isPending ? t('settings.restaurant.saving') : t('settings.restaurantSetup.save')}
             </button>
             <button
               onClick={() => { setIsAdding(false); setFormData({ name: '', seats: 4, zone: 'indoor' }); }}
@@ -307,9 +307,9 @@ function TableManager() {
         ))}
         {tables.length === 0 && !isAdding && (
           <div className="col-span-full py-12 text-center text-slate-400 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
-            {t('settings.restaurantSetup.noTables')}
+            {t('settings.restaurant.noTables')}
             <br />
-            <span className="text-sm">{t('settings.restaurantSetup.noTablesHint')}</span>
+            <span className="text-sm">{t('settings.restaurant.noTablesHint')}</span>
           </div>
         )}
       </div>
@@ -362,7 +362,7 @@ function MenuManager() {
 
   const handleAddCategory = async () => {
     if (!selectedCategoryType) {
-      toast.error(t('settings.restaurantSetup.categoryRequired'));
+      toast.error(t('settings.restaurant.categoryRequired'));
       return;
     }
     try {
@@ -417,7 +417,7 @@ function MenuManager() {
 
   const handleSaveItem = async (categoryId: string) => {
     if (!newItem.name.trim() || newItem.price <= 0) {
-      toast.error(t('settings.restaurantSetup.nameAndPriceRequired'));
+      toast.error(t('settings.restaurant.nameAndPriceRequired'));
       return;
     }
     const imageUrl = safeImageSrc(newItem.imageUrl) || undefined;
@@ -432,7 +432,7 @@ function MenuManager() {
           image_url: imageUrl,
           allergens: newItem.allergens
         });
-        toast.success(t('settings.restaurantSetup.itemUpdated') || 'Item updated');
+        toast.success(t('settings.restaurantSetup.itemUpdated'));
       } else {
         await createMenuItem.mutateAsync({
           category_id: categoryId,
@@ -501,7 +501,7 @@ function MenuManager() {
               disabled={!selectedCategoryType || createCategory.isPending}
               className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg disabled:opacity-50"
             >
-              <Save size={16} /> {createCategory.isPending ? t('settings.restaurantSetup.saving') : t('settings.restaurantSetup.save')}
+              <Save size={16} /> {createCategory.isPending ? t('settings.restaurant.saving') : t('settings.restaurantSetup.save')}
             </button>
             <button
               onClick={() => { setIsAddingCategory(false); setSelectedCategoryType(''); }}
@@ -517,8 +517,8 @@ function MenuManager() {
       {categories.length === 0 && !isAddingCategory ? (
         <div className="text-center py-10 bg-slate-50 dark:bg-slate-800 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700">
           <ChefHat size={48} className="mx-auto mb-4 text-slate-300" />
-          <p className="text-slate-500">{t('settings.restaurantSetup.noCategories')}</p>
-          <p className="text-sm text-slate-400">{t('settings.restaurantSetup.noCategoriesHint')}</p>
+          <p className="text-slate-500">{t('settings.restaurant.noCategories')}</p>
+          <p className="text-sm text-slate-400">{t('settings.restaurant.noCategoriesHint')}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -585,7 +585,7 @@ function MenuManager() {
                           <div className="flex items-center gap-3">
                             <span className="font-bold text-emerald-600">{formatCurrency(item.price)}</span>
                             <button
-                               title={item.is_available ? "86 Item (Make Unavailable)" : "Make Available"}
+                               title={item.is_available ? t('settings.restaurantSetup.makeUnavailable') : t('settings.restaurantSetup.makeAvailable')}
                                onClick={() => toggleItem86.mutate({ id: item.id, is_available: !item.is_available })}
                                className={`p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity ${
                                  item.is_available ? 'text-slate-300 hover:text-orange-500' : 'text-orange-500 bg-orange-50'
@@ -655,7 +655,7 @@ function MenuManager() {
                   {isAddingItem === category.id || (editingItemId && category.items?.find(i => i.id === editingItemId)) ? (
                     <div className="p-3 bg-white dark:bg-slate-900 rounded-lg border border-emerald-200 dark:border-emerald-800 space-y-3">
                       <div className="flex justify-between items-center mb-2">
-                         <span className="text-xs font-bold uppercase text-slate-400">{editingItemId ? (t('settings.restaurantSetup.editItem') || 'Edit Item') : (t('settings.restaurantSetup.addItem') || 'Add New Item')}</span>
+                         <span className="text-xs font-bold uppercase text-slate-400">{editingItemId ? t('settings.restaurantSetup.editItem') : t('settings.restaurantSetup.addItem')}</span>
                       </div>
                       <input
                         type="text"
@@ -676,7 +676,7 @@ function MenuManager() {
                           type="number"
                           value={newItem.cost_price || ''}
                           onChange={(e) => setNewItem({ ...newItem, cost_price: parseFloat(e.target.value) || 0 })}
-                          placeholder={t('settings.restaurantSetup.costPrice') || 'Cost Price'}
+                          placeholder={t('settings.restaurantSetup.costPrice')}
                           className="px-3 py-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50"
                         />
                         <input
@@ -781,7 +781,7 @@ function MenuManager() {
                           onClick={() => handleSaveItem(category.id)}
                           className="flex items-center gap-1 px-3 py-2 bg-emerald-600 text-white rounded-lg text-sm"
                         >
-                          <Save size={14} /> {editingItemId ? (t('settings.restaurantSetup.update') || 'Update') : t('settings.restaurantSetup.addMenuItem')}
+                          <Save size={14} /> {editingItemId ? t('settings.restaurantSetup.update') : t('settings.restaurantSetup.addMenuItem')}
                         </button>
                         <button
                           onClick={() => { setIsAddingItem(null); setEditingItemId(null); setNewItem({ name: '', price: 0, cost_price: 0, description: '', imageUrl: '', allergens: [] }); }}
@@ -886,7 +886,7 @@ function StaffManager() {
         email: formData.email,
         password: formData.password
       });
-      toast.success(t('settings.restaurantSetup.staffUpdated'));
+      toast.success(t('settings.restaurant.staffUpdated'));
       setEditingId(null);
     } catch (err) {
       toast.error(t('settings.restaurantSetup.failed'));
@@ -895,10 +895,10 @@ function StaffManager() {
   };
 
   const handleDeleteStaff = async (id: string) => {
-    if (!confirm(t('settings.restaurantSetup.confirmDeleteStaff'))) return;
+    if (!confirm(t('settings.restaurant.confirmDeleteStaff'))) return;
     try {
       await deleteStaff.mutateAsync(id);
-      toast.success(t('settings.restaurantSetup.staffRemoved'));
+      toast.success(t('settings.restaurant.staffRemoved'));
     } catch (err) {
       toast.error(t('settings.restaurantSetup.failed'));
       console.error(err);
@@ -952,7 +952,7 @@ function StaffManager() {
       {isAdding && (
         <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 space-y-4">
           <h3 className="font-semibold">{t('settings.restaurantSetup.addStaff')}</h3>
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <div>
               <label className="block text-sm font-medium mb-1">{t('settings.restaurantSetup.fullName')}</label>
               <input
@@ -1012,7 +1012,7 @@ function StaffManager() {
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 className="w-full px-3 py-2 rounded-lg border dark:bg-slate-900 dark:border-slate-700 font-mono"
-                placeholder="Password"
+                placeholder={t('settings.restaurantSetup.password')}
               />
             </div>
           </div>
@@ -1022,7 +1022,7 @@ function StaffManager() {
               disabled={createStaff.isPending}
               className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg"
             >
-              <Save size={16} /> {createStaff.isPending ? t('settings.restaurantSetup.saving') : t('settings.restaurantSetup.save')}
+              <Save size={16} /> {createStaff.isPending ? t('settings.restaurant.saving') : t('settings.restaurantSetup.save')}
             </button>
             <button
               onClick={() => { setIsAdding(false); setFormData({ full_name: '', role: 'Waiter', hourly_rate: 0, pin_code: '', email: '', password: '' }); }}
@@ -1039,7 +1039,7 @@ function StaffManager() {
         <div className="text-center py-10 bg-slate-50 dark:bg-slate-800 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700">
           <Users size={48} className="mx-auto mb-4 text-slate-300" />
           <p className="text-slate-500">{t('settings.restaurantSetup.noStaff')}</p>
-          <p className="text-sm text-slate-400">{t('settings.restaurantSetup.noStaffHint')}</p>
+          <p className="text-sm text-slate-400">{t('settings.restaurant.noStaffHint')}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -1050,7 +1050,7 @@ function StaffManager() {
             >
               {editingId === staffMember.id ? (
                 <div className="space-y-3">
-                  <div className="grid grid-cols-4 gap-3">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
                     <input
                       type="text"
                       value={formData.full_name}
@@ -1080,21 +1080,21 @@ function StaffManager() {
                         value={formData.pin_code}
                         onChange={(e) => setFormData({ ...formData, pin_code: e.target.value.replace(/\D/g, '') })}
                         className="px-3 py-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700 tracking-widest text-center font-mono"
-                        placeholder="PIN"
+                        placeholder={t('settings.restaurantSetup.pinCode')}
                       />
                       <input
                         type="email"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="px-3 py-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700 col-span-2"
-                        placeholder="Email"
+                        className="px-3 py-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700 sm:col-span-2"
+                        placeholder={t('settings.restaurantSetup.email')}
                       />
                       <input
                         type="text"
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className="px-3 py-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700 col-span-2 font-mono"
-                        placeholder="Password"
+                        className="px-3 py-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700 sm:col-span-2 font-mono"
+                        placeholder={t('settings.restaurantSetup.password')}
                       />
                   </div>
                   <div className="flex gap-2">

@@ -43,27 +43,26 @@ interface Window {
         // Auto-Update API
         getAppVersion: () => Promise<string>;
         getUpdateState: () => Promise<{
-            status: 'idle' | 'checking' | 'available' | 'downloading' | 'downloaded' | 'error';
+            status: 'idle' | 'checking' | 'up-to-date' | 'available' | 'downloading' | 'downloaded' | 'error';
             currentVersion: string;
             availableVersion?: string | null;
             progress: number;
             error?: string | null;
         }>;
         onUpdateState: (callback: (state: {
-            status: 'idle' | 'checking' | 'available' | 'downloading' | 'downloaded' | 'error';
+            status: 'idle' | 'checking' | 'up-to-date' | 'available' | 'downloading' | 'downloaded' | 'error';
             currentVersion: string;
             availableVersion?: string | null;
             progress: number;
             error?: string | null;
-        }) => void) => void;
+        }) => void) => () => void;
         onUpdateAvailable: (callback: (info: { version: string; [key: string]: unknown }) => void) => void;
         onUpdateProgress: (callback: (progress: { percent: number; [key: string]: unknown }) => void) => void;
         onUpdateDownloaded: (callback: (info: { version: string; [key: string]: unknown }) => void) => void;
         onUpdateError: (callback: (err: string) => void) => void;
-        startDownload: () => void;
-        retryUpdate: () => void;
-        restartApp: () => void;
-        unlockApp: () => void;
+        checkForUpdates: () => Promise<unknown>;
+        startDownload: () => Promise<unknown>;
+        restartApp: () => Promise<boolean>;
         openExternal: (url: string) => void;
         removeAllUpdateListeners: () => void;
 

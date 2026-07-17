@@ -58,6 +58,7 @@ export default function DestinationPerformance({
     value: number;
     name: string;
     color?: string;
+    dataKey?: string;
   }
 
   interface CustomTooltipProps {
@@ -69,13 +70,20 @@ export default function DestinationPerformance({
   const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
     if (!active || !payload?.length) return null;
     return (
-      <div className="rounded-xl border border-slate-100 bg-white/95 p-3.5 shadow-xl backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/95">
+      <div dir={direction} className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-lg dark:border-slate-700 dark:bg-slate-950">
         <p className="mb-2 text-xs font-bold text-slate-800 dark:text-slate-200">{label}</p>
         {payload.map((entry: TooltipEntry, index: number) => (
           <div key={index} className="flex items-center gap-2 text-xs py-0.5">
             <div className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
             <span className="text-slate-500 dark:text-slate-400">{entry.name}:</span>
-            <span className="font-semibold text-slate-850 dark:text-slate-150">
+            <span
+              dir="ltr"
+              className={`font-bold tabular-nums ${
+                entry.dataKey === 'profit'
+                  ? 'text-emerald-700 dark:text-emerald-300'
+                  : 'text-slate-950 dark:text-white'
+              }`}
+            >
               {formatCurrency(entry.value)}
             </span>
           </div>
@@ -114,7 +122,7 @@ export default function DestinationPerformance({
               <p className="mt-1.5 truncate text-sm font-bold text-slate-800 dark:text-slate-200">
                 {highlights.bestRevenueDest || '-'}
               </p>
-              <p className="text-xs font-semibold text-slate-450">
+              <p dir="ltr" className="text-xs font-semibold tabular-nums text-slate-700 dark:text-slate-300">
                 {highlights.bestRevenueDest ? formatCurrency(highlights.bestRevenueValue) : ''}
               </p>
             </div>
@@ -130,7 +138,7 @@ export default function DestinationPerformance({
               <p className="mt-1.5 truncate text-sm font-bold text-slate-800 dark:text-slate-200">
                 {highlights.bestProfitDest || '-'}
               </p>
-              <p className="text-xs font-semibold text-slate-450">
+              <p dir="ltr" className="text-xs font-semibold tabular-nums text-emerald-700 dark:text-emerald-300">
                 {highlights.bestProfitDest ? formatCurrency(highlights.bestProfitValue) : ''}
               </p>
             </div>
@@ -146,7 +154,7 @@ export default function DestinationPerformance({
               <p className="mt-1.5 truncate text-sm font-bold text-slate-800 dark:text-slate-200">
                 {highlights.highestPaxDest || '-'}
               </p>
-              <p className="text-xs font-semibold text-slate-450">
+              <p dir="ltr" className="text-xs font-semibold tabular-nums text-sky-700 dark:text-sky-300">
                 {highlights.highestPaxDest ? `${formatNumber(highlights.highestPaxValue)} ${t('analytics.travelers')}` : ''}
               </p>
             </div>
@@ -162,7 +170,7 @@ export default function DestinationPerformance({
               <p className="mt-1.5 truncate text-sm font-bold text-slate-850 dark:text-slate-200">
                 {highlights.weakestDest || '-'}
               </p>
-              <p className="text-xs font-semibold text-slate-450">
+              <p dir="ltr" className="text-xs font-semibold tabular-nums text-rose-600 dark:text-rose-300">
                 {highlights.weakestDest ? formatCurrency(highlights.weakestValue) : ''}
               </p>
             </div>
@@ -205,10 +213,11 @@ export default function DestinationPerformance({
                             )}
                           </div>
                         </td>
-                        <td className="p-3 text-center font-mono">{formatNumber(stat.trips)}</td>
-                        <td className="p-3 text-start">{formatCurrency(stat.revenue)}</td>
+                        <td dir="ltr" className="p-3 text-center font-mono tabular-nums text-sky-700 dark:text-sky-300">{formatNumber(stat.trips)}</td>
+                        <td dir="ltr" className="p-3 text-start font-bold tabular-nums text-slate-950 dark:text-white">{formatCurrency(stat.revenue)}</td>
                         <td
-                          className={`p-3 text-start font-bold ${
+                          dir="ltr"
+                          className={`p-3 text-start font-bold tabular-nums ${
                             stat.profit > 0
                               ? 'text-emerald-600 dark:text-emerald-400'
                               : stat.profit < 0
@@ -218,12 +227,13 @@ export default function DestinationPerformance({
                         >
                           {formatCurrency(stat.profit)}
                         </td>
-                        <td className="p-3 text-center font-mono">{stat.profitMargin.toFixed(1)}%</td>
-                        <td className="p-3 text-center font-mono">{formatNumber(stat.passengers)}</td>
+                        <td dir="ltr" className={`p-3 text-center font-mono font-bold tabular-nums ${stat.profitMargin > 0 ? 'text-emerald-700 dark:text-emerald-300' : stat.profitMargin < 0 ? 'text-rose-600 dark:text-rose-300' : 'text-slate-600 dark:text-slate-400'}`}>{stat.profitMargin.toFixed(1)}%</td>
+                        <td dir="ltr" className="p-3 text-center font-mono tabular-nums text-sky-700 dark:text-sky-300">{formatNumber(stat.passengers)}</td>
                         <td
-                          className={`p-3 text-start font-bold ${
+                          dir="ltr"
+                          className={`p-3 text-start font-bold tabular-nums ${
                             stat.outstandingBalance > 0
-                              ? 'text-rose-500'
+                              ? 'text-rose-600 dark:text-rose-300'
                               : 'text-slate-450 dark:text-slate-500'
                           }`}
                         >
@@ -264,13 +274,13 @@ export default function DestinationPerformance({
                     <Legend wrapperStyle={{ fontSize: 10 }} />
                     <Bar
                       dataKey="revenue"
-                      fill="#10B981"
+                      fill="#0EA5E9"
                       name={t('analytics.revenue')}
                       radius={isRtl ? [4, 0, 0, 4] : [0, 4, 4, 0]}
                     />
                     <Bar
                       dataKey="profit"
-                      fill="#3B82F6"
+                      fill="#16A34A"
                       name={t('analytics.profit')}
                       radius={isRtl ? [4, 0, 0, 4] : [0, 4, 4, 0]}
                     />

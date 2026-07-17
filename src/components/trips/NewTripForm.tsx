@@ -4,7 +4,6 @@ import { FieldErrors, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { useCurrency } from '../../contexts/CurrencyContext';
 import { Trip, TripFormData } from '../../types/trip';
 import { tripSchema } from '../../lib/schemas';
 import { cn } from '../../lib/utils';
@@ -13,11 +12,11 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
 import { useDebounce } from '../../hooks/useDebounce';
-import { FileUpload } from '../ui/FileUpload';
-import { removeTripAttachments, getTripAttachmentUrl } from '../../lib/tripAttachments';
 import { formatRoomConfiguration, normalizeRoomConfiguration, serializeRoomConfiguration } from '../../lib/tripRoom';
 import { ConfirmationModal } from '../ui/ConfirmationModal';
-import { getEffectivePaymentStatus, getPaymentStatusDescription, getTripStatusDescription } from '../../lib/tripStatus';
+import { Button } from '../travel-ui/Button';
+import { Surface } from '../travel-ui/Surface';
+import { deriveTripStatus, getEffectivePaymentStatus, getPaymentStatusDescription } from '../../lib/tripStatus';
 
 interface NewTripFormProps {
   onClose: () => void;
@@ -37,12 +36,11 @@ type StoredTripDraft = {
 
 export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormProps) {
   const { t, direction } = useLanguage();
-  const { profile, user } = useAuth();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
   const [validationSummary, setValidationSummary] = useState<string[]>([]);
-  const { rates, convert } = useCurrency(); // Added convert
 
   const {
     register,
@@ -67,7 +65,9 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
       itinerary: editTrip?.itinerary || [],
       start_date: editTrip?.start_date || '',
       end_date: editTrip?.end_date || '',
-      currency: (editTrip?.currency as TripFormValues['currency']) || (profile?.preferred_currency as TripFormValues['currency']) || 'USD',
+      currency: (editTrip?.currency as TripFormValues['currency']) || 'ILS',
+      service_type: editTrip?.service_type || 'both',
+      hotel_name: editTrip?.hotel_name || '',
       exchange_rate: editTrip?.exchange_rate || 1,
       wholesale_cost: editTrip?.wholesale_cost !== undefined ? editTrip.wholesale_cost : '' as unknown as number,
       sale_price: editTrip?.sale_price !== undefined ? editTrip.sale_price : '' as unknown as number,
@@ -83,6 +83,9 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
         (editTrip?.payment_status as TripFormValues['payment_status']) || 'unpaid',
       amount_paid: editTrip?.amount_paid !== undefined ? editTrip.amount_paid : '' as unknown as number,
       payment_date: editTrip?.payment_date || '',
+      payment_method: editTrip?.payment_method || null,
+      card_paid_amount: editTrip?.card_paid_amount ?? undefined,
+      cash_paid_amount: editTrip?.cash_paid_amount ?? undefined,
       room_type: normalizeRoomConfiguration(editTrip?.room_type), // JSONB object for room configuration
       board_basis: editTrip?.board_basis || '', // Ensure persistence
       attachments: editTrip?.attachments || [],
@@ -189,31 +192,10 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
   const wholesaleCost = watch('wholesale_cost');
   const salePrice = watch('sale_price');
   const amountPaid = watch('amount_paid');
-  const currency = watch('currency');
-
-  // Independent Currency State for Inputs
-  // Priority: 1. Saved Original Currency from DB. 2. Fallback to trip currency.
-  const [wholesaleCurrency, setWholesaleCurrency] = useState<string>(
-      editTrip?.wholesale_currency || editTrip?.currency || profile?.preferred_currency || 'USD'
-  );
-  const [saleCurrency, setSaleCurrency] = useState<string>(
-      editTrip?.sale_currency || editTrip?.currency || profile?.preferred_currency || 'USD'
-  );
-  const [amountPaidCurrency, setAmountPaidCurrency] = useState<string>(
-      editTrip?.currency || profile?.preferred_currency || 'USD'
-  );
-
-  // Initialize independent currencies when trip loads
-  useEffect(() => {
-    if (editTrip) {
-      // If we have explicit original currency saved, use it.
-      if (editTrip.wholesale_currency) setWholesaleCurrency(editTrip.wholesale_currency);
-      else if (editTrip.currency) setWholesaleCurrency(editTrip.currency);
-
-      if (editTrip.sale_currency) setSaleCurrency(editTrip.sale_currency);
-      else if (editTrip.currency) setSaleCurrency(editTrip.currency);
-    }
-  }, [editTrip]);
+  const paymentMethod = watch('payment_method');
+  const serviceType = watch('service_type');
+  const isLegacyCurrencyTrip = Boolean(editTrip && editTrip.currency !== 'ILS');
+  const displayedCurrency = isLegacyCurrencyTrip ? editTrip?.currency || 'ILS' : '₪';
 
   const [profit, setProfit] = useState(0);
   const [profitPercentage, setProfitPercentage] = useState(0);
@@ -278,42 +260,25 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
   }, [roomCounts, setValue]);
 
   useEffect(() => {
-    // Profit calc needs real-time conversion.
-    
     const safeWholesale = isNaN(Number(wholesaleCost)) ? 0 : Number(wholesaleCost);
     const safeSale = isNaN(Number(salePrice)) ? 0 : Number(salePrice);
-
-    const wCost = convert(safeWholesale, wholesaleCurrency, currency || 'USD'); 
-    const sPrice = convert(safeSale, saleCurrency, currency || 'USD');
-    
-    const calculatedProfit = sPrice - wCost;
-    const calculatedPercentage = wCost > 0 ? (calculatedProfit / wCost) * 100 : 0;
+    const calculatedProfit = safeSale - safeWholesale;
+    const calculatedPercentage = safeWholesale > 0 ? (calculatedProfit / safeWholesale) * 100 : 0;
     
     setProfit(calculatedProfit);
     setProfitPercentage(calculatedPercentage);
-  }, [wholesaleCost, salePrice, currency, wholesaleCurrency, saleCurrency, convert]); // Added dependencies
+  }, [wholesaleCost, salePrice]);
 
   useEffect(() => {
-    // Amount due calc
-    // Amount Paid is in... let's say Main Currency? Or its own?
-    // Let's assume Amount Paid matches Sale Price currency usually.
-    // Let's stick to Sales Currency for Amount Paid for simplicity/consistency with Sale.
-    // Or just Main Currency? The existing code `syncPaymentStatusWithAmount` uses raw values.
-    // We will assume Amount Paid is in `currency` (Main) for now to avoid too much complexity, 
-    // because `payments` array has history.
-    
     const safeSale = isNaN(Number(salePrice)) ? 0 : Number(salePrice);
     const safePaid = isNaN(Number(amountPaid)) ? 0 : Number(amountPaid);
-
-    const sPrice = convert(safeSale, saleCurrency, currency || 'USD');
-    const paidInMain = convert(safePaid, amountPaidCurrency, currency || 'USD');
-    const due = sPrice - paidInMain;
+    const due = safeSale - safePaid;
     setAmountDue(due >= 0 ? due : 0);
-  }, [salePrice, saleCurrency, amountPaid, amountPaidCurrency, currency, convert]);
+  }, [salePrice, amountPaid]);
 
   useEffect(() => {
-    const normalizedSale = convert(Number.isFinite(Number(salePrice)) ? Math.max(0, Number(salePrice)) : 0, saleCurrency, currency || 'USD');
-    const normalizedPaid = convert(Number.isFinite(Number(amountPaid)) ? Math.max(0, Number(amountPaid)) : 0, amountPaidCurrency, currency || 'USD');
+    const normalizedSale = Number.isFinite(Number(salePrice)) ? Math.max(0, Number(salePrice)) : 0;
+    const normalizedPaid = Number.isFinite(Number(amountPaid)) ? Math.max(0, Number(amountPaid)) : 0;
     const nextStatus = getEffectivePaymentStatus({
       payment_status: getValues('payment_status') || 'unpaid',
       sale_price: normalizedSale,
@@ -323,26 +288,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
     if (getValues('payment_status') !== nextStatus) {
       setValue('payment_status', nextStatus, { shouldValidate: false });
     }
-  }, [amountPaid, amountPaidCurrency, convert, currency, getValues, saleCurrency, salePrice, setValue]);
-
-  // Auto-update exchange rate when currency changes
-  useEffect(() => {
-    if (currency && rates && rates[currency]) {
-      const rate = rates[currency];
-      setValue('exchange_rate', rate);
-    }
-  }, [currency, rates, setValue]);
-
-  const getCurrencySymbol = (curr: string) => {
-    switch (curr) {
-      case 'USD': return '$';
-      case 'EUR': return '€';
-      case 'ILS': return '₪';
-      default: return '$';
-    }
-  };
-
-  const currencySymbol = getCurrencySymbol(currency || 'USD');
+  }, [amountPaid, getValues, salePrice, setValue]);
   const validationMessageKeys: Record<string, string> = {
     'Destination is required': 'trips.validation.destinationRequired',
     'Client name is required': 'trips.validation.clientNameRequired',
@@ -363,53 +309,42 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
     return key ? t(key) : message;
   };
 
-  const handleCurrencyChange = (
-      field: 'wholesale_cost' | 'sale_price' | 'amount_paid', 
-      newCurrency: string, 
-      oldCurrency: string
-  ) => {
-      const currentValue = Number(getValues(field)) || 0;
-      // Convert value
-      const newValue = convert(currentValue, oldCurrency, newCurrency);
-      setValue(field, parseFloat(newValue.toFixed(2)));
-  };
-
   const onSubmit = async (data: TripFormValues) => {
     setLoading(true);
     setValidationSummary([]);
     try {
-      // ---------------------------------------------------------
-      // NORMALIZE FINANCIALS TO MAIN CURRENCY BEFORE SAVE
-      // ---------------------------------------------------------
-      // 1. Store the "View" values (Converted to Main Currency) for reporting/dashboard
-      if (wholesaleCurrency !== data.currency) {
-          data.wholesale_cost = convert(Number(data.wholesale_cost) || 0, wholesaleCurrency, data.currency || 'USD');
-      }
-      if (saleCurrency !== data.currency) {
-          data.sale_price = convert(Number(data.sale_price) || 0, saleCurrency, data.currency || 'USD');
-      }
+      if (isLegacyCurrencyTrip && editTrip) {
+        // Editing unrelated information must not relabel or convert a legacy record.
+        data.currency = editTrip.currency;
+        data.exchange_rate = editTrip.exchange_rate;
+        data.wholesale_cost = editTrip.wholesale_cost;
+        data.sale_price = editTrip.sale_price;
+        data.wholesale_original_amount = editTrip.wholesale_original_amount;
+        data.wholesale_currency = editTrip.wholesale_currency;
+        data.sale_original_amount = editTrip.sale_original_amount;
+        data.sale_currency = editTrip.sale_currency;
+        data.amount_paid = editTrip.amount_paid;
+        data.payment_date = editTrip.payment_date;
+        data.payment_status = editTrip.payment_status;
+        data.payments = editTrip.payments || [];
+        data.payment_method = editTrip.payment_method || null;
+        data.card_paid_amount = editTrip.card_paid_amount ?? undefined;
+        data.cash_paid_amount = editTrip.cash_paid_amount ?? undefined;
+      } else {
+        data.currency = 'ILS';
+        data.exchange_rate = 1;
+        data.wholesale_original_amount = Number(data.wholesale_cost) || 0;
+        data.wholesale_currency = 'ILS';
+        data.sale_original_amount = Number(data.sale_price) || 0;
+        data.sale_currency = 'ILS';
 
-      // 2. Store the "Original" values (User Input) EXACTLY as entered
-      // We grab the raw values from the form inputs (which are in the 'independent' currencies)
-      const rawWholesale = getValues('wholesale_cost');
-      const rawSale = getValues('sale_price');
-      
-      data.wholesale_original_amount = Number(rawWholesale) || 0;
-      data.wholesale_currency = wholesaleCurrency;
-      
-      data.sale_original_amount = Number(rawSale) || 0;
-      data.sale_currency = saleCurrency;
+        if (data.payments && data.payments.length > 0) {
+          data.amount_paid = data.payments.reduce((sum, payment) => sum + payment.amount, 0);
+        }
+      }
       
       // Auto-update travelers count
       data.travelers_count = (data.travelers?.length || 0) || data.travelers_count;
-
-      // Auto-calculate amount paid from payments array if used
-      if (data.payments && data.payments.length > 0) {
-        data.amount_paid = data.payments.reduce((sum, p) => sum + p.amount, 0);
-      } else if (amountPaidCurrency !== data.currency) {
-          // Convert simple amount paid if currency differs and no payments array overrides it
-          data.amount_paid = convert(Number(data.amount_paid) || 0, amountPaidCurrency, data.currency || 'USD');
-      }
 
       if (Number(data.amount_paid) > Number(data.sale_price) + 0.01) {
         setError('amount_paid', {
@@ -426,7 +361,25 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
       }
       clearErrors('amount_paid');
 
+      if (Number(data.amount_paid) > 0 && !data.payment_method && (!editTrip || Number(data.amount_paid) !== Number(editTrip.amount_paid))) {
+        setError('payment_method', { type: 'manual', message: 'Payment method is required' });
+        setActiveStep(getStepForField('amount_paid'));
+        return;
+      }
+
+      if (data.payment_method === 'mixed' && Math.abs((Number(data.card_paid_amount || 0) + Number(data.cash_paid_amount || 0)) - Number(data.amount_paid)) >= 0.01) {
+        setError('card_paid_amount', { type: 'manual', message: 'Card and cash amounts must equal the paid amount' });
+        setActiveStep(getStepForField('amount_paid'));
+        return;
+      }
+
       data.room_type = serializeRoomConfiguration(data.room_type);
+      data.status = deriveTripStatus({
+        startDate: data.start_date,
+        endDate: data.end_date,
+        currentStatus: editTrip?.status,
+      });
+      data.attachments = editTrip?.attachments || [];
 
       // Sanitize date fields - convert empty strings to null to avoid Postgres "invalid input syntax" error
       const sanitizedData = {
@@ -486,7 +439,6 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
   const profitSign = profit >= 0 ? '+' : '';
   const profitColor = profit >= 0 ? 'text-emerald-300' : 'text-rose-300';
   const amountDueColor = amountDue > 0 ? 'text-rose-300' : 'text-emerald-300';
-  const currentTripStatus = watch('status');
   const currentPaymentStatus = watch('payment_status');
   const isRtl = direction === 'rtl';
   const currentValues = watch();
@@ -499,9 +451,9 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
   ];
   const currentStepId = steps[activeStep]?.id || 'details';
   const stepFields: Record<FormStep, Array<keyof TripFormValues>> = {
-    details: ['destination', 'client_name', 'travelers_count', 'status', 'start_date', 'end_date'],
+    details: ['destination', 'client_name', 'travelers_count', 'start_date', 'end_date'],
     rooms: [],
-    financials: ['currency', 'wholesale_cost', 'sale_price', 'amount_paid', 'payment_status'],
+    financials: ['wholesale_cost', 'sale_price', 'amount_paid'],
     review: [],
   };
   const fieldLabels: Partial<Record<keyof TripFormValues, string>> = {
@@ -513,8 +465,6 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
     wholesale_cost: t('trips.wholesaleCost'),
     sale_price: t('trips.salePrice'),
     amount_paid: t('trips.amountPaid'),
-    currency: t('trips.mainTripCurrency'),
-    payment_status: t('trips.paymentStatus'),
   };
   const orderedValidationFields: Array<keyof TripFormValues> = [
     'destination',
@@ -592,43 +542,19 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
     { label: t('trips.travelersCount'), value: getReviewValue(currentValues.travelers_count as number), missing: !currentValues.travelers_count },
     { label: t('trips.roomConfiguration'), value: roomConfigPreview || notProvided, missing: false },
     { label: t('trips.boardBasis'), value: currentValues.board_basis || notProvided, missing: false },
-    { label: t('trips.status'), value: t(`trips.statuses.${currentTripStatus}`), missing: false },
     { label: t('trips.paymentStatus'), value: t(`trips.paymentStatuses.${currentPaymentStatus}`), missing: false },
-    { label: t('trips.salePrice'), value: `${saleCurrency} ${Number(isNaN(Number(salePrice)) ? 0 : Number(salePrice)).toFixed(2)}`, missing: false },
-    { label: t('trips.amountPaid'), value: `${amountPaidCurrency} ${Number(isNaN(Number(amountPaid)) ? 0 : Number(amountPaid)).toFixed(2)}`, missing: false },
-    { label: t('trips.amountDue'), value: `${currencySymbol}${amountDue.toFixed(2)}`, missing: false },
+    { label: t('trips.totalCost'), value: `₪${Number(isNaN(Number(salePrice)) ? 0 : Number(salePrice)).toFixed(2)}`, missing: false },
+    { label: t('trips.amountPaid'), value: `₪${Number(isNaN(Number(amountPaid)) ? 0 : Number(amountPaid)).toFixed(2)}`, missing: false },
+    ...(Number(amountPaid || 0) > 0 && paymentMethod ? [{ label: t('trips.paymentMethod'), value: t(`trips.paymentMethods.${paymentMethod}`), missing: false }] : []),
+    ...(Number(amountPaid || 0) > 0 && paymentMethod === 'mixed' ? [
+      { label: t('trips.cardPaidAmount'), value: `₪${Number(currentValues.card_paid_amount || 0).toFixed(2)}`, missing: false },
+      { label: t('trips.cashPaidAmount'), value: `₪${Number(currentValues.cash_paid_amount || 0).toFixed(2)}`, missing: false },
+    ] : []),
+    { label: t('trips.amountDue'), value: `₪${amountDue.toFixed(2)}`, missing: false },
   ];
 
-
-  const handleOpenAttachment = async (file: Trip['attachments'][number]) => {
-    try {
-      const url = await getTripAttachmentUrl(file);
-      window.open(url, '_blank', 'noopener,noreferrer');
-    } catch (error) {
-      console.error('Failed to open attachment:', error);
-      toast.error(t('trips.attachmentOpenError'));
-    }
-  };
-
-  const handleRemoveAttachment = async (index: number) => {
-    const current = getValues('attachments') || [];
-    const target = current[index];
-    if (!target) return;
-
-    setValue('attachments', current.filter((_, i) => i !== index));
-
-    if (target.storage_path && target.bucket) {
-      try {
-        await removeTripAttachments([target]);
-      } catch (error) {
-        console.error('Failed to remove attachment from storage:', error);
-        toast.error(t('trips.attachmentDeleteError'));
-      }
-    }
-  };
-
   const baseInputClasses =
-    'w-full text-slate-900 placeholder-slate-400 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm ' +
+    'min-h-10 w-full text-slate-900 placeholder-slate-400 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm ' +
     'focus:outline-none focus:ring-2 focus:ring-sky-500/80 focus:border-sky-500/80 transition-all shadow-sm ' +
     'dark:text-slate-100 dark:bg-slate-950/90 dark:border-slate-800/80 dark:shadow-slate-950/70';
 
@@ -637,13 +563,13 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
 
   return (
     <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-xl flex items-center justify-center z-50 p-2 sm:p-4 animate-fadeIn" dir={direction}>
-      <div className="relative max-w-6xl w-full h-[min(92vh,920px)] my-2 rounded-2xl bg-white border border-slate-200 shadow-2xl overflow-hidden flex flex-col dark:bg-slate-950/95 dark:border-slate-800/80 dark:shadow-[0_22px_65px_rgba(15,23,42,0.95)]">
+      <Surface className="relative my-2 flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl shadow-xl dark:shadow-[0_22px_65px_rgba(15,23,42,0.95)]">
         {/* gradient line top */}
         <div className="h-[2px] bg-gradient-to-r from-sky-500/70 via-fuchsia-500/50 to-sky-400/70" />
 
         {/* header */}
         <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-5 border-b border-slate-200 bg-white/95 shrink-0 dark:border-slate-800/80 dark:bg-slate-950/95">
-          <div className="flex flex-col gap-1">
+          <div className="flex min-w-0 flex-col gap-1">
             <span className="text-[11px] uppercase tracking-[0.25em] text-sky-600/80 dark:text-sky-300/80">
               {editTrip ? t('trips.edit') : t('trips.newTrip')}
             </span>
@@ -655,6 +581,10 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                 ? t('trips.editTripSubtitle')
                 : t('trips.newTripSubtitle')}
             </p>
+            <div className="flex items-center gap-2 text-xs font-medium text-sky-700 dark:text-sky-300">
+              <span>{steps[activeStep].label}</span>
+              <span className="h-1.5 w-20 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800"><span className="block h-full bg-sky-500" style={{ width: `${((activeStep + 1) / steps.length) * 100}%` }} /></span>
+            </div>
           </div>
           <button
             type="button"
@@ -666,8 +596,8 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
         </div>
 
         {/* Step indicator */}
-        <div className="border-b border-slate-200 bg-slate-50 px-3 py-2 shrink-0 overflow-x-auto dark:border-slate-800/80 dark:bg-slate-900/50">
-          <div className="flex min-w-max items-center gap-2">
+        <div className="shrink-0 overflow-x-auto border-b border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-800/80 dark:bg-slate-900/50">
+          <div className="flex min-w-max items-stretch gap-2">
           {steps.map((step, index) => {
             const Icon = step.icon;
             const isActive = activeStep === index;
@@ -679,7 +609,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                 onClick={() => goToStep(index)}
                 aria-current={isActive ? 'step' : undefined}
                 className={cn(
-                  'flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition-all whitespace-nowrap',
+                  'flex min-h-10 items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors whitespace-normal text-start',
                   isActive
                     ? 'border-sky-400 bg-white text-sky-700 shadow-sm dark:bg-slate-950 dark:text-sky-300'
                     : isComplete
@@ -711,9 +641,9 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
               handleContinue();
             }
           }}
-          className="flex flex-col flex-grow overflow-hidden"
+          className="flex flex-col overflow-hidden"
         >
-          <div id="new-trip-form-content" className="flex-grow overflow-y-auto px-4 py-4 md:px-6 md:py-5 space-y-5">
+          <div id="new-trip-form-content" className="max-h-[calc(92vh-15rem)] overflow-y-auto space-y-5 px-4 py-4 md:px-6 md:py-5">
             {validationSummary.length > 0 && (
               <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-100" role="alert">
                 <p className="text-sm font-bold">{t('trips.validationSummaryTitle')}</p>
@@ -724,9 +654,22 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                 </ul>
               </div>
             )}
+
             {/* DETAILS TAB */}
             {currentStepId === 'details' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 animate-fadeIn">
+            <Surface className="grid grid-cols-1 gap-4 p-4 animate-fadeIn md:grid-cols-2 xl:grid-cols-3">
+                <fieldset className="xl:col-span-3">
+                  <legend className={labelClasses}>{t('trips.serviceType')}</legend>
+                  <p className="mb-2 text-xs text-slate-500 dark:text-slate-400">{t('trips.serviceTypeHelper')}</p>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                    {(['ticket', 'hotel', 'both'] as const).map((type) => (
+                      <label key={type} className="cursor-pointer rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-center text-sm font-semibold text-slate-700 transition-colors has-[:checked]:border-sky-500 has-[:checked]:bg-sky-50 has-[:checked]:text-sky-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:has-[:checked]:border-sky-400 dark:has-[:checked]:bg-sky-950/30 dark:has-[:checked]:text-sky-200">
+                        <input type="radio" value={type} {...register('service_type')} className="sr-only" />
+                        {t(`trips.serviceTypes.${type}`)}
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
                 <div className="xl:col-span-2">
                   <label className={labelClasses}>{t('trips.destination')} *</label>
                   <input
@@ -773,22 +716,10 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                     type="tel"
                     {...register('client_phone')}
                     className={baseInputClasses}
-                    placeholder="+1234567890"
+                    placeholder={t('trips.clientPhonePlaceholder')}
                   />
                   <p className="mt-1 text-xs text-slate-400">
                     {t('trips.clientPhoneHelper')}
-                  </p>
-                </div>
-
-                <div>
-                  <label className={labelClasses}>{t('trips.status')} *</label>
-                  <select {...register('status')} className={baseInputClasses}>
-                    <option value="active">{t('trips.statuses.active')}</option>
-                    <option value="completed">{t('trips.statuses.completed')}</option>
-                    <option value="cancelled">{t('trips.statuses.cancelled')}</option>
-                  </select>
-                  <p className="mt-1 text-xs text-slate-400">
-                    {getTripStatusDescription(currentTripStatus, t)}
                   </p>
                 </div>
 
@@ -797,7 +728,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                    <input
                     type="number"
                     min={1}
-                    placeholder="1"
+                    placeholder={t('trips.travelersCountPlaceholder')}
                     {...register('travelers_count', { valueAsNumber: true })}
                     className={cn(baseInputClasses, errors.travelers_count && errorInputClasses)}
                   />
@@ -838,13 +769,13 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                     </p>
                   )}
                 </div>
-              </div>
+              </Surface>
             )}
 
 
-            {currentStepId === 'rooms' && (
+            {currentStepId === 'rooms' && serviceType !== 'ticket' && (
               <div className="space-y-5 animate-fadeIn">
-                <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900/30">
+            <Surface level="quiet" className="p-4">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <h3 className="text-sm font-bold text-slate-900 dark:text-slate-50">
@@ -877,7 +808,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                         <input
                           type="number"
                           min={0}
-                          placeholder="0"
+                          placeholder={t('trips.zeroPlaceholder')}
                           value={roomCounts[type]}
                           onChange={(e) => {
                             const rawVal = e.target.value;
@@ -906,9 +837,14 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                       placeholder={t('trips.roomConfigurationPlaceholder')}
                     />
                   </div>
-                </section>
+                </Surface>
 
                 <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  <div>
+                    <label className={labelClasses}>{t('trips.hotelName')}</label>
+                    <input type="text" dir="auto" {...register('hotel_name')} placeholder={t('trips.hotelName')} className={cn(baseInputClasses, errors.hotel_name && errorInputClasses)} />
+                    {errors.hotel_name && <p className="mt-1 text-xs text-rose-500">{translateValidationMessage(errors.hotel_name.message)}</p>}
+                  </div>
                   <div>
                     <label className={labelClasses}>{t('trips.boardBasis')}</label>
                     <select {...register('board_basis')} className={baseInputClasses}>
@@ -934,105 +870,50 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                   </div>
                 </section>
 
-                <section className="space-y-2">
-                  <label className={labelClasses}>{t('trips.attachments')}</label>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      {watch('attachments')?.length ? (
-                        watch('attachments')?.map((file, idx) => (
-                          <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-200 dark:bg-slate-900/50 dark:border-slate-800">
-                            <div className="flex items-center gap-2 truncate">
-                              <FileText className="w-4 h-4 text-sky-500 shrink-0" />
-                              <button
-                                type="button"
-                                onClick={() => handleOpenAttachment(file)}
-                                aria-label={t('trips.openAttachment', { fileName: file.file_name })}
-                                className="text-sm text-slate-600 truncate underline dark:text-slate-300"
-                              >
-                                {file.file_name}
-                              </button>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => void handleRemoveAttachment(idx)}
-                              aria-label={t('trips.removeAttachment', { fileName: file.file_name })}
-                              className="p-1 hover:bg-rose-100 text-rose-500 rounded-full transition-colors"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="rounded-xl border border-dashed border-slate-200 p-4 text-sm text-slate-400 dark:border-slate-800">
-                          {t('trips.emptyStates.noAttachmentsInTrip')}
-                        </div>
-                      )}
-                    </div>
-
-                    <div>
-                      <FileUpload
-                        folderName={user?.id || 'anonymous'}
-                        isPrivate
-                        onUploadComplete={(newFile) => {
-                          const current = getValues('attachments') || [];
-                          setValue('attachments', [...current, newFile]);
-                        }}
-                      />
-                      <p className="text-[10px] text-slate-400 mt-2 text-center">
-                        {t('trips.uploadConstraints', { size: '15MB' })}
-                      </p>
-                    </div>
-                  </div>
-                </section>
               </div>
             )}
 
             {/* FINANCIALS TAB */}
             {currentStepId === 'financials' && (
               <div className="space-y-6 animate-fadeIn">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div>
-                    <label className={labelClasses}>{t('trips.mainTripCurrency')}</label>
-                    <select {...register('currency')} className={baseInputClasses}>
-                      <option value="USD">USD ($)</option>
-                      <option value="EUR">EUR (€)</option>
-                      <option value="ILS">ILS (₪)</option>
-                    </select>
-                    <p className="text-[10px] text-slate-400 mt-1">
-                        {t('trips.mainTripCurrencyHelper')}
-                    </p>
-                  </div>
-                  
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-slate-50">{t('trips.formSteps.payment')}</h3>
+                  {!isLegacyCurrencyTrip && (
+                    <span className="inline-flex items-center rounded-full bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700 dark:bg-sky-500/10 dark:text-sky-300">
+                      {t('trips.allAmountsInIls')}
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-5">
+                  <input type="hidden" {...register('currency')} />
                   <input type="hidden" {...register('exchange_rate', { valueAsNumber: true })} />
                   <input type="hidden" {...register('payment_status')} />
 
-                  <div className="col-span-1 md:col-span-2 grid grid-cols-1 md:col-span-2 gap-5">
+                  {isLegacyCurrencyTrip && (
+                    <div className="col-span-1 md:col-span-2 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-100" role="status">
+                      {t('trips.historicalCurrencyPreserved', { currency: editTrip?.currency })}
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div>
                         <label className={labelClasses}>
                           {t('trips.wholesaleCost')}
                         </label>
-                        <div className="flex gap-2">
-                             <select
-                                value={wholesaleCurrency}
-                                onChange={(e) => {
-                                    const newCurr = e.target.value;
-                                    handleCurrencyChange('wholesale_cost', newCurr, wholesaleCurrency);
-                                    setWholesaleCurrency(newCurr);
-                                }}
-                                className="w-24 bg-slate-100 border border-slate-200 rounded-xl px-2 text-sm focus:outline-none dark:bg-slate-900 dark:border-slate-800"
-                             >
-                                <option value="USD">USD</option>
-                                <option value="EUR">EUR</option>
-                                <option value="ILS">ILS</option>
-                             </select>
+                        <div className="relative max-w-sm">
+                             <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3 text-sm font-semibold text-slate-500 dark:text-slate-400">{displayedCurrency}</span>
                              <input
                                type="number"
                                step="0.01"
                                min={0}
-                               placeholder="0.00"
+                               dir="ltr"
+                               placeholder={t('trips.amountPlaceholder')}
                                {...register('wholesale_cost', { valueAsNumber: true })}
-                               className={cn(
-                                 baseInputClasses,
+                               readOnly={isLegacyCurrencyTrip}
+                                className={cn(
+                                  baseInputClasses,
+                                  'h-10 rounded-lg py-2 ps-8 tabular-nums',
+                                  isLegacyCurrencyTrip && 'cursor-not-allowed bg-slate-100 text-slate-500 dark:bg-slate-900/50 dark:text-slate-400',
                                  errors.wholesale_cost && errorInputClasses,
                                )}
                              />
@@ -1042,46 +923,36 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                         <label className={labelClasses}>
                           {t('trips.salePrice')}
                         </label>
-                        <div className="flex gap-2">
-                             <select
-                                value={saleCurrency}
-                                onChange={(e) => {
-                                    const newCurr = e.target.value;
-                                    handleCurrencyChange('sale_price', newCurr, saleCurrency);
-                                    setSaleCurrency(newCurr);
-                                }}
-                                className="w-24 bg-slate-100 border border-slate-200 rounded-xl px-2 text-sm focus:outline-none dark:bg-slate-900 dark:border-slate-800"
-                             >
-                                <option value="USD">USD</option>
-                                <option value="EUR">EUR</option>
-                                <option value="ILS">ILS</option>
-                             </select>
+                        <div className="relative max-w-sm">
+                             <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3 text-sm font-semibold text-slate-500 dark:text-slate-400">{displayedCurrency}</span>
                              <input
                                type="number"
                                step="0.01"
                                min={0}
-                               placeholder="0.00"
+                               dir="ltr"
+                               placeholder={t('trips.amountPlaceholder')}
                                {...register('sale_price', { valueAsNumber: true })}
+                               readOnly={isLegacyCurrencyTrip}
                                onChange={(e) => {
                                  register('sale_price', { valueAsNumber: true }).onChange(e);
                                  handleSalePriceChange();
                                }}
-                               className={cn(baseInputClasses, errors.sale_price && errorInputClasses)}
+                                className={cn(baseInputClasses, 'h-10 rounded-lg py-2 ps-8 tabular-nums', isLegacyCurrencyTrip && 'cursor-not-allowed bg-slate-100 text-slate-500 dark:bg-slate-900/50 dark:text-slate-400', errors.sale_price && errorInputClasses)}
                              />
                         </div>
                       </div>
                   </div>
                 </div>
                 {/* Profit Card */}
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-950/90 dark:shadow-inner dark:shadow-slate-950/80">
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/90">
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <p className="text-xs text-slate-500 mb-1 font-medium dark:text-slate-400">
-                        {t('trips.convertedProfit', { currency })}
+                        {t('trips.profit')}
                       </p>
-                      <p className={`text-2xl font-bold ${profitColor}`}>
+                      <p className={`text-lg font-bold tabular-nums ${profitColor}`} dir="ltr">
                         {profitSign}
-                        {currencySymbol}
+                        {displayedCurrency}
                         {Math.abs(profit).toFixed(2)}
                       </p>
                     </div>
@@ -1089,7 +960,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                       <p className="text-xs text-slate-500 mb-1 font-medium dark:text-slate-400">
                         {t('trips.profitPercentage')}
                       </p>
-                      <p className={`text-2xl font-bold ${profitColor}`}>
+                      <p className={`text-lg font-bold tabular-nums ${profitColor}`} dir="ltr">
                         {profitSign}
                         {profitPercentage.toFixed(1)}%
                       </p>
@@ -1098,45 +969,35 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                 </div>
 
                 {/* Payment Date & Amount Paid - Simplified Payment */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="max-w-sm">
                         <label className={labelClasses}>
                             {t('trips.amountPaid')}
                         </label>
-                        <div className="flex gap-2">
-                             <select
-                                value={amountPaidCurrency}
-                                onChange={(e) => {
-                                    const newCurr = e.target.value;
-                                    handleCurrencyChange('amount_paid', newCurr, amountPaidCurrency);
-                                    setAmountPaidCurrency(newCurr);
-                                }}
-                                className="w-24 bg-slate-100 border border-slate-200 rounded-xl px-2 text-sm focus:outline-none dark:bg-slate-900 dark:border-slate-800"
-                             >
-                                <option value="USD">USD</option>
-                                <option value="EUR">EUR</option>
-                                <option value="ILS">ILS</option>
-                             </select>
+                        <div className="relative max-w-sm">
+                            <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3 text-sm font-semibold text-slate-500 dark:text-slate-400">{displayedCurrency}</span>
                             <input
                                 type="number"
                                 step="0.01"
                                 min={0}
-                                placeholder="0.00"
+                                dir="ltr"
+                                placeholder={t('trips.amountPlaceholder')}
                                 {...register('amount_paid', { valueAsNumber: true })}
+                                readOnly={isLegacyCurrencyTrip}
                                 onChange={(e) => {
                                     register('amount_paid', { valueAsNumber: true }).onChange(e);
                                     const val = parseFloat(e.target.value);
                                     const finalVal = isNaN(val) ? 0 : val;
                                     
                                     const saleVal = isNaN(Number(salePrice)) ? 0 : Number(salePrice);
-                                    const sPrice = convert(saleVal, saleCurrency, currency || 'USD');
-                                    const paidInMain = convert(finalVal, amountPaidCurrency, currency || 'USD');
-                                    if (paidInMain <= sPrice + 0.01) {
+                                    if (finalVal <= saleVal + 0.01) {
                                       clearErrors('amount_paid');
                                     }
                                 }}
                                 className={cn(
                                     baseInputClasses,
+                                    'h-10 rounded-lg py-2 ps-8 tabular-nums',
+                                    isLegacyCurrencyTrip && 'cursor-not-allowed bg-slate-100 text-slate-500 dark:bg-slate-900/50 dark:text-slate-400',
                                     errors.amount_paid && errorInputClasses,
                                 )}
                             />
@@ -1150,53 +1011,54 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                           {getPaymentStatusDescription(currentPaymentStatus, t)}
                         </p>
                     </div>
-                    <div>
+                    <div className="max-w-sm">
                         <label className={labelClasses}>
                             {t('trips.paymentDate')}
                         </label>
                         <input
                             type="date"
                             {...register('payment_date')}
-                            className={cn(baseInputClasses)}
+                            readOnly={isLegacyCurrencyTrip}
+                            className={cn(baseInputClasses, 'h-10 rounded-lg py-2')}
                         />
                     </div>
                 </div>
 
+                {Number(amountPaid || 0) > 0 && !isLegacyCurrencyTrip && (
+                  <fieldset className="max-w-md">
+                    <legend className={labelClasses}>{t('trips.paymentMethod')}</legend>
+                    <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t('trips.paymentMethod')}>
+                      {(['card', 'cash', 'mixed'] as const).map((method) => (
+                        <label key={method} className={cn('cursor-pointer rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors', paymentMethod === method ? 'border-sky-500 bg-sky-50 text-sky-800 dark:bg-sky-500/10 dark:text-sky-200' : 'border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-300')}>
+                          <input type="radio" value={method} {...register('payment_method')} className="sr-only" />
+                          {t(`trips.paymentMethods.${method}`)}
+                        </label>
+                      ))}
+                    </div>
+                    {errors.payment_method && <p className="mt-1 text-xs text-rose-500">{t('trips.validation.paymentMethodRequired')}</p>}
+                  </fieldset>
+                )}
+
+                {paymentMethod === 'mixed' && Number(amountPaid || 0) > 0 && !isLegacyCurrencyTrip && (
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="max-w-sm"><label className={labelClasses}>{t('trips.cardPaidAmount')}</label><div className="relative"><span aria-hidden="true" className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3 text-sm font-semibold text-slate-500">₪</span><input type="number" step="0.01" min={0} dir="ltr" placeholder={t('trips.amountPlaceholder')} {...register('card_paid_amount', { valueAsNumber: true })} className={cn(baseInputClasses, 'h-10 rounded-lg py-2 ps-8 tabular-nums', errors.card_paid_amount && errorInputClasses)} /></div></div>
+                    <div className="max-w-sm"><label className={labelClasses}>{t('trips.cashPaidAmount')}</label><div className="relative"><span aria-hidden="true" className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3 text-sm font-semibold text-slate-500">₪</span><input type="number" step="0.01" min={0} dir="ltr" placeholder={t('trips.amountPlaceholder')} {...register('cash_paid_amount', { valueAsNumber: true })} className={cn(baseInputClasses, 'h-10 rounded-lg py-2 ps-8 tabular-nums', errors.cash_paid_amount && errorInputClasses)} /></div>{(errors.card_paid_amount || errors.cash_paid_amount) && <p className="mt-1 text-xs text-rose-500">{t('trips.validation.mixedPaymentTotal')}</p>}</div>
+                  </div>
+                )}
+
                 <div
-                  className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/90"
+                  className="flex flex-wrap items-center justify-between gap-2 border-y border-slate-200 py-2 dark:border-slate-800"
                   aria-label={t('trips.calculatedPaymentStatus')}
                 >
-                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                        {t('trips.calculatedPaymentStatus')}
-                      </p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        {getPaymentStatusDescription(currentPaymentStatus, t)}
-                      </p>
-                    </div>
-                    <span className="inline-flex w-fit rounded-full border border-sky-200 bg-white px-3 py-1 text-sm font-bold text-sky-700 dark:border-sky-500/30 dark:bg-slate-900 dark:text-sky-300">
-                      {t(`trips.paymentStatuses.${currentPaymentStatus}`)}
-                    </span>
-                  </div>
+                  <div><p className="text-sm font-medium text-slate-700 dark:text-slate-200">{t('trips.calculatedPaymentStatus')}</p><p className="text-xs text-slate-500 dark:text-slate-400">{getPaymentStatusDescription(currentPaymentStatus, t)}</p></div>
+                  <span className="inline-flex rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-300">{t(`trips.paymentStatuses.${currentPaymentStatus}`)}</span>
                 </div>
 
-                {/* Payments Section (Optional/Advanced) */}
-                <div className="space-y-3 hidden"> 
-                   {/* Hidden for now to simplify based on user request, but kept code if needed or for backward compat if we want to toggle it */}
-                   {/* If we want to fully remove, we can. For now hiding to prevent confusion vs the new simple fields which might not sync perfectly if we keep both visible without logic */}
-                </div>
-
-                {/* Amount Due */}
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/90">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                      {t('trips.amountDue')}
-                    </p>
-                    <p className={`text-xl font-bold ${amountDueColor}`}>
-                      {currencySymbol}
-                      {amountDue.toFixed(2)}
-                    </p>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/90">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3" dir="ltr">
+                    <div><p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t('trips.totalCost')}</p><p className="mt-1 text-base font-bold tabular-nums text-slate-900 dark:text-white">{displayedCurrency}{Number(salePrice || 0).toFixed(2)}</p></div>
+                    <div><p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t('trips.amountPaid')}</p><p className="mt-1 text-base font-bold tabular-nums text-slate-900 dark:text-white">{displayedCurrency}{Number(amountPaid || 0).toFixed(2)}</p></div>
+                    <div><p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t('trips.amountDue')}</p><p className={`mt-1 text-base font-bold tabular-nums ${amountDueColor}`}>{displayedCurrency}{amountDue.toFixed(2)}</p></div>
                   </div>
                 </div>
               </div>
@@ -1217,8 +1079,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                   {[
                     { title: t('trips.formSteps.details'), step: 0, items: reviewItems.slice(0, 4), incomplete: requiredDetailsMissing },
                     { title: t('trips.formSteps.rooms'), step: 1, items: reviewItems.slice(4, 6) },
-                    { title: t('trips.formSteps.payment'), step: 2, items: reviewItems.slice(7) },
-                    { title: t('trips.status'), step: 0, items: [reviewItems[6]] },
+                    { title: t('trips.formSteps.payment'), step: 2, items: reviewItems.slice(6) },
                   ].map((section) => (
                     <section
                       key={section.title}
@@ -1269,48 +1130,48 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
             'flex-shrink-0 flex flex-col-reverse sm:flex-row sm:items-center gap-3 px-4 py-3 md:px-6 border-t border-slate-200 bg-white/95 shrink-0 dark:border-slate-800/80 dark:bg-slate-950/95',
             isRtl ? 'sm:justify-start' : 'sm:justify-end',
           )}>
-            <button
-              type="button"
+            <Button
               onClick={handleRequestClose}
-              className="inline-flex w-full sm:w-auto items-center justify-center px-4 py-2.5 rounded-xl text-sm font-medium border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 transition-all dark:border-slate-600/80 dark:text-slate-200 dark:bg-slate-950/90 dark:hover:bg-slate-900/90"
+              variant="secondary"
+              className="w-full sm:w-auto"
             >
               {t('trips.cancel')}
-            </button>
+            </Button>
             {activeStep > 0 && (
-              <button
-                type="button"
+              <Button
                 onClick={handleBack}
                 disabled={loading}
-                className="inline-flex w-full sm:w-auto items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-60 transition-all dark:border-slate-600/80 dark:text-slate-200 dark:bg-slate-950/90 dark:hover:bg-slate-900/90"
+                variant="secondary"
+                className="w-full sm:w-auto"
               >
                 {isRtl ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
                 {t('trips.back')}
-              </button>
+              </Button>
             )}
             {currentStepId !== 'review' ? (
-              <button
-                type="button"
+              <Button
                 onClick={handleContinue}
                 disabled={loading}
-                className="inline-flex w-full sm:w-auto items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-sky-600 hover:bg-sky-500 border border-sky-500 shadow-[0_10px_30px_rgba(56,189,248,0.35)] disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+                variant="primary"
+                className="w-full sm:w-auto"
               >
                 <span>{t('trips.continue')}</span>
                 {isRtl ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-              </button>
+              </Button>
             ) : (
-              <button
-                type="button"
+              <Button
                 onClick={handleSubmit(onSubmit, handleInvalidSubmit)}
                 disabled={loading}
-                className="inline-flex w-full sm:w-auto items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-sky-500 to-sky-400 hover:from-sky-400 hover:to-sky-300 border border-sky-400/80 shadow-[0_10px_30px_rgba(56,189,248,0.55)] disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+                variant="primary"
+                className="w-full sm:w-auto"
               >
                 <Save className="w-4 h-4" />
                 <span>{loading ? t('auth.loading') : t('trips.save')}</span>
-              </button>
+              </Button>
             )}
           </div>
         </form>
-      </div>
+      </Surface>
       <ConfirmationModal
         isOpen={showDiscardConfirm}
         onClose={() => setShowDiscardConfirm(false)}

@@ -20,6 +20,8 @@ import { useTripMutations } from '../../hooks/useTripMutations';
 import { formatRoomConfiguration } from '../../lib/tripRoom';
 import { getTripAttachmentUrl } from '../../lib/tripAttachments';
 import { ConfirmationModal } from '../ui/ConfirmationModal';
+import { StatusBadge } from '../travel-ui/StatusBadge';
+import { Surface } from '../travel-ui/Surface';
 import {
   getEffectivePaymentStatus,
   getPaymentStatusDescription,
@@ -35,7 +37,7 @@ interface ViewTripModalProps {
 }
 
 export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: ViewTripModalProps) {
-  const { t } = useLanguage();
+  const { t, direction } = useLanguage();
   const { format } = useCurrency();
   const [trip] = useState(initialTrip);
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
@@ -72,8 +74,8 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
   const paymentStatusLabel = getPaymentStatusLabel(effectivePaymentStatus, t);
 
   return (
-    <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-xl flex items-center justify-center z-50 p-4 animate-fadeIn">
-      <div className="relative max-w-4xl w-full max-h-[92vh] flex flex-col rounded-2xl bg-white border border-slate-200 shadow-2xl overflow-hidden dark:bg-slate-950 dark:border-slate-800 dark:shadow-[0_22px_65px_rgba(15,23,42,0.95)]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-3 backdrop-blur-md animate-fadeIn sm:p-4" dir={direction}>
+      <Surface className="relative flex max-h-[calc(100vh-1.5rem)] w-full max-w-4xl flex-col overflow-hidden rounded-2xl shadow-2xl dark:shadow-[0_22px_65px_rgba(15,23,42,0.95)] sm:max-h-[92vh]">
         <div className="flex-none">
           <div className="h-[2px] bg-gradient-to-r from-sky-500/70 via-fuchsia-500/50 to-sky-400/70" />
           <div className="flex flex-col gap-4 px-4 py-4 sm:px-6 border-b border-slate-200 bg-white/95 dark:border-slate-800 dark:bg-slate-950">
@@ -83,15 +85,9 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
                   <span className="text-[11px] uppercase tracking-[0.25em] text-sky-600/80 dark:text-sky-300/80">
                     {t('trips.viewTrip')}
                   </span>
-                  <span className={`px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded-full border ${
-                    trip.status === 'active' || trip.status === 'completed'
-                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                      : trip.status === 'cancelled'
-                        ? 'bg-rose-500/10 border-rose-500/30 text-rose-400'
-                        : 'bg-slate-500/10 border-slate-500/30 text-slate-400'
-                  }`}>
+                  <StatusBadge tone={trip.status === 'active' || trip.status === 'completed' ? 'success' : trip.status === 'cancelled' ? 'danger' : 'neutral'}>
                     {statusLabel}
-                  </span>
+                  </StatusBadge>
                 </div>
                 <h2 className="text-xl md:text-2xl font-bold text-slate-900 flex flex-wrap items-center gap-2 dark:text-slate-50">
                   <span className="break-words">{trip.destination}</span>
@@ -361,7 +357,7 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
             {t('trips.close')}
           </button>
         </div>
-      </div>
+      </Surface>
       <ConfirmationModal
         isOpen={showArchiveConfirm}
         onClose={() => setShowArchiveConfirm(false)}

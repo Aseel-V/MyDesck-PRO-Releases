@@ -43,7 +43,6 @@ export default function Navbar({ onNavigate, currentPage, onOpenSearch }: Navbar
 
   // Nav Items Configuration
   const { profile } = useAuth(); // Destructure profile
-  
   const navItems = [
     { id: 'home', icon: Home, label: t('dashboard.home') },
     { 
@@ -64,7 +63,7 @@ export default function Navbar({ onNavigate, currentPage, onOpenSearch }: Navbar
   ].filter(item => !item.hidden) as { id: NavbarProps['currentPage']; icon: LucideIcon; label: string }[];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 flex flex-col items-center pointer-events-none" dir={direction}>
+    <nav className="app-navbar fixed top-0 left-0 right-0 z-50 flex flex-col items-center pointer-events-none" dir={direction}>
       
       {/* === DESKTOP FLOATING DOCK === */}
       <div className="hidden lg:flex mt-6 pointer-events-auto">

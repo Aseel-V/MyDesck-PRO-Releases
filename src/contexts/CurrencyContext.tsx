@@ -23,7 +23,11 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     const [isStale, setIsStale] = useState(false);
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-    const userPreferredCurrency = profile?.preferred_currency || 'USD';
+    // Travel reporting is ILS-first. Stored trip currencies remain authoritative
+    // when individual records are displayed or converted.
+    const userPreferredCurrency = profile?.business_type === 'tourism'
+        ? 'ILS'
+        : profile?.preferred_currency || 'USD';
 
     const loadRates = async () => {
         setIsLoading(true);

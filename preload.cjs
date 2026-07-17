@@ -10,16 +10,19 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Auto-Update API
   getAppVersion: () => ipcRenderer.invoke('get-app-version'),
   getUpdateState: () => ipcRenderer.invoke('get-update-state'),
-  onUpdateState: (callback) => ipcRenderer.on('update_state', (_, state) => callback(state)),
+  onUpdateState: (callback) => {
+    const listener = (_, state) => callback(state);
+    ipcRenderer.on('update_state', listener);
+    return () => ipcRenderer.removeListener('update_state', listener);
+  },
   onUpdateAvailable: (callback) => ipcRenderer.on('update_available', (_, info) => callback(info)),
   onUpdateProgress: (callback) => ipcRenderer.on('update_progress', (_, progress) => callback(progress)),
   onUpdateDownloaded: (callback) => ipcRenderer.on('update_downloaded', (_, info) => callback(info)),
   onUpdateError: (callback) => ipcRenderer.on('update_error', (_, err) => callback(err)),
   
-  startDownload: () => ipcRenderer.send('download_update'),
-  retryUpdate: () => ipcRenderer.send('retry_update'),
-  restartApp: () => ipcRenderer.send('restart_app'),
-  unlockApp: () => ipcRenderer.send('unlock_app'),
+  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+  startDownload: () => ipcRenderer.invoke('download-update'),
+  restartApp: () => ipcRenderer.invoke('install-update'),
   openExternal: (url) => ipcRenderer.send('open_external', url),
   
   // Car Price Check

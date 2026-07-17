@@ -6,6 +6,8 @@ import {
   getPaymentStatusDescription,
   getTripStatusDescription,
 } from '../../lib/tripStatus';
+import { Button } from '../travel-ui/Button';
+import { Surface } from '../travel-ui/Surface';
 
 interface TripFiltersProps {
   searchTerm: string;
@@ -97,7 +99,7 @@ export default function TripFilters({
 
   // نفس روح التصميم الداكن في الـ navbar / Trips
   const baseInputClasses =
-    'w-full px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-sm text-slate-900 placeholder-slate-400 ' +
+    'min-h-10 w-full px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-sm text-slate-900 placeholder-slate-400 ' +
     'focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500/70 transition-all shadow-sm ' +
     'dark:bg-slate-950/90 dark:border-slate-800/80 dark:text-slate-100 dark:placeholder-slate-400 dark:shadow-slate-950/60';
   const activeInputClasses =
@@ -144,9 +146,9 @@ export default function TripFilters({
   ].filter(Boolean) as Array<{ key: string; label: string; value: string; onClear: () => void }>;
 
   return (
-    <div className="space-y-4" dir={direction}>
+    <div className="space-y-5" dir={direction}>
       {/* Search */}
-      <div className="rounded-2xl bg-white border border-slate-200 px-3.5 py-2.5 shadow-sm dark:bg-slate-950/95 dark:border-slate-800/90 dark:shadow-md dark:shadow-slate-950/60">
+      <Surface className="px-3.5 py-3">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
           <div className="relative flex-1">
             <Search 
@@ -168,22 +170,20 @@ export default function TripFilters({
             />
           </div>
           <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
+            <Button
               onClick={() => setIsSavingPreset((prev) => !prev)}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition-all hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900/70"
+              variant="secondary"
             >
               <BookmarkPlus className="w-4 h-4" />
               <span>{t('trips.savePreset')}</span>
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
               onClick={onClearFilters}
               disabled={!hasActiveFilters}
-              className="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition-all hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900/70"
+              variant="secondary"
             >
               {t('trips.clearFilters')}
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -198,13 +198,12 @@ export default function TripFilters({
                 placeholder={t('trips.presetNamePlaceholder')}
                 className={baseInputClasses}
               />
-              <button
-                type="button"
+              <Button
                 onClick={handleSavePreset}
-                className="inline-flex items-center justify-center rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-sky-500 transition-colors"
+                variant="primary"
               >
                 {t('trips.savePreset')}
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -250,10 +249,10 @@ export default function TripFilters({
             </div>
           </div>
         )}
-      </div>
+      </Surface>
 
       {/* Filters grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 overflow-visible">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {/* Payment status */}
         <div>
           <label className={labelClasses}>{t('trips.paymentStatus')}</label>

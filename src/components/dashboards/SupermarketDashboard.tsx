@@ -31,7 +31,7 @@ import ReceiptModal from "../market/ReceiptModal";
 import { ConfirmationModal } from '../ui/ConfirmationModal';
 import useScanDetection from "../../hooks/useScanDetection";
 import { playSuccess, playError } from "../../utils/audio";
-import { Toaster, toast } from 'sonner';
+import { toast } from 'sonner';
 
 // ============================================================================
 // TYPES
@@ -745,8 +745,6 @@ export default function SupermarketDashboard() {
 
   return (
     <div className="flex h-[calc(100vh-4rem)] bg-slate-100 dark:bg-slate-900 overflow-hidden relative" dir={direction}>
-      <Toaster position="top-center" richColors />
-      
       {/* Background Ambience */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-emerald-500/10 via-slate-900/0 to-slate-900/0 pointer-events-none" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-blue-500/5 via-slate-900/0 to-slate-900/0 pointer-events-none" />

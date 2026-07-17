@@ -1,6 +1,6 @@
 import { BusinessProfile } from '../../lib/supabase';
 import { ShoppingCart } from 'lucide-react';
-import { translations, Language } from '../../i18n/translations';
+import { translations, type Language } from '../../i18n/locales';
 
 // Duplicate definition or import shareable type if possible. 
 // For now, based on ReceiptModal info:

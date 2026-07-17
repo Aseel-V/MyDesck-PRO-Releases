@@ -1,4 +1,4 @@
-import { useState, useEffect, MouseEvent } from 'react';
+import { useState, MouseEvent } from 'react';
 import {
   Users,
   Edit,
@@ -7,6 +7,7 @@ import {
   CalendarDays,
   ArrowRight,
   FileText,
+  Loader2,
   TrendingUp,
   AlertCircle
 } from 'lucide-react';
@@ -23,12 +24,15 @@ import {
   getTripStatusDescription,
   getTripStatusLabel,
 } from '../../lib/tripStatus';
+import { StatusBadge } from '../travel-ui/StatusBadge';
+import { Surface } from '../travel-ui/Surface';
 
 interface TripCardProps {
   trip: Trip;
   onEdit: (trip: Trip) => void;
   onDelete: (id: string) => void;
-  onToggleExport: (id: string, value: boolean) => void | Promise<void>;
+  onOpenPdfPreview: (trip: Trip) => Promise<void>;
+  isPreparingPdf?: boolean;
   onView?: (trip: Trip) => void;
   isUrgent?: boolean;
 }
@@ -37,19 +41,14 @@ export default function TripCard({
   trip,
   onEdit,
   onDelete,
-  onToggleExport,
+  onOpenPdfPreview,
+  isPreparingPdf = false,
   onView,
   isUrgent,
 }: TripCardProps) {
   const { t, direction, language } = useLanguage();
   const { format } = useCurrency();
   const [showDetails, setShowDetails] = useState(false);
-  const [exportChecked, setExportChecked] = useState<boolean>(!!trip.export_to_pdf);
-
-  useEffect(() => {
-    setExportChecked(!!trip.export_to_pdf);
-  }, [trip.export_to_pdf]);
-
   // --- Financial Calculations ---
   const wholesale = trip.wholesale_cost ?? 0;
   const sale = trip.sale_price ?? 0;
@@ -87,13 +86,7 @@ export default function TripCard({
 
   const handleExportClick = async (e: MouseEvent) => {
     e.stopPropagation();
-    const newValue = !exportChecked;
-    setExportChecked(newValue);
-    try {
-      await onToggleExport(trip.id, newValue);
-    } catch {
-      setExportChecked(!newValue);
-    }
+    await onOpenPdfPreview(trip);
   };
 
   const handleShare = (e: MouseEvent) => {
@@ -131,7 +124,7 @@ export default function TripCard({
       layout
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -5 }}
+      whileHover={{ y: -3 }}
       transition={{ type: 'spring', stiffness: 300, damping: 20 }}
       className="group relative w-full"
       onClick={handleCardClick}
@@ -142,7 +135,7 @@ export default function TripCard({
       aria-label={`${trip.destination} - ${trip.client_name}`}
     >
       <div className={twMerge(
-          "flex flex-col w-full bg-white dark:bg-slate-950 rounded-[2rem] shadow-sm overflow-hidden hover:shadow-xl transition-all duration-300",
+          "flex flex-col w-full rounded-2xl bg-white shadow-sm overflow-hidden transition-shadow duration-200 hover:shadow-lg dark:bg-slate-950",
           isUrgent 
             ? "ring-2 ring-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.3)] dark:ring-rose-500 dark:shadow-[0_0_20px_rgba(244,63,94,0.2)]" 
             : "ring-1 ring-slate-200 dark:ring-slate-800"
@@ -174,16 +167,12 @@ export default function TripCard({
                         <h3 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white leading-tight break-words">
                             {trip.destination}
                         </h3>
-                         <span className={twMerge(
-                            "flex-shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border shadow-sm",
-                            trip.status === 'active' ? 'bg-emerald-50 text-emerald-750 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-350 dark:border-emerald-800' :
-                            trip.status === 'completed' ? 'bg-emerald-50 text-emerald-750 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-350 dark:border-emerald-800' :
-                            trip.status === 'cancelled'
-                              ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/20 dark:text-rose-350 dark:border-rose-800'
-                              : 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800'
-                        )}>
-                            {statusLabel}
-                        </span>
+                          <StatusBadge
+                            tone={trip.status === 'active' || trip.status === 'completed' ? 'success' : trip.status === 'cancelled' ? 'danger' : 'neutral'}
+                            className="shrink-0"
+                          >
+                             {statusLabel}
+                         </StatusBadge>
                     </div>
                     <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
                       {getTripStatusDescription(trip.status, t)}
@@ -201,7 +190,7 @@ export default function TripCard({
             </div>
 
             {/* Dates Block */}
-            <div className="bg-slate-50 dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 mb-5">
+            <Surface level="quiet" className="mb-5 p-4">
                 <div className="flex items-center justify-between">
                     <div>
                         <p className="text-[10px] uppercase text-slate-400 font-bold mb-1 tracking-wider">
@@ -225,7 +214,7 @@ export default function TripCard({
                         </p>
                     </div>
                 </div>
-            </div>
+            </Surface>
 
             {/* === DETAILED FINANCIALS === */}
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 mb-5 shadow-sm">
@@ -298,7 +287,7 @@ export default function TripCard({
                  <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">
                     {getPaymentStatusDescription(effectivePaymentStatus, t)}
                  </p>
-            </div>
+             </div>
             
             <AnimatePresence>
             {showDetails && trip.notes && (
@@ -320,7 +309,7 @@ export default function TripCard({
         </div>
 
         {/* === MINIMALIST FOOTER === */}
-        <div className="px-5 py-3 bg-slate-50/50 dark:bg-slate-900/30 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3 border-t border-slate-100 bg-slate-50/50 px-5 py-3 dark:border-slate-800 dark:bg-slate-900/30">
             {/* Last Updated */}
             <span className="text-[10px] text-slate-400 font-medium">
                {formatLocDate(trip.updated_at || trip.created_at)}
@@ -330,15 +319,12 @@ export default function TripCard({
                 {/* PDF */}
                 <button
                     onClick={handleExportClick}
-                    className={twMerge(actionBtnClass, 
-                        exportChecked 
-                        ? "bg-sky-500 text-white shadow-sky-200 shadow-md" 
-                        : "text-slate-400 hover:bg-sky-50 hover:text-sky-600"
-                    )}
-                    title={t('trips.exportToPdf')}
-                    aria-label={t('trips.exportToPdf')}
+                    disabled={isPreparingPdf}
+                    className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-rose-500 bg-white px-2.5 text-xs font-bold text-rose-600 transition-colors hover:bg-rose-600 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-transparent"
+                    title={isPreparingPdf ? t('trips.preparingPdf') : t('trips.openPdfPreview')}
+                    aria-label={isPreparingPdf ? t('trips.preparingPdf') : t('trips.openPdfPreview')}
                 >
-                    <FileText className="w-4 h-4" />
+                    {isPreparingPdf ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <FileText className="w-4 h-4" aria-hidden="true" />} <span dir="ltr">PDF</span>
                 </button>
 
                 {/* Edit */}

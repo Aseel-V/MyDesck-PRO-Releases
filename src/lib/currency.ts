@@ -35,7 +35,7 @@ async function fetchRatesFromAPI(base: string): Promise<ExchangeRates> {
         return result.data;
     }
     // Browser / web context: direct fetch
-    const response = await fetch(`${BASE_URL}/latest?from=${base}`, {
+    const response = await fetch(`${BASE_URL}/latest?from=${base}&to=ILS,EUR,JOD`, {
         signal: AbortSignal.timeout(8000),
     });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -59,7 +59,11 @@ export const CurrencyService = {
             }
 
             const now = Date.now();
-            const isCacheValid = cached && (now - cached.timestamp < CACHE_TTL);
+            const cachedRates = cached?.rates?.rates;
+            const hasCompleteDisplayRates = Boolean(
+                cachedRates && ['ILS', 'EUR', 'JOD'].every((code) => Number.isFinite(cachedRates[code]) && cachedRates[code] > 0)
+            );
+            const isCacheValid = cached && hasCompleteDisplayRates && (now - cached.timestamp < CACHE_TTL);
 
             // 1. If cache is valid (fresh), use it
             if (isCacheValid && cached) {

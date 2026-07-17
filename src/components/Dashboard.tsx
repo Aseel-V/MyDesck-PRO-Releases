@@ -7,7 +7,6 @@ import Navbar from "./Navbar";
 import Footer from "./Footer";
 import { AnimatePresence } from "framer-motion";
 import MotionWrapper from "./MotionWrapper";
-import { Toaster } from "sonner";
 import { CommandPalette } from "./CommandPalette";
 import { TripFormData } from "../types/trip";
 import { useTripMutations } from "../hooks/useTripMutations";
@@ -15,6 +14,7 @@ import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import NewYearOverlay from "./ui/NewYearOverlay";
 import { DEFAULT_TRIP_FILTERS } from "./trips/tripFiltersState";
 import { ErrorBoundary } from "./ErrorBoundary";
+import { ExchangeRateStrip } from './travel-ui/ExchangeRateStrip';
 import {
   getEffectiveTripDate,
   isTripEligibleForAlert,
@@ -244,7 +244,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 relative">
-      <Toaster position="top-center" theme="dark" richColors closeButton />
       <CommandPalette
         isOpen={isCommandPaletteOpen}
         onClose={() => setIsCommandPaletteOpen(false)}
@@ -274,7 +273,13 @@ export default function Dashboard() {
         />
       )}
 
-      <main className="relative z-10 flex-1 w-full mx-auto pt-24 pb-10 space-y-6 px-4 sm:px-6 lg:px-8 max-w-none">
+      {profile?.business_type === 'tourism' && currentPage !== 'settings' && (
+        <div className="app-exchange-rate relative z-20 pt-20 ps-4 sm:ps-6 lg:pt-24 lg:ps-8">
+          <ExchangeRateStrip />
+        </div>
+      )}
+
+      <main className="relative z-10 flex-1 w-full mx-auto pt-6 pb-10 space-y-6 px-4 sm:px-6 lg:px-8 max-w-none">
         <AnimatePresence mode="wait">
           {/* Main default Bento dashboard */}
           {isBentoDashboardVisible && (

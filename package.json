@@ -1,7 +1,7 @@
 {
   "name": "my-desck-pro",
   "private": true,
-  "version": "0.0.45",
+  "version": "0.0.46",
   "description": "Professional Travel Agency Dashboard",
   "repository": "https://github.com/Aseel-V/MyDesck-PRO-Releases",
   "type": "module",
@@ -21,6 +21,7 @@
     "files": [
       "dist",
       "electron.js",
+      "updater-policy.cjs",
       "preload.cjs",
       "assets"
     ],
@@ -54,7 +55,8 @@
     "publish": {
       "provider": "github",
       "owner": "Aseel-V",
-      "repo": "MyDesck-PRO-Releases"
+      "repo": "MyDesck-PRO-Releases",
+      "releaseType": "release"
     }
   },
   "scripts": {
@@ -63,6 +65,9 @@
     "lint": "eslint .",
     "preview": "vite preview --host 0.0.0.0 --port 4173",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
+    "i18n:check": "node scripts/check-i18n.mjs",
+    "test:updater": "node scripts/check-desktop-updater.mjs",
+    "test:website-release": "node scripts/check-website-release.mjs",
     "electron:dev": "node scripts/dev.cjs",
     "electron:start": "node scripts/launch-electron.cjs production",
     "electron:build-start": "npm run build && node scripts/launch-electron.cjs production",

@@ -5,6 +5,31 @@ type TranslateFn = (key: string) => string;
 export const TRIP_STATUS_OPTIONS: Array<Trip['status']> = ['active', 'completed', 'cancelled', 'archived'];
 export const PAYMENT_STATUS_OPTIONS: Array<Trip['payment_status']> = ['paid', 'partial', 'unpaid'];
 
+const SPECIAL_TRIP_STATUSES: ReadonlySet<Trip['status']> = new Set(['cancelled', 'archived']);
+
+type TripStatusInput = {
+  startDate?: string | null;
+  endDate?: string | null;
+  currentStatus?: Trip['status'] | null;
+  now?: Date;
+};
+
+/** Maps date-based lifecycle state to the persisted trip enum. */
+export function deriveTripStatus({ startDate, endDate, currentStatus, now = new Date() }: TripStatusInput): Trip['status'] {
+  if (currentStatus && SPECIAL_TRIP_STATUSES.has(currentStatus)) return currentStatus;
+  if (!startDate || !endDate) return currentStatus === 'completed' ? 'completed' : 'active';
+
+  const start = new Date(`${startDate}T00:00:00`);
+  const end = new Date(`${endDate}T23:59:59.999`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end < start) {
+    return currentStatus === 'completed' ? 'completed' : 'active';
+  }
+
+  // The stored enum has no `upcoming` member; `active` is its compatible normal state.
+  if (now < start) return 'active';
+  return now > end ? 'completed' : 'active';
+}
+
 export function getEffectiveTripDate(trip: Pick<Trip, 'payment_date' | 'start_date'>): string {
   return trip.payment_date || trip.start_date;
 }

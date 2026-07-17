@@ -165,6 +165,7 @@ export default function TrendChart({
     value: number;
     name: string;
     color?: string;
+    dataKey?: string;
   }
 
   interface CustomTooltipProps {
@@ -176,13 +177,22 @@ export default function TrendChart({
   const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
     if (!active || !payload?.length) return null;
     return (
-      <div className="rounded-xl border border-slate-100 bg-white/95 p-3.5 shadow-xl backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/95">
+      <div dir={direction} className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-lg dark:border-slate-700 dark:bg-slate-950">
         <p className="mb-2 text-xs font-bold text-slate-800 dark:text-slate-200">{label}</p>
         {payload.map((entry: TooltipEntry, index: number) => (
           <div key={index} className="flex items-center gap-2 text-xs py-0.5">
             <div className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
             <span className="text-slate-500 dark:text-slate-400">{entry.name}:</span>
-            <span className="font-semibold text-slate-850 dark:text-slate-150">
+            <span
+              dir="ltr"
+              className={`font-bold tabular-nums ${
+                entry.dataKey === 'profit'
+                  ? 'text-emerald-700 dark:text-emerald-300'
+                  : entry.dataKey === 'collected'
+                    ? 'text-cyan-700 dark:text-cyan-300'
+                    : 'text-slate-950 dark:text-white'
+              }`}
+            >
               {formatCurrency(entry.value)}
             </span>
           </div>
@@ -291,7 +301,7 @@ export default function TrendChart({
               <Legend wrapperStyle={{ fontSize: 10 }} />
               <Bar
                 dataKey="revenue"
-                fill="#10B981"
+                fill="#0EA5E9"
                 name={t('analytics.revenue')}
                 barSize={20}
                 radius={[4, 4, 0, 0]}
@@ -299,7 +309,7 @@ export default function TrendChart({
               <Line
                 type="monotone"
                 dataKey="profit"
-                stroke="#3B82F6"
+                stroke="#16A34A"
                 strokeWidth={2.5}
                 dot={{ r: 3.5, strokeWidth: 1.5, fill: '#fff' }}
                 name={t('analytics.profit')}
@@ -307,7 +317,7 @@ export default function TrendChart({
               <Line
                 type="monotone"
                 dataKey="collected"
-                stroke="#F59E0B"
+                stroke="#0891B2"
                 strokeWidth={2}
                 strokeDasharray="5 5"
                 dot={{ r: 2.5, strokeWidth: 1.5, fill: '#fff' }}

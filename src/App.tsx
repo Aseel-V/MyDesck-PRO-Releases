@@ -64,7 +64,7 @@ function LoginWrapper() {
 
 function App() {
   const [updateState, setUpdateState] = useState<{
-    status: 'idle' | 'checking' | 'available' | 'downloading' | 'downloaded' | 'error';
+    status: 'idle' | 'checking' | 'up-to-date' | 'available' | 'downloading' | 'downloaded' | 'error';
     progress: number;
     currentVersion: string;
     availableVersion?: string | null;
@@ -89,7 +89,7 @@ function App() {
         });
       });
 
-    api.onUpdateState((state) => {
+    const unsubscribe = api.onUpdateState((state) => {
       setUpdateState({
         status: state.status,
         progress: state.progress,
@@ -100,13 +100,12 @@ function App() {
     });
 
     return () => {
-      api.removeAllUpdateListeners();
+      unsubscribe();
     };
   }, []);
 
   const handleDismissUpdate = () => {
     setUpdateState(prev => ({ ...prev, status: 'idle' }));
-    window.electronAPI?.unlockApp();
   };
 
   // Check if we are in "invoice mode" (window opened by Electron for printing)
@@ -121,9 +120,11 @@ function App() {
     <HelmetProvider>
       <ScrollToTop />
       <Toaster richColors position="top-center" closeButton />
-      {updateState.status !== 'idle' && (
+      {(['available', 'downloading', 'downloaded', 'error'] as const).includes(
+        updateState.status as 'available' | 'downloading' | 'downloaded' | 'error'
+      ) && (
         <UpdateModal 
-          status={updateState.status}
+          status={updateState.status as 'checking' | 'available' | 'downloading' | 'downloaded' | 'error'}
           progress={updateState.progress}
           currentVersion={updateState.currentVersion}
           availableVersion={updateState.availableVersion ?? undefined}

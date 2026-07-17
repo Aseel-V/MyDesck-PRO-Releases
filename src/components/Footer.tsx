@@ -16,33 +16,35 @@ export default function Footer() {
           mx-auto max-w-6xl
           py-4 px-6 
           rounded-2xl
-          border border-slate-800/70
-          bg-slate-950/70
+          border border-slate-200 bg-white/80
+          dark:border-slate-800/70 dark:bg-slate-950/70
           backdrop-blur-2xl
 
           flex flex-col sm:flex-row
           items-center justify-between
           gap-3
 
-          shadow-[0_15px_45px_rgba(0,0,0,0.35)]
-          hover:shadow-[0_25px_70px_rgba(0,0,0,0.55)]
+          shadow-[0_15px_45px_rgba(15,23,42,0.12)]
+          hover:shadow-[0_25px_70px_rgba(15,23,42,0.18)]
+          dark:shadow-[0_15px_45px_rgba(0,0,0,0.35)]
+          dark:hover:shadow-[0_25px_70px_rgba(0,0,0,0.55)]
           transition-all
         "
       >
         {/* Left: Version + Year */}
-        <div className="flex items-center gap-4 text-xs text-slate-300">
-          <span className="px-2 py-1 rounded-lg bg-slate-800/60 border border-slate-700 text-sky-300 shadow-inner shadow-slate-900/40">
+        <div className="flex items-center gap-4 text-xs text-slate-700 dark:text-slate-300">
+          <span className="px-2 py-1 rounded-lg bg-slate-100 border border-slate-200 text-sky-700 shadow-inner shadow-slate-200/70 dark:bg-slate-800/60 dark:border-slate-700 dark:text-sky-300 dark:shadow-slate-900/40">
             v{appVersion}
           </span>
-          <span className="text-slate-400 select-none">&copy; {currentYear}</span>
+          <span className="text-slate-500 dark:text-slate-400 select-none">&copy; {currentYear}</span>
         </div>
 
         {/* Right – built by */}
         <p
           className="
             text-sm 
-            text-slate-400 
-            hover:text-sky-300
+            text-slate-600 dark:text-slate-400
+            hover:text-sky-700 dark:hover:text-sky-300
             transition
             cursor-default
             group
@@ -52,7 +54,7 @@ export default function Footer() {
           <span
             className="
               group-hover:drop-shadow-[0_0_12px_rgba(56,189,248,0.7)]
-              group-hover:text-sky-300
+              group-hover:text-sky-700 dark:group-hover:text-sky-300
               transition
             "
           >

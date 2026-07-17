@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useCallback, Suspense } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Users, UserPlus, Shield, AlertTriangle } from 'lucide-react';
+import { Users, UserPlus, Shield, AlertTriangle, type LucideIcon } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
@@ -31,6 +31,7 @@ import TrendChart from './components/TrendChart';
 import DestinationPerformance from './components/DestinationPerformance';
 import BreakdownBlocks from './components/BreakdownBlocks';
 import AttentionTable from './components/AttentionTable';
+import YearOverYearComparison from './components/YearOverYearComparison';
 
 interface UserProfile {
   user_id: string;
@@ -245,6 +246,12 @@ function AnalyticsContent({ trips, onSelectTrip, onOpenTripsWithFilter }: Analyt
     return needsConversion && !rates && !ratesLoading;
   }, [filteredTrips, currency, rates, ratesLoading]);
 
+  const yearComparisonCurrencyUnavailable = useMemo(() => {
+    const needsConversion = [...filteredTrips, ...prevFilteredTrips]
+      .some((trip) => (trip.currency || currency) !== currency);
+    return needsConversion && !rates;
+  }, [currency, filteredTrips, prevFilteredTrips, rates]);
+
   const updateFilter = (key: keyof AnalyticsFilters, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
@@ -278,7 +285,7 @@ function AnalyticsContent({ trips, onSelectTrip, onOpenTripsWithFilter }: Analyt
     description,
     accent = 'text-sky-550',
   }: {
-    icon: any;
+    icon: LucideIcon;
     label: string;
     value: string | number;
     description: string;
@@ -314,17 +321,17 @@ function AnalyticsContent({ trips, onSelectTrip, onOpenTripsWithFilter }: Analyt
   }
 
   return (
-    <div className="w-full max-w-none space-y-6 animate-fadeIn" dir={direction}>
+    <div className="mx-auto w-full max-w-[1600px] space-y-8 animate-fadeIn" dir={direction}>
       {/* SECTION A: Header & Toolbar */}
-      <div className="flex flex-col gap-5 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm dark:border-slate-800/40 dark:bg-slate-900/50">
+      <div className="flex flex-col gap-5 border-b border-slate-200 pb-6 dark:border-slate-800">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
-            <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.25em] text-sky-600 dark:text-sky-400">
+            <p className="mb-1.5 text-[10px] font-bold tracking-[0.16em] text-sky-700 dark:text-sky-300">
               {isAdmin ? t('analytics.platformInsights') : t('analytics.businessInsights')}
             </p>
-            <h2 className="break-words text-2xl font-extrabold tracking-tight text-slate-850 dark:text-slate-100 sm:text-3xl">
+            <h1 className="break-words text-3xl font-bold tracking-tight text-slate-950 dark:text-slate-100 sm:text-4xl">
               {isAdmin ? t('analytics.adminTitle') : t('analytics.title')}
-            </h2>
+            </h1>
             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
               {isAdmin ? t('analytics.adminSubtitle') : t('analytics.subtitle')}
             </p>
@@ -332,12 +339,12 @@ function AnalyticsContent({ trips, onSelectTrip, onOpenTripsWithFilter }: Analyt
 
           {!isAdmin && (
             <div className="flex flex-wrap items-center gap-2 text-xs">
-              <span className="rounded-full border border-sky-100 bg-sky-50/50 px-3 py-1 font-bold text-sky-700 dark:border-sky-500/10 dark:bg-sky-500/5 dark:text-sky-350">
+              <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 font-semibold text-sky-800 dark:border-sky-900 dark:bg-sky-950/30 dark:text-sky-200">
                 {t('analytics.convertedTo', { currency })}
                 {ratesLoading && <span className="ms-1 animate-pulse">...</span>}
               </span>
               {isStale && (
-                <span className="rounded-full border border-amber-100 bg-amber-50/50 px-3 py-1 font-bold text-amber-700 dark:border-amber-500/10 dark:bg-amber-500/5 dark:text-amber-350">
+                <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 font-semibold text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
                   {t('analytics.staleRatesWarning')}
                 </span>
               )}
@@ -360,7 +367,7 @@ function AnalyticsContent({ trips, onSelectTrip, onOpenTripsWithFilter }: Analyt
 
       {/* Warning on unavailable rates */}
       {!isAdmin && currencyUnavailable && (
-        <div className="flex items-start gap-3 rounded-2xl border border-amber-100 bg-amber-50/30 p-4 text-amber-800 dark:border-amber-500/10 dark:bg-amber-500/5 dark:text-amber-300">
+        <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
           <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
           <div>
             <p className="font-bold text-sm">{t('analytics.currencyUnavailableTitle')}</p>
@@ -414,8 +421,29 @@ function AnalyticsContent({ trips, onSelectTrip, onOpenTripsWithFilter }: Analyt
             formatNumber={formatNumber}
           />
 
-          {/* SECTION C: Operational Insights & Payment Health (Side-by-side) */}
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <YearOverYearComparison
+            selectedYear={filters.year}
+            month={filters.month}
+            currentStats={currentStats}
+            previousStats={prevStats}
+            previousTripCount={prevFilteredTrips.length}
+            conversionUnavailable={yearComparisonCurrencyUnavailable}
+            formatCurrency={formatCurrencyValue}
+          />
+
+          {/* SECTION C: Main Revenue & Profit Trend Chart */}
+          <TrendChart
+            filteredTrips={filteredTrips}
+            year={filters.year}
+            month={filters.month}
+            currency={currency}
+            formatCurrency={formatCurrencyValue}
+            rates={rates}
+            convert={convert}
+          />
+
+          {/* SECTION D: Operational Insights & Payment Health (Side-by-side) */}
+          <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
             <PaymentHealth
               filteredTrips={filteredTrips}
               currentStats={currentStats}
@@ -428,17 +456,6 @@ function AnalyticsContent({ trips, onSelectTrip, onOpenTripsWithFilter }: Analyt
 
             <BusinessInsights insights={businessInsights} />
           </div>
-
-          {/* SECTION D: Main Revenue & Profit Trend Chart */}
-          <TrendChart
-            filteredTrips={filteredTrips}
-            year={filters.year}
-            month={filters.month}
-            currency={currency}
-            formatCurrency={formatCurrencyValue}
-            rates={rates}
-            convert={convert}
-          />
 
           {/* SECTION E: Destination Performance ranked table & Horizontal Bar Chart */}
           <DestinationPerformance

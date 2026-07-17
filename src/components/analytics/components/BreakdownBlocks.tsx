@@ -61,9 +61,9 @@ export default function BreakdownBlocks({ filteredTrips }: BreakdownBlocksProps)
   const getStatusColor = (status: Trip['status']) => {
     switch (status) {
       case 'active':
-        return 'bg-emerald-500';
+        return 'bg-cyan-500';
       case 'completed':
-        return 'bg-sky-500';
+        return 'bg-emerald-500';
       case 'cancelled':
         return 'bg-rose-500';
       case 'archived':
@@ -75,9 +75,9 @@ export default function BreakdownBlocks({ filteredTrips }: BreakdownBlocksProps)
   const getStatusTextClass = (status: Trip['status']) => {
     switch (status) {
       case 'active':
-        return 'text-emerald-600 dark:text-emerald-400';
+        return 'text-cyan-700 dark:text-cyan-300';
       case 'completed':
-        return 'text-sky-650 dark:text-sky-400';
+        return 'text-emerald-700 dark:text-emerald-300';
       case 'cancelled':
         return 'text-rose-600 dark:text-rose-400';
       case 'archived':
@@ -106,7 +106,7 @@ export default function BreakdownBlocks({ filteredTrips }: BreakdownBlocksProps)
                 <span className={`capitalize ${getStatusTextClass(status)}`}>
                   {getTripStatusLabel(status, t)}
                 </span>
-                <span className="text-slate-500 dark:text-slate-400">
+                <span dir="ltr" className={`${getStatusTextClass(status)} tabular-nums`}>
                   {count} ({pct.toFixed(0)}%)
                 </span>
               </div>
@@ -139,7 +139,7 @@ export default function BreakdownBlocks({ filteredTrips }: BreakdownBlocksProps)
               <span className="text-sky-600 dark:text-sky-400">
                 {t('trips.stats.upcoming') || 'Upcoming Trips'}
               </span>
-              <span className="text-slate-500 dark:text-slate-400">
+              <span dir="ltr" className="tabular-nums text-sky-700 dark:text-sky-300">
                 {timingStats.upcoming} ({timingStats.upcomingPct.toFixed(0)}%)
               </span>
             </div>
@@ -157,7 +157,7 @@ export default function BreakdownBlocks({ filteredTrips }: BreakdownBlocksProps)
               <span className="text-slate-600 dark:text-slate-400">
                 {t('analytics.pastTrips') || 'Past Trips'}
               </span>
-              <span className="text-slate-500 dark:text-slate-400">
+              <span dir="ltr" className="tabular-nums text-slate-600 dark:text-slate-400">
                 {timingStats.past} ({timingStats.pastPct.toFixed(0)}%)
               </span>
             </div>

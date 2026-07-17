@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   Plus,
@@ -11,6 +12,9 @@ import {
   LayoutGrid,
   List,
   HelpCircle,
+  Loader2,
+  Download,
+  Printer,
   X,
 } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -21,7 +25,6 @@ import { Trip } from '../../types/trip';
 import { useTripMutations } from '../../hooks/useTripMutations';
 import TripCard from './TripCard';
 import TripFilters from './TripFilters';
-import PDFExportModal from './PDFExportModal';
 import ViewTripModal from './ViewTripModal';
 import {
   DEFAULT_TRIP_FILTERS,
@@ -29,11 +32,15 @@ import {
   TripFilterState,
 } from './tripFiltersState';
 import JSZip from 'jszip';
-import { generateMultipleTripsPDF, generateTripInvoice } from '../../lib/pdfGenerator';
+import { generateTripInvoice } from '../../lib/pdfGenerator';
 import { formatDate, sanitizeFilename } from '../../lib/utils';
 import { Skeleton } from '../ui/Skeleton';
 import { AnimatePresence, motion } from 'framer-motion';
+import { toast } from 'sonner';
 import { ConfirmationModal } from '../ui/ConfirmationModal';
+import { Button } from '../travel-ui/Button';
+import { StatusBadge } from '../travel-ui/StatusBadge';
+import { Surface } from '../travel-ui/Surface';
 import {
   getEffectiveTripDate,
   getEffectivePaymentStatus,
@@ -75,18 +82,22 @@ interface TripsProps {
 }
 
 export default function Trips({ filters, onFiltersChange, initialViewTrip, onEditTrip, onCreateTrip }: TripsProps) {
-  const { t, language, direction } = useLanguage();
+  const { t, direction } = useLanguage();
   const { user, profile, userProfile } = useAuth();
   const { convert, format, currency, isLoading: isCurrencyLoading } = useCurrency();
-  const { deleteTrip, toggleExport, isDeleting } = useTripMutations();
+  const { deleteTrip, isDeleting } = useTripMutations();
 
   const [viewTrip, setViewTrip] = useState<Trip | undefined>(undefined);
   const [tripPendingDelete, setTripPendingDelete] = useState<Trip | null>(null);
-  const [showPDFExport, setShowPDFExport] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isExportingBatch, setIsExportingBatch] = useState(false);
+  const [pdfGeneratingTripIds, setPdfGeneratingTripIds] = useState<string[]>([]);
+  const [pdfPreview, setPdfPreview] = useState<{ trip: Trip; url: string; filename: string } | null>(null);
   const [savedPresets, setSavedPresets] = useState<TripFilterPreset[]>([]);
   const [showStatusHelp, setShowStatusHelp] = useState(false);
+  const pdfPreviewDialogRef = useRef<HTMLDivElement>(null);
+  const pdfPreviewFrameRef = useRef<HTMLIFrameElement>(null);
+  const pdfPreviewTriggerRef = useRef<HTMLElement | null>(null);
 
   const presetStorageKey = user?.id ? `trip_filter_presets:${user.id}` : null;
 
@@ -151,13 +162,13 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
     baseActionBtn +
     ' border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-100/50 hover:border-slate-300 dark:text-slate-300 dark:hover:text-slate-50 dark:hover:bg-slate-900/50 dark:hover:border-slate-500/80';
   const statCardClasses =
-    'h-full min-h-[132px] rounded-2xl bg-white border border-slate-200/90 p-4 sm:p-5 flex items-start justify-between gap-3 overflow-hidden shadow-sm dark:bg-slate-950/95 dark:border-slate-800/90 dark:shadow-md dark:shadow-slate-950/70';
+    'min-w-0 p-4 sm:p-5 flex items-start justify-between gap-3 border-b border-slate-200 last:border-b-0 sm:border-b-0 sm:border-e sm:last:border-e-0 dark:border-slate-800';
   const statLabelClasses =
-    'text-[11px] sm:text-xs uppercase text-slate-500 dark:text-slate-400 font-semibold leading-snug break-words';
+    'text-xs text-slate-500 dark:text-slate-400 font-medium leading-snug break-words';
   const statValueClasses =
-    'mt-2 text-xl sm:text-2xl font-extrabold leading-tight break-words [overflow-wrap:anywhere]';
+    'mt-1 text-lg sm:text-xl font-semibold leading-tight break-words [overflow-wrap:anywhere] tabular-nums';
   const statIconClasses =
-    'shrink-0 p-3 rounded-2xl border';
+    'hidden';
 
   const { data: availableYears = [] } = useQuery({
     queryKey: ['trip-years', user?.id],
@@ -290,11 +301,6 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
     return Array.from(destinations).sort();
   }, [tripsBeforeDestinationFilter]);
 
-  const tripsMarkedForExport = useMemo(
-    () => trips.filter((trip) => trip.export_to_pdf),
-    [trips]
-  );
-
   const hasActiveFilters = Boolean(
     filters.search ||
     filters.paymentStatus ||
@@ -360,9 +366,92 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
     setViewTrip(trip);
   };
 
-  const handleToggleExport = (id: string, value: boolean) => {
-    toggleExport({ id, value });
+  const openTripPdfPreview = async (trip: Trip) => {
+    if (!profile || !user || pdfGeneratingTripIds.includes(trip.id)) return;
+    pdfPreviewTriggerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setPdfGeneratingTripIds((ids) => [...ids, trip.id]);
+    try {
+      const pdfBytes = await generateTripInvoice(trip, profile, userProfile?.full_name || '', userProfile?.phone_number || '', profile.preferred_language || 'en');
+      const blob = new Blob([pdfBytes as unknown as BlobPart], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const filename = `${sanitizeFilename(`Invoice_${trip.client_name}_${trip.destination}`, `trip_${trip.id.slice(0, 8)}`)}.pdf`;
+      setPdfPreview({ trip, url, filename });
+    } catch (error) {
+      console.error('PDF preview generation failed', error);
+      toast.error(t('trips.pdfPreviewFailed'));
+    } finally {
+      setPdfGeneratingTripIds((ids) => ids.filter((id) => id !== trip.id));
+    }
   };
+
+  const closePdfPreview = () => {
+    if (pdfPreview) {
+      window.URL.revokeObjectURL(pdfPreview.url);
+      setPdfPreview(null);
+    }
+    window.requestAnimationFrame(() => pdfPreviewTriggerRef.current?.focus());
+  };
+
+  const printPdfPreview = () => {
+    const previewWindow = pdfPreviewFrameRef.current?.contentWindow;
+    if (!previewWindow) {
+      toast.error(t('trips.unableToDisplayPdf'));
+      return;
+    }
+    previewWindow.focus();
+    previewWindow.print();
+  };
+
+  const savePdfPreview = () => {
+    if (!pdfPreview) return;
+    const link = document.createElement('a');
+    link.href = pdfPreview.url;
+    link.download = pdfPreview.filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  useEffect(() => {
+    if (!pdfPreview) return;
+    const dialog = pdfPreviewDialogRef.current;
+    if (!dialog) return;
+
+    dialog.focus();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        window.URL.revokeObjectURL(pdfPreview.url);
+        setPdfPreview(null);
+        window.requestAnimationFrame(() => pdfPreviewTriggerRef.current?.focus());
+        return;
+      }
+      if (event.key !== 'Tab') return;
+
+      const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), [href], iframe, [tabindex]:not([tabindex="-1"])'
+      ));
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [pdfPreview]);
+
+  useEffect(() => {
+    if (!pdfPreview) return;
+    document.body.classList.add('pdf-preview-open');
+    return () => document.body.classList.remove('pdf-preview-open');
+  }, [pdfPreview]);
 
   const clearFilters = () => {
     onFiltersChange(DEFAULT_TRIP_FILTERS);
@@ -393,32 +482,6 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
 
   const deletePreset = (presetId: string) => {
     setSavedPresets((prev) => prev.filter((item) => item.id !== presetId));
-  };
-
-  const handleExportPDF = async () => {
-    try {
-      if (!filteredTrips.length || !profile || !user) return;
-
-      const pdfBytes = await generateMultipleTripsPDF({
-        profile,
-        trips: filteredTrips,
-        userFullName: userProfile?.full_name || profile.business_name || '',
-        phoneNumber: userProfile?.phone_number || profile.phone_number || '',
-        language: (language as 'en' | 'ar' | 'he') || 'en',
-      });
-
-      const pdfBlob = new Blob([pdfBytes as unknown as BlobPart], { type: 'application/pdf' });
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-      const printWindow = window.open(pdfUrl, '_blank');
-
-      if (printWindow) {
-        printWindow.onload = () => {
-          printWindow.print();
-        };
-      }
-    } catch (error) {
-      console.error('Export failed', error);
-    }
   };
 
   const handleDownloadAllInvoices = async () => {
@@ -531,36 +594,37 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
   }
 
   return (
-    <div className="w-full space-y-6 animate-fadeIn">
-      <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-4">
+    <div className="mx-auto w-full max-w-[1440px] space-y-5 animate-fadeIn" dir={direction}>
+      <div className="flex flex-col gap-4 border-b border-slate-200/80 pb-5 xl:flex-row xl:items-end xl:justify-between dark:border-slate-800/80">
         <div className="min-w-0">
-          <h2 className="text-2xl sm:text-3xl font-extrabold gradient-title drop-shadow dark:drop-shadow-none text-slate-900 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-slate-50 dark:via-sky-100 dark:to-slate-200">
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl dark:text-white">
             {t('trips.title')}
-          </h2>
-          <p className="text-sm text-slate-500 mt-1 break-words dark:text-slate-300">
+          </h1>
+          <p className="mt-2 text-sm leading-6 text-slate-500 break-words dark:text-slate-300">
             {count === 0
               ? t('trips.emptyStates.noTripsTitle')
               : t('trips.resultsSummary', { shown: displayTrips.length, total: filteredTrips.length })}
             {currency !== 'USD' && (
-              <span className="ml-2 text-xs text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-full border border-sky-500/20">
+              <span className="ms-2 inline-flex rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-xs font-medium text-sky-700 dark:text-sky-300">
                 {currency} {isCurrencyLoading && '...'}
               </span>
             )}
           </p>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap xl:justify-end">
-          <button
-            type="button"
+        <div className="flex flex-wrap items-center gap-2 xl:justify-end">
+          <Button
             onClick={() => setShowStatusHelp(true)}
             aria-label={t('trips.help')}
             aria-haspopup="dialog"
             aria-expanded={showStatusHelp}
             title={t('trips.help')}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition-all hover:border-sky-300 hover:bg-sky-50 hover:text-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300 dark:hover:border-sky-500/60 dark:hover:bg-sky-500/10 dark:hover:text-sky-200 dark:focus:ring-offset-slate-950"
+            variant="secondary"
+            size="icon"
+            className="rounded-full"
           >
             <HelpCircle className="h-5 w-5" />
-          </button>
+          </Button>
 
           <div className="flex items-center bg-slate-100 rounded-xl p-1 border border-slate-200/80 dark:bg-slate-900/80 dark:border-slate-800/80">
             <button
@@ -603,26 +667,6 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
             </button>
           )}
 
-          {tripsMarkedForExport.length > 0 && (
-            <button
-              onClick={() => setShowPDFExport(true)}
-              className={secondaryActionBtn}
-            >
-              <FileText className="w-5 h-5" />
-              <span className="hidden md:inline">
-                {t('trips.exportToPdf')} ({tripsMarkedForExport.length})
-              </span>
-            </button>
-          )}
-
-          <button
-            onClick={handleExportPDF}
-            className={secondaryActionBtn}
-          >
-            <FileText className="w-5 h-5" />
-            <span className="hidden md:inline">{t('trips.exportPdf')}</span>
-          </button>
-
           <button
             onClick={() => onCreateTrip?.()}
             className={primaryActionBtn}
@@ -633,7 +677,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-4 items-stretch">
+      <div className="grid overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 dark:border-slate-800 dark:bg-slate-900">
         <div className={statCardClasses}>
           <div className="min-w-0 flex-1">
             <p className={statLabelClasses}>
@@ -701,7 +745,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
         </div>
       </div>
 
-      <div className="rounded-2xl bg-white border border-slate-200/80 p-4 shadow-sm dark:bg-slate-950/90 dark:border-slate-800/80 dark:shadow-md dark:shadow-slate-950/60">
+      <Surface className="p-3 sm:p-4">
         <TripFilters
           searchTerm={filters.search}
           onSearchChange={setSearchTerm}
@@ -724,7 +768,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
           availableYears={availableYears}
           availableDestinations={availableDestinations}
         />
-      </div>
+      </Surface>
 
       <div className="min-h-[400px]">
         {error && (
@@ -818,7 +862,8 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
                     trip={trip}
                     onEdit={handleEditTrip}
                     onDelete={handleDeleteTrip}
-                    onToggleExport={handleToggleExport}
+                    onOpenPdfPreview={openTripPdfPreview}
+                    isPreparingPdf={pdfGeneratingTripIds.includes(trip.id)}
                     onView={handleViewTrip}
                   />
                 </motion.div>
@@ -834,7 +879,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
             )}
           </motion.div>
         ) : (
-          <div className="glass-panel bg-white/90 border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm dark:bg-slate-950/90 dark:border-slate-800/80 dark:shadow-lg dark:shadow-slate-950/70">
+          <Surface className="overflow-hidden">
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
                 <thead>
@@ -868,27 +913,34 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
                           {format(trip.sale_price || 0, trip.currency || currency)}
                         </td>
                         <td className="py-3 px-4">
-                          <span
-                            className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${trip.status === 'active'
-                              ? 'bg-emerald-500/10 text-emerald-650 border border-emerald-500/20 dark:text-emerald-400'
-                              : trip.status === 'completed'
-                                ? 'bg-emerald-500/10 text-emerald-650 border border-emerald-500/20 dark:text-emerald-400'
-                                : trip.status === 'archived'
-                                  ? 'bg-slate-500/10 text-slate-500 border border-slate-500/20 dark:text-slate-400'
-                                  : 'bg-rose-500/10 text-rose-650 border border-rose-500/20 dark:text-rose-400'
-                              }`}
+                          <StatusBadge
+                            tone={trip.status === 'active' || trip.status === 'completed' ? 'success' : trip.status === 'archived' ? 'neutral' : 'danger'}
                             title={getTripStatusDescription(trip.status, t)}
                           >
                             {getTripStatusLabel(trip.status, t)}
-                          </span>
+                          </StatusBadge>
                         </td>
                         <td className="py-3 px-4 text-right">
-                          <button
-                            onClick={() => handleViewTrip(trip)}
-                            className="text-sky-600 hover:text-sky-500 font-medium text-xs dark:text-sky-400 dark:hover:text-sky-300"
-                          >
-                            {t('trips.viewTrip')}
-                          </button>
+                          <div className="inline-flex items-center justify-end gap-3">
+                            <button
+                              type="button"
+                              onClick={() => void openTripPdfPreview(trip)}
+                              disabled={pdfGeneratingTripIds.includes(trip.id)}
+                              className="inline-flex h-8 items-center gap-1 rounded-md border border-rose-500 bg-white px-2 text-xs font-bold text-rose-600 transition-colors hover:bg-rose-600 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-transparent"
+                              title={pdfGeneratingTripIds.includes(trip.id) ? t('trips.preparingPdf') : t('trips.openPdfPreview')}
+                              aria-label={pdfGeneratingTripIds.includes(trip.id) ? t('trips.preparingPdf') : t('trips.openPdfPreview')}
+                            >
+                              {pdfGeneratingTripIds.includes(trip.id) ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" /> : <FileText className="h-3.5 w-3.5" aria-hidden="true" />}
+                              <span dir="ltr">PDF</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleViewTrip(trip)}
+                              className="text-sky-600 hover:text-sky-500 font-medium text-xs dark:text-sky-400 dark:hover:text-sky-300"
+                            >
+                              {t('trips.viewTrip')}
+                            </button>
+                          </div>
                         </td>
                       </motion.tr>
                     ))}
@@ -903,7 +955,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
                 </span>
               </div>
             )}
-          </div>
+          </Surface>
         )}
       </div>
 
@@ -975,6 +1027,72 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
         </div>
       )}
 
+      {pdfPreview && createPortal(
+        <div
+          className="fixed inset-0 z-[100] flex h-[100dvh] w-screen flex-col bg-slate-100 dark:bg-slate-950"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="trip-pdf-preview-title"
+          dir={direction}
+        >
+          <div
+            ref={pdfPreviewDialogRef}
+            tabIndex={-1}
+            className="isolate flex h-full w-full flex-col overflow-hidden bg-white outline-none dark:bg-slate-950"
+          >
+            <header className="relative z-10 flex min-h-14 shrink-0 items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-2 pt-[max(0.5rem,env(safe-area-inset-top))] shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:px-5">
+              <div className="flex min-w-0 items-center gap-2">
+                <button
+                  type="button"
+                  onClick={closePdfPreview}
+                  className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg px-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:text-slate-300 dark:hover:bg-slate-900"
+                  aria-label={t('trips.closePdfPreview')}
+                >
+                  <X className="h-4 w-4" aria-hidden="true" />
+                  <span className="hidden sm:inline">{t('trips.backToTrips')}</span>
+                </button>
+                <div className="min-w-0">
+                  <p id="trip-pdf-preview-title" className="text-base font-bold text-slate-900 dark:text-slate-50">
+                    {t('trips.pdfPreview')}
+                  </p>
+                  <p className="truncate text-sm text-slate-500 dark:text-slate-400">
+                    {pdfPreview.trip.destination}{' · '}{pdfPreview.trip.client_name}
+                  </p>
+                </div>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <button
+                  type="button"
+                  onClick={printPdfPreview}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+                >
+                  <Printer className="h-4 w-4" aria-hidden="true" />
+                  {t('trips.printPdf')}
+                </button>
+                <button
+                  type="button"
+                  onClick={savePdfPreview}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-rose-600 px-3 text-sm font-semibold text-white transition-colors hover:bg-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+                >
+                  <Download className="h-4 w-4" aria-hidden="true" />
+                  <span dir="ltr">PDF</span>
+                  {t('trips.savePdf')}
+                </button>
+              </div>
+            </header>
+            <div className="min-h-0 flex-1 bg-slate-100 [contain:layout_paint] dark:bg-slate-900">
+              <iframe
+                ref={pdfPreviewFrameRef}
+                src={pdfPreview.url}
+                title={t('trips.pdfPreview')}
+                className="h-full w-full border-0"
+              />
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
       {viewTrip && (
         <ViewTripModal
           trip={viewTrip}
@@ -1005,17 +1123,6 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
         isLoading={isDeleting}
       />
 
-      {showPDFExport && (
-        <PDFExportModal
-          trips={tripsMarkedForExport}
-          onClose={() => setShowPDFExport(false)}
-          onExportComplete={() => {
-            tripsMarkedForExport.forEach((trip) => {
-              toggleExport({ id: trip.id, value: false });
-            });
-          }}
-        />
-      )}
     </div>
   );
 }

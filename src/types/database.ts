@@ -141,6 +141,9 @@ export interface Database {
           amount_paid: number;
           amount_due: number;
           payment_date: string | null;
+          payment_method: 'card' | 'cash' | 'mixed' | null;
+          card_paid_amount: number | null;
+          cash_paid_amount: number | null;
           room_type: Json;
           board_basis: string | null;
           attachments: Json;
@@ -177,6 +180,9 @@ export interface Database {
           amount_paid: number;
           amount_due?: number;
           payment_date?: string | null;
+          payment_method?: 'card' | 'cash' | 'mixed' | null;
+          card_paid_amount?: number | null;
+          cash_paid_amount?: number | null;
           room_type?: Json;
           board_basis?: string | null;
           attachments?: Json;
@@ -213,6 +219,9 @@ export interface Database {
           payments?: Json;
           amount_paid?: number;
           payment_date?: string | null;
+          payment_method?: 'card' | 'cash' | 'mixed' | null;
+          card_paid_amount?: number | null;
+          cash_paid_amount?: number | null;
           room_type?: Json;
           board_basis?: string | null;
           attachments?: Json;

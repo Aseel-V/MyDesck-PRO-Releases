@@ -53,7 +53,7 @@ export default function AttentionTable({
         <h3 className="text-lg font-bold text-slate-855 dark:text-slate-100">
           {t('analytics.tripsRequiringAttention')}
         </h3>
-        <span className="rounded-full bg-rose-50 px-2 py-0.5 text-xs font-bold text-rose-700 dark:bg-rose-950/30 dark:text-rose-400">
+        <span dir="ltr" className="rounded-full bg-rose-50 px-2 py-0.5 text-xs font-bold tabular-nums text-rose-700 dark:bg-rose-950/30 dark:text-rose-400">
           {attentionItems.length}
         </span>
       </div>
@@ -91,7 +91,7 @@ export default function AttentionTable({
                   <td className="p-3 text-start font-bold text-slate-800 dark:text-slate-200">
                     {trip.destination}
                   </td>
-                  <td className="p-3 text-start font-mono text-slate-550 dark:text-slate-400">
+                  <td dir="ltr" className="p-3 text-start font-mono tabular-nums text-slate-600 dark:text-slate-400">
                     {trip.start_date}
                   </td>
                   <td className="p-3 text-center">
@@ -99,7 +99,7 @@ export default function AttentionTable({
                       {getPaymentStatusLabel(trip.payment_status, t)}
                     </span>
                   </td>
-                  <td className="p-3 text-start font-bold text-rose-500">
+                  <td dir="ltr" className="p-3 text-start font-bold tabular-nums text-rose-600 dark:text-rose-300">
                     {outstandingBalance > 0 ? formatCurrency(outstandingBalance) : '-'}
                   </td>
                   <td className="p-3 text-start">
