@@ -56,6 +56,8 @@ export default function Login() {
           throw new Error(getFriendlyAuthError(staffError));
         }
       }
+
+      console.info('[Auth] Sign-in completed successfully.');
     } catch (authError: unknown) {
       const friendlyError = getFriendlyAuthError(authError);
 
