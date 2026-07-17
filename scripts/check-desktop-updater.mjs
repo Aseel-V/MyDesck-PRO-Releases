@@ -21,6 +21,8 @@ assert.ok(pkg.build?.win?.target?.includes('nsis'), 'Windows NSIS target is requ
 assert.ok(pkg.build?.files?.includes('electron.js'));
 assert.ok(pkg.build?.files?.includes('preload.cjs'));
 assert.ok(pkg.build?.files?.includes('updater-policy.cjs'));
+assert.match(pkg.scripts?.['dist:win'] ?? '', /dotenv -- electron-builder --win --publish never/);
+assert.match(pkg.scripts?.release ?? '', /dotenv -- electron-builder --win --publish always/);
 
 for (const channel of ['check-for-updates', 'download-update', 'install-update']) {
   assert.ok(main.includes(`ipcMain.handle('${channel}'`), `main handler missing: ${channel}`);
