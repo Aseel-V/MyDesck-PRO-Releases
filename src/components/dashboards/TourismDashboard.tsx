@@ -297,7 +297,8 @@ export default function TourismDashboard({
     return (
       <div className="flex -space-x-1.5 rtl:space-x-reverse overflow-hidden">
         {list.slice(0, 3).map((traveler, i) => {
-          const initials = traveler.full_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'P';
+          const initials = traveler.full_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
+            || t('dashboard.passengerInitialFallback');
           return (
             <div 
               key={i} 
