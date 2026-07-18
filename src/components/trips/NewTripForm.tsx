@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { X, Save, FileText, CreditCard, BedDouble, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { FieldErrors, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -17,6 +17,8 @@ import { ConfirmationModal } from '../ui/ConfirmationModal';
 import { Button } from '../travel-ui/Button';
 import { Surface } from '../travel-ui/Surface';
 import { deriveTripStatus, getEffectivePaymentStatus, getPaymentStatusDescription } from '../../lib/tripStatus';
+import { getTripDuration } from '../../lib/tripDates';
+import TripDateRangePicker from './TripDateRangePicker';
 
 interface NewTripFormProps {
   onClose: () => void;
@@ -39,17 +41,6 @@ type ExistingClient = {
   client_phone: string | null;
 };
 
-function getTripDuration(startDate: string, endDate: string) {
-  if (!startDate || !endDate) return null;
-
-  const start = Date.parse(`${startDate}T00:00:00Z`);
-  const end = Date.parse(`${endDate}T00:00:00Z`);
-  if (!Number.isFinite(start) || !Number.isFinite(end) || end < start) return null;
-
-  const nights = Math.round((end - start) / 86_400_000);
-  return { nights, days: nights + 1 };
-}
-
 export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormProps) {
   const { t, direction } = useLanguage();
   const { user } = useAuth();
@@ -57,7 +48,6 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
   const [activeStep, setActiveStep] = useState(0);
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
   const [validationSummary, setValidationSummary] = useState<string[]>([]);
-  const endDateInputRef = useRef<HTMLInputElement | null>(null);
   const validationSchema = useMemo(
     () => createTripSchema({
       allowMissingLegacyHotel: Boolean(
@@ -85,6 +75,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
     defaultValues: {
       destination: editTrip?.destination || '',
       client_name: editTrip?.client_name || '',
+      client_phone: editTrip?.client_phone || '',
       travelers: editTrip?.travelers || [],
       travelers_count: editTrip?.travelers_count !== undefined ? editTrip.travelers_count : '' as unknown as number,
       itinerary: editTrip?.itinerary || [],
@@ -207,7 +198,8 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
       const unique = new Map<string, ExistingClient>();
       data?.forEach((item: ExistingClient) => {
         const normalizedName = item.client_name?.trim().toLocaleLowerCase();
-        if (normalizedName && !unique.has(normalizedName)) {
+        const existing = normalizedName ? unique.get(normalizedName) : undefined;
+        if (normalizedName && (!existing || (!existing.client_phone && item.client_phone))) {
           unique.set(normalizedName, item);
         }
       });
@@ -342,15 +334,16 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
     setValidationSummary([]);
     try {
       if (isLegacyCurrencyTrip && editTrip) {
-        // Editing unrelated information must not relabel or convert a legacy record.
+        const editedSalePrice = Number(data.sale_price) || 0;
+        // Preserve the historical currency/rate while allowing its amount to be edited.
         data.currency = editTrip.currency;
         data.exchange_rate = editTrip.exchange_rate;
         data.wholesale_cost = editTrip.wholesale_cost;
-        data.sale_price = editTrip.sale_price;
+        data.sale_price = editedSalePrice;
         data.wholesale_original_amount = editTrip.wholesale_original_amount;
         data.wholesale_currency = editTrip.wholesale_currency;
-        data.sale_original_amount = editTrip.sale_original_amount;
-        data.sale_currency = editTrip.sale_currency;
+        data.sale_original_amount = editedSalePrice;
+        data.sale_currency = editTrip.sale_currency || editTrip.currency;
         data.amount_paid = editTrip.amount_paid;
         data.payment_date = editTrip.payment_date;
         data.payment_status = editTrip.payment_status;
@@ -412,6 +405,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
       // Sanitize date fields - convert empty strings to null to avoid Postgres "invalid input syntax" error
       const sanitizedData = {
         ...data,
+        client_phone: data.client_phone?.trim() || null,
         start_date: data.start_date || null,
         end_date: data.end_date || null,
         payment_date: data.payment_date || null,
@@ -783,47 +777,24 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                   )}
                 </div>
 
-                <div>
-                  <label className={labelClasses}>{t('trips.startDate')} *</label>
-                  <input
-                    type="date"
-                    {...register('start_date', {
-                      onChange: () => {
-                        endDateInputRef.current?.focus();
-                        try {
-                          endDateInputRef.current?.showPicker?.();
-                        } catch {
-                          // Focusing the field is the cross-browser fallback.
-                        }
-                      },
-                    })}
-                    className={cn(baseInputClasses, errors.start_date && errorInputClasses)}
-                  />
-                  {errors.start_date && (
-                    <p className="text-xs text-rose-400 mt-1">
-                      {translateValidationMessage(errors.start_date.message)}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className={labelClasses}>{t('trips.endDate')} *</label>
-                  <input
-                    type="date"
-                    {...register('end_date')}
-                    ref={(element) => {
-                      register('end_date').ref(element);
-                      endDateInputRef.current = element;
-                    }}
-                    min={currentValues.start_date || undefined}
-                    className={cn(baseInputClasses, errors.end_date && errorInputClasses)}
-                  />
-                  {errors.end_date && (
-                    <p className="text-xs text-rose-400 mt-1">
-                      {translateValidationMessage(errors.end_date.message)}
-                    </p>
-                  )}
-                </div>
+                <input type="hidden" {...register('start_date')} />
+                <input type="hidden" {...register('end_date')} />
+                <TripDateRangePicker
+                  startDate={currentValues.start_date}
+                  endDate={currentValues.end_date}
+                  hasError={Boolean(errors.start_date || errors.end_date)}
+                  onChange={(startDate, endDate) => {
+                    setValue('start_date', startDate, { shouldDirty: true, shouldValidate: true });
+                    setValue('end_date', endDate, { shouldDirty: true, shouldValidate: Boolean(endDate) });
+                    if (startDate) clearErrors('start_date');
+                    if (endDate) clearErrors('end_date');
+                  }}
+                />
+                {(errors.start_date || errors.end_date) && (
+                  <p className="md:col-span-2 xl:col-span-3 text-xs text-rose-400">
+                    {translateValidationMessage(errors.start_date?.message || errors.end_date?.message)}
+                  </p>
+                )}
                 {tripDuration && (
                   <div className="md:col-span-2 xl:col-span-3" aria-live="polite">
                     <div className="flex flex-wrap items-center gap-x-5 gap-y-1 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-900 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-100">
@@ -996,12 +967,11 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                                dir="ltr"
                                placeholder={t('trips.amountPlaceholder')}
                                {...register('sale_price', { valueAsNumber: true })}
-                               readOnly={isLegacyCurrencyTrip}
                                onChange={(e) => {
                                  register('sale_price', { valueAsNumber: true }).onChange(e);
                                  handleSalePriceChange();
                                }}
-                                className={cn(baseInputClasses, 'h-10 rounded-lg py-2 ps-8 tabular-nums', isLegacyCurrencyTrip && 'cursor-not-allowed bg-slate-100 text-slate-500 dark:bg-slate-900/50 dark:text-slate-400', errors.sale_price && errorInputClasses)}
+                                 className={cn(baseInputClasses, 'h-10 rounded-lg py-2 ps-8 tabular-nums', errors.sale_price && errorInputClasses)}
                              />
                         </div>
                       </div>

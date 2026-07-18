@@ -10,7 +10,8 @@ import {
   Loader2,
   TrendingUp,
   AlertCircle,
-  BedDouble
+  BedDouble,
+  Phone
 } from 'lucide-react';
 import { formatDate, generateWhatsAppLink } from '../../lib/utils';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -27,6 +28,7 @@ import {
 } from '../../lib/tripStatus';
 import { StatusBadge } from '../travel-ui/StatusBadge';
 import { Surface } from '../travel-ui/Surface';
+import { getTripDuration } from '../../lib/tripDates';
 
 interface TripCardProps {
   trip: Trip;
@@ -119,6 +121,7 @@ export default function TripCard({
   };
   const statusLabel = getTripStatusLabel(trip.status, t);
   const paymentStatusLabel = getPaymentStatusLabel(effectivePaymentStatus, t);
+  const tripDuration = getTripDuration(trip.start_date, trip.end_date);
 
   return (
     <motion.div
@@ -187,6 +190,12 @@ export default function TripCard({
                             {trip.travelers_count} {t('trips.travelers')}
                          </span>
                     </div>
+                    {trip.client_phone?.trim() && (
+                      <div className="mt-1.5 flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                        <Phone className="h-3.5 w-3.5 shrink-0 text-sky-500" aria-hidden="true" />
+                        <span dir="ltr" className="truncate font-medium">{trip.client_phone}</span>
+                      </div>
+                    )}
                 </div>
             </div>
 
@@ -200,7 +209,7 @@ export default function TripCard({
 
             {/* Dates Block */}
             <Surface level="quiet" className="mb-5 p-4">
-                <div className="flex items-center justify-between">
+                 <div className="flex items-center justify-between">
                     <div>
                         <p className="text-[10px] uppercase text-slate-400 font-bold mb-1 tracking-wider">
                             {t('trips.startDate')}
@@ -222,7 +231,14 @@ export default function TripCard({
                              <CalendarDays className="w-4 h-4 text-sky-500" />
                         </p>
                     </div>
-                </div>
+                 </div>
+                 {tripDuration && (
+                   <div className="mt-3 flex items-center justify-center gap-2 border-t border-slate-200 pt-2 text-xs font-medium text-slate-500 dark:border-slate-800 dark:text-slate-400">
+                     <span>{t('trips.nightsCount', { count: tripDuration.nights })}</span>
+                     <span aria-hidden="true">·</span>
+                     <span>{t('trips.daysCount', { count: tripDuration.days })}</span>
+                   </div>
+                 )}
             </Surface>
 
             {/* === DETAILED FINANCIALS === */}
@@ -329,7 +345,7 @@ export default function TripCard({
                 <button
                     onClick={handleExportClick}
                     disabled={isPreparingPdf}
-                    className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-rose-500 bg-white px-2.5 text-xs font-bold text-rose-600 transition-colors hover:bg-rose-600 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-transparent"
+                    className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-sky-500 bg-white px-2.5 text-xs font-bold text-sky-600 transition-colors hover:bg-sky-600 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-transparent dark:text-sky-400"
                     title={isPreparingPdf ? t('trips.preparingPdf') : t('trips.openPdfPreview')}
                     aria-label={isPreparingPdf ? t('trips.preparingPdf') : t('trips.openPdfPreview')}
                 >

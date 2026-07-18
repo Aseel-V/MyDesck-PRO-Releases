@@ -926,7 +926,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
                               type="button"
                               onClick={() => void openTripPdfPreview(trip)}
                               disabled={pdfGeneratingTripIds.includes(trip.id)}
-                              className="inline-flex h-8 items-center gap-1 rounded-md border border-rose-500 bg-white px-2 text-xs font-bold text-rose-600 transition-colors hover:bg-rose-600 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-transparent"
+                              className="inline-flex h-8 items-center gap-1 rounded-md border border-sky-500 bg-white px-2 text-xs font-bold text-sky-600 transition-colors hover:bg-sky-600 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-transparent dark:text-sky-400"
                               title={pdfGeneratingTripIds.includes(trip.id) ? t('trips.preparingPdf') : t('trips.openPdfPreview')}
                               aria-label={pdfGeneratingTripIds.includes(trip.id) ? t('trips.preparingPdf') : t('trips.openPdfPreview')}
                             >
@@ -1072,7 +1072,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
                 <button
                   type="button"
                   onClick={savePdfPreview}
-                  className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-rose-600 px-3 text-sm font-semibold text-white transition-colors hover:bg-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+                  className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-sky-600 px-3 text-sm font-semibold text-white transition-colors hover:bg-sky-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
                 >
                   <Download className="h-4 w-4" aria-hidden="true" />
                   <span dir="ltr">PDF</span>
