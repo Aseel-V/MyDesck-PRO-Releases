@@ -9,7 +9,8 @@ import {
   FileText,
   Loader2,
   TrendingUp,
-  AlertCircle
+  AlertCircle,
+  BedDouble
 } from 'lucide-react';
 import { formatDate, generateWhatsAppLink } from '../../lib/utils';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -188,6 +189,14 @@ export default function TripCard({
                     </div>
                 </div>
             </div>
+
+            {trip.hotel_name?.trim() && (
+              <div className="mb-4 flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                <BedDouble className="h-4 w-4 shrink-0 text-sky-500" aria-hidden="true" />
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">{t('trips.hotelName')}:</span>
+                <span className="min-w-0 truncate font-medium" dir="auto">{trip.hotel_name}</span>
+              </div>
+            )}
 
             {/* Dates Block */}
             <Surface level="quiet" className="mb-5 p-4">

@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { X, Save, FileText, CreditCard, BedDouble, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { FieldErrors, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { Trip, TripFormData } from '../../types/trip';
-import { tripSchema } from '../../lib/schemas';
+import { createTripSchema, tripSchema } from '../../lib/schemas';
 import { cn } from '../../lib/utils';
 import { z } from 'zod';
 import { useQuery } from '@tanstack/react-query';
@@ -34,6 +34,22 @@ type StoredTripDraft = {
   data?: Partial<TripFormValues>;
 };
 
+type ExistingClient = {
+  client_name: string;
+  client_phone: string | null;
+};
+
+function getTripDuration(startDate: string, endDate: string) {
+  if (!startDate || !endDate) return null;
+
+  const start = Date.parse(`${startDate}T00:00:00Z`);
+  const end = Date.parse(`${endDate}T00:00:00Z`);
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end < start) return null;
+
+  const nights = Math.round((end - start) / 86_400_000);
+  return { nights, days: nights + 1 };
+}
+
 export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormProps) {
   const { t, direction } = useLanguage();
   const { user } = useAuth();
@@ -41,6 +57,15 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
   const [activeStep, setActiveStep] = useState(0);
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
   const [validationSummary, setValidationSummary] = useState<string[]>([]);
+  const endDateInputRef = useRef<HTMLInputElement | null>(null);
+  const validationSchema = useMemo(
+    () => createTripSchema({
+      allowMissingLegacyHotel: Boolean(
+        editTrip && editTrip.service_type !== 'ticket' && !editTrip.hotel_name?.trim()
+      ),
+    }),
+    [editTrip]
+  );
 
   const {
     register,
@@ -54,7 +79,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
     setFocus,
     formState: { errors, isDirty },
   } = useForm<TripFormValues>({
-    resolver: zodResolver(tripSchema),
+    resolver: zodResolver(validationSchema),
     mode: 'onTouched',
     reValidateMode: 'onChange',
     defaultValues: {
@@ -171,21 +196,24 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
     queryFn: async () => {
       const { data, error } = await supabase
         .from('trips')
-        .select('client_name')
+        .select('client_name, client_phone')
+        .eq('user_id', user!.id)
         .order('created_at', { ascending: false })
         .limit(1000);
 
       if (error) throw error;
 
       // Deduplicate by client_name
-      const unique = new Map();
-      data?.forEach((item: { client_name: string }) => {
-        if (item.client_name && !unique.has(item.client_name)) {
-          unique.set(item.client_name, item);
+      const unique = new Map<string, ExistingClient>();
+      data?.forEach((item: ExistingClient) => {
+        const normalizedName = item.client_name?.trim().toLocaleLowerCase();
+        if (normalizedName && !unique.has(normalizedName)) {
+          unique.set(normalizedName, item);
         }
       });
       return Array.from(unique.values());
     },
+    enabled: !!user?.id,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
@@ -442,6 +470,10 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
   const currentPaymentStatus = watch('payment_status');
   const isRtl = direction === 'rtl';
   const currentValues = watch();
+  const tripDuration = useMemo(
+    () => getTripDuration(currentValues.start_date, currentValues.end_date),
+    [currentValues.end_date, currentValues.start_date]
+  );
   const totalRooms = Object.values(roomCounts).reduce<number>((sum, count) => sum + (Number(count) || 0), 0);
   const steps: Array<{ id: FormStep; label: string; icon: typeof FileText }> = [
     { id: 'details', label: t('trips.formSteps.details'), icon: FileText },
@@ -693,14 +725,23 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                     className={cn(baseInputClasses, errors.client_name && errorInputClasses)}
                     list="client-names"
                     placeholder={t('trips.clientNamePlaceholder')}
-                    onChange={(e) => {
-                      register('client_name').onChange(e);
-                      // If we had phone number logic, we'd call it here
+                    onChange={(event) => {
+                      void register('client_name').onChange(event);
+                      const normalizedName = event.target.value.trim().toLocaleLowerCase();
+                      const selectedClient = distinctClients.find(
+                        (client) => client.client_name.trim().toLocaleLowerCase() === normalizedName
+                      );
+                      if (selectedClient?.client_phone) {
+                        setValue('client_phone', selectedClient.client_phone, {
+                          shouldDirty: true,
+                          shouldValidate: true,
+                        });
+                      }
                     }}
                   />
                   <datalist id="client-names">
-                    {distinctClients.map((c: { client_name: string }, i: number) => (
-                      <option key={i} value={c.client_name} />
+                    {distinctClients.map((client) => (
+                      <option key={client.client_name} value={client.client_name} />
                     ))}
                   </datalist>
                   {errors.client_name && (
@@ -746,7 +787,16 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                   <label className={labelClasses}>{t('trips.startDate')} *</label>
                   <input
                     type="date"
-                    {...register('start_date')}
+                    {...register('start_date', {
+                      onChange: () => {
+                        endDateInputRef.current?.focus();
+                        try {
+                          endDateInputRef.current?.showPicker?.();
+                        } catch {
+                          // Focusing the field is the cross-browser fallback.
+                        }
+                      },
+                    })}
                     className={cn(baseInputClasses, errors.start_date && errorInputClasses)}
                   />
                   {errors.start_date && (
@@ -761,6 +811,11 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                   <input
                     type="date"
                     {...register('end_date')}
+                    ref={(element) => {
+                      register('end_date').ref(element);
+                      endDateInputRef.current = element;
+                    }}
+                    min={currentValues.start_date || undefined}
                     className={cn(baseInputClasses, errors.end_date && errorInputClasses)}
                   />
                   {errors.end_date && (
@@ -769,6 +824,15 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                     </p>
                   )}
                 </div>
+                {tripDuration && (
+                  <div className="md:col-span-2 xl:col-span-3" aria-live="polite">
+                    <div className="flex flex-wrap items-center gap-x-5 gap-y-1 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-900 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-100">
+                      <span className="font-semibold">{t('trips.tripDuration')}</span>
+                      <span>{t('trips.nightsCount', { count: tripDuration.nights })}</span>
+                      <span>{t('trips.daysCount', { count: tripDuration.days })}</span>
+                    </div>
+                  </div>
+                )}
               </Surface>
             )}
 

@@ -16,23 +16,34 @@ export function useTripMutations() {
             if (!user?.id) throw new Error('USER_NOT_AUTHENTICATED');
 
             if (editTripId) {
-                const { error } = await supabase
+                const { data, error } = await supabase
                     .from('trips')
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     .update({ ...(formData as any), updated_at: new Date().toISOString() })
-                    .eq('id', editTripId);
+                    .eq('id', editTripId)
+                    .eq('user_id', user.id)
+                    .select('id, updated_at')
+                    .maybeSingle();
                 if (error) throw error;
+                if (!data) throw new Error('TRIP_UPDATE_NOT_APPLIED');
+                return data;
             } else {
-                const { error } = await supabase
+                const { data, error } = await supabase
                     .from('trips')
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    .insert([{ ...(formData as any), user_id: user.id }]);
+                    .insert([{ ...(formData as any), user_id: user.id }])
+                    .select('id, updated_at')
+                    .single();
                 if (error) throw error;
+                return data;
             }
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['trips'] });
-            queryClient.invalidateQueries({ queryKey: ['trip-years'] });
+        onSuccess: async () => {
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: ['trips'] }),
+                queryClient.invalidateQueries({ queryKey: ['trip-years'] }),
+                queryClient.invalidateQueries({ queryKey: ['distinct-clients'] }),
+            ]);
             toast.success(t('notifications.tripSaved'));
         },
         onError: (error: Error) => {

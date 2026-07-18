@@ -148,6 +148,22 @@ export interface TripFormData {
   board_basis?: string;
   hotel_name?: string;
   service_type: 'ticket' | 'hotel' | 'both';
+  trip_type?: 'one_way' | 'round_trip' | null;
+  airline_name?: string | null;
+  flight_number?: string | null;
+  booking_reference?: string | null;
+  departure_airport?: string | null;
+  arrival_airport?: string | null;
+  departure_datetime?: string | null;
+  arrival_datetime?: string | null;
+  return_flight_number?: string | null;
+  return_departure_airport?: string | null;
+  return_arrival_airport?: string | null;
+  return_departure_datetime?: string | null;
+  return_arrival_datetime?: string | null;
+  ticket_class?: 'economy' | 'premium_economy' | 'business' | 'first' | null;
+  ticket_cost_ils?: number | null;
+  ticket_notes?: string | null;
 
   // Stored Original Values
   wholesale_original_amount?: number;
@@ -193,6 +209,22 @@ export interface TripInsert {
   board_basis?: string;
   hotel_name?: string;
   service_type?: 'ticket' | 'hotel' | 'both';
+  trip_type?: 'one_way' | 'round_trip' | null;
+  airline_name?: string | null;
+  flight_number?: string | null;
+  booking_reference?: string | null;
+  departure_airport?: string | null;
+  arrival_airport?: string | null;
+  departure_datetime?: string | null;
+  arrival_datetime?: string | null;
+  return_flight_number?: string | null;
+  return_departure_airport?: string | null;
+  return_arrival_airport?: string | null;
+  return_departure_datetime?: string | null;
+  return_arrival_datetime?: string | null;
+  ticket_class?: 'economy' | 'premium_economy' | 'business' | 'first' | null;
+  ticket_cost_ils?: number | null;
+  ticket_notes?: string | null;
 
   wholesale_original_amount?: number;
   wholesale_currency?: string;
@@ -242,8 +274,25 @@ export interface TripUpdate {
   cash_paid_amount?: number | null;
 
   room_type?: RoomConfiguration;
+  board_basis?: string;
   hotel_name?: string;
   service_type?: 'ticket' | 'hotel' | 'both';
+  trip_type?: 'one_way' | 'round_trip' | null;
+  airline_name?: string | null;
+  flight_number?: string | null;
+  booking_reference?: string | null;
+  departure_airport?: string | null;
+  arrival_airport?: string | null;
+  departure_datetime?: string | null;
+  arrival_datetime?: string | null;
+  return_flight_number?: string | null;
+  return_departure_airport?: string | null;
+  return_arrival_airport?: string | null;
+  return_departure_datetime?: string | null;
+  return_arrival_datetime?: string | null;
+  ticket_class?: 'economy' | 'premium_economy' | 'business' | 'first' | null;
+  ticket_cost_ils?: number | null;
+  ticket_notes?: string | null;
 
   attachments?: Attachment[];
 

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const tripSchema = z.object({
+const tripBaseSchema = z.object({
     destination: z.string().min(1, 'Destination is required'),
     client_name: z.string().min(1, 'Client name is required'),
     client_phone: z.string().optional(),
@@ -89,14 +89,17 @@ export const tripSchema = z.object({
 
     notes: z.string().optional(),
     status: z.enum(['active', 'completed', 'cancelled', 'archived']).default('active'),
-}).refine((data) => {
+});
+
+export function createTripSchema({ allowMissingLegacyHotel = false } = {}) {
+    return tripBaseSchema.refine((data) => {
     if (!data.start_date || !data.end_date) return true;
     return new Date(data.end_date) >= new Date(data.start_date);
 }, {
     message: "End date must be after start date",
     path: ["end_date"],
 }).refine((data) => {
-    return data.service_type === 'ticket' || Boolean(data.hotel_name?.trim());
+    return allowMissingLegacyHotel || data.service_type === 'ticket' || Boolean(data.hotel_name?.trim());
 }, {
     message: 'Hotel name is required',
     path: ['hotel_name'],
@@ -107,5 +110,8 @@ export const tripSchema = z.object({
     message: 'Card and cash amounts must equal the paid amount',
     path: ['card_paid_amount'],
 });
+}
+
+export const tripSchema = createTripSchema();
 
 export type TripSchemaType = z.infer<typeof tripSchema>;
