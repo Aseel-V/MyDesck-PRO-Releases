@@ -1,4 +1,21 @@
 import { z } from 'zod';
+import { buildInstallmentSchedule, toMinorUnits, validatePaymentSplit } from './tripInstallments';
+
+const nonNegativeMoney = z.preprocess(
+    (value) => value === '' || value === null || value === undefined || Number.isNaN(Number(value)) ? 0 : Number(value),
+    z.number().min(0)
+);
+
+const paymentPlanSchema = z.object({
+    plan_id: z.string().uuid().nullable().optional(),
+    card_total: nonNegativeMoney,
+    cash_total: nonNegativeMoney,
+    installment_count: z.preprocess(
+        (value) => value === '' || value === null || value === undefined || Number.isNaN(Number(value)) ? 1 : Number(value),
+        z.number().int().min(1, 'Installment count must be at least 1').max(120)
+    ),
+    first_installment_date: z.string().default(''),
+});
 
 const tripBaseSchema = z.object({
     destination: z.string().min(1, 'Destination is required'),
@@ -7,7 +24,6 @@ const tripBaseSchema = z.object({
 
     travelers: z.array(z.object({
         full_name: z.string().optional(),
-        passport_number: z.string().optional(),
         nationality: z.string().optional(),
         room_type: z.enum(['single', 'double', 'triple', 'suite']).optional(),
     })).default([]),
@@ -78,6 +94,9 @@ const tripBaseSchema = z.object({
     payment_method: z.enum(['card', 'cash', 'mixed']).nullable().optional(),
     card_paid_amount: z.number().min(0).optional(),
     cash_paid_amount: z.number().min(0).optional(),
+    payment_plan: paymentPlanSchema.nullable().optional(),
+    source_template_id: z.string().uuid().nullable().optional(),
+    source_template_name: z.string().max(120).nullable().optional(),
 
     attachments: z.array(z.object({
         file_name: z.string(),
@@ -109,6 +128,35 @@ export function createTripSchema({ allowMissingLegacyHotel = false } = {}) {
 }, {
     message: 'Card and cash amounts must equal the paid amount',
     path: ['card_paid_amount'],
+}).superRefine((data, context) => {
+    if (data.payment_method !== 'card' && data.payment_method !== 'mixed') return;
+    const plan = data.payment_plan;
+    if (!plan || plan.card_total <= 0) {
+        context.addIssue({ code: z.ZodIssueCode.custom, message: 'Card total must be greater than 0', path: ['payment_plan', 'card_total'] });
+        return;
+    }
+    if (!plan.first_installment_date) {
+        context.addIssue({ code: z.ZodIssueCode.custom, message: 'First installment date is required', path: ['payment_plan', 'first_installment_date'] });
+    }
+    if (data.payment_method === 'mixed' && !validatePaymentSplit(toMinorUnits(data.sale_price), toMinorUnits(plan.card_total), toMinorUnits(plan.cash_total))) {
+        context.addIssue({ code: z.ZodIssueCode.custom, message: 'Card and cash totals must equal the sale price', path: ['payment_plan', 'cash_total'] });
+    }
+    if (data.payment_method === 'mixed' && plan.cash_total <= 0) {
+        context.addIssue({ code: z.ZodIssueCode.custom, message: 'Cash total must be greater than 0 for mixed payment', path: ['payment_plan', 'cash_total'] });
+    }
+    if (data.payment_method === 'mixed' && (data.cash_paid_amount || 0) > plan.cash_total) {
+        context.addIssue({ code: z.ZodIssueCode.custom, message: 'Confirmed cash cannot exceed the cash total', path: ['cash_paid_amount'] });
+    }
+    if (!plan.first_installment_date) return;
+    try {
+        const totalMinor = toMinorUnits(plan.card_total);
+        const schedule = buildInstallmentSchedule(totalMinor, plan.installment_count, plan.first_installment_date);
+        if (schedule.reduce((sum, item) => sum + item.expectedAmountMinor, 0) !== totalMinor) {
+            context.addIssue({ code: z.ZodIssueCode.custom, message: 'Installment schedule must equal the card total', path: ['payment_plan', 'installment_count'] });
+        }
+    } catch {
+        context.addIssue({ code: z.ZodIssueCode.custom, message: 'Installment schedule is invalid', path: ['payment_plan', 'installment_count'] });
+    }
 });
 }
 

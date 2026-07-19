@@ -1,7 +1,6 @@
 // Trip row as stored in Supabase
 export interface Traveler {
   full_name: string;
-  passport_number?: string;
   nationality?: string;
   room_type?: 'single' | 'double' | 'triple' | 'suite';
 }
@@ -26,6 +25,31 @@ export interface Attachment {
   type: 'ticket' | 'visa' | 'voucher' | 'other';
   bucket?: string;
   storage_path?: string;
+}
+
+export interface TripPaymentPlanSummary {
+  plan_id: string;
+  source: 'native' | 'legacy';
+  payment_method: 'card' | 'cash' | 'mixed';
+  currency: string;
+  card_total_minor: number;
+  cash_total_minor: number;
+  cash_paid_minor: number;
+  installment_count: number;
+  processed_installments: number;
+  scheduled_minor_to_date: number;
+  remaining_scheduled_minor: number;
+  next_installment_minor: number | null;
+  next_installment_date: string | null;
+  final_installment_date: string | null;
+}
+
+export interface TripPaymentPlanDraft {
+  plan_id?: string | null;
+  card_total: number;
+  cash_total: number;
+  installment_count: number;
+  first_installment_date: string;
 }
 
 // Room configuration as JSONB for analytics
@@ -74,6 +98,8 @@ export interface Trip {
   payment_method?: 'card' | 'cash' | 'mixed' | null;
   card_paid_amount?: number | null;
   cash_paid_amount?: number | null;
+  payment_plan_summary?: TripPaymentPlanSummary | null;
+  payment_plan?: TripPaymentPlanDraft | null;
 
   room_type?: RoomConfiguration;
   board_basis?: string;
@@ -111,6 +137,9 @@ export interface Trip {
   checklist_payment: boolean;
 
   notes: string;
+  has_itinerary?: boolean;
+  source_template_id?: string | null;
+  source_template_name?: string | null;
   status: 'active' | 'completed' | 'cancelled' | 'archived';
   export_to_pdf: boolean;
   created_at: string;
@@ -143,6 +172,9 @@ export interface TripFormData {
   payment_method?: 'card' | 'cash' | 'mixed' | null;
   card_paid_amount?: number | null;
   cash_paid_amount?: number | null;
+  payment_plan?: TripPaymentPlanDraft | null;
+  source_template_id?: string | null;
+  source_template_name?: string | null;
 
   room_type?: RoomConfiguration;
   board_basis?: string;
@@ -204,6 +236,8 @@ export interface TripInsert {
   payment_method?: 'card' | 'cash' | 'mixed' | null;
   card_paid_amount?: number | null;
   cash_paid_amount?: number | null;
+  source_template_id?: string | null;
+  source_template_name?: string | null;
 
   room_type?: RoomConfiguration;
   board_basis?: string;
@@ -272,6 +306,8 @@ export interface TripUpdate {
   payment_method?: 'card' | 'cash' | 'mixed' | null;
   card_paid_amount?: number | null;
   cash_paid_amount?: number | null;
+  source_template_id?: string | null;
+  source_template_name?: string | null;
 
   room_type?: RoomConfiguration;
   board_basis?: string;

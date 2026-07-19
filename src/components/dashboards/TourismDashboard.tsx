@@ -26,6 +26,7 @@ import { getEffectiveTripDate, getEffectivePaymentStatus } from '../../lib/tripS
 import { Button } from '../travel-ui/Button';
 import { StatusBadge } from '../travel-ui/StatusBadge';
 import { TravelOperationsDashboard } from './TravelOperationsDashboard';
+import { MeasuredChart } from '../travel-ui/MeasuredChart';
 
 interface UserProfile {
   full_name?: string | null;
@@ -33,7 +34,6 @@ interface UserProfile {
 }
 
 interface TourismDashboardProps {
-  trips: Trip[];
   filteredTrips: Trip[];
   isLoading: boolean;
   profile: UserProfile | null;
@@ -272,46 +272,20 @@ export default function TourismDashboard({
 
   // Render avatar grouping for visual passenger counts
   const renderTravelersAvatars = (trip: Trip) => {
-    const list = trip.travelers || [];
-    if (list.length === 0) {
-      const count = Number(trip.travelers_count) || 1;
-      return (
-        <div className="flex -space-x-1.5 rtl:space-x-reverse overflow-hidden">
-          {Array.from({ length: Math.min(count, 3) }).map((_, i) => (
-            <div 
-              key={i} 
-              className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-sky-200 bg-sky-50 text-[9px] font-bold text-sky-700 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-300"
-            >
-              {t('dashboard.passengerInitial', { count: i + 1 })}
-            </div>
-          ))}
-          {count > 3 && (
-            <div className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-[9px] font-bold text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
-              +{count - 3}
-            </div>
-          )}
-        </div>
-      );
-    }
-
+    const count = Number(trip.travelers_count) || 1;
     return (
       <div className="flex -space-x-1.5 rtl:space-x-reverse overflow-hidden">
-        {list.slice(0, 3).map((traveler, i) => {
-          const initials = traveler.full_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
-            || t('dashboard.passengerInitialFallback');
-          return (
-            <div 
-              key={i} 
-              className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-[9px] font-bold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-              title={traveler.full_name}
-            >
-              {initials}
-            </div>
-          );
-        })}
-        {list.length > 3 && (
-          <div className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-[9px] font-bold text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
-            +{list.length - 3}
+        {Array.from({ length: Math.min(count, 3) }).map((_, i) => (
+          <div
+            key={i}
+            className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-sky-200 bg-sky-50 text-[9px] font-bold text-sky-700 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-300"
+          >
+            {t('dashboard.passengerInitial', { count: i + 1 })}
+          </div>
+        ))}
+        {count > 3 && (
+          <div className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-[9px] font-bold text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
+            +{count - 3}
           </div>
         )}
       </div>
@@ -694,8 +668,8 @@ export default function TourismDashboard({
               </div>
 
               {/* Area curves chart */}
-              <div className="h-[250px] w-full min-w-0 mt-6">
-                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+              <MeasuredChart className="mt-6 h-[250px]">
+                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1} initialDimension={{ width: 1, height: 1 }}>
                   <AreaChart data={monthlyData} margin={chartMargin}>
                     <defs>
                       <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
@@ -749,7 +723,7 @@ export default function TourismDashboard({
                     />
                   </AreaChart>
                 </ResponsiveContainer>
-              </div>
+              </MeasuredChart>
             </div>
           </BentoCard>
         </div>

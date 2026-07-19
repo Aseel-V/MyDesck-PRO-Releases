@@ -144,6 +144,8 @@ export interface Database {
           payment_method: 'card' | 'cash' | 'mixed' | null;
           card_paid_amount: number | null;
           cash_paid_amount: number | null;
+          source_template_id: string | null;
+          source_template_name: string | null;
           room_type: Json;
           board_basis: string | null;
           hotel_name: string | null;
@@ -174,6 +176,9 @@ export interface Database {
           wholesale_currency: string | null;
           sale_original_amount: number | null;
           sale_currency: string | null;
+          deleted_at: string | null;
+          deleted_by: string | null;
+          search_document: string;
         };
 
         Insert: {
@@ -201,6 +206,8 @@ export interface Database {
           payment_method?: 'card' | 'cash' | 'mixed' | null;
           card_paid_amount?: number | null;
           cash_paid_amount?: number | null;
+          source_template_id?: string | null;
+          source_template_name?: string | null;
           room_type?: Json;
           board_basis?: string | null;
           hotel_name?: string | null;
@@ -232,6 +239,9 @@ export interface Database {
           sale_currency?: string | null;
           created_at?: string;
           updated_at?: string;
+          deleted_at?: string | null;
+          deleted_by?: string | null;
+          search_document?: string;
         };
 
         Update: {
@@ -258,6 +268,8 @@ export interface Database {
           payment_method?: 'card' | 'cash' | 'mixed' | null;
           card_paid_amount?: number | null;
           cash_paid_amount?: number | null;
+          source_template_id?: string | null;
+          source_template_name?: string | null;
           room_type?: Json;
           board_basis?: string | null;
           hotel_name?: string | null;
@@ -289,6 +301,9 @@ export interface Database {
           sale_currency?: string | null;
           created_at?: string;
           updated_at?: string;
+          deleted_at?: string | null;
+          deleted_by?: string | null;
+          search_document?: string;
         };
 
         Relationships: [
@@ -1970,6 +1985,74 @@ export interface Database {
         Relationships: [];
       };
 
+      trip_financial_audit: {
+        Row: { id: number; trip_id: string; user_id: string; actor_user_id: string | null; changed_at: string; changed_field: string; previous_value: Json | null; new_value: Json | null; operation_type: string };
+        Insert: { id?: number; trip_id: string; user_id: string; actor_user_id?: string | null; changed_at?: string; changed_field: string; previous_value?: Json | null; new_value?: Json | null; operation_type: string };
+        Update: never;
+        Relationships: [];
+      };
+      trip_attachment_cleanup_queue: {
+        Row: { id: number; trip_id: string; user_id: string; attachments: Json; status: 'pending' | 'processing' | 'completed' | 'failed'; attempts: number; last_error: string | null; last_attempted_at: string | null; next_retry_at: string; created_at: string; completed_at: string | null };
+        Insert: { id?: number; trip_id: string; user_id: string; attachments?: Json; status?: 'pending' | 'processing' | 'completed' | 'failed'; attempts?: number; last_error?: string | null; last_attempted_at?: string | null; next_retry_at?: string; created_at?: string; completed_at?: string | null };
+        Update: Partial<Database['public']['Tables']['trip_attachment_cleanup_queue']['Insert']>;
+        Relationships: [];
+      };
+      trip_activity_log: {
+        Row: { id: number; trip_id: string; user_id: string; actor_user_id: string | null; activity_type: string; metadata: Json; created_at: string };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      trip_templates: {
+        Row: { id: string; user_id: string; name: string; description: string | null; template_data: Json; template_type: 'full_trip' | 'itinerary' | 'hotel' | 'transportation' | 'pricing' | 'checklist' | 'message'; is_favorite: boolean; usage_count: number; last_used_at: string | null; status: 'active' | 'archived'; deleted_at: string | null; created_at: string; updated_at: string };
+        Insert: { id?: string; user_id: string; name: string; description?: string | null; template_data?: Json; template_type?: 'full_trip' | 'itinerary' | 'hotel' | 'transportation' | 'pricing' | 'checklist' | 'message'; is_favorite?: boolean; usage_count?: number; last_used_at?: string | null; status?: 'active' | 'archived'; deleted_at?: string | null; created_at?: string; updated_at?: string };
+        Update: Partial<Database['public']['Tables']['trip_templates']['Insert']>;
+        Relationships: [];
+      };
+      trip_notification_settings: {
+        Row: { user_id: string; timezone: string; upcoming_enabled: boolean; upcoming_days: number; trip_reminder_days: number[]; payment_enabled: boolean; payment_reminder_days: number[]; cleanup_enabled: boolean; retention_enabled: boolean; updated_at: string };
+        Insert: { user_id: string; timezone?: string; upcoming_enabled?: boolean; upcoming_days?: number; trip_reminder_days?: number[]; payment_enabled?: boolean; payment_reminder_days?: number[]; cleanup_enabled?: boolean; retention_enabled?: boolean; updated_at?: string };
+        Update: Partial<Database['public']['Tables']['trip_notification_settings']['Insert']>;
+        Relationships: [];
+      };
+      trip_notifications: {
+        Row: { id: string; user_id: string; trip_id: string | null; notification_type: string; title_key: string; body_key: string; params: Json; dedupe_key: string; read_at: string | null; snoozed_until: string | null; dismissed_at: string | null; completed_at: string | null; scheduled_for: string; created_at: string };
+        Insert: never;
+        Update: { read_at?: string | null; snoozed_until?: string | null; dismissed_at?: string | null; completed_at?: string | null };
+        Relationships: [];
+      };
+      trip_payment_plans: {
+        Row: { id: string; trip_id: string; user_id: string; payment_method: 'card' | 'cash' | 'mixed'; currency: string; card_total_minor: number; cash_total_minor: number; card_paid_minor: number; cash_paid_minor: number; installment_count: number; first_installment_date: string | null; source: 'native' | 'legacy'; status: 'active' | 'completed' | 'cancelled'; notes: string | null; deleted_at: string | null; created_at: string; updated_at: string };
+        Insert: never; Update: never; Relationships: [];
+      };
+      trip_installments: {
+        Row: { id: string; payment_plan_id: string; trip_id: string; user_id: string; installment_number: number; due_date: string; expected_amount_minor: number; paid_amount_minor: number; paid_at: string | null; status: 'scheduled' | 'paid' | 'partially_paid' | 'cancelled'; notes: string | null; created_at: string; updated_at: string };
+        Insert: never; Update: never; Relationships: [];
+      };
+      trip_installment_events: {
+        Row: { id: number; installment_id: string; trip_id: string; user_id: string; actor_user_id: string | null; event_type: string; previous_state: Json | null; new_state: Json | null; created_at: string };
+        Insert: never; Update: never; Relationships: [];
+      };
+      trip_payment_events: {
+        Row: { id: number; payment_plan_id: string; trip_id: string; user_id: string; actor_user_id: string | null; event_type: string; previous_state: Json | null; new_state: Json | null; created_at: string };
+        Insert: never; Update: never; Relationships: [];
+      };
+      trip_packing_lists: {
+        Row: { id: string; trip_id: string | null; user_id: string; name: string; is_template: boolean; items: Json; deleted_at: string | null; created_at: string; updated_at: string };
+        Insert: { id?: string; trip_id?: string | null; user_id: string; name: string; is_template?: boolean; items?: Json; deleted_at?: string | null; created_at?: string; updated_at?: string };
+        Update: Partial<Database['public']['Tables']['trip_packing_lists']['Insert']>; Relationships: [];
+      };
+      trip_pricing_preferences: {
+        Row: { user_id: string; default_target_markup: number; minimum_profit_minor: number; currency: string; updated_at: string };
+        Insert: { user_id: string; default_target_markup?: number; minimum_profit_minor?: number; currency?: string; updated_at?: string };
+        Update: Partial<Database['public']['Tables']['trip_pricing_preferences']['Insert']>; Relationships: [];
+      };
+      trip_whatsapp_templates: {
+        Row: { id: string; user_id: string; name: string; body: string; language: 'en' | 'he' | 'ar'; category: string; is_favorite: boolean; is_archived: boolean; usage_count: number; last_used_at: string | null; created_at: string; updated_at: string };
+        Insert: { id?: string; user_id: string; name: string; body: string; language?: 'en' | 'he' | 'ar'; category?: string; is_favorite?: boolean; is_archived?: boolean; usage_count?: number; last_used_at?: string | null; created_at?: string; updated_at?: string };
+        Update: Partial<Database['public']['Tables']['trip_whatsapp_templates']['Insert']>;
+        Relationships: [];
+      };
     };
 
     Views: {
@@ -2074,6 +2157,55 @@ export interface Database {
         };
         Returns: Database['public']['Tables']['trips']['Row'][];
       };
+      get_trips_page: {
+        Args: {
+          p_year: string;
+          p_page?: number;
+          p_page_size?: number;
+          p_search?: string | null;
+          p_payment_status?: string | null;
+          p_trip_status?: string | null;
+          p_month?: number | null;
+          p_destination?: string | null;
+        };
+        Returns: Json;
+      };
+      get_trip_details: {
+        Args: {
+          p_trip_id: string;
+        };
+        Returns: Json;
+      };
+      get_trip_dashboard_items: {
+        Args: {
+          p_year: string;
+        };
+        Returns: Json;
+      };
+      purge_deleted_trips: {
+        Args: {
+          p_retention_days?: number;
+        };
+        Returns: number;
+      };
+      retry_trip_attachment_cleanup: { Args: { p_job_id: number }; Returns: boolean };
+      get_trip_activity_page: { Args: { p_trip_id: string; p_page?: number; p_page_size?: number; p_type?: string | null }; Returns: Json };
+      get_trip_financial_audit_page: { Args: { p_trip_id: string; p_page?: number; p_page_size?: number }; Returns: Json };
+      get_deleted_trips_page: { Args: { p_page?: number; p_page_size?: number; p_search?: string | null }; Returns: Json };
+      restore_deleted_trips: { Args: { p_trip_ids: string[] }; Returns: number };
+      permanently_delete_trips: { Args: { p_trip_ids: string[] }; Returns: number };
+      log_trip_activity: { Args: { p_trip_id: string; p_activity_type: string; p_metadata?: Json }; Returns: number };
+      claim_trip_pdf_generation: { Args: Record<PropertyKey, never>; Returns: boolean };
+      generate_trip_notifications: { Args: { p_now?: string }; Returns: number };
+      create_trip_event_notification: { Args: { p_trip_id: string; p_event_type: string }; Returns: string };
+      use_trip_template: { Args: { p_template_id: string }; Returns: Json };
+      create_trip_payment_plan: { Args: { p_trip_id: string; p_payment_method: string; p_currency: string; p_card_total_minor: number; p_cash_total_minor: number; p_installment_count: number; p_first_installment_date: string; p_notes?: string | null }; Returns: string };
+      record_trip_installment_payment: { Args: { p_installment_id: string; p_paid_amount_minor: number; p_paid_at: string; p_notes?: string | null }; Returns: Json };
+      reschedule_trip_installment: { Args: { p_installment_id: string; p_due_date: string }; Returns: Json };
+      record_trip_cash_payment: { Args: { p_payment_plan_id: string; p_paid_amount_minor: number; p_paid_at: string; p_notes?: string | null }; Returns: Json };
+      recalculate_future_trip_installments: { Args: { p_payment_plan_id: string; p_new_card_total_minor: number }; Returns: number };
+      mark_all_trip_notifications_read: { Args: Record<PropertyKey, never>; Returns: number };
+      get_travel_reports: { Args: { p_start_date: string; p_end_date: string; p_currency?: string | null; p_destination?: string | null; p_include_archived?: boolean }; Returns: Json };
       get_yearly_stats_overview: {
         Args: Record<PropertyKey, never>;
         Returns: Json;

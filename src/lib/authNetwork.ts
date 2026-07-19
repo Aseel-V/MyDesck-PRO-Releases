@@ -131,7 +131,7 @@ export const validateSupabasePublicConfig = (
 
   console.info('[Auth Config] Runtime auth diagnostics', {
     appOrigin: origin,
-    apiBaseUrl,
+    apiHostname: parsedUrl.hostname,
     isSecureContext: getWindowContext().isSecureContext,
   });
 
@@ -162,8 +162,18 @@ export const createSupabaseFetchWithLogging = () => {
       const response = await fetch(input, init);
 
       if (!response.ok) {
+        let projectHostname = 'unknown';
+        let endpoint = 'unknown';
+        try {
+          const parsed = new URL(requestInfo.url);
+          projectHostname = parsed.hostname;
+          endpoint = parsed.pathname;
+        } catch {
+          // Keep diagnostics free of raw malformed configuration values.
+        }
         console.warn('[Supabase Request] Non-OK response', {
-          url: requestInfo.url,
+          projectHostname,
+          endpoint,
           method: requestInfo.method,
           status: response.status,
           origin: requestInfo.origin,

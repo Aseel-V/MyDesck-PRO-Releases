@@ -1,402 +1,146 @@
-import { useState, MouseEvent } from 'react';
+import { useEffect, useId, useRef, useState, type MouseEvent } from 'react';
 import {
-  Users,
-  Edit,
-  Trash2,
-  Share2,
-  CalendarDays,
-  ArrowRight,
-  FileText,
-  Loader2,
-  TrendingUp,
-  AlertCircle,
-  BedDouble,
-  Phone
+  AlertTriangle, Archive, ArrowRight, BedDouble, BookTemplate, CalendarDays, ChevronDown, ChevronUp,
+  Copy, Edit, Eye, FileText, Loader2, MessageCircle, MoreHorizontal, Phone, Plane, Trash2, TrendingUp, Users,
 } from 'lucide-react';
-import { formatDate, generateWhatsAppLink } from '../../lib/utils';
+import type { LucideIcon } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
-import { Trip } from '../../types/trip';
-import { motion, AnimatePresence } from 'framer-motion';
-import { twMerge } from 'tailwind-merge';
-import {
-  getEffectivePaymentStatus,
-  getPaymentStatusDescription,
-  getPaymentStatusLabel,
-  getTripStatusDescription,
-  getTripStatusLabel,
-} from '../../lib/tripStatus';
-import { StatusBadge } from '../travel-ui/StatusBadge';
-import { Surface } from '../travel-ui/Surface';
+import type { Trip } from '../../types/trip';
 import { getTripDuration } from '../../lib/tripDates';
+import { calculateTripFinancials } from '../../lib/tripFinancials';
+import { getTripCardPaymentState } from '../../lib/tripCardPayment';
+import { getTripStatusDescription, getTripStatusLabel } from '../../lib/tripStatus';
+import { StatusBadge } from '../travel-ui/StatusBadge';
+import { cn } from '../../lib/utils';
 
 interface TripCardProps {
   trip: Trip;
   onEdit: (trip: Trip) => void;
   onDelete: (id: string) => void;
   onOpenPdfPreview: (trip: Trip) => Promise<void>;
+  onView: (trip: Trip) => void;
+  onDuplicate: (trip: Trip) => void;
+  onSaveTemplate: (trip: Trip) => void;
+  onOpenSourceTemplate: (trip: Trip) => void;
+  onWhatsapp: (trip: Trip) => void;
+  onArchive: (trip: Trip) => void;
   isPreparingPdf?: boolean;
-  onView?: (trip: Trip) => void;
-  isUrgent?: boolean;
 }
 
-export default function TripCard({
-  trip,
-  onEdit,
-  onDelete,
-  onOpenPdfPreview,
-  isPreparingPdf = false,
-  onView,
-  isUrgent,
-}: TripCardProps) {
+export default function TripCard({ trip, onEdit, onDelete, onOpenPdfPreview, onView, onDuplicate, onSaveTemplate, onOpenSourceTemplate, onWhatsapp, onArchive, isPreparingPdf = false }: TripCardProps) {
   const { t, direction, language } = useLanguage();
   const { format } = useCurrency();
-  const [showDetails, setShowDetails] = useState(false);
-  // --- Financial Calculations ---
-  const wholesale = trip.wholesale_cost ?? 0;
-  const sale = trip.sale_price ?? 0;
-  const paid = trip.amount_paid ?? 0;
-  
-  const profitValue = typeof trip.profit === 'number' ? trip.profit : sale - wholesale;
-  const isProfitPositive = profitValue >= 0;
-  const profitPercentage = sale > 0 ? (profitValue / sale) * 100 : 0;
-
-  const amountDue = Math.max(sale - paid, 0);
-  const paymentPercentage = sale > 0 ? Math.min((paid / sale) * 100, 100) : 0;
-  const effectivePaymentStatus = getEffectivePaymentStatus(trip);
-
-  const getPaymentColor = (status: string) => {
-    switch (status) {
-      case 'paid': return 'bg-emerald-500';
-      case 'partial': return 'bg-amber-500';
-      case 'unpaid': return 'bg-rose-500';
-      default: return 'bg-slate-500';
-    }
-  };
-
-  const statusColor = getPaymentColor(effectivePaymentStatus);
+  const [expanded, setExpanded] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const detailsId = useId();
+  const menuId = useId();
+  const menuRef = useRef<HTMLDivElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const financials = calculateTripFinancials(trip);
+  const duration = getTripDuration(trip.start_date, trip.end_date);
+  const payment = getTripCardPaymentState(trip, new Date().toISOString().slice(0, 10));
   const isRtl = direction === 'rtl';
+  const locale = language === 'he' ? 'he-IL-u-nu-latn' : language === 'ar' ? 'ar-IL-u-nu-latn' : 'en-US';
+  const money = (minor: number) => format(minor / 100, trip.currency || 'ILS');
+  const date = (value: string) => new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(`${value.slice(0, 10)}T12:00:00Z`));
+  const stop = (event: MouseEvent) => event.stopPropagation();
 
-  const handleCardClick = () => {
-    if (onView) {
-      onView(trip);
-      return;
-    }
-    setShowDetails((prev) => !prev);
+  useEffect(() => {
+    if (!menuOpen) return;
+    const close = (event: globalThis.MouseEvent) => { if (!menuRef.current?.contains(event.target as Node)) setMenuOpen(false); };
+    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') { setMenuOpen(false); menuButtonRef.current?.focus(); } };
+    document.addEventListener('mousedown', close); document.addEventListener('keydown', escape);
+    return () => { document.removeEventListener('mousedown', close); document.removeEventListener('keydown', escape); };
+  }, [menuOpen]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    menuRef.current?.querySelector<HTMLButtonElement>('[role="menuitem"]')?.focus();
+  }, [menuOpen]);
+
+  const menuAction = (action: () => void) => { setMenuOpen(false); action(); };
+  const moveMenuFocus = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    const items = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="menuitem"]'));
+    const current = items.indexOf(document.activeElement as HTMLButtonElement);
+    let next = current;
+    if (event.key === 'ArrowDown') next = (current + 1) % items.length;
+    else if (event.key === 'ArrowUp') next = (current - 1 + items.length) % items.length;
+    else if (event.key === 'Home') next = 0;
+    else if (event.key === 'End') next = items.length - 1;
+    else return;
+    event.preventDefault();
+    items[next]?.focus();
   };
+  const menuItems: Array<{ Icon: LucideIcon; label: string; action: () => void; danger?: boolean }> = [
+    { Icon: Copy, label: 'trips.duplicate.title', action: () => onDuplicate(trip) },
+    { Icon: BookTemplate, label: 'trips.templates.fromTrip', action: () => onSaveTemplate(trip) },
+    { Icon: MessageCircle, label: 'trips.card.prepareWhatsapp', action: () => onWhatsapp(trip) },
+    { Icon: Archive, label: 'trips.archive', action: () => onArchive(trip) },
+    { Icon: Trash2, label: 'trips.delete', action: () => onDelete(trip.id), danger: true },
+  ];
+  const progress = (value: number, label: string, color: string) => <div className="h-2 overflow-hidden rounded-full bg-slate-800 ring-1 ring-slate-700" role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(value)}><div className={cn('h-full rounded-full transition-[width]', color)} style={{ width: `${value}%` }} /></div>;
 
-  const stopPropagation = (e: MouseEvent) => e.stopPropagation();
-
-  const handleExportClick = async (e: MouseEvent) => {
-    e.stopPropagation();
-    await onOpenPdfPreview(trip);
-  };
-
-  const handleShare = (e: MouseEvent) => {
-    e.stopPropagation();
-    const msgTemplate = t('trips.shareMessage', { 
-        destination: trip.destination, 
-        date: formatDate(trip.start_date),
-        price: format(sale, trip.currency || 'USD')
-    });
-    
-    const url = `https://wa.me/?text=${encodeURIComponent(msgTemplate)}`;
-    window.open(url, '_blank');
-  };
-
-  const FirstLetter = trip.destination.charAt(0).toUpperCase();
-  const actionBtnClass = "w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95";
-
-  const formatLocDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-EG' : 'en-US', {
-        day: 'numeric', month: 'short', year: 'numeric'
-    });
-  };
-
-  const handleCardKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      handleCardClick();
-    }
-  };
-  const statusLabel = getTripStatusLabel(trip.status, t);
-  const paymentStatusLabel = getPaymentStatusLabel(effectivePaymentStatus, t);
-  const tripDuration = getTripDuration(trip.start_date, trip.end_date);
-
-  return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -3 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-      className="group relative w-full"
-      onClick={handleCardClick}
-      onKeyDown={handleCardKeyDown}
-      role="button"
-      tabIndex={0}
-      dir={direction}
-      aria-label={`${trip.destination} - ${trip.client_name}`}
-    >
-      <div className={twMerge(
-          "flex flex-col w-full rounded-2xl bg-white shadow-sm overflow-hidden transition-shadow duration-200 hover:shadow-lg dark:bg-slate-950",
-          isUrgent 
-            ? "ring-2 ring-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.3)] dark:ring-rose-500 dark:shadow-[0_0_20px_rgba(244,63,94,0.2)]" 
-            : "ring-1 ring-slate-200 dark:ring-slate-800"
-      )}>
-        
-        {/* Urgent Badge */}
-        {isUrgent && (
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-rose-500 text-white text-[10px] uppercase font-bold px-3 py-1 rounded-b-lg shadow-md z-20 flex items-center gap-1">
-                <AlertCircle className="w-3 h-3" />
-                <span>{t('trips.paymentOverdue')}</span>
-            </div>
-        )}
-
-        {/* === Top Section === */}
-        <div className="p-5 pb-0 relative">
-             {/* Background Decoration */}
-             <div className="absolute top-0 right-0 rtl:left-0 rtl:right-auto w-40 h-40 bg-gradient-to-br from-sky-400/10 to-purple-400/10 blur-3xl rounded-full pointer-events-none -mr-10 -mt-10 rtl:-ml-10 rtl:-mr-0" />
-
-            {/* Header */}
-            <div className="flex items-start gap-4 mb-5 relative z-10">
-                <div className="flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shadow-inner">
-                    <span className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-tr from-sky-600 to-indigo-600">
-                        {FirstLetter}
-                    </span>
-                </div>
-                
-                <div className="flex-1 min-w-0 pt-1">
-                    <div className="flex justify-between items-start gap-2">
-                        <h3 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white leading-tight break-words">
-                            {trip.destination}
-                        </h3>
-                          <StatusBadge
-                            tone={trip.status === 'active' || trip.status === 'completed' ? 'success' : trip.status === 'cancelled' ? 'danger' : 'neutral'}
-                            className="shrink-0"
-                          >
-                             {statusLabel}
-                         </StatusBadge>
-                    </div>
-                    <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
-                      {getTripStatusDescription(trip.status, t)}
-                    </p>
-                    
-                    <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-sm mt-1.5">
-                         <Users className="w-4 h-4" />
-                         <span className="font-medium truncate">{trip.client_name}</span>
-                         <span className="text-slate-300 px-1">•</span>
-                         <span className="text-xs bg-slate-100 dark:bg-slate-900 px-2 py-0.5 rounded-md">
-                            {trip.travelers_count} {t('trips.travelers')}
-                         </span>
-                    </div>
-                    {trip.client_phone?.trim() && (
-                      <div className="mt-1.5 flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-                        <Phone className="h-3.5 w-3.5 shrink-0 text-sky-500" aria-hidden="true" />
-                        <span dir="ltr" className="truncate font-medium">{trip.client_phone}</span>
-                      </div>
-                    )}
-                </div>
-            </div>
-
-            {trip.hotel_name?.trim() && (
-              <div className="mb-4 flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                <BedDouble className="h-4 w-4 shrink-0 text-sky-500" aria-hidden="true" />
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">{t('trips.hotelName')}:</span>
-                <span className="min-w-0 truncate font-medium" dir="auto">{trip.hotel_name}</span>
-              </div>
-            )}
-
-            {/* Dates Block */}
-            <Surface level="quiet" className="mb-5 p-4">
-                 <div className="flex items-center justify-between">
-                    <div>
-                        <p className="text-[10px] uppercase text-slate-400 font-bold mb-1 tracking-wider">
-                            {t('trips.startDate')}
-                        </p>
-                        <p className="text-sm md:text-base font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                             <CalendarDays className="w-4 h-4 text-sky-500" />
-                             {formatLocDate(trip.start_date)}
-                        </p>
-                    </div>
-                    <div className="px-2 text-slate-300 dark:text-slate-700">
-                         <ArrowRight className={twMerge("w-4 h-4", isRtl && "rotate-180")} />
-                    </div>
-                    <div className="text-end">
-                        <p className="text-[10px] uppercase text-slate-400 font-bold mb-1 tracking-wider">
-                            {t('trips.endDate')}
-                        </p>
-                         <p className="text-sm md:text-base font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 justify-end">
-                             {formatLocDate(trip.end_date)}
-                             <CalendarDays className="w-4 h-4 text-sky-500" />
-                        </p>
-                    </div>
-                 </div>
-                 {tripDuration && (
-                   <div className="mt-3 flex items-center justify-center gap-2 border-t border-slate-200 pt-2 text-xs font-medium text-slate-500 dark:border-slate-800 dark:text-slate-400">
-                     <span>{t('trips.nightsCount', { count: tripDuration.nights })}</span>
-                     <span aria-hidden="true">·</span>
-                     <span>{t('trips.daysCount', { count: tripDuration.days })}</span>
-                   </div>
-                 )}
-            </Surface>
-
-            {/* === DETAILED FINANCIALS === */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 mb-5 shadow-sm">
-                
-                {/* Row 1: Cost vs Price */}
-                <div className="grid grid-cols-2 gap-4 pb-3 border-b border-slate-100 dark:border-slate-800 mb-3">
-                    <div>
-                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">
-                            {t('trips.wholesaleCost')}
-                         </p>
-                         <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
-                             {format(wholesale, trip.currency || 'USD')}
-                         </p>
-                    </div>
-                    <div className="text-end">
-                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">
-                            {t('trips.salePrice')}
-                         </p>
-                         <p className="text-lg font-extrabold text-slate-900 dark:text-white">
-                             {format(sale, trip.currency || 'USD')}
-                         </p>
-                    </div>
-                </div>
-
-                {/* Row 2: Profit & Percent */}
-                <div className="flex items-center justify-between">
-                     <div className="flex items-center gap-2">
-                        <div className={twMerge("p-1.5 rounded-full", isProfitPositive ? "bg-emerald-100 text-emerald-600" : "bg-rose-100 text-rose-600")}>
-                            {isProfitPositive ? <TrendingUp className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}
-                        </div>
-                        <div>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                                {t('trips.profit')}
-                            </p>
-                            <p className={twMerge("text-xs font-bold", isProfitPositive ? "text-emerald-600" : "text-rose-600")}>
-                                {isProfitPositive ? '+' : ''}{format(profitValue, trip.currency || 'USD')}
-                            </p>
-                        </div>
-                     </div>
-                     
-                     <div className={twMerge(
-                        "px-2 py-0.5 rounded-md text-[10px] font-bold border",
-                        isProfitPositive 
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800" 
-                            : "bg-rose-50 text-rose-700 border-rose-100"
-                     )}>
-                        {profitPercentage.toFixed(1)}% {t('trips.profitPercentage')}
-                     </div>
-                </div>
-            </div>
-
-            {/* Payment Progress Bar */}
-            <div className="mb-4">
-                 <div className="flex justify-between items-end mb-2">
-                     <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                        {t('trips.paymentStatus')}
-                     </span>
-                     <span className={twMerge("text-xs font-bold", amountDue > 0 ? "text-rose-500" : "text-emerald-600")}>
-                        {amountDue > 0 
-                            ? `${t('trips.amountDue')}: ${format(amountDue, trip.currency || 'USD')}` 
-                            : paymentStatusLabel}
-                     </span>
-                 </div>
-                 <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden ring-1 ring-slate-200 dark:ring-slate-700">
-                    <div 
-                        className={twMerge("h-full transition-all duration-500 rounded-full relative", statusColor)}
-                        style={{ width: `${Math.max(5, paymentPercentage)}%` }}
-                    />
-                 </div>
-                 <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">
-                    {getPaymentStatusDescription(effectivePaymentStatus, t)}
-                 </p>
-             </div>
-            
-            <AnimatePresence>
-            {showDetails && trip.notes && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="overflow-hidden"
-              >
-                <div className="pt-4 mt-2 border-t border-dashed border-slate-200 dark:border-slate-800">
-                  <p className="text-xs text-slate-500 mb-1 font-semibold">{t('trips.notes')}</p>
-                  <p className="text-sm text-slate-600 dark:text-slate-300 bg-yellow-50 dark:bg-yellow-900/10 p-3 rounded-xl border border-yellow-100 dark:border-yellow-900/20 whitespace-pre-wrap">
-                    {trip.notes}
-                  </p>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+  return <article className="relative flex min-w-0 flex-col overflow-hidden rounded-lg border border-slate-800 bg-slate-950 text-slate-100 shadow-sm transition-shadow hover:shadow-lg" dir={direction} aria-labelledby={`${detailsId}-title`}>
+    <div className="p-4 sm:p-5">
+      <header className="flex min-w-0 items-start gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-700 bg-slate-900 text-lg font-bold text-sky-400" aria-hidden="true">{trip.destination.trim().charAt(0).toUpperCase()}</div>
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 items-start justify-between gap-2">
+            <h3 id={`${detailsId}-title`} className="min-w-0 break-words text-base font-bold leading-6 text-white sm:text-lg" title={trip.destination}>{trip.destination}</h3>
+            <StatusBadge tone={trip.status === 'active' || trip.status === 'completed' ? 'success' : trip.status === 'cancelled' ? 'danger' : 'neutral'} className="shrink-0">{getTripStatusLabel(trip.status, t)}</StatusBadge>
+          </div>
+          <p className="mt-0.5 truncate text-sm font-medium text-slate-300" title={trip.client_name}>{trip.client_name}</p>
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400"><span className="inline-flex items-center gap-1"><Users className="h-3.5 w-3.5" aria-hidden="true"/>{t('trips.card.travelers', { count: trip.travelers_count })}</span><span aria-hidden="true">·</span><span>{t(`trips.serviceTypes.${trip.service_type}`)}</span></div>
+          {trip.source_template_name && (trip.source_template_id ? <button type="button" className="mt-1 block max-w-full truncate text-start text-xs text-cyan-300 underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400" title={trip.source_template_name} onClick={() => onOpenSourceTemplate(trip)}>{t('trips.card.createdFromTemplate', { name: trip.source_template_name })}</button> : <p className="mt-1 truncate text-xs text-cyan-300" title={trip.source_template_name}>{t('trips.card.createdFromTemplate', { name: trip.source_template_name })}</p>)}
         </div>
+      </header>
 
-        {/* === MINIMALIST FOOTER === */}
-        <div className="flex items-center justify-between gap-3 border-t border-slate-100 bg-slate-50/50 px-5 py-3 dark:border-slate-800 dark:bg-slate-900/30">
-            {/* Last Updated */}
-            <span className="text-[10px] text-slate-400 font-medium">
-               {formatLocDate(trip.updated_at || trip.created_at)}
-            </span>
-            
-            <div className="flex items-center gap-1">
-                {/* PDF */}
-                <button
-                    onClick={handleExportClick}
-                    disabled={isPreparingPdf}
-                    className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-sky-500 bg-white px-2.5 text-xs font-bold text-sky-600 transition-colors hover:bg-sky-600 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-transparent dark:text-sky-400"
-                    title={isPreparingPdf ? t('trips.preparingPdf') : t('trips.openPdfPreview')}
-                    aria-label={isPreparingPdf ? t('trips.preparingPdf') : t('trips.openPdfPreview')}
-                >
-                    {isPreparingPdf ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <FileText className="w-4 h-4" aria-hidden="true" />} <span dir="ltr">PDF</span>
-                </button>
+      {payment.statusChip && <div className="mt-3 inline-flex rounded-full border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-1 text-xs font-semibold text-cyan-200">{t(`trips.card.chips.${payment.statusChip.key}`, payment.statusChip.values)}</div>}
+      {payment.attention && <button type="button" onClick={() => onView(trip)} className="mt-3 flex w-full items-start gap-2 border-s-2 border-amber-400 bg-amber-400/10 p-2.5 text-start text-xs text-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true"/><span className="flex-1">{t(`trips.card.alerts.${payment.attention.key}`, payment.attention.values)}</span><span className="font-semibold">{t('trips.card.openDetails')}</span></button>}
 
-                {/* Edit */}
-                <button
-                    onClick={(e) => { stopPropagation(e); onEdit(trip); }}
-                    className={twMerge(actionBtnClass, "text-slate-400 hover:bg-amber-50 hover:text-amber-600")}
-                    title={t('trips.edit')}
-                    aria-label={t('trips.edit')}
-                >
-                    <Edit className="w-4 h-4" />
-                </button>
+      <section className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-2 bg-slate-900/70 p-3" aria-label={t('trips.dateRange')}>
+        <div className="min-w-0"><span className="block text-[11px] font-semibold text-slate-500">{t('trips.startDate')}</span><strong className="mt-1 flex items-center gap-1 text-xs sm:text-sm"><CalendarDays className="h-3.5 w-3.5 shrink-0 text-sky-400" aria-hidden="true"/>{date(trip.start_date)}</strong></div>
+        <ArrowRight className={cn('h-4 w-4 text-slate-600', isRtl && 'rotate-180')} aria-hidden="true"/>
+        <div className="min-w-0 text-end"><span className="block text-[11px] font-semibold text-slate-500">{t('trips.endDate')}</span><strong className="mt-1 block text-xs sm:text-sm">{date(trip.end_date)}</strong></div>
+        {duration && <p className="col-span-3 border-t border-slate-800 pt-2 text-center text-xs text-slate-400">{t('trips.nightsCount', { count: duration.nights })} · {t('trips.daysCount', { count: duration.days })}</p>}
+      </section>
 
-                {/* Share */}
-                <button
-                    onClick={(e) => {
-                        stopPropagation(e);
-                        if (trip.client_phone) {
-                            const msgTemplate = t('trips.shareMessage', {
-                              clientName: trip.client_name,
-                              destination: trip.destination,
-                              date: formatDate(trip.start_date),
-                              price: format(sale, trip.currency || 'USD'),
-                            });
-                            const url = generateWhatsAppLink(trip.client_phone, msgTemplate);
-                            window.open(url, '_blank');
-                        } else handleShare(e);
-                    }}
-                    className={twMerge(actionBtnClass, "text-slate-400 hover:bg-emerald-50 hover:text-emerald-600")}
-                    title={t('trips.share')}
-                    aria-label={t('trips.share')}
-                >
-                    <Share2 className="w-4 h-4" />
-                </button>
+      <section className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 border-y border-slate-800 py-3 sm:grid-cols-4" aria-label={t('trips.card.financialSummary')}>
+        {[['salePrice',financials.salePrice,'text-white'],['wholesaleCost',financials.wholesaleCost,'text-slate-300'],['profit',financials.profit,financials.profit >= 0 ? 'text-emerald-400' : 'text-rose-400']].map(([key,value,color]) => <div key={key as string} className="min-w-0"><span className="block text-[11px] text-slate-500">{t(`trips.${key}`)}</span><strong className={cn('block truncate text-sm tabular-nums', color as string)} title={format(value as number, trip.currency)}>{format(value as number, trip.currency)}</strong></div>)}
+        <div><span className="block text-[11px] text-slate-500">{t('trips.markupPercentage')}</span><strong className="text-sm tabular-nums text-emerald-400"><TrendingUp className="me-1 inline h-3.5 w-3.5" aria-hidden="true"/>{financials.markupPercentage.toFixed(1)}%</strong></div>
+      </section>
 
-                {/* Delete */}
-                <button
-                     onClick={(e) => { stopPropagation(e); onDelete(trip.id); }}
-                     className={twMerge(actionBtnClass, "text-slate-400 hover:bg-rose-50 hover:text-rose-600")}
-                     title={t('trips.delete')}
-                     aria-label={t('trips.delete')}
-                >
-                    <Trash2 className="w-4 h-4" />
-                </button>
-            </div>
-        </div>
+      <section className="mt-3 bg-slate-900/70 p-3" aria-label={t('trips.card.paymentSummary')}>
+        <div className="flex items-center justify-between gap-2"><div><span className="text-[11px] text-slate-500">{t('trips.paymentMethod')}</span><h4 className="text-sm font-bold">{payment.method === 'card' ? t('trips.card.visa') : t(`trips.paymentMethods.${payment.method === 'legacy' ? trip.payment_method || 'cash' : payment.method}`)}</h4></div><strong className="text-sm tabular-nums text-rose-300">{t('trips.card.combinedRemaining')}: {money(payment.combinedRemainingMinor)}</strong></div>
+        {payment.hasVisaSchedule ? <div className="mt-3 space-y-2.5">
+          <div className="flex items-center justify-between gap-2 text-xs"><strong>{t('trips.card.visaProcessed', { processed: payment.processedInstallments, total: payment.installmentCount })}</strong><span className="tabular-nums text-cyan-300">{Math.round(payment.visaProgress)}%</span></div>
+          {progress(payment.visaProgress, t('trips.card.visaProgressLabel'), 'bg-cyan-400')}
+          <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-3"><div><span className="block text-slate-500">{t('trips.card.cardTotal')}</span><strong>{money(trip.payment_plan_summary?.card_total_minor || 0)}</strong></div><div><span className="block text-slate-500">{t('trips.card.scheduledUntilToday')}</span><strong>{money(payment.scheduledMinor)}</strong></div><div><span className="block text-slate-500">{t('trips.card.remainingScheduled')}</span><strong>{money(payment.remainingVisaMinor)}</strong></div></div>
+          {(payment.nextInstallmentDate || payment.finalInstallmentDate) && <div className="flex flex-wrap items-end justify-between gap-2 border-t border-slate-800 pt-2 text-xs">{payment.nextInstallmentDate && payment.nextInstallmentMinor !== null && <div><span className="block text-slate-500">{t('trips.card.nextInstallment')}</span><strong className="text-sm text-white">{money(payment.nextInstallmentMinor)} · {date(payment.nextInstallmentDate)}</strong></div>}{payment.finalInstallmentDate && <div className="text-end"><span className="block text-slate-500">{t('trips.card.finalInstallment')}</span><strong>{date(payment.finalInstallmentDate)}</strong></div>}</div>}
+        </div> : <div className="mt-3 space-y-2"><div className="flex flex-wrap justify-between gap-2 text-xs"><span>{payment.method === 'cash' && trip.payment_plan_summary ? `${t('trips.card.cashTotal')}: ${money(trip.payment_plan_summary.cash_total_minor)} · ` : ''}{t('trips.card.confirmedPaid')}: {trip.payment_plan_summary ? money(payment.confirmedCashMinor) : format(financials.amountPaid, trip.currency)}</span><span>{t(`trips.paymentStatuses.${financials.paymentStatus}`)} · {Math.round(trip.payment_plan_summary ? payment.cashProgress : financials.paymentPercentage)}%</span></div>{progress(trip.payment_plan_summary ? payment.cashProgress : financials.paymentPercentage, t(payment.method === 'cash' ? 'trips.card.cashProgressLabel' : 'trips.card.paymentProgressLabel'), payment.remainingCashMinor > 0 || financials.amountDue > 0 ? 'bg-amber-400' : 'bg-emerald-400')}</div>}
+        {payment.method === 'mixed' && payment.remainingCashMinor >= 0 && <div className="mt-3 border-t border-slate-800 pt-2"><div className="mb-1 flex justify-between text-xs"><span>{t('trips.card.cashConfirmed')}: {money(payment.confirmedCashMinor)}</span><span>{t('trips.card.cashRemaining')}: {money(payment.remainingCashMinor)}</span></div>{progress(payment.cashProgress, t('trips.card.cashProgressLabel'), 'bg-emerald-400')}</div>}
+      </section>
 
+      <button type="button" className="mt-3 inline-flex min-h-9 items-center gap-1 text-xs font-semibold text-slate-300 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500" aria-expanded={expanded} aria-controls={detailsId} onClick={() => setExpanded((value) => !value)}>{expanded ? <ChevronUp className="h-4 w-4"/> : <ChevronDown className="h-4 w-4"/>}{t(expanded ? 'trips.card.lessDetails' : 'trips.card.moreDetails')}</button>
+      {expanded && <section id={detailsId} className="grid gap-2 border-t border-slate-800 pt-3 text-xs text-slate-300 sm:grid-cols-2">
+        <p className="flex items-center gap-2"><BedDouble className="h-4 w-4 text-sky-400"/><span><span className="text-slate-500">{t('trips.hotelName')}:</span> {trip.hotel_name || t('trips.notSpecified')}</span></p>
+        <p className="flex items-center gap-2"><Plane className="h-4 w-4 text-cyan-400"/><span><span className="text-slate-500">{t('trips.flightNumber')}:</span> {trip.flight_number || t('trips.notSpecified')}</span></p>
+        {trip.client_phone?.trim() && <p className="flex min-w-0 items-center gap-2"><Phone className="h-4 w-4 shrink-0 text-emerald-400"/><span className="truncate"><span className="text-slate-500">{t('trips.clientPhone')}:</span> <span dir="ltr">{trip.client_phone}</span></span></p>}
+        <p><span className="text-slate-500">{t('trips.boardBasis')}:</span> {trip.board_basis || t('trips.notSpecified')}</p><p><span className="text-slate-500">{t('trips.itinerary')}:</span> {t(trip.has_itinerary ? 'trips.card.available' : 'trips.card.notAdded')}</p>
+        {trip.notes?.trim() && <p className="line-clamp-2 sm:col-span-2" title={trip.notes}><span className="text-slate-500">{t('trips.notes')}:</span> {trip.notes}</p>}
+        <p className="sm:col-span-2 text-slate-500">{t('trips.card.lastUpdated')}: {date(trip.updated_at || trip.created_at)}</p>
+        <p className="sm:col-span-2 text-slate-500">{getTripStatusDescription(trip.status, t)}</p>
+      </section>}
+    </div>
+
+    <footer className="mt-auto flex min-w-0 items-center gap-1.5 border-t border-slate-800 bg-slate-900/40 px-2 py-2.5 sm:gap-2 sm:px-3">
+      <div className="grid min-w-0 flex-1 grid-cols-3 gap-1.5 sm:gap-2">
+        <button type="button" onClick={() => onView(trip)} className="inline-flex min-h-11 min-w-0 items-center justify-center gap-1 rounded-md bg-sky-600 px-1.5 text-xs font-semibold text-white transition-colors hover:bg-sky-500 active:bg-sky-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 sm:gap-1.5 sm:px-2.5"><Eye className="h-4 w-4 shrink-0" aria-hidden="true"/><span className="truncate">{t('trips.card.open')}</span></button>
+        <button type="button" onClick={() => onEdit(trip)} className="inline-flex min-h-11 min-w-0 items-center justify-center gap-1 rounded-md bg-amber-400 px-1.5 text-xs font-semibold text-slate-950 transition-colors hover:bg-amber-300 active:bg-amber-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 sm:gap-1.5 sm:px-2.5" aria-label={t('trips.actions.editAria')}><Edit className="h-4 w-4 shrink-0" aria-hidden="true"/><span className="truncate">{t('trips.actions.edit')}</span></button>
+        <button type="button" onClick={() => void onOpenPdfPreview(trip)} disabled={isPreparingPdf} aria-busy={isPreparingPdf} className="inline-flex min-h-11 min-w-0 items-center justify-center gap-1 rounded-md bg-sky-700 px-1.5 text-xs font-semibold text-white transition-colors hover:bg-sky-600 active:bg-sky-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 disabled:cursor-wait disabled:opacity-60 sm:gap-1.5 sm:px-2.5" aria-label={t('trips.actions.pdfAria')}>{isPreparingPdf ? <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden="true"/> : <FileText className="h-4 w-4 shrink-0" aria-hidden="true"/>}<span className="truncate">{t('trips.actions.pdf')}</span>{isPreparingPdf && <span className="sr-only" role="status">{t('trips.actions.pdfLoading')}</span>}</button>
       </div>
-    </motion.div>
-  );
+      <div ref={menuRef} className="relative shrink-0"><button ref={menuButtonRef} type="button" className="inline-flex h-11 w-11 items-center justify-center rounded-md text-slate-300 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500" aria-label={t('trips.card.moreActions')} aria-haspopup="menu" aria-expanded={menuOpen} aria-controls={menuId} onClick={(event) => { stop(event); setMenuOpen((value) => !value); }}><MoreHorizontal className="h-5 w-5"/></button>{menuOpen && <div id={menuId} role="menu" onKeyDown={moveMenuFocus} className="absolute bottom-12 end-0 z-30 w-52 border border-slate-700 bg-slate-900 p-1.5 shadow-xl">{menuItems.map(({ Icon, label, action, danger }) => <button key={label} role="menuitem" type="button" onClick={() => menuAction(action)} className={cn('flex min-h-9 w-full items-center gap-2 rounded px-2.5 text-start text-xs text-slate-200 hover:bg-slate-800 focus:bg-slate-800 focus:outline-none', danger && 'text-rose-300')}><Icon className="h-4 w-4"/>{t(label)}</button>)}</div>}</div>
+    </footer>
+  </article>;
 }

@@ -193,7 +193,7 @@ export default function TripDateRangePicker({
       window.removeEventListener('resize', positionPopover);
       window.removeEventListener('scroll', positionPopover, true);
     };
-  }, [direction, isOpen, locale, visibleMonth]);
+  }, [direction, isOpen, isRtl, locale, visibleMonth]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -204,7 +204,7 @@ export default function TripDateRangePicker({
         ?.focus({ preventScroll: true });
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [isOpen]);
+  }, [draftStart, isOpen]);
 
   const formatSelectedDate = (value: string) =>
     new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric' })

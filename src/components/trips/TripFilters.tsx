@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { BookmarkPlus, Search, Trash2, X } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import type { TripFilterPreset } from './tripFiltersState';
@@ -32,6 +32,8 @@ interface TripFiltersProps {
   onDestinationFilterChange: (value: string) => void;
   availableYears: string[];
   availableDestinations: string[];
+  leadingControls?: ReactNode;
+  trailingControls?: ReactNode;
 }
 
 export default function TripFilters({
@@ -55,6 +57,8 @@ export default function TripFilters({
   onDestinationFilterChange,
   availableYears,
   availableDestinations,
+  leadingControls,
+  trailingControls,
 }: TripFiltersProps) {
   const { t, direction } = useLanguage();
   const isRtl = direction === 'rtl';
@@ -170,20 +174,22 @@ export default function TripFilters({
             />
           </div>
           <div className="flex flex-wrap gap-2">
+            {leadingControls}
             <Button
               onClick={() => setIsSavingPreset((prev) => !prev)}
               variant="secondary"
             >
               <BookmarkPlus className="w-4 h-4" />
-              <span>{t('trips.savePreset')}</span>
+              <span>{t('trips.toolbar.saveFilter')}</span>
             </Button>
             <Button
               onClick={onClearFilters}
               disabled={!hasActiveFilters}
               variant="secondary"
             >
-              {t('trips.clearFilters')}
+              {t('trips.toolbar.resetFilters')}
             </Button>
+            {trailingControls}
           </div>
         </div>
 

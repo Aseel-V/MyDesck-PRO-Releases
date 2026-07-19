@@ -12,6 +12,7 @@ import {
 } from 'recharts';
 import { Calendar } from 'lucide-react';
 import { useLanguage } from '../../../contexts/LanguageContext';
+import { MeasuredChart } from '../../travel-ui/MeasuredChart';
 import { Trip } from '../../../types/trip';
 import {
   getTripDateObj,
@@ -274,8 +275,8 @@ export default function TrendChart({
           <p>{t('analytics.noTripsForSelection')}</p>
         </div>
       ) : (
-        <div className="h-[320px] w-full min-w-0">
-          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+        <MeasuredChart className="h-[320px]">
+          <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1} initialDimension={{ width: 1, height: 1 }}>
             <ComposedChart
               data={chartData}
               margin={{
@@ -325,7 +326,7 @@ export default function TrendChart({
               />
             </ComposedChart>
           </ResponsiveContainer>
-        </div>
+        </MeasuredChart>
       )}
     </div>
   );

@@ -15,6 +15,14 @@ import {
   Loader2,
   Download,
   Printer,
+  Trash2,
+  FileSpreadsheet,
+  Sheet,
+  Bell,
+  BookTemplate,
+  ChevronDown,
+  FileBarChart,
+  MoreHorizontal,
   X,
 } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -33,7 +41,7 @@ import {
 } from './tripFiltersState';
 import JSZip from 'jszip';
 import { generateTripInvoice } from '../../lib/pdfGenerator';
-import { formatDate, sanitizeFilename } from '../../lib/utils';
+import { cn, formatDate, sanitizeFilename } from '../../lib/utils';
 import { Skeleton } from '../ui/Skeleton';
 import { AnimatePresence, motion } from 'framer-motion';
 import { toast } from 'sonner';
@@ -42,36 +50,22 @@ import { Button } from '../travel-ui/Button';
 import { StatusBadge } from '../travel-ui/StatusBadge';
 import { Surface } from '../travel-ui/Surface';
 import {
-  getEffectiveTripDate,
-  getEffectivePaymentStatus,
   getPaymentStatusDescription,
   getTripStatusDescription,
   getTripStatusLabel,
-  isTripIncludedInDashboardStats,
-  isTripVisibleInTripList,
 } from '../../lib/tripStatus';
-
-function normalizeSearchValue(value: string): string {
-  return value.toLowerCase().replace(/\s+/g, ' ').trim();
-}
-
-function getSearchDateStrings(date?: string): string[] {
-  if (!date) return [];
-
-  const parsed = new Date(date);
-  if (Number.isNaN(parsed.getTime())) {
-    return [date];
-  }
-
-  return [
-    parsed.toISOString().split('T')[0],
-    parsed.toLocaleDateString('en-CA'),
-    parsed.toLocaleDateString('en-US'),
-    parsed.toLocaleDateString('he-IL'),
-    parsed.toLocaleDateString('ar-EG'),
-    parsed.getFullYear().toString(),
-  ];
-}
+import { fetchAllFilteredTrips, fetchTripDetails, fetchTripPage, TRIPS_PAGE_SIZE } from '../../lib/tripQueries';
+import { mapWithConcurrency } from '../../lib/asyncPool';
+import { TripPagination } from './TripPagination';
+import { getSafeErrorCode } from '../../lib/safeError';
+import { TripTrash } from './TripTrash';
+import { createTripCsv, createTripXlsx, downloadBlob, type TripExportLabels } from '../../lib/tripExport';
+import { TripNotificationCenter } from './TripNotificationCenter';
+import { TripTemplatesPanel } from './TripTemplatesPanel';
+import { DuplicateTripDialog } from './DuplicateTripDialog';
+import { TripWhatsappDialog } from './TripWhatsappDialog';
+import type { WhatsappMessageType } from '../../lib/tripWhatsapp';
+import { TravelReportsPanel } from '../analytics/TravelReportsPanel';
 
 interface TripsProps {
   filters: TripFilterState;
@@ -79,25 +73,39 @@ interface TripsProps {
   initialViewTrip?: Trip;
   onEditTrip?: (trip: Trip) => void;
   onCreateTrip?: () => void;
+  onCreateFromTemplate?: (draft: Trip) => void;
 }
 
-export default function Trips({ filters, onFiltersChange, initialViewTrip, onEditTrip, onCreateTrip }: TripsProps) {
-  const { t, direction } = useLanguage();
+export default function Trips({ filters, onFiltersChange, initialViewTrip, onEditTrip, onCreateTrip, onCreateFromTemplate }: TripsProps) {
+  const { t, direction, language } = useLanguage();
   const { user, profile, userProfile } = useAuth();
   const { convert, format, currency, isLoading: isCurrencyLoading } = useCurrency();
-  const { deleteTrip, isDeleting } = useTripMutations();
+  const { deleteTrip, archiveTrip, isDeleting } = useTripMutations();
 
   const [viewTrip, setViewTrip] = useState<Trip | undefined>(undefined);
   const [tripPendingDelete, setTripPendingDelete] = useState<Trip | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isExportingBatch, setIsExportingBatch] = useState(false);
+  const [batchExportProgress, setBatchExportProgress] = useState({ completed: 0, total: 0 });
+  const [page, setPage] = useState(1);
+  const [loadingTripId, setLoadingTripId] = useState<string | null>(null);
   const [pdfGeneratingTripIds, setPdfGeneratingTripIds] = useState<string[]>([]);
   const [pdfPreview, setPdfPreview] = useState<{ trip: Trip; url: string; filename: string } | null>(null);
   const [savedPresets, setSavedPresets] = useState<TripFilterPreset[]>([]);
   const [showStatusHelp, setShowStatusHelp] = useState(false);
+  const [showTrash, setShowTrash] = useState(false);
+  const [dataExport, setDataExport] = useState<'csv' | 'xlsx' | null>(null);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [showReports, setShowReports] = useState(false);
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const [moreActionsOpen, setMoreActionsOpen] = useState(false);
+  const [cardAction, setCardAction] = useState<{ type: 'duplicate' | 'template' | 'source-template' | 'whatsapp'; trip: Trip; whatsappType?: WhatsappMessageType } | null>(null);
   const pdfPreviewDialogRef = useRef<HTMLDivElement>(null);
   const pdfPreviewFrameRef = useRef<HTMLIFrameElement>(null);
   const pdfPreviewTriggerRef = useRef<HTMLElement | null>(null);
+  const exportMenuRef = useRef<HTMLDivElement>(null);
+  const moreActionsRef = useRef<HTMLDivElement>(null);
 
   const presetStorageKey = user?.id ? `trip_filter_presets:${user.id}` : null;
 
@@ -130,7 +138,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
       const parsed = JSON.parse(rawPresets) as TripFilterPreset[];
       setSavedPresets(Array.isArray(parsed) ? parsed : []);
     } catch (error) {
-      console.error('Failed to read trip filter presets:', error);
+      console.error('Failed to read trip filter presets:', getSafeErrorCode(error));
       setSavedPresets([]);
     }
   }, [presetStorageKey]);
@@ -152,6 +160,25 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showStatusHelp]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [filters.destination, filters.month, filters.paymentStatus, filters.search, filters.tripStatus, filters.year]);
+
+  useEffect(() => {
+    if (!exportMenuOpen && !moreActionsOpen) return;
+    const closeOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (!exportMenuRef.current?.contains(target)) setExportMenuOpen(false);
+      if (!moreActionsRef.current?.contains(target)) setMoreActionsOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { setExportMenuOpen(false); setMoreActionsOpen(false); }
+    };
+    document.addEventListener('mousedown', closeOutside);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => { document.removeEventListener('mousedown', closeOutside); document.removeEventListener('keydown', closeOnEscape); };
+  }, [exportMenuOpen, moreActionsOpen]);
 
   const baseActionBtn =
     'inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium rounded-xl transition-all border-b-2';
@@ -178,7 +205,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
       const { data, error } = await supabase.rpc('get_trip_years');
 
       if (error) {
-        console.error('Error fetching years:', error);
+        console.error('Error fetching trip years:', getSafeErrorCode(error));
         return [new Date().getFullYear().toString()];
       }
 
@@ -195,111 +222,35 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
   });
 
   const {
-    data: { data: rawTrips, count } = { data: [], count: 0 },
+    data: pageData,
     isLoading: loading,
     error,
     refetch,
   } = useQuery({
-    queryKey: ['trips', user?.id, filters.year],
+    queryKey: ['trips-page', user?.id, filters, page],
     queryFn: async () => {
-      if (!user?.id) return { data: [], count: 0 };
-
-      const yearToFetch = filters.year || new Date().getFullYear().toString();
-      const { data, error } = await supabase.rpc('get_trips_by_year', { year_input: yearToFetch });
-
-      if (error) throw error;
-
-      return { data: data as unknown as Trip[], count: data?.length || 0 };
+      if (!user?.id) return null;
+      return fetchTripPage({
+        year: filters.year || new Date().getFullYear().toString(),
+        page,
+        search: filters.search,
+        paymentStatus: filters.paymentStatus,
+        tripStatus: filters.tripStatus,
+        month: filters.month,
+        destination: filters.destination,
+      });
     },
     enabled: !!user?.id,
+    placeholderData: (previousData) => previousData,
   });
+  const trips = pageData?.items ?? [];
+  const count = pageData?.total_count ?? 0;
+  const availableDestinations = pageData?.destinations ?? [];
+  const totalPages = Math.max(1, Math.ceil(count / TRIPS_PAGE_SIZE));
 
-  const tripsBeforeDestinationFilter = useMemo(() => {
-    if (!rawTrips) return [];
-
-    let filtered = rawTrips;
-
-    if (filters.search) {
-      const normalizedSearch = normalizeSearchValue(filters.search);
-      const searchTokens = normalizedSearch.split(' ').filter(Boolean);
-
-      filtered = filtered.filter((trip) => {
-        const travelerFields = trip.travelers?.flatMap((traveler) => [
-          traveler.full_name,
-          traveler.passport_number,
-          traveler.nationality,
-          traveler.room_type,
-        ]) || [];
-
-        const attachmentFields = trip.attachments?.flatMap((attachment) => [
-          attachment.file_name,
-          attachment.type,
-        ]) || [];
-
-        const searchIndex = normalizeSearchValue([
-          trip.destination,
-          trip.client_name,
-          trip.client_phone,
-          trip.notes,
-          trip.status,
-          getTripStatusLabel(trip.status, t),
-          getEffectivePaymentStatus(trip),
-          t(`trips.paymentStatuses.${getEffectivePaymentStatus(trip)}`),
-          trip.board_basis,
-          ...travelerFields,
-          ...attachmentFields,
-          ...getSearchDateStrings(trip.start_date),
-          ...getSearchDateStrings(trip.end_date),
-          ...getSearchDateStrings(trip.payment_date),
-        ].filter(Boolean).join(' '));
-
-        return searchTokens.every((token) => searchIndex.includes(token));
-      });
-    }
-
-    if (filters.paymentStatus) {
-      filtered = filtered.filter((trip) => getEffectivePaymentStatus(trip) === filters.paymentStatus);
-    }
-
-    if (filters.tripStatus) {
-      filtered = filtered.filter((trip) => trip.status === filters.tripStatus);
-    }
-
-    if (filters.month) {
-      filtered = filtered.filter((trip) => {
-        const effectiveDate = getEffectiveTripDate(trip);
-        if (!effectiveDate) return false;
-        const parsed = new Date(effectiveDate);
-        return String(parsed.getMonth() + 1).padStart(2, '0') === filters.month;
-      });
-    }
-
-    return filtered;
-  }, [filters.month, filters.paymentStatus, filters.search, filters.tripStatus, rawTrips, t]);
-
-  const searchableTrips = useMemo(() => {
-    if (!filters.destination) return tripsBeforeDestinationFilter;
-    return tripsBeforeDestinationFilter.filter((trip) => trip.destination === filters.destination);
-  }, [filters.destination, tripsBeforeDestinationFilter]);
-
-  const archivedTripsMatchingCurrentFilters = useMemo(
-    () => searchableTrips.filter((trip) => trip.status === 'archived'),
-    [searchableTrips]
-  );
-
-  const filteredTrips = useMemo(() => {
-    if (filters.tripStatus === 'archived') {
-      return archivedTripsMatchingCurrentFilters;
-    }
-
-    return searchableTrips.filter(isTripVisibleInTripList);
-  }, [archivedTripsMatchingCurrentFilters, filters.tripStatus, searchableTrips]);
-
-  const trips = filteredTrips;
-  const availableDestinations = useMemo(() => {
-    const destinations = new Set(tripsBeforeDestinationFilter.map((trip) => trip.destination));
-    return Array.from(destinations).sort();
-  }, [tripsBeforeDestinationFilter]);
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
 
   const hasActiveFilters = Boolean(
     filters.search ||
@@ -311,45 +262,21 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
   );
 
   const stats = useMemo(() => {
-    if (!trips.length) {
+    if (!pageData) {
       return { totalTrips: 0, totalRevenue: 0, totalProfit: 0, unpaidAmount: 0, upcoming: 0 };
     }
-
-    const statTrips = trips.filter(isTripIncludedInDashboardStats);
-
-    const totalRevenue = statTrips.reduce((sum, trip) => {
-      const tripCurrency = trip.currency || currency;
-      return sum + convert(trip.sale_price || 0, tripCurrency, currency);
-    }, 0);
-
-    const totalProfit = statTrips.reduce((sum, trip) => {
-      const tripCurrency = trip.currency || currency;
-      const profit = typeof trip.profit === 'number'
-        ? trip.profit
-        : (trip.sale_price || 0) - (trip.wholesale_cost || 0);
-
-      return sum + convert(profit, tripCurrency, currency);
-    }, 0);
-
-    const unpaidAmount = statTrips.reduce((sum, trip) => {
-      const tripCurrency = trip.currency || currency;
-      const due = (trip.sale_price || 0) - (trip.amount_paid || 0);
-      return sum + convert(due > 0 ? due : 0, tripCurrency, currency);
-    }, 0);
-
-    const upcoming = statTrips.filter((trip) => {
-      if (!trip.start_date) return false;
-      return new Date(trip.start_date) >= new Date();
-    }).length;
+    const totalRevenue = pageData.summary.reduce((sum, item) => sum + convert(item.revenue, item.currency, currency), 0);
+    const totalProfit = pageData.summary.reduce((sum, item) => sum + convert(item.profit, item.currency, currency), 0);
+    const unpaidAmount = pageData.summary.reduce((sum, item) => sum + convert(item.amount_due, item.currency, currency), 0);
 
     return {
-      totalTrips: statTrips.length,
+      totalTrips: pageData.summary.reduce((sum, item) => sum + item.trip_count, 0),
       totalRevenue,
       totalProfit,
       unpaidAmount,
-      upcoming,
+      upcoming: pageData.upcoming_count,
     };
-  }, [convert, currency, trips]);
+  }, [convert, currency, pageData]);
 
   const handleDeleteTrip = (id: string) => {
     const trip = trips.find((item) => item.id === id);
@@ -358,12 +285,59 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
     }
   };
 
-  const handleEditTrip = (trip: Trip) => {
-    onEditTrip?.(trip);
+  const handleDataExport = async (kind: 'csv' | 'xlsx') => {
+    setDataExport(kind);
+    try {
+      const exportTrips = await fetchAllFilteredTrips({
+        year: filters.year || new Date().getFullYear().toString(), search: filters.search,
+        paymentStatus: filters.paymentStatus, tripStatus: filters.tripStatus,
+        month: filters.month, destination: filters.destination,
+      });
+      const labels: TripExportLabels = {
+        destination: t('trips.destination'), client: t('trips.clientName'), start: t('trips.startDate'), end: t('trips.endDate'),
+        status: t('trips.status'), paymentStatus: t('trips.paymentStatus'), currency: t('trips.mainTripCurrency'),
+        salePrice: t('trips.salePrice'), amountPaid: t('trips.amountPaid'), amountDue: t('trips.amountDue'),
+      };
+      const name = `${t('trips.export.dataFileName')}_${filters.year}_${language}`;
+      if (kind === 'csv') downloadBlob(new Blob([createTripCsv(exportTrips, labels)], { type: 'text/csv;charset=utf-8' }), name, 'csv');
+      else downloadBlob(await createTripXlsx(exportTrips, labels), name, 'xlsx');
+      toast.success(t('trips.export.complete', { count: exportTrips.length }));
+    } catch (exportError) {
+      console.error('Trip data export failed:', getSafeErrorCode(exportError));
+      toast.error(t('trips.export.failed'));
+    } finally { setDataExport(null); }
   };
 
-  const handleViewTrip = (trip: Trip) => {
-    setViewTrip(trip);
+  const loadTripDetails = async (tripId: string) => {
+    setLoadingTripId(tripId);
+    try {
+      return await fetchTripDetails(tripId);
+    } catch {
+      toast.error(t('trips.loadDetailsError'));
+      return null;
+    } finally {
+      setLoadingTripId(null);
+    }
+  };
+
+  const handleEditTrip = async (trip: Trip) => {
+    const details = await loadTripDetails(trip.id);
+    if (details) onEditTrip?.(details);
+  };
+
+  const handleViewTrip = async (trip: Trip) => {
+    const details = await loadTripDetails(trip.id);
+    if (details) setViewTrip(details);
+  };
+
+  const openCardAction = async (type: 'duplicate' | 'template' | 'whatsapp', trip: Trip) => {
+    const details = await loadTripDetails(trip.id);
+    if (details) setCardAction({ type, trip: details });
+  };
+
+  const handleArchiveTrip = async (trip: Trip) => {
+    try { await archiveTrip(trip.id); void refetch(); }
+    catch { /* mutation owns localized feedback */ }
   };
 
   const openTripPdfPreview = async (trip: Trip) => {
@@ -371,13 +345,14 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
     pdfPreviewTriggerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setPdfGeneratingTripIds((ids) => [...ids, trip.id]);
     try {
-      const pdfBytes = await generateTripInvoice(trip, profile, userProfile?.full_name || '', userProfile?.phone_number || '', profile.preferred_language || 'en');
+      const details = await fetchTripDetails(trip.id);
+      const pdfBytes = await generateTripInvoice(details, profile, userProfile?.full_name || '', userProfile?.phone_number || '', profile.preferred_language || 'en');
       const blob = new Blob([pdfBytes as unknown as BlobPart], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
-      const filename = `${sanitizeFilename(`Invoice_${trip.client_name}_${trip.destination}`, `trip_${trip.id.slice(0, 8)}`)}.pdf`;
-      setPdfPreview({ trip, url, filename });
-    } catch (error) {
-      console.error('PDF preview generation failed', error);
+      const filename = `${sanitizeFilename(`Invoice_${trip.destination}_${trip.id.slice(0, 8)}`, `trip_${trip.id.slice(0, 8)}`)}.pdf`;
+      setPdfPreview({ trip: details, url, filename });
+    } catch {
+      console.error('PDF preview generation failed');
       toast.error(t('trips.pdfPreviewFailed'));
     } finally {
       setPdfGeneratingTripIds((ids) => ids.filter((id) => id !== trip.id));
@@ -485,7 +460,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
   };
 
   const handleDownloadAllInvoices = async () => {
-    if (!filteredTrips.length || !user || !profile) return;
+    if (!count || !user || !profile) return;
     setIsExportingBatch(true);
 
     const userFullName = userProfile?.full_name || '';
@@ -497,36 +472,60 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
       const folder = zip.folder(`Invoices_${new Date().toISOString().split('T')[0]}`);
       if (!folder) throw new Error('Failed to create zip folder');
 
-      await Promise.all(
-        filteredTrips.map(async (trip) => {
-          try {
+      const pageCount = Math.ceil(count / 100);
+      const listPageResults = await mapWithConcurrency(
+        Array.from({ length: pageCount }, (_, index) => index + 1),
+        3,
+        (pageNumber) => fetchTripPage({
+          year: filters.year || new Date().getFullYear().toString(),
+          page: pageNumber,
+          pageSize: 100,
+          search: filters.search,
+          paymentStatus: filters.paymentStatus,
+          tripStatus: filters.tripStatus,
+          month: filters.month,
+          destination: filters.destination,
+        })
+      );
+      if (listPageResults.some((result) => result.status === 'rejected')) {
+        throw new Error('TRIP_LIST_EXPORT_FETCH_FAILED');
+      }
+      const exportTrips = listPageResults.flatMap((result) => result.value?.items ?? []);
+      setBatchExportProgress({ completed: 0, total: exportTrips.length });
+
+      const results = await mapWithConcurrency(exportTrips, 2, async (trip) => {
+            const details = await fetchTripDetails(trip.id);
             const pdfBytes = await generateTripInvoice(
-              trip,
+              details,
               profile,
               userFullName,
               phoneNumber,
               selectedLanguage
             );
 
-            const fileName = `${sanitizeFilename(`Invoice_${trip.client_name}_${trip.destination}`, `trip_${trip.id.slice(0, 8)}`)}.pdf`;
+            const fileName = `${sanitizeFilename(`Invoice_${trip.destination}_${trip.id.slice(0, 8)}`, `trip_${trip.id.slice(0, 8)}`)}.pdf`;
             folder.file(fileName, pdfBytes);
-          } catch (error) {
-            console.error(`Failed to generate PDF for trip ${trip.id}`, error);
-          }
-        })
-      );
+            return trip.id;
+      }, (completed, total) => setBatchExportProgress({ completed, total }));
+
+      const failureCount = results.filter((result) => result.status === 'rejected').length;
+      if (failureCount > 0) toast.warning(t('trips.batchExportPartialFailure', { count: failureCount }));
 
       const content = await zip.generateAsync({ type: 'blob' });
       const url = window.URL.createObjectURL(content);
       const link = document.createElement('a');
-      link.href = url;
-      link.download = `Invoices_${new Date().toISOString().split('T')[0]}.zip`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Error generating batch zip:', error);
+      try {
+        link.href = url;
+        link.download = `Invoices_${new Date().toISOString().split('T')[0]}.zip`;
+        document.body.appendChild(link);
+        link.click();
+      } finally {
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      }
+    } catch {
+      console.error('Error generating batch zip');
+      toast.error(t('trips.batchExportFailed'));
     } finally {
       setIsExportingBatch(false);
     }
@@ -551,7 +550,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
           ))}
         </div>
         <Skeleton className="h-20 w-full rounded-2xl" />
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-5">
           {[...Array(6)].map((_, index) => (
             <Skeleton key={index} className="h-[280px] w-full rounded-2xl" />
           ))}
@@ -560,28 +559,19 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
     );
   }
 
-  const displayTrips = filteredTrips.slice(0, 50);
-  const hasSearchTerm = Boolean(normalizeSearchValue(filters.search));
-  const archivedHiddenCount = filters.tripStatus === 'archived' ? 0 : archivedTripsMatchingCurrentFilters.length;
+  const displayTrips = trips;
+  const hasSearchTerm = Boolean(filters.search.trim());
 
   let emptyStateTitle = t('trips.emptyStates.noTripsTitle');
   let emptyStateDescription = t('trips.emptyStates.noTripsDescription');
   let showCreateAction = count === 0;
   let showClearAction = hasActiveFilters;
-  let secondaryAction: { label: string; onClick: () => void } | null = null;
 
   if (count > 0) {
     showCreateAction = true;
     if (hasSearchTerm) {
       emptyStateTitle = t('trips.emptyStates.noSearchResultsTitle');
       emptyStateDescription = t('trips.emptyStates.noSearchResultsDescription');
-    } else if (archivedHiddenCount > 0 && !filters.tripStatus) {
-      emptyStateTitle = t('trips.emptyStates.archivedHiddenTitle');
-      emptyStateDescription = t('trips.emptyStates.archivedHiddenDescription');
-      secondaryAction = {
-        label: t('trips.showArchived'),
-        onClick: () => setTripStatusFilter('archived'),
-      };
     } else if (hasActiveFilters) {
       emptyStateTitle = t('trips.noMatchingTrips');
       emptyStateDescription = t('trips.tryAdjustingFilters');
@@ -603,7 +593,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
           <p className="mt-2 text-sm leading-6 text-slate-500 break-words dark:text-slate-300">
             {count === 0
               ? t('trips.emptyStates.noTripsTitle')
-              : t('trips.resultsSummary', { shown: displayTrips.length, total: filteredTrips.length })}
+              : t('trips.resultsSummary', { shown: displayTrips.length, total: count })}
             {currency !== 'USD' && (
               <span className="ms-2 inline-flex rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-xs font-medium text-sky-700 dark:text-sky-300">
                 {currency} {isCurrencyLoading && '...'}
@@ -612,68 +602,11 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 xl:justify-end">
-          <Button
-            onClick={() => setShowStatusHelp(true)}
-            aria-label={t('trips.help')}
-            aria-haspopup="dialog"
-            aria-expanded={showStatusHelp}
-            title={t('trips.help')}
-            variant="secondary"
-            size="icon"
-            className="rounded-full"
-          >
-            <HelpCircle className="h-5 w-5" />
-          </Button>
-
-          <div className="flex items-center bg-slate-100 rounded-xl p-1 border border-slate-200/80 dark:bg-slate-900/80 dark:border-slate-800/80">
-            <button
-              onClick={() => setViewMode('grid')}
-              type="button"
-              aria-label={t('trips.gridView')}
-              aria-pressed={viewMode === 'grid'}
-              className={`p-1.5 rounded-lg transition-all ${viewMode === 'grid'
-                ? 'bg-white text-sky-600 shadow-sm dark:bg-slate-800 dark:text-sky-400'
-                : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
-                }`}
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              type="button"
-              aria-label={t('trips.listView')}
-              aria-pressed={viewMode === 'list'}
-              className={`p-1.5 rounded-lg transition-all ${viewMode === 'list'
-                ? 'bg-white text-sky-600 shadow-sm dark:bg-slate-800 dark:text-sky-400'
-                : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
-                }`}
-            >
-              <List className="w-4 h-4" />
-            </button>
-          </div>
-
-          {filteredTrips.length > 0 && (
-            <button
-              onClick={handleDownloadAllInvoices}
-              disabled={isExportingBatch}
-              className={secondaryActionBtn}
-              title={t('trips.downloadAllInvoices')}
-            >
-              <FileText className="w-5 h-5" />
-              <span className="hidden md:inline">
-                {isExportingBatch ? t('trips.zippingInvoices') : t('trips.downloadAll')}
-              </span>
-            </button>
-          )}
-
-          <button
-            onClick={() => onCreateTrip?.()}
-            className={primaryActionBtn}
-          >
-            <Plus className="w-5 h-5" />
-            <span className="hidden md:inline">{t('trips.newTrip')}</span>
-          </button>
+        <div className="flex flex-wrap items-center gap-2 xl:justify-end" aria-label={t('trips.toolbar.mainActions')}>
+          <Button variant="primary" onClick={() => onCreateTrip?.()}><Plus className="h-4 w-4" aria-hidden="true"/>{t('trips.toolbar.newTrip')}</Button>
+          <Button variant="secondary" onClick={() => setShowReports(true)}><FileBarChart className="h-4 w-4" aria-hidden="true"/>{t('trips.toolbar.reports')}</Button>
+          <Button variant="secondary" onClick={() => setShowNotifications(true)}><Bell className="h-4 w-4" aria-hidden="true"/>{t('trips.toolbar.notifications')}</Button>
+          <Button variant="ghost" onClick={() => setShowTrash(true)}><Trash2 className="h-4 w-4" aria-hidden="true"/>{t('trips.toolbar.trash')}</Button>
         </div>
       </div>
 
@@ -767,6 +700,20 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
           onDestinationFilterChange={setDestinationFilter}
           availableYears={availableYears}
           availableDestinations={availableDestinations}
+          leadingControls={<>
+            <div className="inline-flex min-h-10 items-center rounded-xl border border-slate-200 bg-slate-100 p-1 dark:border-slate-700 dark:bg-slate-900" role="group" aria-label={t('trips.toolbar.viewMode')}>
+              <button type="button" onClick={() => setViewMode('grid')} aria-pressed={viewMode === 'grid'} className={cn('inline-flex min-h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500', viewMode === 'grid' ? 'bg-white text-sky-700 shadow-sm dark:bg-slate-800 dark:text-sky-300' : 'text-slate-600 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-800')}><LayoutGrid className="h-4 w-4" aria-hidden="true"/>{t('trips.toolbar.gridView')}</button>
+              <button type="button" onClick={() => setViewMode('list')} aria-pressed={viewMode === 'list'} className={cn('inline-flex min-h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500', viewMode === 'list' ? 'bg-white text-sky-700 shadow-sm dark:bg-slate-800 dark:text-sky-300' : 'text-slate-600 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-800')}><List className="h-4 w-4" aria-hidden="true"/>{t('trips.toolbar.listView')}</button>
+            </div>
+            <div ref={exportMenuRef} className="relative">
+              <Button variant="secondary" aria-haspopup="menu" aria-expanded={exportMenuOpen} onClick={() => { setExportMenuOpen((value) => !value); setMoreActionsOpen(false); }} disabled={dataExport !== null || isExportingBatch}>{dataExport !== null || isExportingBatch ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true"/> : <Download className="h-4 w-4" aria-hidden="true"/>}{t('trips.toolbar.export')}<ChevronDown className="h-4 w-4" aria-hidden="true"/>{isExportingBatch && <span className="sr-only" role="status">{t('trips.batchExportProgress', batchExportProgress)}</span>}</Button>
+              {exportMenuOpen && <div role="menu" className="absolute end-0 top-12 z-40 w-56 rounded-lg border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-700 dark:bg-slate-900">{([['csv', Sheet, 'exportCsv'], ['xlsx', FileSpreadsheet, 'exportXlsx']] as const).map(([kind, Icon, key]) => <button key={kind} role="menuitem" type="button" className="flex min-h-10 w-full items-center gap-2 rounded-md px-3 text-start text-sm text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:text-slate-200 dark:hover:bg-slate-800" onClick={() => { setExportMenuOpen(false); void handleDataExport(kind); }}><Icon className="h-4 w-4" aria-hidden="true"/>{t(`trips.toolbar.${key}`)}</button>)}{trips.length > 0 && <button role="menuitem" type="button" className="flex min-h-10 w-full items-center gap-2 rounded-md px-3 text-start text-sm text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:text-slate-200 dark:hover:bg-slate-800" onClick={() => { setExportMenuOpen(false); void handleDownloadAllInvoices(); }}><FileText className="h-4 w-4" aria-hidden="true"/>{t('trips.toolbar.exportInvoices')}</button>}</div>}
+            </div>
+          </>}
+          trailingControls={<div ref={moreActionsRef} className="relative">
+            <Button variant="ghost" aria-haspopup="menu" aria-expanded={moreActionsOpen} onClick={() => { setMoreActionsOpen((value) => !value); setExportMenuOpen(false); }}><MoreHorizontal className="h-4 w-4" aria-hidden="true"/>{t('trips.toolbar.moreActions')}<ChevronDown className="h-4 w-4" aria-hidden="true"/></Button>
+            {moreActionsOpen && <div role="menu" className="absolute end-0 top-12 z-40 w-52 rounded-lg border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-700 dark:bg-slate-900"><button role="menuitem" type="button" className="flex min-h-10 w-full items-center gap-2 rounded-md px-3 text-start text-sm text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:text-slate-200 dark:hover:bg-slate-800" onClick={() => { setMoreActionsOpen(false); setShowTemplates(true); }}><BookTemplate className="h-4 w-4" aria-hidden="true"/>{t('trips.toolbar.templates')}</button><button role="menuitem" type="button" className="flex min-h-10 w-full items-center gap-2 rounded-md px-3 text-start text-sm text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:text-slate-200 dark:hover:bg-slate-800" onClick={() => { setMoreActionsOpen(false); setShowStatusHelp(true); }}><HelpCircle className="h-4 w-4" aria-hidden="true"/>{t('trips.toolbar.help')}</button></div>}
+          </div>}
         />
       </Surface>
 
@@ -789,7 +736,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
           </div>
         )}
 
-        {filteredTrips.length === 0 ? (
+        {trips.length === 0 ? (
           error ? (
             <div className="rounded-2xl bg-white border border-slate-200/90 p-12 text-center shadow-sm dark:bg-slate-950/95 dark:border-slate-800/90 dark:shadow-lg dark:shadow-slate-950/70">
               <div className="flex justify-center mb-4">
@@ -825,15 +772,6 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
                     <span>{t('trips.clearFilters')}</span>
                   </button>
                 )}
-                {secondaryAction && (
-                  <button
-                    type="button"
-                    onClick={secondaryAction.onClick}
-                    className={secondaryActionBtn}
-                  >
-                    <span>{secondaryAction.label}</span>
-                  </button>
-                )}
                 {showCreateAction && (
                   <button
                     onClick={() => onCreateTrip?.()}
@@ -847,7 +785,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
             </div>
           )
         ) : viewMode === 'grid' ? (
-          <motion.div layout className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5">
+          <motion.div layout className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-5">
             <AnimatePresence mode="popLayout">
               {displayTrips.map((trip) => (
                 <motion.div
@@ -865,18 +803,16 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
                     onOpenPdfPreview={openTripPdfPreview}
                     isPreparingPdf={pdfGeneratingTripIds.includes(trip.id)}
                     onView={handleViewTrip}
+                    onDuplicate={(value) => void openCardAction('duplicate', value)}
+                    onSaveTemplate={(value) => void openCardAction('template', value)}
+                    onOpenSourceTemplate={(value) => setCardAction({ type: 'source-template', trip: value })}
+                    onWhatsapp={(value) => void openCardAction('whatsapp', value)}
+                    onArchive={(value) => void handleArchiveTrip(value)}
                   />
                 </motion.div>
               ))}
             </AnimatePresence>
 
-            {filteredTrips.length > 50 && (
-              <div className="col-span-full text-center py-6">
-                <span className="text-slate-500 text-sm bg-slate-100 px-4 py-2 rounded-full border border-slate-200 dark:text-slate-400 dark:bg-slate-900/50 dark:border-slate-800">
-                  {t('trips.limitNotice')}
-                </span>
-              </div>
-            )}
           </motion.div>
         ) : (
           <Surface className="overflow-hidden">
@@ -884,12 +820,12 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
               <table className="min-w-full text-sm">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200/80 sticky top-0 z-10 backdrop-blur-md dark:bg-slate-900/50 dark:border-slate-800/80">
-                    <th className="text-left py-3 px-4 font-medium text-slate-500 dark:text-slate-400">{t('trips.destination')}</th>
-                    <th className="text-left py-3 px-4 font-medium text-slate-500 dark:text-slate-400">{t('trips.clientName')}</th>
-                    <th className="text-left py-3 px-4 font-medium text-slate-500 dark:text-slate-400">{t('trips.dateRange')}</th>
-                    <th className="text-left py-3 px-4 font-medium text-slate-500 dark:text-slate-400">{t('trips.salePrice')}</th>
-                    <th className="text-left py-3 px-4 font-medium text-slate-500 dark:text-slate-400">{t('trips.status')}</th>
-                    <th className="text-right py-3 px-4 font-medium text-slate-500 dark:text-slate-400">{t('admin.table.actions')}</th>
+                    <th scope="col" className="text-start py-3 px-4 font-medium text-slate-500 dark:text-slate-400">{t('trips.destination')}</th>
+                    <th scope="col" className="text-start py-3 px-4 font-medium text-slate-500 dark:text-slate-400">{t('trips.clientName')}</th>
+                    <th scope="col" className="text-start py-3 px-4 font-medium text-slate-500 dark:text-slate-400">{t('trips.dateRange')}</th>
+                    <th scope="col" className="text-start py-3 px-4 font-medium text-slate-500 dark:text-slate-400">{t('trips.salePrice')}</th>
+                    <th scope="col" className="text-start py-3 px-4 font-medium text-slate-500 dark:text-slate-400">{t('trips.status')}</th>
+                    <th scope="col" className="text-end py-3 px-4 font-medium text-slate-500 dark:text-slate-400">{t('admin.table.actions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200/80 dark:divide-slate-800/80">
@@ -920,7 +856,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
                             {getTripStatusLabel(trip.status, t)}
                           </StatusBadge>
                         </td>
-                        <td className="py-3 px-4 text-right">
+                        <td className="py-3 px-4 text-end">
                           <div className="inline-flex items-center justify-end gap-3">
                             <button
                               type="button"
@@ -935,10 +871,11 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
                             </button>
                             <button
                               type="button"
-                              onClick={() => handleViewTrip(trip)}
-                              className="text-sky-600 hover:text-sky-500 font-medium text-xs dark:text-sky-400 dark:hover:text-sky-300"
+                              onClick={() => void handleViewTrip(trip)}
+                              disabled={loadingTripId === trip.id}
+                              className="text-sky-600 hover:text-sky-500 font-medium text-xs disabled:cursor-wait disabled:opacity-60 dark:text-sky-400 dark:hover:text-sky-300"
                             >
-                              {t('trips.viewTrip')}
+                              {loadingTripId === trip.id ? t('trips.loadingDetails') : t('trips.viewTrip')}
                             </button>
                           </div>
                         </td>
@@ -948,14 +885,11 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
                 </tbody>
               </table>
             </div>
-            {filteredTrips.length > 50 && (
-              <div className="p-4 text-center border-t border-slate-200 dark:border-slate-800">
-                <span className="text-slate-500 text-sm dark:text-slate-400">
-                  {t('trips.limitNotice')}
-                </span>
-              </div>
-            )}
           </Surface>
+        )}
+
+        {count > 0 && (
+          <TripPagination page={page} totalPages={totalPages} onPageChange={setPage} />
         )}
       </div>
 
@@ -1101,6 +1035,15 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
         />
       )}
 
+      {showTrash && <TripTrash onClose={() => setShowTrash(false)} />}
+      {showNotifications && <TripNotificationCenter onClose={() => setShowNotifications(false)} onOpenTrip={(id) => { setShowNotifications(false); void loadTripDetails(id).then((details) => { if (details) setViewTrip(details); }); }} onOpenWhatsapp={(id, whatsappType) => { setShowNotifications(false); void loadTripDetails(id).then((details) => { if (details) setCardAction({ type: 'whatsapp', trip: details, whatsappType }); }); }} />}
+      {showTemplates && <TripTemplatesPanel onClose={() => setShowTemplates(false)} onUse={onCreateFromTemplate} />}
+      {showReports && <TravelReportsPanel year={filters.year} destination={filters.destination || undefined} currency={currency || undefined} onClose={() => setShowReports(false)} />}
+      {cardAction?.type === 'duplicate' && <DuplicateTripDialog trip={cardAction.trip} onClose={() => setCardAction(null)} onCreated={() => void refetch()} />}
+      {cardAction?.type === 'template' && <TripTemplatesPanel sourceTrip={cardAction.trip} onClose={() => setCardAction(null)} />}
+      {cardAction?.type === 'source-template' && cardAction.trip.source_template_id && <TripTemplatesPanel initialTemplateId={cardAction.trip.source_template_id} onClose={() => setCardAction(null)} />}
+      {cardAction?.type === 'whatsapp' && <TripWhatsappDialog trip={cardAction.trip} initialType={cardAction.whatsappType} onClose={() => setCardAction(null)} />}
+
       <ConfirmationModal
         isOpen={!!tripPendingDelete}
         onClose={() => setTripPendingDelete(null)}
@@ -1117,7 +1060,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
             ? `${tripPendingDelete.destination} - ${tripPendingDelete.client_name}. ${t('trips.deleteWarning')}`
             : t('trips.deleteWarning')
         }
-        confirmText={t('trips.delete')}
+        confirmText={t('trips.moveToTrash')}
         cancelText={t('trips.cancel')}
         variant="danger"
         isLoading={isDeleting}

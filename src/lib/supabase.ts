@@ -15,7 +15,18 @@ const globalScope = globalThis as typeof globalThis & {
 };
 
 if (!globalScope.__mydesck_supabase_client__) {
-  console.log('[Supabase] Initializing client with URL:', supabaseUrl);
+  if (import.meta.env.DEV) {
+    let projectHostname = 'invalid-host';
+    try {
+      projectHostname = new URL(supabaseUrl || '').hostname || 'unconfigured';
+    } catch {
+      // The public configuration validator reports malformed URLs.
+    }
+    console.info('[Supabase] Client configuration', {
+      projectHostname,
+      environment: import.meta.env.MODE,
+    });
+  }
 
   globalScope.__mydesck_supabase_client__ = createClient(
     supabaseUrl || 'https://placeholder.supabase.co',

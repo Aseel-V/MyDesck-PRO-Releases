@@ -1,9 +1,12 @@
 ﻿import { Trip } from '../types/trip';
 import { RestaurantOrder, RestaurantTable, DailyReport } from '../types/restaurant';
-import { BusinessProfile } from './supabase';
+import { supabase, type BusinessProfile } from './supabase';
 import { formatRoomConfiguration } from './tripRoom';
 import { formatCurrency, formatDate, getTextDirection } from '../utils/localeFormatting';
 import { safeImageSrc } from './safeUrl';
+import { calculateTripFinancials } from './tripFinancials';
+import { getSafeErrorCode } from './safeError';
+import { generateTripPdfOnServer } from './tripPdfClient';
 
 type Language = 'en' | 'ar' | 'he';
 type PdfMode = 'invoice' | 'summary' | 'receipt' | 'report';
@@ -15,6 +18,38 @@ interface PDFOptions {
   phoneNumber: string;
   language: Language;
   templateId?: 'modern' | 'classic';
+}
+
+type CurrencyTotals = Record<string, ReturnType<typeof calculateTripFinancials>>;
+
+function getFinancialTotalsByCurrency(trips: Trip[]): CurrencyTotals {
+  return trips.reduce<CurrencyTotals>((totals, trip) => {
+    const currency = trip.currency || 'USD';
+    const value = calculateTripFinancials(trip);
+    const current = totals[currency] || calculateTripFinancials({
+      sale_price: 0,
+      wholesale_cost: 0,
+      amount_paid: 0,
+      payment_status: 'unpaid',
+    });
+    totals[currency] = calculateTripFinancials({
+      sale_price: current.salePrice + value.salePrice,
+      wholesale_cost: current.wholesaleCost + value.wholesaleCost,
+      amount_paid: current.amountPaid + value.amountPaid,
+      payment_status: 'unpaid',
+    });
+    return totals;
+  }, {});
+}
+
+function formatFinancialTotals(
+  totals: CurrencyTotals,
+  field: 'salePrice' | 'amountPaid' | 'amountDue',
+  language: Language
+): string {
+  return Object.entries(totals)
+    .map(([currency, values]) => formatCurrency(values[field], currency, language))
+    .join(' / ');
 }
 
 const LABELS: Record<Language, Record<string, string>> = {
@@ -178,6 +213,7 @@ function renderSignature(signatureUrl: string | null, label: string): string {
 function renderInvoiceHtml(options: PDFOptions, logoUrl: string | null, signatureUrl: string | null): string {
   const { profile, trips, userFullName, phoneNumber, language } = options;
   const trip = trips[0];
+  const financials = calculateTripFinancials(trip);
   const labels = LABELS[language];
   const dir = getTextDirection(language);
   const roomType = formatRoomConfiguration(trip.room_type, labels.notSpecified);
@@ -207,9 +243,9 @@ function renderInvoiceHtml(options: PDFOptions, logoUrl: string | null, signatur
         ${renderMetric(labels.travelers, trip.travelers_count || 0)}
         ${renderMetric(labels.roomType, roomType)}
         ${renderMetric(labels.boardBasis, trip.board_basis || labels.notSpecified)}
-        ${renderMetric(labels.salePrice, formatCurrency(trip.sale_price || 0, trip.currency || 'USD', language), true)}
-        ${renderMetric(labels.paidAmount, formatCurrency(trip.amount_paid || 0, trip.currency || 'USD', language))}
-        ${renderMetric(labels.amountDue, formatCurrency(trip.amount_due || 0, trip.currency || 'USD', language), true)}
+        ${renderMetric(labels.salePrice, formatCurrency(financials.salePrice, trip.currency || 'USD', language), true)}
+        ${renderMetric(labels.paidAmount, formatCurrency(financials.amountPaid, trip.currency || 'USD', language))}
+        ${renderMetric(labels.amountDue, formatCurrency(financials.amountDue, trip.currency || 'USD', language), true)}
         ${renderMetric(labels.paymentStatus, paidStatus)}
       </section>
 
@@ -233,21 +269,22 @@ function renderSummaryHtml(options: PDFOptions, logoUrl: string | null, signatur
   const labels = LABELS[language];
   const dir = getTextDirection(language);
   const summaryCurrency = trips[0]?.currency || profile.preferred_currency || 'USD';
-  const totalRevenue = trips.reduce((sum, trip) => sum + (trip.sale_price || 0), 0);
-  const totalPaid = trips.reduce((sum, trip) => sum + (trip.amount_paid || 0), 0);
-  const totalDue = trips.reduce((sum, trip) => sum + (trip.amount_due || 0), 0);
+  const totals = getFinancialTotalsByCurrency(trips);
 
-  const rows = trips.map((trip) => `
+  const rows = trips.map((trip) => {
+    const value = calculateTripFinancials(trip);
+    return `
     <tr>
       <td>${escapeHtml(trip.client_name || labels.notSpecified)}</td>
       <td>${escapeHtml(trip.destination || labels.notSpecified)}</td>
       <td>${escapeHtml(`${formatDate(trip.start_date, language)} - ${formatDate(trip.end_date, language)}`)}</td>
-      <td>${escapeHtml(formatCurrency(trip.sale_price || 0, trip.currency || summaryCurrency, language))}</td>
-      <td>${escapeHtml(formatCurrency(trip.amount_paid || 0, trip.currency || summaryCurrency, language))}</td>
-      <td>${escapeHtml(formatCurrency(trip.amount_due || 0, trip.currency || summaryCurrency, language))}</td>
+      <td>${escapeHtml(formatCurrency(value.salePrice, trip.currency || summaryCurrency, language))}</td>
+      <td>${escapeHtml(formatCurrency(value.amountPaid, trip.currency || summaryCurrency, language))}</td>
+      <td>${escapeHtml(formatCurrency(value.amountDue, trip.currency || summaryCurrency, language))}</td>
       <td>${escapeHtml(getPaymentStatusLabel(trip.payment_status, language))}</td>
     </tr>
-  `).join('');
+  `;
+  }).join('');
 
   return `
     <div dir="${dir}" style="width:794px;background:#fff;color:#0f172a;font-family:Arial,'Rubik','Noto Sans Hebrew',sans-serif;padding:38px;box-sizing:border-box;">
@@ -266,9 +303,9 @@ function renderSummaryHtml(options: PDFOptions, logoUrl: string | null, signatur
 
       <section style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:24px;">
         ${renderMetric(labels.totalTrips, trips.length)}
-        ${renderMetric(labels.totalRevenue, formatCurrency(totalRevenue, summaryCurrency, language), true)}
-        ${renderMetric(labels.totalPaid, formatCurrency(totalPaid, summaryCurrency, language))}
-        ${renderMetric(labels.totalDue, formatCurrency(totalDue, summaryCurrency, language), true)}
+        ${renderMetric(labels.totalRevenue, formatFinancialTotals(totals, 'salePrice', language), true)}
+        ${renderMetric(labels.totalPaid, formatFinancialTotals(totals, 'amountPaid', language))}
+        ${renderMetric(labels.totalDue, formatFinancialTotals(totals, 'amountDue', language), true)}
       </section>
 
       <table style="width:100%;border-collapse:collapse;margin-top:28px;font-size:12px;">
@@ -368,6 +405,7 @@ async function generateTripFallbackPDF(mode: 'invoice' | 'summary', options: PDF
 
   if (mode === 'invoice') {
     const trip = trips[0];
+    const financials = calculateTripFinancials(trip);
     const roomType = formatRoomConfiguration(trip.room_type, labels.notSpecified);
     const rows = [
       [labels.client, trip.client_name || labels.notSpecified],
@@ -376,9 +414,9 @@ async function generateTripFallbackPDF(mode: 'invoice' | 'summary', options: PDF
       [labels.travelers, String(trip.travelers_count || 0)],
       [labels.roomType, roomType],
       [labels.boardBasis, trip.board_basis || labels.notSpecified],
-      [labels.salePrice, formatCurrency(trip.sale_price || 0, trip.currency || 'USD', language)],
-      [labels.paidAmount, formatCurrency(trip.amount_paid || 0, trip.currency || 'USD', language)],
-      [labels.amountDue, formatCurrency(trip.amount_due || 0, trip.currency || 'USD', language)],
+      [labels.salePrice, formatCurrency(financials.salePrice, trip.currency || 'USD', language)],
+      [labels.paidAmount, formatCurrency(financials.amountPaid, trip.currency || 'USD', language)],
+      [labels.amountDue, formatCurrency(financials.amountDue, trip.currency || 'USD', language)],
       [labels.paymentStatus, getPaymentStatusLabel(trip.payment_status, language)],
       [labels.notes, trip.notes || labels.notSpecified],
     ];
@@ -392,15 +430,13 @@ async function generateTripFallbackPDF(mode: 'invoice' | 'summary', options: PDF
     });
   } else {
     const summaryCurrency = trips[0]?.currency || options.profile.preferred_currency || 'USD';
-    const totalRevenue = trips.reduce((sum, trip) => sum + (trip.sale_price || 0), 0);
-    const totalPaid = trips.reduce((sum, trip) => sum + (trip.amount_paid || 0), 0);
-    const totalDue = trips.reduce((sum, trip) => sum + (trip.amount_due || 0), 0);
+    const totals = getFinancialTotalsByCurrency(trips);
 
     const summaryRows = [
       [labels.totalTrips, String(trips.length)],
-      [labels.totalRevenue, formatCurrency(totalRevenue, summaryCurrency, language)],
-      [labels.totalPaid, formatCurrency(totalPaid, summaryCurrency, language)],
-      [labels.totalDue, formatCurrency(totalDue, summaryCurrency, language)],
+      [labels.totalRevenue, formatFinancialTotals(totals, 'salePrice', language)],
+      [labels.totalPaid, formatFinancialTotals(totals, 'amountPaid', language)],
+      [labels.totalDue, formatFinancialTotals(totals, 'amountDue', language)],
     ];
 
     autoTable(doc, {
@@ -411,15 +447,18 @@ async function generateTripFallbackPDF(mode: 'invoice' | 'summary', options: PDF
       body: summaryRows,
     });
 
-    const detailRows = trips.map((trip) => [
+    const detailRows = trips.map((trip) => {
+      const value = calculateTripFinancials(trip);
+      return [
       trip.client_name || labels.notSpecified,
       trip.destination || labels.notSpecified,
       `${formatDate(trip.start_date, language)} - ${formatDate(trip.end_date, language)}`,
-      formatCurrency(trip.sale_price || 0, trip.currency || summaryCurrency, language),
-      formatCurrency(trip.amount_paid || 0, trip.currency || summaryCurrency, language),
-      formatCurrency(trip.amount_due || 0, trip.currency || summaryCurrency, language),
+      formatCurrency(value.salePrice, trip.currency || summaryCurrency, language),
+      formatCurrency(value.amountPaid, trip.currency || summaryCurrency, language),
+      formatCurrency(value.amountDue, trip.currency || summaryCurrency, language),
       getPaymentStatusLabel(trip.payment_status, language),
-    ]);
+    ];
+    });
 
     autoTable(doc, {
       startY: 72,
@@ -438,7 +477,7 @@ async function generateBrowserPDF(payload: Record<string, unknown>): Promise<Uin
     try {
       return await generateTripRasterPDF(payload.mode, payload as unknown as PDFOptions & { mode: 'invoice' | 'summary' });
     } catch (error) {
-      console.error('Raster PDF generation failed, using text fallback:', error);
+      console.error('Raster PDF generation failed, using text fallback:', getSafeErrorCode(error));
       return generateTripFallbackPDF(payload.mode, payload as unknown as PDFOptions & { mode: 'invoice' | 'summary' });
     }
   }
@@ -461,7 +500,7 @@ async function generatePDF(mode: PdfMode, options: Record<string, unknown>): Pro
   try {
     return await generateBrowserPDF(payload);
   } catch (error) {
-    console.error('Error generating PDF:', error);
+    console.error('PDF generation failed:', getSafeErrorCode(error));
     return generateBrowserPDF(payload);
   }
 }
@@ -479,6 +518,14 @@ export const generateTripInvoice = async (
   phoneNumber: string,
   language: Language
 ): Promise<Uint8Array> => {
+  try {
+    const result = await generateTripPdfOnServer({ tripId: trip.id, language });
+    void supabase.rpc('log_trip_activity', { p_trip_id: trip.id, p_activity_type: 'pdf_generated', p_metadata: { renderer: 'server' } });
+    void supabase.rpc('create_trip_event_notification', { p_trip_id: trip.id, p_event_type: 'pdf_export_completion' });
+    return result;
+  } catch (error) {
+    console.warn('Server PDF unavailable; temporary browser fallback used:', getSafeErrorCode(error));
+  }
   return generateSingleTripPDF({
     profile,
     trips: [trip],

@@ -27,6 +27,7 @@ import { PostgrestError } from '@supabase/supabase-js';
 import { resizeImage } from '../lib/imageUtils';
 import { CurrencyService } from '../lib/currency';
 import { safeImageSrc } from '../lib/safeUrl';
+import { WebsiteReleaseNotesDialog } from './WebsiteReleaseNotesDialog';
 
 type NoticeType = 'success' | 'error' | 'info';
 type UpdateStatus = 'idle' | 'checking' | 'up-to-date' | 'available' | 'downloading' | 'downloaded' | 'error';
@@ -60,6 +61,7 @@ export default function Settings() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [refreshingRates, setRefreshingRates] = useState(false);
   const [appVersion, setAppVersion] = useState(__APP_VERSION__);
+  const [showReleaseNotes, setShowReleaseNotes] = useState(false);
   const [updateState, setUpdateState] = useState<{
     status: UpdateStatus;
     availableVersion?: string | null;
@@ -876,7 +878,7 @@ export default function Settings() {
                 <h3 id="about-settings" className="sr-only">{t('settings.tabs.about')}</h3>
                 <dl className="divide-y divide-slate-200 rounded-lg border border-slate-200 dark:divide-slate-800 dark:border-slate-800">
                   <div className="flex flex-col gap-1 p-4 sm:flex-row sm:items-center sm:justify-between"><dt className="text-sm font-medium">{t('settings.about.application')}</dt><dd className="text-sm text-slate-600 dark:text-slate-400">MyDesck PRO</dd></div>
-                  <div className="flex flex-col gap-1 p-4 sm:flex-row sm:items-center sm:justify-between"><dt className="text-sm font-medium">{t('settings.about.version')}</dt><dd dir="ltr" className="font-mono text-sm tabular-nums text-slate-600 dark:text-slate-400">v{appVersion}</dd></div>
+                  <div className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between"><dt className="text-sm font-medium">{t('settings.about.version')}</dt><dd className="flex items-center gap-2"><span dir="ltr" className="font-mono text-sm tabular-nums text-slate-600 dark:text-slate-400">v{appVersion}</span><button type="button" onClick={() => setShowReleaseNotes(true)} className="text-sm font-medium text-sky-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:text-sky-300">{t('websiteUpdate.whatsNew')}</button></dd></div>
                   <div className="flex flex-col gap-1 p-4 sm:flex-row sm:items-center sm:justify-between"><dt className="text-sm font-medium">{t('settings.signedInAs')}</dt><dd dir="ltr" className="max-w-full truncate text-sm text-slate-600 dark:text-slate-400">{email}</dd></div>
                 </dl>
                 {window.electronAPI && (
@@ -923,6 +925,7 @@ export default function Settings() {
                 )}
               </section>
             )}
+            {showReleaseNotes && <WebsiteReleaseNotesDialog onClose={() => setShowReleaseNotes(false)} />}
             </div>
 
             {(activeTab === 'profile' || activeTab === 'business' || activeTab === 'preferences') && (

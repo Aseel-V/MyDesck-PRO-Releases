@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect, useCallback, Suspense } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Users, UserPlus, Shield, AlertTriangle, type LucideIcon } from 'lucide-react';
+import { MeasuredChart } from '../travel-ui/MeasuredChart';
+import { Users, UserPlus, Shield, AlertTriangle, FileBarChart, type LucideIcon } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
@@ -32,6 +33,8 @@ import DestinationPerformance from './components/DestinationPerformance';
 import BreakdownBlocks from './components/BreakdownBlocks';
 import AttentionTable from './components/AttentionTable';
 import YearOverYearComparison from './components/YearOverYearComparison';
+import { TravelReportsPanel } from './TravelReportsPanel';
+import { Button } from '../travel-ui/Button';
 
 interface UserProfile {
   user_id: string;
@@ -69,6 +72,7 @@ function AnalyticsContent({ trips, onSelectTrip, onOpenTripsWithFilter }: Analyt
 
   const [userProfiles, setUserProfiles] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showTravelReports, setShowTravelReports] = useState(false);
   const currentYear = new Date().getFullYear().toString();
 
   const [filters, setFilters] = useState<AnalyticsFilters>({
@@ -339,6 +343,7 @@ function AnalyticsContent({ trips, onSelectTrip, onOpenTripsWithFilter }: Analyt
 
           {!isAdmin && (
             <div className="flex flex-wrap items-center gap-2 text-xs">
+              <Button variant="secondary" onClick={() => setShowTravelReports(true)}><FileBarChart className="h-4 w-4"/>{t('analytics.travelReports.title')}</Button>
               <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 font-semibold text-sky-800 dark:border-sky-900 dark:bg-sky-950/30 dark:text-sky-200">
                 {t('analytics.convertedTo', { currency })}
                 {ratesLoading && <span className="ms-1 animate-pulse">...</span>}
@@ -375,6 +380,7 @@ function AnalyticsContent({ trips, onSelectTrip, onOpenTripsWithFilter }: Analyt
           </div>
         </div>
       )}
+      {showTravelReports && <TravelReportsPanel year={filters.year} destination={filters.destination || undefined} currency={currency || undefined} onClose={() => setShowTravelReports(false)} />}
 
       {/* Platform Admin view OR Tourism business view */}
       {isAdmin ? (
@@ -395,8 +401,8 @@ function AnalyticsContent({ trips, onSelectTrip, onOpenTripsWithFilter }: Analyt
                 <p>{t('analytics.noUserRegistrations')}</p>
               </div>
             ) : (
-              <div className="h-[320px] w-full min-w-0">
-                <ResponsiveContainer width="100%" height="100%">
+              <MeasuredChart className="h-[320px] min-h-[320px]">
+                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1} initialDimension={{ width: 1, height: 1 }}>
                   <BarChart data={adminMonthlyData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" className="dark:stroke-slate-800/40" />
                     <XAxis dataKey="month" stroke="#64748b" tick={{ fill: '#64748b', fontSize: 10 }} reversed={isRtl} />
@@ -406,7 +412,7 @@ function AnalyticsContent({ trips, onSelectTrip, onOpenTripsWithFilter }: Analyt
                     <Bar dataKey="users" fill="#0ea5e9" name={t('analytics.totalUsers')} radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
-              </div>
+              </MeasuredChart>
             )}
           </div>
         </div>

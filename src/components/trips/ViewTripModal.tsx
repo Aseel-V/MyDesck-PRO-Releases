@@ -14,6 +14,11 @@ import {
   Plane,
   UserRound,
   Clock3,
+  Copy,
+  MessageCircle,
+  BookTemplate,
+  RotateCcw,
+  Wand2,
 } from 'lucide-react';
 import { formatDate } from '../../lib/utils';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -34,6 +39,14 @@ import {
   getTripStatusLabel,
 } from '../../lib/tripStatus';
 import { getTripDuration } from '../../lib/tripDates';
+import { calculateTripFinancials } from '../../lib/tripFinancials';
+import { getSafeErrorCode } from '../../lib/safeError';
+import { TripHistoryPanel } from './TripHistoryPanel';
+import { DuplicateTripDialog } from './DuplicateTripDialog';
+import { TripWhatsappDialog } from './TripWhatsappDialog';
+import { TripTemplatesPanel } from './TripTemplatesPanel';
+import { TripPaymentPlanPanel } from './TripPaymentPlanPanel';
+import { TripSmartToolsDialog } from './TripSmartToolsDialog';
 
 interface ViewTripModalProps {
   trip: Trip;
@@ -46,7 +59,12 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
   const { format } = useCurrency();
   const [trip] = useState(initialTrip);
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
-  const { archiveTrip, isArchiving } = useTripMutations();
+  const [showDuplicate, setShowDuplicate] = useState(false);
+  const [showWhatsapp, setShowWhatsapp] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [showPaymentPlan, setShowPaymentPlan] = useState(false);
+  const [showSmartTools, setShowSmartTools] = useState(false);
+  const { archiveTrip, unarchiveTrip, isArchiving } = useTripMutations();
 
   const handleArchive = async () => {
     try {
@@ -55,7 +73,17 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
       onClose();
       onUpdate?.();
     } catch (error) {
-      console.error('Failed to archive trip:', error);
+      console.error('Trip archive failed:', getSafeErrorCode(error));
+    }
+  };
+
+  const handleUnarchive = async () => {
+    try {
+      await unarchiveTrip(trip.id);
+      onClose();
+      onUpdate?.();
+    } catch (error) {
+      console.error('Trip unarchive failed:', getSafeErrorCode(error));
     }
   };
 
@@ -64,16 +92,17 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
       const url = await getTripAttachmentUrl(file);
       window.open(url, '_blank', 'noopener,noreferrer');
     } catch (error) {
-      console.error('Failed to open attachment:', error);
+      console.error('Trip attachment open failed:', getSafeErrorCode(error));
       toast.error(t('trips.attachmentOpenError'));
     }
   };
 
-  const wholesale = trip.wholesale_cost ?? 0;
-  const sale = trip.sale_price ?? 0;
-  const paid = trip.amount_paid ?? 0;
-  const profitValue = typeof trip.profit === 'number' ? trip.profit : sale - wholesale;
-  const amountDue = Math.max(sale - paid, 0);
+  const financials = calculateTripFinancials(trip);
+  const wholesale = financials.wholesaleCost;
+  const sale = financials.salePrice;
+  const paid = financials.amountPaid;
+  const profitValue = financials.profit;
+  const amountDue = financials.amountDue;
   const statusLabel = getTripStatusLabel(trip.status, t);
   const effectivePaymentStatus = getEffectivePaymentStatus(trip);
   const paymentStatusLabel = getPaymentStatusLabel(effectivePaymentStatus, t);
@@ -125,6 +154,11 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
+                <button onClick={() => setShowTemplates(true)} className="p-2 rounded-full text-slate-400 hover:bg-violet-50 hover:text-violet-600 transition-colors" title={t('trips.templates.fromTrip')} aria-label={t('trips.templates.fromTrip')}><BookTemplate className="h-5 w-5"/></button>
+                <button onClick={() => setShowPaymentPlan(true)} className="p-2 rounded-full text-slate-400 hover:bg-cyan-50 hover:text-cyan-600 transition-colors" title={t('trips.installments.title')} aria-label={t('trips.installments.title')}><CreditCard className="h-5 w-5"/></button>
+                <button onClick={() => setShowSmartTools(true)} className="p-2 rounded-full text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 transition-colors" title={t('trips.smartTools.title')} aria-label={t('trips.smartTools.title')}><Wand2 className="h-5 w-5"/></button>
+                <button onClick={() => setShowWhatsapp(true)} className="p-2 rounded-full text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 transition-colors" title={t('trips.whatsapp.title')} aria-label={t('trips.whatsapp.title')}><MessageCircle className="h-5 w-5"/></button>
+                <button onClick={() => setShowDuplicate(true)} className="p-2 rounded-full text-slate-400 hover:bg-sky-50 hover:text-sky-600 transition-colors" title={t('trips.duplicate.title')} aria-label={t('trips.duplicate.title')}><Copy className="h-5 w-5"/></button>
                 {trip.status !== 'archived' && (
                   <button
                     onClick={() => setShowArchiveConfirm(true)}
@@ -136,6 +170,7 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
                     {isArchiving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Archive className="w-5 h-5" />}
                   </button>
                 )}
+                {trip.status === 'archived' && <button onClick={() => void handleUnarchive()} disabled={isArchiving} className="p-2 rounded-full text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 transition-colors" title={t('trips.unarchive')} aria-label={t('trips.unarchive')}>{isArchiving ? <Loader2 className="h-5 w-5 animate-spin"/> : <RotateCcw className="h-5 w-5"/>}</button>}
                 <button
                   onClick={onClose}
                   aria-label={t('trips.close')}
@@ -266,17 +301,15 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
                 <table className="w-full text-start text-sm">
                   <thead className="bg-slate-100 text-slate-500 dark:bg-slate-900/80 dark:text-slate-400">
                     <tr>
-                      <th className="px-4 py-3 font-medium">{t('admin.table.fullName')}</th>
-                      <th className="px-4 py-3 font-medium">{t('trips.passportNumber')}</th>
-                      <th className="px-4 py-3 font-medium">{t('trips.nationality')}</th>
-                      <th className="px-4 py-3 font-medium">{t('trips.roomType')}</th>
+                      <th scope="col" className="px-4 py-3 font-medium">{t('admin.table.fullName')}</th>
+                      <th scope="col" className="px-4 py-3 font-medium">{t('trips.nationality')}</th>
+                      <th scope="col" className="px-4 py-3 font-medium">{t('trips.roomType')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 bg-white dark:divide-slate-800 dark:bg-slate-900/30">
                     {trip.travelers.map((traveler, index) => (
                       <tr key={index} className="hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/30">
                         <td className="px-4 py-3 text-slate-900 font-medium dark:text-slate-200">{traveler.full_name}</td>
-                        <td className="px-4 py-3 text-slate-500 font-mono dark:text-slate-400">{traveler.passport_number || t('trips.notSpecified')}</td>
                         <td className="px-4 py-3 text-slate-500 dark:text-slate-400">{traveler.nationality || t('trips.notSpecified')}</td>
                         <td className="px-4 py-3 text-slate-500 dark:text-slate-400">{traveler.room_type || t('trips.notSpecified')}</td>
                       </tr>
@@ -337,10 +370,10 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
                 <table className="w-full text-start text-sm">
                   <thead className="bg-slate-100 text-slate-500 dark:bg-slate-900/80 dark:text-slate-400">
                     <tr>
-                      <th className="px-4 py-3 font-medium">{t('trips.date')}</th>
-                      <th className="px-4 py-3 font-medium">{t('trips.amount')}</th>
-                      <th className="px-4 py-3 font-medium">{t('trips.method')}</th>
-                      <th className="px-4 py-3 font-medium">{t('trips.receiptId')}</th>
+                      <th scope="col" className="px-4 py-3 font-medium">{t('trips.date')}</th>
+                      <th scope="col" className="px-4 py-3 font-medium">{t('trips.amount')}</th>
+                      <th scope="col" className="px-4 py-3 font-medium">{t('trips.method')}</th>
+                      <th scope="col" className="px-4 py-3 font-medium">{t('trips.receiptId')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 bg-white dark:divide-slate-800 dark:bg-slate-900/30">
@@ -408,6 +441,8 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
               </div>
             </section>
           )}
+
+          <TripHistoryPanel trip={trip} />
         </div>
 
         <div className="flex-none p-4 md:px-6 border-t border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950">
@@ -430,6 +465,11 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
         variant="warning"
         isLoading={isArchiving}
       />
+      {showDuplicate && <DuplicateTripDialog trip={trip} onClose={() => setShowDuplicate(false)} onCreated={onUpdate} />}
+      {showWhatsapp && <TripWhatsappDialog trip={trip} onClose={() => setShowWhatsapp(false)} />}
+      {showTemplates && <TripTemplatesPanel sourceTrip={trip} onClose={() => setShowTemplates(false)} />}
+      {showPaymentPlan && <TripPaymentPlanPanel trip={trip} onClose={() => setShowPaymentPlan(false)} />}
+      {showSmartTools && <TripSmartToolsDialog trip={trip} onClose={() => setShowSmartTools(false)} onUpdated={onUpdate} />}
     </div>
   );
 }

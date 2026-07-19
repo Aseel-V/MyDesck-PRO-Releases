@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { X, Save, Plus } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
 import { Trip, Payment } from '../../types/trip';
+import { calculateTripFinancials } from '../../lib/tripFinancials';
 
 interface UpdatePaymentFormProps {
   trip: Trip;
@@ -23,7 +24,7 @@ export default function UpdatePaymentForm({
 }: UpdatePaymentFormProps) {
   const { t } = useLanguage();
   const { profile } = useAuth();
-  const { convert } = useCurrency();
+  const { convert, format } = useCurrency();
   const tripCurrency = trip.currency || profile?.preferred_currency || 'USD';
   
   // State for NEW payment
@@ -33,28 +34,21 @@ export default function UpdatePaymentForm({
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'transfer' | 'card' | 'check'>('transfer');
 
   const [loading, setLoading] = useState(false);
+  const submittingRef = useRef(false);
 
-  const getCurrencySymbol = (currency: string) => {
-    switch (currency) {
-      case 'USD': return '$';
-      case 'EUR': return '€';
-      case 'ILS': return '₪';
-      default: return '$';
-    }
-  };
-
-  const currencySymbol = getCurrencySymbol(tripCurrency);
-  const totalSalePrice = trip.sale_price || 0;
+  const financials = calculateTripFinancials(trip);
+  const totalSalePrice = financials.salePrice;
   
   // Calculate current status (including unsaved new payment for preview?)
   // No, let's keep it simple: Show current state, then add new payment.
-  const currentPaid = trip.amount_paid || 0;
-  const currentDue = Math.max(0, totalSalePrice - currentPaid);
+  const currentPaid = financials.amountPaid;
+  const currentDue = financials.amountDue;
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (amountToAdd <= 0) return;
+    if (amountToAdd <= 0 || submittingRef.current) return;
 
+    submittingRef.current = true;
     setLoading(true);
     try {
       // 1. Create new payment object
@@ -87,9 +81,10 @@ export default function UpdatePaymentForm({
       // 5. Submit
       await onUpdate(trip.id, newTotalPaid, newStatus, updatedPayments);
       onClose();
-    } catch (error) {
-      console.error('Failed to update payment:', error);
+    } catch {
+      console.error('Failed to update payment');
     } finally {
+      submittingRef.current = false;
       setLoading(false);
     }
   };
@@ -128,13 +123,13 @@ export default function UpdatePaymentForm({
                <div className="flex justify-between items-center text-sm">
                   <span className="text-slate-400">{t('trips.amountPaid')}</span>
                   <span className="text-lg font-semibold text-emerald-300">
-                    {currencySymbol}{currentPaid.toFixed(2)}
+                    {format(currentPaid, tripCurrency, tripCurrency)}
                   </span>
                </div>
                <div className="flex justify-between items-center text-sm">
                   <span className="text-slate-400">{t('trips.amountDue')}</span>
                   <span className="text-lg font-semibold text-rose-300">
-                    {currencySymbol}{currentDue.toFixed(2)}
+                    {format(currentDue, tripCurrency, tripCurrency)}
                   </span>
                </div>
                <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden mt-1">
@@ -215,8 +210,7 @@ export default function UpdatePaymentForm({
                 <div className="py-2 flex justify-between items-center text-sm border-t border-slate-800/50">
                   <span className="text-slate-400">{t('trips.newTotalWillBe')}</span>
                   <span className="font-bold text-emerald-400">
-                    {currencySymbol}
-                    {(currentPaid + convert(amountToAdd, inputCurrency, tripCurrency)).toFixed(2)}
+                    {format(currentPaid + convert(amountToAdd, inputCurrency, tripCurrency), tripCurrency, tripCurrency)}
                   </span>
                 </div>
              )}

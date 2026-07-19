@@ -20,11 +20,14 @@ import { LanguageProvider } from './contexts/LanguageContext'; // Assuming path 
 import { AuthProvider } from './contexts/AuthContext'; // Assuming path for AuthProvider
 import { CurrencyProvider } from './contexts/CurrencyContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { queryRetryDelay, shouldRetryQuery } from './lib/queryRetryPolicy';
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       gcTime: 1000 * 60 * 60 * 24, // 24 hours
+      retry: shouldRetryQuery,
+      retryDelay: queryRetryDelay,
     },
   },
 });

@@ -14,6 +14,9 @@ import InvoiceTemplate from './components/invoice/InvoiceTemplate';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ResetPassword from './components/auth/ResetPassword';
 import UpdateModal from './components/UpdateModal';
+import { WebsiteUpdateNotice } from './components/WebsiteUpdateNotice';
+import { WebsiteReleaseNotesDialog } from './components/WebsiteReleaseNotesDialog';
+import { useWebsiteUpdate } from './hooks/useWebsiteUpdate';
 import { HelmetProvider } from 'react-helmet-async';
 import SolutionPage from './pages/solutions/SolutionPage';
 import SafetySupportPage from './pages/SafetySupportPage';
@@ -63,6 +66,8 @@ function LoginWrapper() {
 }
 
 function App() {
+  const websiteUpdate = useWebsiteUpdate(!isElectron);
+  const [showReleaseNotes, setShowReleaseNotes] = useState(false);
   const [updateState, setUpdateState] = useState<{
     status: 'idle' | 'checking' | 'up-to-date' | 'available' | 'downloading' | 'downloaded' | 'error';
     progress: number;
@@ -130,8 +135,11 @@ function App() {
           availableVersion={updateState.availableVersion ?? undefined}
           error={updateState.error ?? undefined}
           onDismiss={handleDismissUpdate}
+          onViewWhatsNew={() => setShowReleaseNotes(true)}
         />
       )}
+      {websiteUpdate.metadata && <WebsiteUpdateNotice metadata={websiteUpdate.metadata} onLater={websiteUpdate.dismiss} onUpdate={websiteUpdate.updateNow}/>}
+      {showReleaseNotes && <WebsiteReleaseNotesDialog onClose={() => setShowReleaseNotes(false)} />}
       <Routes>
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/login" element={<LoginWrapper />} />

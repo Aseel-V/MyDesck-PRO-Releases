@@ -9,6 +9,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import { MeasuredChart } from '../../travel-ui/MeasuredChart';
 import {
   Map,
   TrendingUp,
@@ -248,8 +249,8 @@ export default function DestinationPerformance({
 
             {/* Recharts Bar Chart */}
             <div className="rounded-xl border border-slate-100 bg-slate-50/15 p-4 dark:border-slate-800/40 dark:bg-slate-950/10 xl:col-span-5">
-              <div className="h-[280px] w-full min-w-0">
-                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+              <MeasuredChart className="h-[280px]">
+                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1} initialDimension={{ width: 1, height: 1 }}>
                   <BarChart
                     data={chartData}
                     layout="vertical"
@@ -286,7 +287,7 @@ export default function DestinationPerformance({
                     />
                   </BarChart>
                 </ResponsiveContainer>
-              </div>
+              </MeasuredChart>
             </div>
           </div>
         </div>

@@ -8,6 +8,7 @@ import {
   generateSingleTripPDF,
   generateMultipleTripsPDF,
 } from '../../lib/pdfGenerator';
+import { getSafeErrorCode } from '../../lib/safeError';
 import { sanitizeFilename } from '../../lib/utils';
 
 export interface PDFExportModalProps {
@@ -100,7 +101,7 @@ export default function PDFExportModal({ trips, onClose, onExportComplete }: PDF
         return toPdfBlobUrl(pdfBytes);
       });
     } catch (error) {
-      console.error('Preview generation error:', error);
+      console.error('Trip PDF preview failed:', getSafeErrorCode(error));
     } finally {
       setGeneratingPreview(false);
     }
@@ -145,7 +146,7 @@ export default function PDFExportModal({ trips, onClose, onExportComplete }: PDF
         });
 
         filename = `${sanitizeFilename(
-          `trip_${trip.client_name}_${trip.destination}_${new Date().toISOString().split('T')[0]}`,
+          `trip_${trip.destination}_${trip.id.slice(0, 8)}_${new Date().toISOString().split('T')[0]}`,
           `trip_${trip.id.slice(0, 8)}`
         )}.pdf`;
       } else {
@@ -168,17 +169,20 @@ export default function PDFExportModal({ trips, onClose, onExportComplete }: PDF
       });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      try {
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+      } finally {
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      }
 
       onExportComplete?.();
       onClose();
     } catch (error) {
-      console.error('PDF generation error:', error);
+      console.error('Trip PDF generation failed:', getSafeErrorCode(error));
       setBannerError(t('trips.exportModal.pdfError'));
     } finally {
       setLoading(false);

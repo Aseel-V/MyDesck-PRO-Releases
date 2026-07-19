@@ -20,6 +20,7 @@ import {
   isTripEligibleForAlert,
   isTripIncludedInDashboardStats,
 } from "../lib/tripStatus";
+import { fetchTripDashboardItems, fetchTripDetails } from "../lib/tripQueries";
 
 // Lazy load components
 const Settings = lazy(() => import("./Settings"));
@@ -83,10 +84,17 @@ export default function Dashboard() {
 
   // Alert System State
   const [dismissedAlerts, setDismissedAlerts] = useState<string[]>([]);
+  const [yearFilter, setYearFilter] = useState(new Date().getFullYear().toString());
 
   const handleCreateTrip = () => {
     setSelectedTrip(undefined);
     setEditingTrip(undefined);
+    setShowNewTripForm(true);
+  };
+
+  const handleCreateTripFromTemplate = (draft: Trip) => {
+    setSelectedTrip(undefined);
+    setEditingTrip(draft);
     setShowNewTripForm(true);
   };
 
@@ -115,7 +123,7 @@ export default function Dashboard() {
   ]);
 
   const handleSaveTrip = async (data: TripFormData) => {
-    await saveTrip({ formData: data, editTripId: editingTrip?.id });
+    await saveTrip({ formData: data, editTripId: editingTrip?.id || undefined });
     setShowNewTripForm(false);
     setEditingTrip(undefined);
   };
@@ -130,17 +138,10 @@ export default function Dashboard() {
     data: trips = [],
     isLoading,
   } = useQuery<Trip[]>({
-    queryKey: ["trips", user?.id],
+    queryKey: ["trip-dashboard", user?.id, yearFilter],
     queryFn: async () => {
       if (!user) return [];
-      const { data, error } = await supabase
-        .from("trips")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      return data as unknown as Trip[];
+      return fetchTripDashboardItems(yearFilter);
     },
     enabled: !!user?.id && !isAdmin,
   });
@@ -181,24 +182,23 @@ export default function Dashboard() {
   }, [user, isAdmin]);
 
   // State for Year Filter
-  const [yearFilter, setYearFilter] = useState(new Date().getFullYear().toString());
+  const { data: storedYears = [] } = useQuery({
+    queryKey: ['trip-years', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_trip_years');
+      if (error) throw error;
+      return (data as { year: string }[]).map((item) => item.year);
+    },
+    enabled: !!user?.id && !isAdmin,
+  });
 
-  // Derive available years from trips
   const availableYears = useMemo(() => {
-    if (!trips || trips.length === 0) return [new Date().getFullYear().toString()];
-    const years = new Set(
-      trips
-        .filter(isTripIncludedInDashboardStats)
-        .map((tr) => {
-          const effDate = getEffectiveTripDate(tr);
-          return new Date(effDate).getFullYear().toString();
-        })
-    );
+    const years = new Set(storedYears);
     const currentYear = new Date().getFullYear().toString();
     if (!years.has(currentYear)) years.add(currentYear);
     
     return Array.from(years).sort((a, b) => b.localeCompare(a));
-  }, [trips]);
+  }, [storedYears]);
 
   // Filter trips by year
   const filteredTrips = useMemo(() => {
@@ -228,9 +228,14 @@ export default function Dashboard() {
     setCurrentPage(page);
   };
 
-  const handleSelectTrip = (trip: Trip) => {
-    setSelectedTrip(trip);
-    setCurrentPage("trips");
+  const handleSelectTrip = async (trip: Trip) => {
+    try {
+      setSelectedTrip(await fetchTripDetails(trip.id));
+    } catch {
+      setSelectedTrip(undefined);
+    } finally {
+      setCurrentPage("trips");
+    }
   };
 
   const isBentoDashboardVisible = 
@@ -286,7 +291,6 @@ export default function Dashboard() {
             <MotionWrapper key="home">
               <Suspense fallback={<PageLoader />}>
                 <TourismDashboard
-                  trips={trips}
                   filteredTrips={filteredTrips}
                   isLoading={isLoading}
                   profile={profile}
@@ -319,6 +323,7 @@ export default function Dashboard() {
                       initialViewTrip={selectedTrip}
                       onEditTrip={handleEditTrip}
                       onCreateTrip={handleCreateTrip}
+                      onCreateFromTemplate={handleCreateTripFromTemplate}
                     />
                 )}
               </Suspense>

@@ -9,9 +9,10 @@ interface UpdateModalProps {
   availableVersion?: string;
   error?: string;
   onDismiss?: () => void;
+  onViewWhatsNew?: () => void;
 }
 
-const UpdateModal: React.FC<UpdateModalProps> = ({ status, progress, currentVersion, availableVersion, error, onDismiss }) => {
+const UpdateModal: React.FC<UpdateModalProps> = ({ status, progress, currentVersion, availableVersion, error, onDismiss, onViewWhatsNew }) => {
   const { t } = useLanguage();
 
   const handleRetry = () => void window.electronAPI?.checkForUpdates();
@@ -91,13 +92,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({ status, progress, currentVers
             )}
 
             {status === 'available' && (
-              <button
-                onClick={handleDownload}
-                className="w-full flex items-center justify-center gap-3 rounded-xl bg-sky-600 px-6 py-3 font-semibold text-white transition hover:bg-sky-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2"
-              >
-                <Download className="h-5 w-5" />
-                <span>{t('updates.download')}</span>
-              </button>
+              <div className="grid gap-2 sm:grid-cols-2">{onViewWhatsNew && <button onClick={onViewWhatsNew} className="flex items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900"><ExternalLink className="h-4 w-4"/><span>{t('websiteUpdate.whatsNew')}</span></button>}<button onClick={handleDownload} className="flex items-center justify-center gap-3 rounded-xl bg-sky-600 px-6 py-3 font-semibold text-white transition hover:bg-sky-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2"><Download className="h-5 w-5" /><span>{t('updates.download')}</span></button></div>
             )}
 
             {status === 'downloaded' && (
