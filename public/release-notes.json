@@ -1,26 +1,29 @@
 {
-  "version": "0.0.53",
-  "releasedAt": "2026-07-20T13:00:00.000Z",
+  "version": "0.0.54",
+  "releasedAt": "2026-07-20T16:00:00.000Z",
   "title": {
-    "en": "Corrective Update",
-    "he": "עדכון תיקון",
-    "ar": "تحديث إصلاحي"
+    "en": "Corrective Release & PWA Fix",
+    "he": "עדכון תיקון וניקוי מטמון PWA",
+    "ar": "تحديث إصلاحي وتنظيف كاش الـ PWA"
   },
   "changes": {
     "en": [
-      "Fixed update installation/reload flow",
-      "Fixed release metadata delivery",
-      "Improved update reliability"
+      "Fixed stale authenticated website version",
+      "Improved service-worker update activation",
+      "Fixed old cached application bundles",
+      "Improved website update reliability"
     ],
     "he": [
-      "תיקון תהליך התקנת העדכון ורענון הדף",
-      "תיקון מסירת נתוני הגרסה (metadata)",
-      "שיפור יציבות ואמינות מנגנון העדכונים"
+      "תיקון גרסת אתר ישנה שנשארה לאחר התחברות",
+      "שיפור שפעול עדכוני Service Worker",
+      "תיקון מטמון רכיבי האפליקציה הישנים",
+      "שיפור אמינות עדכון האתר"
     ],
     "ar": [
-      "إصلاح عملية تثبيت التحديث وإعادة تحميل الصفحة",
-      "إصلاح تسليم بيانات تعريف الإصدار (metadata)",
-      "تحسين موثوقية واستقرار نظام التحديثات"
+      "إصلاح نسخة الموقع القديمة بعد تسجيل الدخول",
+      "تحسين تفعيل تحديثات الـ Service Worker",
+      "إصلاح حزم التطبيق المخزنة مؤقتاً في الكاش القديم",
+      "تحسين استقرار وموثوقية تحديث الموقع"
     ]
   }
 }

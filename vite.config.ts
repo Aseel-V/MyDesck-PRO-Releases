@@ -35,9 +35,16 @@ export default defineConfig({
         ],
       },
       workbox: {
+        cleanupOutdatedCaches: true,
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024, // 4MB
-        // Fix: Exclude sitemap and other static files from SPA navigation fallback
-        navigateFallbackDenylist: [/^\/sitemap\.xml$/, /^\/robots\.txt$/, /^.*\.html$/],
+        // Fix: Exclude sitemap, version metadata, and html files from SPA navigation fallback
+        navigateFallbackDenylist: [
+          /^\/sitemap\.xml$/,
+          /^\/robots\.txt$/,
+          /^\/version\.json$/,
+          /^\/release-notes\.json$/,
+          /^.*\.html$/
+        ],
       },
     }),
   ],

@@ -59,6 +59,10 @@ function isReleaseNotes(value: unknown): value is ReleaseNotes {
 async function fetchPublicJson(file: string): Promise<unknown> {
   const response = await fetch(`${publicUrl(file)}?t=${Date.now()}`, { cache: 'no-store' });
   if (!response.ok) throw new Error('RELEASE_METADATA_UNAVAILABLE');
+  const contentType = response.headers.get('content-type') || '';
+  if (!contentType.includes('application/json') && !contentType.includes('text/plain') && !contentType.includes('text/json')) {
+    throw new Error('INVALID_CONTENT_TYPE');
+  }
   return response.json();
 }
 
