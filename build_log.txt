@@ -1,0 +1,20 @@
+
+> vite-react-typescript-starter@0.0.0 build
+> vite build
+
+[36mvite v5.4.21 [32mbuilding for production...[36m[39m
+transforming...
+[32m✓[39m 73 modules transformed.
+[31mx[39m Build failed in 1.78s
+[31merror during build:
+[31m[vite-plugin-pwa:build] [plugin vite-plugin-pwa:build] src/index.css (65:4): There was an error during the build:
+  [postcss] C:/Users/user/OneDrive - Kinneret Academic College/שולחן העבודה/MyDesck PRO/src/index.css:65:5: The `shadow-[0_18px_60px_rgba(0,` class does not exist. If `shadow-[0_18px_60px_rgba(0,` is a custom class, make sure it is defined within a `@layer` directive.
+Additionally, handling the error in the 'buildEnd' hook caused the following error:
+  [postcss] C:/Users/user/OneDrive - Kinneret Academic College/שולחן העבודה/MyDesck PRO/src/index.css:65:5: The `shadow-[0_18px_60px_rgba(0,` class does not exist. If `shadow-[0_18px_60px_rgba(0,` is a custom class, make sure it is defined within a `@layer` directive.[31m
+file: [36mC:/Users/user/OneDrive - Kinneret Academic College/שולחן העבודה/MyDesck PRO/src/index.css:65:4[31m
+    at getRollupError (file:///C:/Users/user/OneDrive%20-%20Kinneret%20Academic%20College/%D7%A9%D7%95%D7%9C%D7%97%D7%9F%20%D7%94%D7%A2%D7%91%D7%95%D7%93%D7%94/MyDesck%20PRO/node_modules/rollup/dist/es/shared/parseAst.js:401:41)
+    at file:///C:/Users/user/OneDrive%20-%20Kinneret%20Academic%20College/%D7%A9%D7%95%D7%9C%D7%97%D7%9F%20%D7%94%D7%A2%D7%91%D7%95%D7%93%D7%94/MyDesck%20PRO/node_modules/rollup/dist/es/shared/node-entry.js:23333:39
+    at async catchUnfinishedHookActions (file:///C:/Users/user/OneDrive%20-%20Kinneret%20Academic%20College/%D7%A9%D7%95%D7%9C%D7%97%D7%9F%20%D7%94%D7%A2%D7%91%D7%95%D7%93%D7%94/MyDesck%20PRO/node_modules/rollup/dist/es/shared/node-entry.js:22791:16)
+    at async rollupInternal (file:///C:/Users/user/OneDrive%20-%20Kinneret%20Academic%20College/%D7%A9%D7%95%D7%9C%D7%97%D7%9F%20%D7%94%D7%A2%D7%91%D7%95%D7%93%D7%94/MyDesck%20PRO/node_modules/rollup/dist/es/shared/node-entry.js:23316:5)
+    at async build (file:///C:/Users/user/OneDrive%20-%20Kinneret%20Academic%20College/%D7%A9%D7%95%D7%9C%D7%97%D7%9F%20%D7%94%D7%A2%D7%91%D7%95%D7%93%D7%94/MyDesck%20PRO/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:65709:14)
+    at async CAC.<anonymous> (file:///C:/Users/user/OneDrive%20-%20Kinneret%20Academic%20College/%D7%A9%D7%95%D7%9C%D7%97%D7%9F%20%D7%94%D7%A2%D7%91%D7%95%D7%93%D7%94/MyDesck%20PRO/node_modules/vite/dist/node/cli.js:829:5)[39m

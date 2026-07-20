@@ -1,0 +1,72 @@
+﻿
+> vite-react-typescript-starter@0.0.5 lint
+> eslint .
+
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck PRO\src\components\Dashboard.tsx
+  137:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  138:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  141:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  634:47  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck PRO\src\components\ForgotPassword.tsx
+  28:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck PRO\src\components\Navbar.tsx
+  49:77  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck PRO\src\components\Settings.tsx
+   58:42  error  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+   59:22  error  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  127:42  error  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  308:21  error  'id' is assigned a value but never used          @typescript-eslint/no-unused-vars
+  308:25  error  'user_id' is assigned a value but never used     @typescript-eslint/no-unused-vars
+  308:34  error  'created_at' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  308:46  error  'updated_at' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  376:21  error  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  433:21  error  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck PRO\src\components\admin\AdminDashboard.tsx
+  83:78  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck PRO\src\components\admin\CreateUserForm.tsx
+   43:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   69:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  214:84  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck PRO\src\components\analytics\Analytics.tsx
+  197:5   warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+  208:59  error    Unexpected any. Specify a different type                                                        @typescript-eslint/no-explicit-any
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck PRO\src\components\auth\ResetPassword.tsx
+  44:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck PRO\src\components\invoice\InvoiceTemplate.tsx
+  17:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck PRO\src\components\trips\UpdatePaymentForm.tsx
+  200:73  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck PRO\src\components\ui\FileUpload.tsx
+  51:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck PRO\src\lib\pdfGenerator.ts
+  61:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck PRO\src\pages\GuideWallet.tsx
+  83:67  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  94:63  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck PRO\supabase\functions\create-user\index.ts
+  193:8  error  Parsing error: 'catch' or 'finally' expected
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck PRO\supabase\functions\get-guide-analytics\index.ts
+  51:9  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/naming-convention')
+
+C:\Users\user\OneDrive - Kinneret Academic College\╫⌐╫ץ╫£╫ק╫ƒ ╫פ╫ó╫ס╫ץ╫ף╫פ\MyDesck PRO\supabase\functions\get-users\index.ts
+  109:5  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/naming-convention')
+  111:5  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/naming-convention')
+
+Γ£צ 32 problems (28 errors, 4 warnings)
+  0 errors and 4 warnings potentially fixable with the `--fix` option.
+

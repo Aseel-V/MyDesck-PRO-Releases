@@ -1,0 +1,24 @@
+# Settings V2 implementation
+
+- Files changed: `src/components/Settings.tsx`, `src/components/restaurant/RestaurantSettings.tsx`, and the English, Arabic, and Hebrew locale JSON files.
+- Previous Settings issues: glass-style panels, weak horizontal navigation, unrelated preferences mixed into one long business form, repeated large cards, hardcoded notices, and narrow-screen grid overflow.
+- New Settings hierarchy: Profile, Business, Appearance and region, Security, Data, optional Restaurant, and About.
+- Navigation design: compact semantic sidebar on desktop and a labeled category selector on smaller screens, with localized descriptions and clear active/focus states.
+- General settings organization: supported theme, language, currency, and exchange-rate controls are grouped under Appearance and region.
+- Business-profile organization: identity fields, subscription status, logo, signature, and fallback logo URL are grouped into compact rows.
+- Appearance organization: the existing theme toggle is presented as one concise setting row; theme architecture is unchanged.
+- Language/region organization: language, direction, currency preference, and localized exchange-rate timestamps are grouped together.
+- Travel-settings result: no separate Travel category was created because no additional supported Travel preference exists in this component.
+- Security/account organization: existing password change, profile refresh, and sign-out actions are grouped without adding account operations.
+- Data/export organization: existing JSON export and import actions remain together with the original confirmation behavior.
+- Save behavior: existing explicit profile and business save callbacks are preserved behind one sticky section action bar; duplicate submissions remain disabled while saving.
+- Loading/success/error behavior: compact localized saving and saved states, inline announced notices, preserved input values, and no raw backend error messages.
+- Desktop result: two-level sidebar/content workspace with solid surfaces, subtle borders, and compact rows.
+- Mobile result: single category selector, one focused section, responsive form grids, safe wrapping, and no permanent sidebar.
+- Localization result: Settings-facing English, Arabic, and Hebrew keys are structurally complete; direct restaurant-setting fallbacks were removed.
+- RTL/accessibility result: page direction follows the locale; email, phone, IDs, dates, and version values are direction-safe; navigation, labels, status messages, and focus states are semantic.
+- Typecheck result: passed.
+- Build result: passed with existing Rollup circular-chunk and bundle-size warnings.
+- Lint result: changed-file ESLint passed.
+- Remaining risks: visual verification across every business type, locale, theme, and narrow viewport remains a manual QA item.
+- Rollback instructions: revert this report, the two Settings component files, and only the Settings-related additions in the three locale files.

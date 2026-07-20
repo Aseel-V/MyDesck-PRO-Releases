@@ -1,0 +1,18 @@
+{
+  "headers": [
+    {
+      "source": "/version.json",
+      "headers": [{ "key": "Cache-Control", "value": "no-store" }]
+    },
+    {
+      "source": "/release-notes.json",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/((?!assets/|locales/|.*\\.xml|.*\\.txt|.*\\.ico|.*\\.png|.*\\.json|google.*\\.html).*)",
+      "destination": "/index.html"
+    }
+  ]
+}

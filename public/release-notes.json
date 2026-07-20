@@ -1,0 +1,26 @@
+{
+  "version": "0.0.53",
+  "releasedAt": "2026-07-20T13:00:00.000Z",
+  "title": {
+    "en": "Corrective Update",
+    "he": "עדכון תיקון",
+    "ar": "تحديث إصلاحي"
+  },
+  "changes": {
+    "en": [
+      "Fixed update installation/reload flow",
+      "Fixed release metadata delivery",
+      "Improved update reliability"
+    ],
+    "he": [
+      "תיקון תהליך התקנת העדכון ורענון הדף",
+      "תיקון מסירת נתוני הגרסה (metadata)",
+      "שיפור יציבות ואמינות מנגנון העדכונים"
+    ],
+    "ar": [
+      "إصلاح عملية تثبيت التحديث وإعادة تحميل الصفحة",
+      "إصلاح تسليم بيانات تعريف الإصدار (metadata)",
+      "تحسين موثوقية واستقرار نظام التحديثات"
+    ]
+  }
+}

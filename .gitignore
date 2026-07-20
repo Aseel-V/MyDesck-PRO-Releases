@@ -1,0 +1,56 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependency folders
+node_modules/
+
+# Build outputs
+dist/
+dist-ssr/
+build/
+release/
+win-unpacked/
+
+# Ignore executables and installers
+*.exe
+*.msi
+*.asar
+
+# Local environment files
+*.local
+.env
+
+# Editor folders and files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# Supabase
+supabase/.branches
+supabase/.temp
+supabase/.cache
+
+# Misc
+*.pem
+*.p12
+*.key
+*.crt
+*.cache

@@ -1,0 +1,152 @@
+{
+  "name": "my-desck-pro",
+  "private": true,
+  "version": "0.0.53",
+  "description": "Professional Travel Agency Dashboard",
+  "repository": "https://github.com/Aseel-V/MyDesck-PRO-Releases",
+  "type": "module",
+  "main": "electron.js",
+  "homepage": "./",
+  "author": {
+    "name": "Aseel-V",
+    "email": "Aseelshaheen621@gmail.com"
+  },
+  "build": {
+    "appId": "com.mydesck.pro",
+    "productName": "MyDesck PRO",
+    "directories": {
+      "output": "release"
+    },
+    "npmRebuild": false,
+    "files": [
+      "dist",
+      "electron.js",
+      "updater-policy.cjs",
+      "preload.cjs",
+      "assets"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "artifactName": "${productName}-Setup-${version}.${ext}",
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerHeaderIcon": "assets/icon.ico",
+      "deleteAppDataOnUninstall": true,
+      "runAfterFinish": true,
+      "artifactName": "MyDesck-PRO-Setup.exe"
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.business"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "Aseel-V",
+      "repo": "MyDesck-PRO-Releases",
+      "releaseType": "release"
+    }
+  },
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 5173 --strictPort",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview --host 0.0.0.0 --port 4173",
+    "typecheck": "tsc --noEmit -p tsconfig.app.json",
+    "i18n:check": "node scripts/check-i18n.mjs",
+    "test:travel": "node scripts/check-travel-mode.mjs",
+    "test:migrations:travel": "node scripts/test-travel-migrations.mjs --clean-local",
+    "test:migrations:travel:structure": "node scripts/test-travel-migrations.mjs",
+    "test:auth-config": "dotenv -- node scripts/check-auth-build-config.mjs --env",
+    "test:auth-bundle": "dotenv -- node scripts/check-auth-build-config.mjs --dist",
+    "test:updater": "node scripts/check-desktop-updater.mjs",
+    "test:website-release": "node scripts/check-website-release.mjs",
+    "test:release-version": "node scripts/check-release-version.mjs",
+    "electron:dev": "node scripts/dev.cjs",
+    "electron:start": "node scripts/launch-electron.cjs production",
+    "electron:build-start": "npm run build && node scripts/launch-electron.cjs production",
+    "dist": "npm run build && dotenv -- electron-builder --publish never",
+    "dist:win": "npm run build && npm run test:auth-bundle && dotenv -- electron-builder --win --publish never",
+    "dist:mac": "node -e \"if (process.platform === 'win32') { console.log('\\x1b[31mError: macOS builds cannot be run on Windows.\\x1b[0m\\n\\x1b[33mPlease push a tag (e.g. v0.0.40) to GitHub to trigger the cloud build.\\x1b[0m'); process.exit(1); }\" && npm run build && electron-builder --mac --publish never",
+    "release": "npm run build && dotenv -- electron-builder --win --publish always",
+    "release:ci:win": "npm run build && npm run test:auth-bundle && electron-builder --win --publish always",
+    "release:patch": "npm version patch && npm run release",
+    "release:minor": "npm version minor && npm run release"
+  },
+  "dependencies": {
+    "@fontsource/cairo": "^5.2.7",
+    "@fontsource/ibm-plex-sans-arabic": "^5.2.8",
+    "@fontsource/inter": "^5.2.8",
+    "@fontsource/rubik": "^5.2.8",
+    "@hookform/resolvers": "^5.2.2",
+    "@pdf-lib/fontkit": "^1.1.1",
+    "@supabase/supabase-js": "^2.57.4",
+    "@tanstack/react-query": "^5.90.10",
+    "@tanstack/react-query-persist-client": "^5.90.12",
+    "@types/jszip": "^3.4.0",
+    "@types/qrcode": "^1.5.6",
+    "arabic-reshaper": "^1.1.0",
+    "browser-image-compression": "^2.0.2",
+    "clsx": "^2.1.1",
+    "cmdk": "^1.1.1",
+    "electron-updater": "^6.6.2",
+    "framer-motion": "^12.23.24",
+    "html2canvas": "^1.4.1",
+    "i18next": "^25.6.3",
+    "i18next-browser-languagedetector": "^8.2.0",
+    "idb-keyval": "^6.2.2",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
+    "jszip": "^3.10.1",
+    "lucide-react": "^0.344.0",
+    "pdf-lib": "^1.17.1",
+    "qrcode": "^1.5.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-helmet-async": "^2.0.5",
+    "react-hook-form": "^7.66.1",
+    "react-i18next": "^16.3.5",
+    "react-router-dom": "^7.11.0",
+    "recharts": "^3.5.1",
+    "rtl-detect": "^1.1.2",
+    "serialport": "^13.0.0",
+    "sonner": "^2.0.7",
+    "tailwind-merge": "^3.4.0",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.9.1",
+    "@types/react": "^18.3.27",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^4.7.0",
+    "autoprefixer": "^10.4.22",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "dotenv-cli": "^11.0.0",
+    "electron": "^33.0.0",
+    "electron-builder": "^26.0.12",
+    "eslint": "^9.9.1",
+    "eslint-plugin-react-hooks": "^5.1.0-rc.0",
+    "eslint-plugin-react-refresh": "^0.4.11",
+    "globals": "^15.9.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.18",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.3.0",
+    "vite": "^5.4.21",
+    "vite-plugin-pwa": "^1.1.0",
+    "wait-on": "^9.0.3"
+  }
+}

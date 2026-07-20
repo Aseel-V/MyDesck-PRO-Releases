@@ -1,0 +1,17 @@
+alter table public.trips
+  add column if not exists trip_type text null check (trip_type in ('one_way', 'round_trip')),
+  add column if not exists airline_name text null,
+  add column if not exists flight_number text null,
+  add column if not exists booking_reference text null,
+  add column if not exists departure_airport text null,
+  add column if not exists arrival_airport text null,
+  add column if not exists departure_datetime timestamptz null,
+  add column if not exists arrival_datetime timestamptz null,
+  add column if not exists return_flight_number text null,
+  add column if not exists return_departure_airport text null,
+  add column if not exists return_arrival_airport text null,
+  add column if not exists return_departure_datetime timestamptz null,
+  add column if not exists return_arrival_datetime timestamptz null,
+  add column if not exists ticket_class text null check (ticket_class in ('economy', 'premium_economy', 'business', 'first')),
+  add column if not exists ticket_cost_ils numeric null,
+  add column if not exists ticket_notes text null;
