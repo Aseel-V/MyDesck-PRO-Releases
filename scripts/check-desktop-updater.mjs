@@ -42,9 +42,13 @@ assert.ok(workflow.includes("github.event_name == 'workflow_dispatch'"), 'manual
 assert.ok(workflow.includes('npm run dist:win'), 'manual workflow must not publish');
 
 assert.deepEqual(parseStableVersion('0.0.45'), [0, 0, 45]);
-assert.equal(parseStableVersion('v0.0.46'), null);
+assert.deepEqual(parseStableVersion('v0.0.46'), [0, 0, 46]);
+assert.deepEqual(parseStableVersion('V0.0.46'), [0, 0, 46]);
+assert.equal(parseStableVersion('vv0.0.46'), null);
 assert.equal(parseStableVersion('0.0.46-beta.1'), null);
 assert.equal(isHigherStableVersion('0.0.46', '0.0.45'), true);
+assert.equal(isHigherStableVersion('v0.0.46', '0.0.45'), true);
+assert.equal(isHigherStableVersion('0.0.46', 'V0.0.45'), true);
 assert.equal(isHigherStableVersion('0.0.45', '0.0.45'), false);
 assert.equal(isHigherStableVersion('0.0.44', '0.0.45'), false);
 assert.equal(isHigherStableVersion('invalid', '0.0.45'), false);

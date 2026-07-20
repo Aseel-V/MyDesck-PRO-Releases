@@ -16,9 +16,11 @@ export interface ReleaseNotes {
 const stableVersion = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
 
 export function compareStableVersions(left: string, right: string): number | null {
-  if (!stableVersion.test(left) || !stableVersion.test(right)) return null;
-  const leftParts = left.split('.').map(Number);
-  const rightParts = right.split('.').map(Number);
+  const cleanLeft = left.replace(/^[vV]/, '');
+  const cleanRight = right.replace(/^[vV]/, '');
+  if (!stableVersion.test(cleanLeft) || !stableVersion.test(cleanRight)) return null;
+  const leftParts = cleanLeft.split('.').map(Number);
+  const rightParts = cleanRight.split('.').map(Number);
   for (let index = 0; index < leftParts.length; index += 1) {
     if (leftParts[index] > rightParts[index]) return 1;
     if (leftParts[index] < rightParts[index]) return -1;

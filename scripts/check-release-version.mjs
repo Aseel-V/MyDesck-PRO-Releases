@@ -11,7 +11,7 @@ const lockfile = JSON.parse(readFileSync('package-lock.json', 'utf8'));
 const versionMetadata = JSON.parse(readFileSync('public/version.json', 'utf8'));
 const releaseNotes = JSON.parse(readFileSync('public/release-notes.json', 'utf8'));
 
-assert.equal(packageJson.version, '0.0.52');
+assert.equal(packageJson.version, '0.0.53');
 assert.equal(lockfile.version, packageJson.version);
 assert.equal(lockfile.packages[''].version, packageJson.version);
 assert.equal(versionMetadata.version, packageJson.version);
@@ -28,13 +28,17 @@ try {
   await build({ entryPoints: ['src/lib/websiteRelease.ts'], outfile, bundle: true, platform: 'node', format: 'esm', define: { 'import.meta.env': JSON.stringify({ BASE_URL: '/' }), __APP_VERSION__: JSON.stringify(packageJson.version) }, logLevel: 'warning' });
   const release = await import(`${pathToFileURL(outfile).href}?run=${Date.now()}`);
   assert.equal(release.APP_VERSION, packageJson.version);
-  assert.equal(release.compareStableVersions('0.0.52', '0.0.51'), 1);
-  assert.equal(release.compareStableVersions('0.0.100', '0.0.52'), 1);
+  assert.equal(release.compareStableVersions('0.0.53', '0.0.52'), 1);
+  assert.equal(release.compareStableVersions('v0.0.53', '0.0.52'), 1);
+  assert.equal(release.compareStableVersions('0.0.53', 'V0.0.53'), 0);
+  assert.equal(release.compareStableVersions('0.0.100', '0.0.53'), 1);
   assert.equal(release.compareStableVersions('1.0.0', '0.9.99'), 1);
-  assert.equal(release.compareStableVersions('invalid', '0.0.52'), null);
-  assert.equal(release.isNewerWebsiteVersion('0.0.52', '0.0.51'), true);
-  assert.equal(release.isNewerWebsiteVersion('0.0.52', '0.0.52'), false);
-  assert.equal(release.shouldDeferWebsiteUpdate('0.0.52'), false);
+  assert.equal(release.compareStableVersions('invalid', '0.0.53'), null);
+  assert.equal(release.isNewerWebsiteVersion('0.0.53', '0.0.52'), true);
+  assert.equal(release.isNewerWebsiteVersion('v0.0.53', '0.0.52'), true);
+  assert.equal(release.isNewerWebsiteVersion('0.0.53', 'v0.0.53'), false);
+  assert.equal(release.isNewerWebsiteVersion('0.0.53', '0.0.53'), false);
+  assert.equal(release.shouldDeferWebsiteUpdate('0.0.53'), false);
 } finally {
   await rm(directory, { recursive: true, force: true });
 }

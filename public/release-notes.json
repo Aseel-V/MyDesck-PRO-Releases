@@ -1,32 +1,26 @@
 {
-  "version": "0.0.52",
-  "releasedAt": "2026-07-19T00:00:00.000Z",
+  "version": "0.0.53",
+  "releasedAt": "2026-07-20T13:00:00.000Z",
   "title": {
-    "en": "Travel Mode improvements",
-    "he": "שיפורים במצב טיולים",
-    "ar": "تحسينات وضع السفر"
+    "en": "Corrective Update",
+    "he": "עדכון תיקון",
+    "ar": "تحديث إصلاحي"
   },
   "changes": {
     "en": [
-      "A clearer Travel Mode toolbar with labeled actions and easier filters.",
-      "More visible Edit and PDF trip-card actions.",
-      "Visa installment scheduling and payment-plan details.",
-      "Smarter manual WhatsApp preparation with saved client phone numbers.",
-      "Improved templates, reports, exports, notifications, RTL support, and accessibility."
+      "Fixed update installation/reload flow",
+      "Fixed release metadata delivery",
+      "Improved update reliability"
     ],
     "he": [
-      "סרגל כלים ברור יותר במצב טיולים עם פעולות מסומנות ומסננים נגישים יותר.",
-      "פעולות עריכה ו-PDF בולטות יותר בכרטיסי נסיעה.",
-      "תזמון תשלומי ויזה ופרטי תוכנית תשלום.",
-      "הכנת הודעות WhatsApp ידנית חכמה יותר עם טלפון הלקוח השמור.",
-      "שיפורים בתבניות, דוחות, ייצוא, התראות, תמיכת RTL ונגישות."
+      "תיקון תהליך התקנת העדכון ורענון הדף",
+      "תיקון מסירת נתוני הגרסה (metadata)",
+      "שיפור יציבות ואמינות מנגנון העדכונים"
     ],
     "ar": [
-      "شريط أدوات أوضح في وضع السفر مع إجراءات مسماة وفلاتر أسهل.",
-      "إجراءات تعديل وPDF أوضح في بطاقات الرحلات.",
-      "جدولة أقساط فيزا وتفاصيل خطط الدفع.",
-      "إعداد يدوي أذكى لرسائل WhatsApp باستخدام هاتف العميل المحفوظ.",
-      "تحسينات للقوالب والتقارير والتصدير والإشعارات ودعم RTL وإمكانية الوصول."
+      "إصلاح عملية تثبيت التحديث وإعادة تحميل الصفحة",
+      "إصلاح تسليم بيانات تعريف الإصدار (metadata)",
+      "تحسين موثوقية واستقرار نظام التحديثات"
     ]
   }
 }

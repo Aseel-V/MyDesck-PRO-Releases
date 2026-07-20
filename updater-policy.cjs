@@ -3,8 +3,10 @@
 const STABLE_SEMVER = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
 
 function parseStableVersion(version) {
-  if (typeof version !== 'string' || !STABLE_SEMVER.test(version)) return null;
-  return version.split('.').map(Number);
+  if (typeof version !== 'string') return null;
+  const clean = version.replace(/^[vV]/, '');
+  if (!STABLE_SEMVER.test(clean)) return null;
+  return clean.split('.').map(Number);
 }
 
 function isHigherStableVersion(candidate, current) {

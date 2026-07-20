@@ -227,11 +227,15 @@ function setupAutoUpdater() {
   });
 
   autoUpdater.on('update-available', (info) => {
-    if (!isHigherStableVersion(info?.version, app.getVersion())) {
+    const rawVersion = info?.version || '';
+    const normalizedVersion = typeof rawVersion === 'string' ? rawVersion.replace(/^[vV]/, '') : '';
+
+    if (!isHigherStableVersion(normalizedVersion, app.getVersion())) {
+      const isValid = /^\d+\.\d+\.\d+$/.test(normalizedVersion);
       broadcastUpdateState({
-        status: /^\d+\.\d+\.\d+$/.test(info?.version || '') ? 'up-to-date' : 'error',
+        status: isValid ? 'up-to-date' : 'error',
         availableVersion: null,
-        error: /^\d+\.\d+\.\d+$/.test(info?.version || '') ? null : 'INVALID_UPDATE_METADATA',
+        error: isValid ? null : 'INVALID_UPDATE_METADATA',
         progress: 0,
       });
       return;
@@ -239,12 +243,12 @@ function setupAutoUpdater() {
 
     const nextState = {
       status: 'available',
-      availableVersion: info?.version || null,
+      availableVersion: normalizedVersion || null,
       error: null,
       progress: 0,
     };
     broadcastUpdateState(nextState);
-    sendUpdateEvent('update_available', info);
+    sendUpdateEvent('update_available', { ...info, version: normalizedVersion });
   });
 
   autoUpdater.on('update-not-available', () => {
@@ -266,13 +270,15 @@ function setupAutoUpdater() {
   });
 
   autoUpdater.on('update-downloaded', (info) => {
+    const rawVersion = info?.version || '';
+    const normalizedVersion = typeof rawVersion === 'string' ? rawVersion.replace(/^[vV]/, '') : '';
     broadcastUpdateState({
       status: 'downloaded',
-      availableVersion: info?.version || updateState.availableVersion,
+      availableVersion: normalizedVersion || updateState.availableVersion,
       progress: 100,
       error: null,
     });
-    sendUpdateEvent('update_downloaded', info);
+    sendUpdateEvent('update_downloaded', { ...info, version: normalizedVersion });
   });
 
   autoUpdater.on('error', (err) => {

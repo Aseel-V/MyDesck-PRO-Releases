@@ -11,6 +11,13 @@ export function useWebsiteUpdate(enabled: boolean) {
   const [state, setState] = useState<WebsiteUpdateState>({ metadata: null, serviceWorkerReady: false });
   const updateServiceWorker = useRef<((reloadPage?: boolean) => Promise<void>) | null>(null);
   const reloaded = useRef(false);
+  const reloadTriggered = useRef(false);
+
+  const safeReload = useCallback(() => {
+    if (reloadTriggered.current) return;
+    reloadTriggered.current = true;
+    window.location.reload();
+  }, []);
 
   useEffect(() => {
     if (!enabled) return;
@@ -34,12 +41,29 @@ export function useWebsiteUpdate(enabled: boolean) {
   const updateNow = useCallback(async () => {
     if (reloaded.current) return;
     reloaded.current = true;
-    if (state.serviceWorkerReady && updateServiceWorker.current) {
-      await updateServiceWorker.current(true);
-      return;
+    try {
+      if (state.serviceWorkerReady && updateServiceWorker.current) {
+        const timer = setTimeout(() => {
+          safeReload();
+        }, 1500);
+
+        const onControllerChange = () => {
+          clearTimeout(timer);
+          safeReload();
+        };
+
+        if (navigator.serviceWorker) {
+          navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
+        }
+
+        await updateServiceWorker.current(true);
+        return;
+      }
+    } catch (error) {
+      console.error('Service worker update failed, reloading:', error);
     }
-    window.location.reload();
-  }, [state.serviceWorkerReady]);
+    safeReload();
+  }, [state.serviceWorkerReady, safeReload]);
 
   return { metadata: state.metadata, dismiss, updateNow };
 }
