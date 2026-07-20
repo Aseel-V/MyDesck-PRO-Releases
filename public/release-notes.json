@@ -1,29 +1,29 @@
 {
-  "version": "0.0.54",
-  "releasedAt": "2026-07-20T16:00:00.000Z",
+  "version": "0.0.55",
+  "releasedAt": "2026-07-20T16:30:00.000Z",
   "title": {
-    "en": "Corrective Release & PWA Fix",
-    "he": "עדכון תיקון וניקוי מטמון PWA",
-    "ar": "تحديث إصلاحي وتنظيف كاش الـ PWA"
+    "en": "Trip Save & Database Synchronization Fix",
+    "he": "תיקון שמירת טיולים וסנכרון מסד הנתונים",
+    "ar": "إصلاح حفظ الرحلات ومزامنة قاعدة البيانات"
   },
   "changes": {
     "en": [
-      "Fixed stale authenticated website version",
-      "Improved service-worker update activation",
-      "Fixed old cached application bundles",
-      "Improved website update reliability"
+      "Fixed saving new trips",
+      "Fixed editing existing trips",
+      "Fixed frontend/database synchronization",
+      "Improved trip-save reliability"
     ],
     "he": [
-      "תיקון גרסת אתר ישנה שנשארה לאחר התחברות",
-      "שיפור שפעול עדכוני Service Worker",
-      "תיקון מטמון רכיבי האפליקציה הישנים",
-      "שיפור אמינות עדכון האתר"
+      "תיקון שמירת טיולים חדשים",
+      "תיקון עריכת טיולים קיימים",
+      "תיקון סנכרון ממשק משתמש מול מסד הנתונים",
+      "שיפור אמינות שמירת טיולים"
     ],
     "ar": [
-      "إصلاح نسخة الموقع القديمة بعد تسجيل الدخول",
-      "تحسين تفعيل تحديثات الـ Service Worker",
-      "إصلاح حزم التطبيق المخزنة مؤقتاً في الكاش القديم",
-      "تحسين استقرار وموثوقية تحديث الموقع"
+      "إصلاح حفظ الرحلات الجديدة",
+      "إصلاح تعديل الرحلات الحالية",
+      "إصلاح مزامنة الواجهة مع قاعدة البيانات",
+      "تحسين موثوقية حفظ الرحلات"
     ]
   }
 }
