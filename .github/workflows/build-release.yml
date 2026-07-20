@@ -35,6 +35,9 @@ jobs:
       - name: Verify updater configuration
         run: npm run test:updater
 
+      - name: Verify release version and metadata
+        run: npm run test:release-version
+
       - name: Validate production authentication configuration
         env:
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}

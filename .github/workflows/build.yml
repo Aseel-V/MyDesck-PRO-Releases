@@ -34,3 +34,6 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Verify release version and metadata
+        run: npm run test:release-version
