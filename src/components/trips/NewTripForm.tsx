@@ -23,6 +23,7 @@ import { useTripDraft } from '../../hooks/useTripDraft';
 import { toast } from 'sonner';
 import { getSafeErrorCode } from '../../lib/safeError';
 import { checkTripCompleteness } from '../../lib/tripSmartTools';
+import { RoomCompositionSection } from './RoomCompositionSection';
 import { fetchTripPaymentPlan } from '../../lib/tripPayments';
 import { buildInstallmentSchedule, fromMinorUnits, toMinorUnits } from '../../lib/tripInstallments';
 import TripInstallmentPlanFields from './TripInstallmentPlanFields';
@@ -520,7 +521,6 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
     () => getTripDuration(currentValues.start_date, currentValues.end_date),
     [currentValues.end_date, currentValues.start_date]
   );
-  const totalRooms = Object.values(roomCounts).reduce<number>((sum, count) => sum + (Number(count) || 0), 0);
   const steps: Array<{ id: FormStep; label: string; icon: typeof FileText }> = [
     { id: 'details', label: t('trips.formSteps.details'), icon: FileText },
     { id: 'rooms', label: t('trips.formSteps.rooms'), icon: BedDouble },
@@ -885,69 +885,11 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
 
             {currentStepId === 'rooms' && serviceType !== 'ticket' && (
               <div className="space-y-5 animate-fadeIn">
-            <Surface level="quiet" className="p-4">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <h3 className="text-sm font-bold text-slate-900 dark:text-slate-50">
-                        {t('trips.roomConfiguration')}
-                      </h3>
-                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                        {t('trips.roomConfigurationHelper')}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600 border border-slate-200 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-300">
-                        {t('trips.roomTotal', { count: totalRooms })}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setRoomCounts({ Single: 0, Double: 0, Triple: 0, Quad: 0, Suite: 0, Family: 0 })}
-                        className="text-xs font-medium text-sky-600 hover:text-sky-500 dark:text-sky-400 dark:hover:text-sky-300"
-                      >
-                        {t('trips.resetCounts')}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                    {(Object.keys(roomCounts) as RoomType[]).map((type) => (
-                      <label key={type} className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950/80">
-                        <span className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                          {t(`trips.roomTypes.${type}`)}
-                        </span>
-                        <input
-                          type="number"
-                          min={0}
-                          placeholder={t('trips.zeroPlaceholder')}
-                          value={roomCounts[type]}
-                          onChange={(e) => {
-                            const rawVal = e.target.value;
-                            if (rawVal === '') {
-                              setRoomCounts(prev => ({ ...prev, [type]: '' }));
-                              return;
-                            }
-                            const val = parseInt(rawVal);
-                            setRoomCounts(prev => ({ ...prev, [type]: isNaN(val) || val < 0 ? 0 : val }));
-                          }}
-                          className="mt-2 w-full rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-center text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
-                        />
-                      </label>
-                    ))}
-                  </div>
-
-                  <div className="mt-4">
-                    <label className="text-[11px] font-semibold text-slate-500 mb-1 block dark:text-slate-400">
-                      {t('trips.finalText')}
-                    </label>
-                    <input
-                      type="text"
-                      value={roomConfigPreview}
-                      readOnly
-                      className={cn(baseInputClasses, 'text-xs py-2 bg-white dark:bg-slate-950/80')}
-                      placeholder={t('trips.roomConfigurationPlaceholder')}
-                    />
-                  </div>
-                </Surface>
+                <RoomCompositionSection
+                  roomCounts={roomCounts}
+                  onChangeRoomCounts={setRoomCounts}
+                  travelersCount={Number(watch('travelers_count')) || 0}
+                />
 
                 <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                   <div>

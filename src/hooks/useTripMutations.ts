@@ -5,7 +5,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { toast } from 'sonner';
 import { toTripInsert, toTripPaymentPlanInput, toTripUpdate } from '../lib/tripPayload';
-import { syncTripPaymentPlan } from '../lib/tripPayments';
 import type { Json } from '../types/database';
 import { getSafeErrorCode, logSafeDatabaseError } from '../lib/safeError';
 import {
@@ -24,33 +23,21 @@ export function useTripMutations() {
     const { t } = useLanguage();
 
     const saveTripMutation = useMutation({
-        mutationFn: async ({ formData, editTripId }: { formData: TripFormData; editTripId?: string }) => {
+        mutationFn: async ({ formData, editTripId, clientRequestId }: { formData: TripFormData; editTripId?: string; clientRequestId?: string }) => {
             if (!user?.id) throw new Error('USER_NOT_AUTHENTICATED');
             const paymentPlan = toTripPaymentPlanInput(formData);
+            const rawPayload = editTripId ? { id: editTripId, ...toTripUpdate(formData) } : toTripInsert(formData, user.id);
 
-            if (editTripId) {
-                const { data, error } = await supabase
-                    .from('trips')
-                    .update({ ...toTripUpdate(formData), updated_at: new Date().toISOString() })
-                    .eq('id', editTripId)
-                    .eq('user_id', user.id)
-                    .is('deleted_at', null)
-                    .select('id, updated_at')
-                    .maybeSingle();
-                if (error) throw error;
-                if (!data) throw new Error('TRIP_UPDATE_NOT_APPLIED');
-                if (paymentPlan) await syncTripPaymentPlan(data.id, paymentPlan);
-                return data;
-            } else {
-                const { data, error } = await supabase
-                    .from('trips')
-                    .insert([toTripInsert(formData, user.id)])
-                    .select('id, updated_at')
-                    .single();
-                if (error) throw error;
-                if (paymentPlan) await syncTripPaymentPlan(data.id, paymentPlan);
-                return data;
-            }
+            const requestId = clientRequestId || crypto.randomUUID();
+
+            const { data, error } = await supabase.rpc('save_trip_transaction', {
+                p_trip_data: rawPayload as unknown as Json,
+                p_payment_plan: (paymentPlan ?? undefined) as unknown as Json,
+                p_client_request_id: requestId,
+            });
+
+            if (error) throw error;
+            return data as { id: string; client_name: string; destination: string; updated_at: string };
         },
         onMutate: async ({ formData, editTripId }) => {
             await queryClient.cancelQueries({ queryKey: ['trips-page'] });

@@ -2060,6 +2060,14 @@ export interface Database {
     };
 
     Functions: {
+      save_trip_transaction: {
+        Args: {
+          p_trip_data: Json;
+          p_payment_plan?: Json;
+          p_client_request_id?: string;
+        };
+        Returns: Json;
+      };
       delete_menu_item_secure: {
         Args: {
           p_item_id: string;
