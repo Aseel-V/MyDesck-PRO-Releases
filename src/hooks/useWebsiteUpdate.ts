@@ -43,12 +43,19 @@ export function useWebsiteUpdate(enabled: boolean) {
     reloaded.current = true;
     try {
       if (state.serviceWorkerReady && updateServiceWorker.current) {
+        let onControllerChange: (() => void) | null = null;
         const timer = setTimeout(() => {
+          if (navigator.serviceWorker && onControllerChange) {
+            navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
+          }
           safeReload();
         }, 1500);
 
-        const onControllerChange = () => {
+        onControllerChange = () => {
           clearTimeout(timer);
+          if (navigator.serviceWorker && onControllerChange) {
+            navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
+          }
           safeReload();
         };
 
