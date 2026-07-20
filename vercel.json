@@ -1,7 +1,7 @@
 {
   "headers": [
     {
-      "source": "/(sw.js|registerSW.js|version.json|release-notes.json)",
+      "source": "/(sw.js|registerSW.js|version.json|release-notes.json|manifest.webmanifest)",
       "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
     },
     {
@@ -15,7 +15,7 @@
   ],
   "rewrites": [
     {
-      "source": "/((?!assets/|locales/|.*\\.xml|.*\\.txt|.*\\.ico|.*\\.png|.*\\.json|google.*\\.html|sw\\.js|registerSW\\.js).*)",
+      "source": "/((?!version\\.json|release-notes\\.json|sw\\.js|registerSW\\.js|manifest\\.webmanifest|favicon\\.ico|robots\\.txt|sitemap\\.xml|assets/|locales/|google.*\\.html).*)",
       "destination": "/index.html"
     }
   ]
