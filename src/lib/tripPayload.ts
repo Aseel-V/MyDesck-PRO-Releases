@@ -6,6 +6,10 @@ import { toMinorUnits, validatePaymentSplit } from './tripInstallments';
 type TripInsert = Database['public']['Tables']['trips']['Insert'];
 type TripUpdate = Database['public']['Tables']['trips']['Update'];
 
+export type ReadonlyTripGeneratedColumns = 'profit' | 'profit_percentage' | 'amount_due' | 'search_document' | 'created_at' | 'updated_at';
+export type WritableTripInsertPayload = Omit<TripInsert, ReadonlyTripGeneratedColumns>;
+export type WritableTripUpdatePayload = Omit<TripUpdate, ReadonlyTripGeneratedColumns>;
+
 export function sanitizeTripFormData(formData: TripFormData): TripFormData {
   return {
     destination: formData.destination.trim(),
@@ -125,11 +129,11 @@ function writableFields(formData: TripFormData) {
   } satisfies TripUpdate;
 }
 
-export function toTripInsert(formData: TripFormData, userId: string): TripInsert {
+export function toTripInsert(formData: TripFormData, userId: string): WritableTripInsertPayload {
   return { ...writableFields(formData), user_id: userId };
 }
 
-export function toTripUpdate(formData: TripFormData): TripUpdate {
+export function toTripUpdate(formData: TripFormData): WritableTripUpdatePayload {
   return writableFields(formData);
 }
 
