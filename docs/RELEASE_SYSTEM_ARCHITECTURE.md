@@ -37,3 +37,10 @@ The release state machine logs statuses accurately:
 - `BLOCKED`
 
 Production PASS requires real production verification. User Verified requires explicit confirmation.
+
+## 4. Promotion Policy: Option A — Exact Fast-Forward Promotion
+
+To guarantee artifact and verification integrity between Staging and Production:
+1. **Exact Fast-Forward Promotion**: The production branch (`main`) must be fast-forwarded directly to the exact tested staging candidate commit SHA (`approved_staging_sha == github.sha == main_head_sha`).
+2. **Rejection of Merge Commits & Squash Merges**: Merge commits and squash merges create a brand-new commit SHA that has not passed the full 11-stage staging test battery. They are strictly rejected by the production workflow.
+3. **Exact Byte Reuse**: Production release publishing reuses the exact pre-verified installer, blockmap, and `latest.yml` artifacts downloaded from the approved staging workflow run. No code is rebuilt after verification.

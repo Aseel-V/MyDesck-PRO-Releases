@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { writeFileSync, mkdirSync } from 'node:fs';
 
 console.log('[verify-staging-database] Verifying live Supabase Staging database contracts...');
 
@@ -30,9 +31,8 @@ if (stagingUrl) {
 }
 
 if (!stagingUrl || !stagingKey) {
-  console.log('STATUS: BLOCKED');
-  console.log('Reason: Missing STAGING_SUPABASE_URL and STAGING_SUPABASE_SERVICE_ROLE_KEY environment variables.');
-  process.exit(0);
+  console.error('❌ FAIL CLOSED: Missing STAGING_SUPABASE_URL or STAGING_SUPABASE_SERVICE_ROLE_KEY environment variables.');
+  process.exit(1);
 }
 
 // Live Supabase Staging Contract Checks
@@ -86,4 +86,13 @@ const checkTrip = await supabase.from('trips').select('id').eq('destination', 'R
 assert.equal(checkTrip.data?.length || 0, 0, 'No partial trip must remain after failed transaction');
 console.log('✓ Transaction rollback verified: No partial trip saved on failure');
 
-console.log('STATUS: STAGING PASS');
+mkdirSync('results', { recursive: true });
+const result = {
+  test: 'staging-database',
+  status: 'STAGING PASS',
+  timestamp: new Date().toISOString(),
+  details: 'Live RPC resolution, parameters, and transaction rollback verified on Supabase Staging.'
+};
+writeFileSync('results/staging-database-result.json', JSON.stringify(result, null, 2), 'utf8');
+
+console.log('✓ Live Supabase Staging Database Contract Verification PASSED.');

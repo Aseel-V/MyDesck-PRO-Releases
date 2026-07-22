@@ -76,8 +76,65 @@ jobs:
           fi
           echo "✓ All required staging configuration variables are present."
 
+  staging-database-migration:
+    name: 3. Apply Staging Database Migrations
+    needs: staging-preflight
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - name: Verify APP_ENV=staging and Reject Production Project
+        env:
+          APP_ENV: staging
+          STAGING_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+        run: |
+          node -e "
+            const url = require('url');
+            if (process.env.APP_ENV !== 'staging') process.exit(1);
+            const parsed = new url.URL(process.env.STAGING_URL);
+            if (parsed.hostname.includes('pubugnfaqqukelvgckdr')) {
+              console.error('❌ FATAL: Staging target matches production project reference!');
+              process.exit(1);
+            }
+          "
+      - name: Push Migrations to Staging Database
+        env:
+          SUPABASE_DB_URL: ${{ secrets.STAGING_DATABASE_URL }}
+        run: npx supabase db push --db-url "${{ secrets.STAGING_DATABASE_URL }}"
+
+  staging-database-contract-verification:
+    name: 4. Verify Live Staging Database Contracts
+    needs: staging-database-migration
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - name: Verify Staging Database
+        env:
+          APP_ENV: staging
+          STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          STAGING_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
+          STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+        run: npm run test:staging-db
+      - uses: actions/upload-artifact@v4
+        with:
+          name: staging-database-result
+          path: results/staging-database-result.json
+
   deploy-staging:
-    name: 3. Real Vercel Staging Deployment
+    name: 5. Real Vercel Staging Deployment
     needs: staging-preflight
     runs-on: ubuntu-latest
     permissions:
@@ -116,7 +173,6 @@ jobs:
         shell: bash
         run: |
           URL="${{ steps.deploy.outputs.url }}"
-          echo "Verifying HTTP 200 response for URL: $URL"
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
           if [ "$STATUS" -ne 200 ]; then
             echo "❌ Vercel staging deployment returned HTTP $STATUS (expected 200)"
@@ -124,32 +180,11 @@ jobs:
           fi
           echo "✓ Vercel staging URL returned HTTP 200"
 
-  staging-database:
-    name: 4. Verify Live Staging Database Contracts
-    needs: deploy-staging
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-      - run: npm ci
-      - name: Verify Staging Database
-        env:
-          APP_ENV: staging
-          STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
-          STAGING_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
-          STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
-        run: npm run test:staging-db
-
   staging-e2e:
-    name: 5. Playwright Browser E2E Staging Suite
+    name: 6. Playwright Browser E2E Staging Suite
     needs:
       - deploy-staging
-      - staging-database
+      - staging-database-contract-verification
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -170,9 +205,13 @@ jobs:
           STAGING_USER_B_EMAIL: ${{ secrets.STAGING_USER_B_EMAIL }}
           STAGING_USER_B_PASSWORD: ${{ secrets.STAGING_USER_B_PASSWORD }}
         run: npm run test:staging-e2e
+      - uses: actions/upload-artifact@v4
+        with:
+          name: playwright-result
+          path: results/playwright-result.json
 
   build-desktop-candidate:
-    name: 6. Build Unsigned Desktop Candidate Installer
+    name: 7. Build Unsigned Desktop Candidate Installer
     needs: staging-e2e
     runs-on: windows-latest
     permissions:
@@ -196,7 +235,7 @@ jobs:
           path: release/*
 
   verify-desktop-candidate:
-    name: 7. Verify Built Candidate Installer & Compute Hashes
+    name: 8. Verify Built Candidate Installer & Compute Hashes
     needs: build-desktop-candidate
     runs-on: ubuntu-latest
     permissions:
@@ -226,14 +265,38 @@ jobs:
           echo "installer_sha256=$INSTALLER_HASH" >> $GITHUB_OUTPUT
           echo "blockmap_sha256=$BLOCKMAP_HASH" >> $GITHUB_OUTPUT
           echo "latest_yml_sha256=$LATEST_HASH" >> $GITHUB_OUTPUT
-          
-          echo "✓ Candidate Installer SHA256:  $INSTALLER_HASH"
-          echo "✓ Candidate Blockmap SHA256:   $BLOCKMAP_HASH"
-          echo "✓ Candidate latest.yml SHA256: $LATEST_HASH"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: artifact-integrity-result
+          path: results/artifact-integrity-result.json
 
-  staging-updater:
-    name: 8. Staged Desktop Updater Candidate Channel Test
+  staging-updater-metadata:
+    name: 9. Staged Desktop Updater Channel Metadata Verification
     needs: verify-desktop-candidate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - uses: actions/download-artifact@v4
+        with:
+          name: desktop-candidate
+          path: release
+      - run: npm ci
+      - name: Verify Metadata Contract
+        run: npm run test:desktop-updater-metadata
+      - uses: actions/upload-artifact@v4
+        with:
+          name: updater-metadata-result
+          path: results/updater-metadata-result.json
+
+  staging-upgrade-test:
+    name: 10. Physical Windows Previous-Version Upgrade Test
+    needs: staging-updater-metadata
     runs-on: windows-latest
     permissions:
       contents: read
@@ -248,15 +311,19 @@ jobs:
           name: desktop-candidate
           path: release
       - run: npm ci
-      - name: Test Staged Updater with Built Candidate Artifacts
-        run: npm run test:desktop-updater-staging
+      - name: Verify Physical Windows Upgrade Test
+        run: node scripts/verify-desktop-upgrade-physical.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-upgrade-result
+          path: results/desktop-upgrade-result.json
 
   generate-staging-evidence:
-    name: 9. Generate Signed Staging Evidence Artifact
+    name: 11. Aggregate Machine-Readable Job Results & Generate Evidence
     needs:
       - deploy-staging
       - staging-e2e
-      - staging-updater
+      - staging-upgrade-test
       - verify-desktop-candidate
     runs-on: ubuntu-latest
     permissions:
@@ -267,7 +334,27 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
-      - name: Create Complete Tamper-Resistant Evidence JSON
+      - uses: actions/download-artifact@v4
+        with:
+          name: staging-database-result
+          path: results
+      - uses: actions/download-artifact@v4
+        with:
+          name: playwright-result
+          path: results
+      - uses: actions/download-artifact@v4
+        with:
+          name: artifact-integrity-result
+          path: results
+      - uses: actions/download-artifact@v4
+        with:
+          name: updater-metadata-result
+          path: results
+      - uses: actions/download-artifact@v4
+        with:
+          name: desktop-upgrade-result
+          path: results
+      - name: Aggregate Results & Generate Evidence (Fail Closed)
         env:
           COMMIT_SHA: ${{ github.sha }}
           RUN_ID: ${{ github.run_id }}
@@ -279,39 +366,7 @@ jobs:
           BLOCKMAP_HASH: ${{ needs.verify-desktop-candidate.outputs.blockmap_sha256 }}
           LATEST_HASH: ${{ needs.verify-desktop-candidate.outputs.latest_yml_sha256 }}
           STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
-        run: |
-          node -e "
-            const fs = require('fs');
-            const url = require('url');
-            let dbHost = 'unknown';
-            try { dbHost = new url.URL(process.env.STAGING_SUPABASE_URL || '').hostname; } catch(e){}
-            const now = new Date();
-            const expires = new Date(now.getTime() + 7 * 86400000);
-            
-            const evidence = {
-              schema_version: '1.0.0',
-              commit_sha: process.env.COMMIT_SHA,
-              workflow_run_id: String(process.env.RUN_ID),
-              workflow_attempt: String(process.env.RUN_ATTEMPT),
-              repository: process.env.REPOSITORY,
-              workflow_file: '.github/workflows/staging-pipeline.yml',
-              candidate_version: JSON.parse(fs.readFileSync('package.json')).version,
-              vercel_staging_url: process.env.STAGING_URL,
-              vercel_deployment_id: process.env.DEPLOYMENT_ID || 'preview',
-              staging_database_host: dbHost,
-              database_verification_status: 'STAGING PASS',
-              playwright_e2e_status: 'STAGING PASS',
-              updater_test_status: 'STAGING PASS',
-              installer_sha256: process.env.INSTALLER_HASH,
-              blockmap_sha256: process.env.BLOCKMAP_HASH,
-              latest_yml_sha256: process.env.LATEST_HASH,
-              timestamp: now.toISOString(),
-              expiration_timestamp: expires.toISOString()
-            };
-            
-            fs.writeFileSync('staging-evidence.json', JSON.stringify(evidence, null, 2));
-            console.log('✓ Generated tamper-resistant staging evidence JSON for SHA ' + process.env.COMMIT_SHA);
-          "
+        run: node scripts/aggregate-staging-evidence.mjs
       - uses: actions/upload-artifact@v4
         with:
           name: staging-evidence
