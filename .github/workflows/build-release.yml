@@ -1,6 +1,9 @@
 name: Production Rollout and Release Pipeline
 
 on:
+  push:
+    tags:
+      - 'v*.*.*'
   workflow_dispatch:
     inputs:
       version:
@@ -20,9 +23,23 @@ permissions:
   contents: read
 
 jobs:
+  manual-desktop-dry-run:
+    name: Build Desktop Artifacts Without Publishing
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build
+      - run: npm run dist:win
+
   verify-staging-run:
     name: 1. Query GitHub API & Verify Tamper-Resistant Staging Evidence
-    if: github.ref == 'refs/heads/main'
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: read
