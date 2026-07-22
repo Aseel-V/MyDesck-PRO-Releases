@@ -32,14 +32,14 @@ jobs:
       - run: npm run test:release-static
 
   staging-preflight:
-    name: 2. Staging Configuration Preflight
+    name: 2. Staging Configuration & Feed Preflight
     needs: static-gate
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@v4
-      - name: Validate Staging Secret Presence
+      - name: Validate Staging Secrets & Updater Feed URL
         env:
           STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
           STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
@@ -52,6 +52,7 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          STAGING_UPDATER_FEED_URL: ${{ secrets.STAGING_UPDATER_FEED_URL }}
         shell: bash
         run: |
           MISSING=()
@@ -66,19 +67,69 @@ jobs:
           [ -z "$VERCEL_TOKEN" ] && MISSING+=("VERCEL_TOKEN")
           [ -z "$VERCEL_ORG_ID" ] && MISSING+=("VERCEL_ORG_ID")
           [ -z "$VERCEL_PROJECT_ID" ] && MISSING+=("VERCEL_PROJECT_ID")
+          [ -z "$STAGING_UPDATER_FEED_URL" ] && MISSING+=("STAGING_UPDATER_FEED_URL")
 
           if [ ${#MISSING[@]} -gt 0 ]; then
-            echo "❌ Missing required staging configuration:"
+            echo "❌ Missing required staging configuration secrets:"
             for key in "${MISSING[@]}"; do
               echo "  - $key"
             done
             exit 1
           fi
-          echo "✓ All required staging configuration variables are present."
+
+          node -e "
+            const feedUrl = process.env.STAGING_UPDATER_FEED_URL;
+            if (!feedUrl.startsWith('https://')) {
+              console.error('❌ STAGING_UPDATER_FEED_URL must be a secure HTTPS URL');
+              process.exit(1);
+            }
+            if (feedUrl.includes('github.com/Aseel-V/MyDesck-PRO-Releases') || feedUrl.includes('mydesck.app')) {
+              console.error('❌ STAGING_UPDATER_FEED_URL must NOT point to production GitHub Release or production website feed!');
+              process.exit(1);
+            }
+            console.log('✓ Isolated Staging Updater Feed URL validated.');
+          "
+
+  check-runner-health:
+    name: 3. Verify Self-Hosted Windows Upgrade Runner Health
+    needs: staging-preflight
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Query GitHub API for Self-Hosted Windows Upgrade Runner
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          node -e "
+            const { execSync } = require('child_process');
+            const repo = process.env.REPOSITORY;
+            const token = process.env.GITHUB_TOKEN;
+            const curlCmd = \`curl -s -H "Authorization: Bearer \${token}" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/\${repo}/actions/runners"\`;
+            const res = JSON.parse(execSync(curlCmd, { encoding: 'utf8' }));
+            
+            const runners = res.runners || [];
+            const upgradeRunner = runners.find(r => 
+              r.status === 'online' && 
+              r.os === 'Windows' && 
+              r.labels && r.labels.some(l => l.name === 'mydesck-upgrade-test')
+            );
+
+            if (!upgradeRunner) {
+              console.log('DESKTOP UPGRADE RUNNER: BLOCKED');
+              console.error('❌ FAIL CLOSED: No online self-hosted Windows runner with label [mydesck-upgrade-test] is currently active for repo ' + repo);
+              process.exit(1);
+            }
+
+            console.log('✓ Online self-hosted Windows runner detected:', upgradeRunner.name);
+          "
 
   staging-database-migration:
-    name: 3. Apply Staging Database Migrations
-    needs: staging-preflight
+    name: 4. Apply Staging Database Migrations
+    needs: check-runner-health
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -109,7 +160,7 @@ jobs:
         run: npx supabase db push --db-url "${{ secrets.STAGING_DATABASE_URL }}"
 
   staging-database-contract-verification:
-    name: 4. Verify Live Staging Database Contracts
+    name: 5. Verify Live Staging Database Contracts
     needs: staging-database-migration
     runs-on: ubuntu-latest
     permissions:
@@ -130,29 +181,19 @@ jobs:
           COMMIT_SHA: ${{ github.sha }}
           RUN_ID: ${{ github.run_id }}
         run: npm run test:staging-db
-      - name: Validate Staging Database Result File Before Upload
+      - name: Validate Staging Database Result File with Shared Validator
         env:
           COMMIT_SHA: ${{ github.sha }}
           RUN_ID: ${{ github.run_id }}
-        run: |
-          node -e "
-            const fs = require('fs');
-            const file = 'results/staging-database-result.json';
-            if (!fs.existsSync(file)) throw new Error('Result file missing: ' + file);
-            const d = JSON.parse(fs.readFileSync(file, 'utf8'));
-            if (d.status !== 'STAGING PASS') throw new Error('Invalid status: ' + d.status);
-            if (d.commit_sha !== process.env.COMMIT_SHA) throw new Error('Mismatched commit SHA');
-            if (String(d.workflow_run_id) !== String(process.env.RUN_ID)) throw new Error('Mismatched run ID');
-            console.log('✓ Validated ' + file + ' before upload.');
-          "
+        run: node scripts/validate-result-schema.mjs results/staging-database-result.json staging-database
       - uses: actions/upload-artifact@v4
         with:
           name: staging-database-result
           path: results/staging-database-result.json
 
   deploy-staging:
-    name: 5. Real Vercel Staging Deployment
-    needs: staging-preflight
+    name: 6. Real Vercel Staging Deployment
+    needs: check-runner-health
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -198,7 +239,7 @@ jobs:
           echo "✓ Vercel staging URL returned HTTP 200"
 
   staging-e2e:
-    name: 6. Playwright Browser E2E Staging Suite
+    name: 7. Playwright Browser E2E Staging Suite
     needs:
       - deploy-staging
       - staging-database-contract-verification
@@ -224,28 +265,18 @@ jobs:
           COMMIT_SHA: ${{ github.sha }}
           RUN_ID: ${{ github.run_id }}
         run: npm run test:staging-e2e
-      - name: Validate Playwright Result File Before Upload
+      - name: Validate Playwright Result File with Shared Validator
         env:
           COMMIT_SHA: ${{ github.sha }}
           RUN_ID: ${{ github.run_id }}
-        run: |
-          node -e "
-            const fs = require('fs');
-            const file = 'results/playwright-result.json';
-            if (!fs.existsSync(file)) throw new Error('Result file missing: ' + file);
-            const d = JSON.parse(fs.readFileSync(file, 'utf8'));
-            if (d.status !== 'STAGING PASS') throw new Error('Invalid status: ' + d.status);
-            if (d.commit_sha !== process.env.COMMIT_SHA) throw new Error('Mismatched commit SHA');
-            if (String(d.workflow_run_id) !== String(process.env.RUN_ID)) throw new Error('Mismatched run ID');
-            console.log('✓ Validated ' + file + ' before upload.');
-          "
+        run: node scripts/validate-result-schema.mjs results/playwright-result.json playwright
       - uses: actions/upload-artifact@v4
         with:
           name: playwright-result
           path: results/playwright-result.json
 
   build-desktop-candidate:
-    name: 7. Build Unsigned Desktop Candidate Installer
+    name: 8. Build Unsigned Desktop Candidate Installer
     needs: staging-e2e
     runs-on: windows-latest
     permissions:
@@ -269,7 +300,7 @@ jobs:
           path: release/*
 
   verify-desktop-candidate:
-    name: 8. Verify Built Candidate Installer & Compute Hashes
+    name: 9. Verify Built Candidate Installer & Compute Hashes
     needs: build-desktop-candidate
     runs-on: ubuntu-latest
     permissions:
@@ -302,28 +333,18 @@ jobs:
           echo "installer_sha256=$INSTALLER_HASH" >> $GITHUB_OUTPUT
           echo "blockmap_sha256=$BLOCKMAP_HASH" >> $GITHUB_OUTPUT
           echo "latest_yml_sha256=$LATEST_HASH" >> $GITHUB_OUTPUT
-      - name: Validate Artifact Integrity Result File Before Upload
+      - name: Validate Artifact Integrity Result File with Shared Validator
         env:
           COMMIT_SHA: ${{ github.sha }}
           RUN_ID: ${{ github.run_id }}
-        run: |
-          node -e "
-            const fs = require('fs');
-            const file = 'results/artifact-integrity-result.json';
-            if (!fs.existsSync(file)) throw new Error('Result file missing: ' + file);
-            const d = JSON.parse(fs.readFileSync(file, 'utf8'));
-            if (d.status !== 'STAGING PASS') throw new Error('Invalid status: ' + d.status);
-            if (d.commit_sha !== process.env.COMMIT_SHA) throw new Error('Mismatched commit SHA');
-            if (String(d.workflow_run_id) !== String(process.env.RUN_ID)) throw new Error('Mismatched run ID');
-            console.log('✓ Validated ' + file + ' before upload.');
-          "
+        run: node scripts/validate-result-schema.mjs results/artifact-integrity-result.json artifact-integrity
       - uses: actions/upload-artifact@v4
         with:
           name: artifact-integrity-result
           path: results/artifact-integrity-result.json
 
   staging-updater-metadata:
-    name: 9. Staged Desktop Updater Channel Metadata Verification
+    name: 10. Staged Desktop Updater Channel Metadata Verification
     needs: verify-desktop-candidate
     runs-on: ubuntu-latest
     permissions:
@@ -344,28 +365,18 @@ jobs:
           COMMIT_SHA: ${{ github.sha }}
           RUN_ID: ${{ github.run_id }}
         run: npm run test:desktop-updater-metadata
-      - name: Validate Updater Metadata Result File Before Upload
+      - name: Validate Updater Metadata Result File with Shared Validator
         env:
           COMMIT_SHA: ${{ github.sha }}
           RUN_ID: ${{ github.run_id }}
-        run: |
-          node -e "
-            const fs = require('fs');
-            const file = 'results/updater-metadata-result.json';
-            if (!fs.existsSync(file)) throw new Error('Result file missing: ' + file);
-            const d = JSON.parse(fs.readFileSync(file, 'utf8'));
-            if (d.status !== 'STAGING PASS') throw new Error('Invalid status: ' + d.status);
-            if (d.commit_sha !== process.env.COMMIT_SHA) throw new Error('Mismatched commit SHA');
-            if (String(d.workflow_run_id) !== String(process.env.RUN_ID)) throw new Error('Mismatched run ID');
-            console.log('✓ Validated ' + file + ' before upload.');
-          "
+        run: node scripts/validate-result-schema.mjs results/updater-metadata-result.json desktop-updater-metadata
       - uses: actions/upload-artifact@v4
         with:
           name: updater-metadata-result
           path: results/updater-metadata-result.json
 
   staging-upgrade-test:
-    name: 10. Physical Windows Previous-Version Upgrade Harness Test
+    name: 11. Physical Windows Previous-Version Upgrade Harness Test
     needs: staging-updater-metadata
     runs-on:
       - self-hosted
@@ -389,29 +400,19 @@ jobs:
           COMMIT_SHA: ${{ github.sha }}
           RUN_ID: ${{ github.run_id }}
           STAGING_UPDATER_FEED_URL: ${{ secrets.STAGING_UPDATER_FEED_URL }}
-        run: node scripts/verify-desktop-upgrade-physical.mjs
-      - name: Validate Desktop Upgrade Result File Before Upload
+        run: node scripts/run-windows-upgrade-harness.mjs
+      - name: Validate Desktop Upgrade Result File with Shared Validator
         env:
           COMMIT_SHA: ${{ github.sha }}
           RUN_ID: ${{ github.run_id }}
-        run: |
-          node -e "
-            const fs = require('fs');
-            const file = 'results/desktop-upgrade-result.json';
-            if (!fs.existsSync(file)) throw new Error('Result file missing: ' + file);
-            const d = JSON.parse(fs.readFileSync(file, 'utf8'));
-            if (d.status !== 'STAGING PASS') throw new Error('Invalid status: ' + d.status);
-            if (d.commit_sha !== process.env.COMMIT_SHA) throw new Error('Mismatched commit SHA');
-            if (String(d.workflow_run_id) !== String(process.env.RUN_ID)) throw new Error('Mismatched run ID');
-            console.log('✓ Validated ' + file + ' before upload.');
-          "
+        run: node scripts/validate-result-schema.mjs results/desktop-upgrade-result.json desktop-upgrade
       - uses: actions/upload-artifact@v4
         with:
           name: desktop-upgrade-result
           path: results/desktop-upgrade-result.json
 
   generate-staging-evidence:
-    name: 11. Aggregate Machine-Readable Job Results & Generate Evidence
+    name: 12. Aggregate Machine-Readable Job Results & Generate Evidence
     needs:
       - deploy-staging
       - staging-e2e

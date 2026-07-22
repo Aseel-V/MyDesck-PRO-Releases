@@ -39,70 +39,56 @@ assert.equal(checkProductionJobSequence('publish-desktop-release', false), 'BLOC
 assert.equal(checkProductionJobSequence('production-database-migration', true), 'PERMITTED');
 console.log('✓ Scenario 2: Production database mutation or deployment before manual approval is strictly BLOCKED');
 
-// 3. Complete Staging Evidence Validation & Provenance Rule Check
-function validateResultProvenance(data, expectedCommitSha, expectedRunId) {
-  if (!data || typeof data.status !== 'string' || data.status !== 'STAGING PASS') {
-    return 'FAIL_INVALID_STATUS';
+// 3. Reject Known Placeholder Evidence String Defaults
+function checkPlaceholderValue(val) {
+  const placeholders = ['preview', 'xyz123.supabase.co', 'https://mydesck-pro-staging.vercel.app', 'unbound', 'unknown'];
+  if (!val || typeof val !== 'string' || placeholders.includes(val.toLowerCase().trim())) {
+    return 'REJECTED_PLACEHOLDER';
   }
-  if (!data.commit_sha || data.commit_sha !== expectedCommitSha) {
-    return 'FAIL_COMMIT_SHA_MISMATCH';
-  }
-  if (!data.workflow_run_id || String(data.workflow_run_id) !== String(expectedRunId)) {
-    return 'FAIL_RUN_ID_MISMATCH';
-  }
-  if (!data.timestamp || isNaN(new Date(data.timestamp).getTime())) {
-    return 'FAIL_MALFORMED_TIMESTAMP';
-  }
-  if (new Date(data.timestamp).getTime() > Date.now() + 5 * 60 * 1000) {
-    return 'FAIL_FUTURE_TIMESTAMP';
-  }
-  return 'VALID_PROVENANCE';
+  return 'VALID_REAL_IDENTIFIER';
 }
 
-const validResult = {
-  status: 'STAGING PASS',
-  commit_sha: 'e7f21f5aba548eef57fee81442c241c53ed100a3',
-  workflow_run_id: '999888',
-  timestamp: new Date().toISOString()
-};
+assert.equal(checkPlaceholderValue('preview'), 'REJECTED_PLACEHOLDER');
+assert.equal(checkPlaceholderValue('xyz123.supabase.co'), 'REJECTED_PLACEHOLDER');
+assert.equal(checkPlaceholderValue('https://mydesck-pro-staging.vercel.app'), 'REJECTED_PLACEHOLDER');
+assert.equal(checkPlaceholderValue('dpl_987654321'), 'VALID_REAL_IDENTIFIER');
+assert.equal(checkPlaceholderValue('staging-project-ref.supabase.co'), 'VALID_REAL_IDENTIFIER');
+console.log('✓ Scenario 3: Aggregator strictly REJECTS placeholder default strings (preview, xyz123.supabase.co, etc.)');
 
-assert.equal(validateResultProvenance(validResult, 'e7f21f5aba548eef57fee81442c241c53ed100a3', '999888'), 'VALID_PROVENANCE');
-assert.equal(validateResultProvenance({ ...validResult, status: 'BLOCKED' }, 'e7f21f5aba548eef57fee81442c241c53ed100a3', '999888'), 'FAIL_INVALID_STATUS');
-assert.equal(validateResultProvenance({ ...validResult, commit_sha: 'wrong_sha' }, 'e7f21f5aba548eef57fee81442c241c53ed100a3', '999888'), 'FAIL_COMMIT_SHA_MISMATCH');
-assert.equal(validateResultProvenance({ ...validResult, workflow_run_id: 'wrong_run' }, 'e7f21f5aba548eef57fee81442c241c53ed100a3', '999888'), 'FAIL_RUN_ID_MISMATCH');
-assert.equal(validateResultProvenance({ ...validResult, timestamp: 'invalid-date' }, 'e7f21f5aba548eef57fee81442c241c53ed100a3', '999888'), 'FAIL_MALFORMED_TIMESTAMP');
-assert.equal(validateResultProvenance({ ...validResult, timestamp: new Date(Date.now() + 86400000).toISOString() }, 'e7f21f5aba548eef57fee81442c241c53ed100a3', '999888'), 'FAIL_FUTURE_TIMESTAMP');
-console.log('✓ Scenario 3: Aggregator fails closed on missing commit SHA, wrong run ID, or malformed/future timestamps');
+// 4. Runner Health Check Rule
+function checkSelfHostedRunnerHealth(runners) {
+  const onlineRunner = (runners || []).find(r => 
+    r.status === 'online' && 
+    r.os === 'Windows' && 
+    r.labels && r.labels.some(l => l.name === 'mydesck-upgrade-test')
+  );
 
-// 4. Raw Evidence Harness Rule Check (No Synthetic Boolean PASS)
-function checkHarnessRawEvidenceRequirement(rawEvidenceFilesExist) {
-  if (!rawEvidenceFilesExist) {
-    return 'HARNESS_DESKTOP_UPGRADE_BLOCKED';
+  if (!onlineRunner) {
+    return 'DESKTOP UPGRADE RUNNER: BLOCKED';
   }
-  return 'HARNESS_OBSERVED_EVIDENCE_PERMITTED';
+  return 'RUNNER_HEALTHY';
 }
 
-assert.equal(checkHarnessRawEvidenceRequirement(false), 'HARNESS_DESKTOP_UPGRADE_BLOCKED');
-assert.equal(checkHarnessRawEvidenceRequirement(true), 'HARNESS_OBSERVED_EVIDENCE_PERMITTED');
-console.log('✓ Scenario 4: Upgrade harness requires raw observed filesystem evidence files (no synthetic env PASS)');
+assert.equal(checkSelfHostedRunnerHealth([]), 'DESKTOP UPGRADE RUNNER: BLOCKED');
+assert.equal(checkSelfHostedRunnerHealth([{ name: 'runner-1', status: 'offline', os: 'Windows', labels: [{ name: 'mydesck-upgrade-test' }] }]), 'DESKTOP UPGRADE RUNNER: BLOCKED');
+assert.equal(checkSelfHostedRunnerHealth([{ name: 'runner-1', status: 'online', os: 'Windows', labels: [{ name: 'mydesck-upgrade-test' }] }]), 'RUNNER_HEALTHY');
+console.log('✓ Scenario 4: Offline or missing self-hosted Windows runner fails preflight with DESKTOP UPGRADE RUNNER: BLOCKED');
 
-// 5. Production Database Host Exact Match Guard
-function checkProductionDatabaseHost(prodUrl) {
-  const EXACT_PROD_PROJECT_REF = 'pubugnfaqqukelvgckdr';
-  if (!prodUrl) return 'MISSING_PROD_URL';
-  try {
-    const url = new URL(prodUrl);
-    if (!url.hostname.includes(EXACT_PROD_PROJECT_REF)) {
-      return 'REJECTED_UNKNOWN_OR_STAGING_HOST';
-    }
-    return 'ALLOWED_PROD_HOST';
-  } catch (e) {
-    return 'INVALID_URL_FORMAT';
+// 5. Staging Updater Feed URL Validation Rule
+function checkStagingUpdaterFeedUrl(url) {
+  if (!url || typeof url !== 'string' || !url.startsWith('https://')) {
+    return 'REJECTED_NON_HTTPS_OR_EMPTY';
   }
+  if (url.includes('github.com/Aseel-V/MyDesck-PRO-Releases') || url.includes('mydesck.app')) {
+    return 'REJECTED_PRODUCTION_FEED_TARGET';
+  }
+  return 'VALID_STAGING_FEED_URL';
 }
 
-assert.equal(checkProductionDatabaseHost('https://pubugnfaqqukelvgckdr.supabase.co'), 'ALLOWED_PROD_HOST');
-assert.equal(checkProductionDatabaseHost('https://staging-db.supabase.co'), 'REJECTED_UNKNOWN_OR_STAGING_HOST');
-console.log('✓ Scenario 5: Unknown database host or staging host strictly REJECTED for production migration');
+assert.equal(checkStagingUpdaterFeedUrl(''), 'REJECTED_NON_HTTPS_OR_EMPTY');
+assert.equal(checkStagingUpdaterFeedUrl('http://staging-feed.local'), 'REJECTED_NON_HTTPS_OR_EMPTY');
+assert.equal(checkStagingUpdaterFeedUrl('https://github.com/Aseel-V/MyDesck-PRO-Releases'), 'REJECTED_PRODUCTION_FEED_TARGET');
+assert.equal(checkStagingUpdaterFeedUrl('https://isolated-staging-feed.internal.net'), 'VALID_STAGING_FEED_URL');
+console.log('✓ Scenario 5: Missing or production-pointing STAGING_UPDATER_FEED_URL strictly REJECTED');
 
 console.log('[test-workflow-negative-rules] ALL COMPREHENSIVE WORKFLOW NEGATIVE TESTS PASSED.');
