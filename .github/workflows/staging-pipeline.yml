@@ -127,7 +127,24 @@ jobs:
           STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
           STAGING_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
           STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          COMMIT_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
         run: npm run test:staging-db
+      - name: Validate Staging Database Result File Before Upload
+        env:
+          COMMIT_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          node -e "
+            const fs = require('fs');
+            const file = 'results/staging-database-result.json';
+            if (!fs.existsSync(file)) throw new Error('Result file missing: ' + file);
+            const d = JSON.parse(fs.readFileSync(file, 'utf8'));
+            if (d.status !== 'STAGING PASS') throw new Error('Invalid status: ' + d.status);
+            if (d.commit_sha !== process.env.COMMIT_SHA) throw new Error('Mismatched commit SHA');
+            if (String(d.workflow_run_id) !== String(process.env.RUN_ID)) throw new Error('Mismatched run ID');
+            console.log('✓ Validated ' + file + ' before upload.');
+          "
       - uses: actions/upload-artifact@v4
         with:
           name: staging-database-result
@@ -204,7 +221,24 @@ jobs:
           STAGING_USER_A_PASSWORD: ${{ secrets.STAGING_USER_A_PASSWORD }}
           STAGING_USER_B_EMAIL: ${{ secrets.STAGING_USER_B_EMAIL }}
           STAGING_USER_B_PASSWORD: ${{ secrets.STAGING_USER_B_PASSWORD }}
+          COMMIT_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
         run: npm run test:staging-e2e
+      - name: Validate Playwright Result File Before Upload
+        env:
+          COMMIT_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          node -e "
+            const fs = require('fs');
+            const file = 'results/playwright-result.json';
+            if (!fs.existsSync(file)) throw new Error('Result file missing: ' + file);
+            const d = JSON.parse(fs.readFileSync(file, 'utf8'));
+            if (d.status !== 'STAGING PASS') throw new Error('Invalid status: ' + d.status);
+            if (d.commit_sha !== process.env.COMMIT_SHA) throw new Error('Mismatched commit SHA');
+            if (String(d.workflow_run_id) !== String(process.env.RUN_ID)) throw new Error('Mismatched run ID');
+            console.log('✓ Validated ' + file + ' before upload.');
+          "
       - uses: actions/upload-artifact@v4
         with:
           name: playwright-result
@@ -256,6 +290,9 @@ jobs:
           path: release
       - name: Verify Candidate Assets & Hashes
         id: hash
+        env:
+          COMMIT_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
         run: |
           npm run test:desktop-assets
           INSTALLER_HASH=$(sha256sum release/MyDesck-PRO-Setup-*.exe | awk '{print $1}')
@@ -265,6 +302,21 @@ jobs:
           echo "installer_sha256=$INSTALLER_HASH" >> $GITHUB_OUTPUT
           echo "blockmap_sha256=$BLOCKMAP_HASH" >> $GITHUB_OUTPUT
           echo "latest_yml_sha256=$LATEST_HASH" >> $GITHUB_OUTPUT
+      - name: Validate Artifact Integrity Result File Before Upload
+        env:
+          COMMIT_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          node -e "
+            const fs = require('fs');
+            const file = 'results/artifact-integrity-result.json';
+            if (!fs.existsSync(file)) throw new Error('Result file missing: ' + file);
+            const d = JSON.parse(fs.readFileSync(file, 'utf8'));
+            if (d.status !== 'STAGING PASS') throw new Error('Invalid status: ' + d.status);
+            if (d.commit_sha !== process.env.COMMIT_SHA) throw new Error('Mismatched commit SHA');
+            if (String(d.workflow_run_id) !== String(process.env.RUN_ID)) throw new Error('Mismatched run ID');
+            console.log('✓ Validated ' + file + ' before upload.');
+          "
       - uses: actions/upload-artifact@v4
         with:
           name: artifact-integrity-result
@@ -288,16 +340,37 @@ jobs:
           path: release
       - run: npm ci
       - name: Verify Metadata Contract
+        env:
+          COMMIT_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
         run: npm run test:desktop-updater-metadata
+      - name: Validate Updater Metadata Result File Before Upload
+        env:
+          COMMIT_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          node -e "
+            const fs = require('fs');
+            const file = 'results/updater-metadata-result.json';
+            if (!fs.existsSync(file)) throw new Error('Result file missing: ' + file);
+            const d = JSON.parse(fs.readFileSync(file, 'utf8'));
+            if (d.status !== 'STAGING PASS') throw new Error('Invalid status: ' + d.status);
+            if (d.commit_sha !== process.env.COMMIT_SHA) throw new Error('Mismatched commit SHA');
+            if (String(d.workflow_run_id) !== String(process.env.RUN_ID)) throw new Error('Mismatched run ID');
+            console.log('✓ Validated ' + file + ' before upload.');
+          "
       - uses: actions/upload-artifact@v4
         with:
           name: updater-metadata-result
           path: results/updater-metadata-result.json
 
   staging-upgrade-test:
-    name: 10. Physical Windows Previous-Version Upgrade Test
+    name: 10. Physical Windows Previous-Version Upgrade Harness Test
     needs: staging-updater-metadata
-    runs-on: windows-latest
+    runs-on:
+      - self-hosted
+      - windows
+      - mydesck-upgrade-test
     permissions:
       contents: read
     steps:
@@ -311,8 +384,27 @@ jobs:
           name: desktop-candidate
           path: release
       - run: npm ci
-      - name: Verify Physical Windows Upgrade Test
+      - name: Execute Observed Windows Upgrade Harness
+        env:
+          COMMIT_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+          STAGING_UPDATER_FEED_URL: ${{ secrets.STAGING_UPDATER_FEED_URL }}
         run: node scripts/verify-desktop-upgrade-physical.mjs
+      - name: Validate Desktop Upgrade Result File Before Upload
+        env:
+          COMMIT_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          node -e "
+            const fs = require('fs');
+            const file = 'results/desktop-upgrade-result.json';
+            if (!fs.existsSync(file)) throw new Error('Result file missing: ' + file);
+            const d = JSON.parse(fs.readFileSync(file, 'utf8'));
+            if (d.status !== 'STAGING PASS') throw new Error('Invalid status: ' + d.status);
+            if (d.commit_sha !== process.env.COMMIT_SHA) throw new Error('Mismatched commit SHA');
+            if (String(d.workflow_run_id) !== String(process.env.RUN_ID)) throw new Error('Mismatched run ID');
+            console.log('✓ Validated ' + file + ' before upload.');
+          "
       - uses: actions/upload-artifact@v4
         with:
           name: desktop-upgrade-result

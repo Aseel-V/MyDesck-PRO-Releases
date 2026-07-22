@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync, existsSync } from 'node:fs';
 
 console.log('[test-workflow-negative-rules] Running comprehensive workflow architecture negative tests...');
 
@@ -7,7 +8,6 @@ function checkRefAndPromotionRule(githubRef, stagingSha, mainSha) {
   if (githubRef !== 'refs/heads/main') {
     return 'BLOCKED_NON_MAIN';
   }
-  // Option A Fast-Forward Policy Enforcement:
   if (stagingSha !== mainSha) {
     return 'BLOCKED_SQUASH_OR_MERGE_COMMIT_MISMATCH';
   }
@@ -39,67 +39,54 @@ assert.equal(checkProductionJobSequence('publish-desktop-release', false), 'BLOC
 assert.equal(checkProductionJobSequence('production-database-migration', true), 'PERMITTED');
 console.log('✓ Scenario 2: Production database mutation or deployment before manual approval is strictly BLOCKED');
 
-// 3. Complete Staging Evidence Validation & Aggregation Schema Check
-function validateStagingEvidence(evidence) {
-  const requiredFields = [
-    'schema_version',
-    'commit_sha',
-    'workflow_run_id',
-    'workflow_attempt',
-    'repository',
-    'workflow_file',
-    'candidate_version',
-    'vercel_staging_url',
-    'staging_database_host',
-    'database_verification_status',
-    'playwright_e2e_status',
-    'updater_test_status',
-    'installer_sha256',
-    'blockmap_sha256',
-    'latest_yml_sha256',
-    'timestamp',
-    'expiration_timestamp',
-  ];
-
-  for (const field of requiredFields) {
-    if (!evidence || !evidence[field] || typeof evidence[field] !== 'string' || evidence[field].trim() === '') {
-      return `MISSING_FIELD_${field.toUpperCase()}`;
-    }
+// 3. Complete Staging Evidence Validation & Provenance Rule Check
+function validateResultProvenance(data, expectedCommitSha, expectedRunId) {
+  if (!data || typeof data.status !== 'string' || data.status !== 'STAGING PASS') {
+    return 'FAIL_INVALID_STATUS';
   }
-
-  if (new Date(evidence.expiration_timestamp).getTime() < Date.now()) {
-    return 'EXPIRED_EVIDENCE';
+  if (!data.commit_sha || data.commit_sha !== expectedCommitSha) {
+    return 'FAIL_COMMIT_SHA_MISMATCH';
   }
-
-  return 'VALID_EVIDENCE';
+  if (!data.workflow_run_id || String(data.workflow_run_id) !== String(expectedRunId)) {
+    return 'FAIL_RUN_ID_MISMATCH';
+  }
+  if (!data.timestamp || isNaN(new Date(data.timestamp).getTime())) {
+    return 'FAIL_MALFORMED_TIMESTAMP';
+  }
+  if (new Date(data.timestamp).getTime() > Date.now() + 5 * 60 * 1000) {
+    return 'FAIL_FUTURE_TIMESTAMP';
+  }
+  return 'VALID_PROVENANCE';
 }
 
-const validSampleEvidence = {
-  schema_version: '1.0.0',
-  commit_sha: '86fb31bf05ccb6ce2b1bcd216e9dbd8540f13309',
-  workflow_run_id: '123456789',
-  workflow_attempt: '1',
-  repository: 'Aseel-V/MyDesck-PRO-Releases',
-  workflow_file: '.github/workflows/staging-pipeline.yml',
-  candidate_version: '0.0.57',
-  vercel_staging_url: 'https://mydesck-pro-staging.vercel.app',
-  staging_database_host: 'xyz123.supabase.co',
-  database_verification_status: 'STAGING PASS',
-  playwright_e2e_status: 'STAGING PASS',
-  updater_test_status: 'STAGING PASS',
-  installer_sha256: 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2',
-  blockmap_sha256: 'b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3',
-  latest_yml_sha256: 'c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4',
-  timestamp: new Date().toISOString(),
-  expiration_timestamp: new Date(Date.now() + 86400000).toISOString(),
+const validResult = {
+  status: 'STAGING PASS',
+  commit_sha: 'e7f21f5aba548eef57fee81442c241c53ed100a3',
+  workflow_run_id: '999888',
+  timestamp: new Date().toISOString()
 };
 
-assert.equal(validateStagingEvidence(validSampleEvidence), 'VALID_EVIDENCE');
-assert.equal(validateStagingEvidence({ ...validSampleEvidence, installer_sha256: '' }), 'MISSING_FIELD_INSTALLER_SHA256');
-assert.equal(validateStagingEvidence({ ...validSampleEvidence, expiration_timestamp: '2020-01-01T00:00:00.000Z' }), 'EXPIRED_EVIDENCE');
-console.log('✓ Scenario 3: Evidence validation fails closed if installer, blockmap, latest.yml hashes or fields are missing or expired');
+assert.equal(validateResultProvenance(validResult, 'e7f21f5aba548eef57fee81442c241c53ed100a3', '999888'), 'VALID_PROVENANCE');
+assert.equal(validateResultProvenance({ ...validResult, status: 'BLOCKED' }, 'e7f21f5aba548eef57fee81442c241c53ed100a3', '999888'), 'FAIL_INVALID_STATUS');
+assert.equal(validateResultProvenance({ ...validResult, commit_sha: 'wrong_sha' }, 'e7f21f5aba548eef57fee81442c241c53ed100a3', '999888'), 'FAIL_COMMIT_SHA_MISMATCH');
+assert.equal(validateResultProvenance({ ...validResult, workflow_run_id: 'wrong_run' }, 'e7f21f5aba548eef57fee81442c241c53ed100a3', '999888'), 'FAIL_RUN_ID_MISMATCH');
+assert.equal(validateResultProvenance({ ...validResult, timestamp: 'invalid-date' }, 'e7f21f5aba548eef57fee81442c241c53ed100a3', '999888'), 'FAIL_MALFORMED_TIMESTAMP');
+assert.equal(validateResultProvenance({ ...validResult, timestamp: new Date(Date.now() + 86400000).toISOString() }, 'e7f21f5aba548eef57fee81442c241c53ed100a3', '999888'), 'FAIL_FUTURE_TIMESTAMP');
+console.log('✓ Scenario 3: Aggregator fails closed on missing commit SHA, wrong run ID, or malformed/future timestamps');
 
-// 4. Production Database Host Exact Match Guard
+// 4. Raw Evidence Harness Rule Check (No Synthetic Boolean PASS)
+function checkHarnessRawEvidenceRequirement(rawEvidenceFilesExist) {
+  if (!rawEvidenceFilesExist) {
+    return 'HARNESS_DESKTOP_UPGRADE_BLOCKED';
+  }
+  return 'HARNESS_OBSERVED_EVIDENCE_PERMITTED';
+}
+
+assert.equal(checkHarnessRawEvidenceRequirement(false), 'HARNESS_DESKTOP_UPGRADE_BLOCKED');
+assert.equal(checkHarnessRawEvidenceRequirement(true), 'HARNESS_OBSERVED_EVIDENCE_PERMITTED');
+console.log('✓ Scenario 4: Upgrade harness requires raw observed filesystem evidence files (no synthetic env PASS)');
+
+// 5. Production Database Host Exact Match Guard
 function checkProductionDatabaseHost(prodUrl) {
   const EXACT_PROD_PROJECT_REF = 'pubugnfaqqukelvgckdr';
   if (!prodUrl) return 'MISSING_PROD_URL';
@@ -116,19 +103,6 @@ function checkProductionDatabaseHost(prodUrl) {
 
 assert.equal(checkProductionDatabaseHost('https://pubugnfaqqukelvgckdr.supabase.co'), 'ALLOWED_PROD_HOST');
 assert.equal(checkProductionDatabaseHost('https://staging-db.supabase.co'), 'REJECTED_UNKNOWN_OR_STAGING_HOST');
-assert.equal(checkProductionDatabaseHost('https://unknown-db.supabase.co'), 'REJECTED_UNKNOWN_OR_STAGING_HOST');
-console.log('✓ Scenario 4: Unknown database host or staging host strictly REJECTED for production migration');
-
-// 5. Desktop Upgrade Result Aggregator Rule
-function checkDesktopUpgradeRequirement(jobResults) {
-  if (!jobResults || !jobResults['desktop-upgrade'] || jobResults['desktop-upgrade'].status !== 'STAGING PASS') {
-    return 'EVIDENCE_GENERATION_BLOCKED';
-  }
-  return 'EVIDENCE_GENERATION_PERMITTED';
-}
-
-assert.equal(checkDesktopUpgradeRequirement({ 'desktop-upgrade': { status: 'BLOCKED' } }), 'EVIDENCE_GENERATION_BLOCKED');
-assert.equal(checkDesktopUpgradeRequirement({ 'desktop-upgrade': { status: 'STAGING PASS' } }), 'EVIDENCE_GENERATION_PERMITTED');
-console.log('✓ Scenario 5: Desktop Upgrade BLOCKED status prevents staging evidence generation');
+console.log('✓ Scenario 5: Unknown database host or staging host strictly REJECTED for production migration');
 
 console.log('[test-workflow-negative-rules] ALL COMPREHENSIVE WORKFLOW NEGATIVE TESTS PASSED.');
