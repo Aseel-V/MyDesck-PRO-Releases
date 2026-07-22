@@ -4,8 +4,7 @@ const root = path.resolve(__dirname, '..');
 
 const tempFiles = [
   'src/commit_log.txt',
-  'scripts/do_final_commit_push.cjs',
-  'scripts/commit_removed_synthetic_pass.cjs',
+  'scripts/commit_real_identifiers_runner.cjs',
   'powershell.bat'
 ];
 

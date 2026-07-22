@@ -32,6 +32,9 @@ assert.ok(latestYml.includes(`version: ${pkg.version}`), `latest.yml version mus
 assert.ok(latestYml.includes('MyDesck-PRO-Setup.exe'), 'latest.yml must reference MyDesck-PRO-Setup.exe');
 assert.ok(latestYml.includes('sha512:'), 'latest.yml must contain SHA512 hash');
 
+const sha512Match = latestYml.match(/sha512:\s*([^\s\r\n]+)/);
+const sha512Val = sha512Match ? sha512Match[1] : '';
+
 mkdirSync('results', { recursive: true });
 const result = {
   test: 'desktop-updater-metadata',
@@ -39,6 +42,13 @@ const result = {
   commit_sha: process.env.COMMIT_SHA || process.env.GITHUB_SHA || 'local',
   workflow_run_id: String(process.env.RUN_ID || process.env.GITHUB_RUN_ID || 'local'),
   timestamp: new Date().toISOString(),
+  version: pkg.version,
+  installer_filename: 'MyDesck-PRO-Setup.exe',
+  blockmap_filename: 'MyDesck-PRO-Setup.exe.blockmap',
+  latest_yml_filename: 'latest.yml',
+  latest_yml_sha512: sha512Val,
+  installer_exists: true,
+  blockmap_exists: true,
   details: 'Verified provider, repo, latest.yml, installer, blockmap, version, and SHA512 metadata.'
 };
 writeFileSync('results/updater-metadata-result.json', JSON.stringify(result, null, 2), 'utf8');

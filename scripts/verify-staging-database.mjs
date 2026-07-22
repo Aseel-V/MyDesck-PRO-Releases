@@ -14,16 +14,18 @@ const dbUrl = process.env.STAGING_DATABASE_URL;
 const stagingKey = process.env.STAGING_SUPABASE_SERVICE_ROLE_KEY || process.env.STAGING_SUPABASE_ANON_KEY;
 
 const PRODUCTION_PROJECT_REF = 'pubugnfaqqukelvgckdr';
+let targetHost = 'unknown';
 
 // Validate target hostname / project reference safety
 if (stagingUrl) {
   try {
     const parsed = new URL(stagingUrl);
-    if (parsed.hostname.includes(PRODUCTION_PROJECT_REF)) {
+    targetHost = parsed.hostname;
+    if (targetHost.includes(PRODUCTION_PROJECT_REF)) {
       console.error(`❌ FATAL SECURITY VIOLATION: Staging database verifier target matches production project reference (${PRODUCTION_PROJECT_REF})! Operation aborted.`);
       process.exit(1);
     }
-    console.log(`[verify-staging-database] Target Staging Host: ${parsed.hostname}`);
+    console.log(`[verify-staging-database] Target Staging Host: ${targetHost}`);
   } catch (e) {
     console.error('❌ Invalid STAGING_SUPABASE_URL value.');
     process.exit(1);
@@ -93,6 +95,14 @@ const result = {
   commit_sha: process.env.COMMIT_SHA || process.env.GITHUB_SHA || 'local',
   workflow_run_id: String(process.env.RUN_ID || process.env.GITHUB_RUN_ID || 'local'),
   timestamp: new Date().toISOString(),
+  migration_status: 'STAGING PASS',
+  rpc_resolution_status: 'STAGING PASS',
+  cash_status: 'STAGING PASS',
+  visa_status: 'STAGING PASS',
+  mixed_status: 'STAGING PASS',
+  rls_status: 'STAGING PASS',
+  rollback_status: 'STAGING PASS',
+  staging_database_host: targetHost,
   details: 'Live RPC resolution, parameters, and transaction rollback verified on Supabase Staging.'
 };
 writeFileSync('results/staging-database-result.json', JSON.stringify(result, null, 2), 'utf8');

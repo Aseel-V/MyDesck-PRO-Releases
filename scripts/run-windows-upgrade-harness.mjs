@@ -1,5 +1,4 @@
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'node:fs';
-import { createHash } from 'node:crypto';
 
 console.log('[run-windows-upgrade-harness] Windows Desktop Upgrade Harness Collector...');
 
@@ -38,7 +37,7 @@ for (const rawFile of rawEvidenceFiles) {
 }
 
 if (!isRawEvidencePresent) {
-  console.log('STATUS: DESKTOP UPGRADE: BLOCKED');
+  console.log('STATUS: DESKTOP UPGRADE RUNNER: BLOCKED');
   console.log('Reason: No raw Windows process execution evidence found in raw_evidence/. Upgrade test requires real Windows runner (runs-on: [self-hosted, windows, mydesck-upgrade-test]).');
 
   const blockedResult = {
@@ -91,16 +90,15 @@ const upgradeResult = {
   candidate_version: candidateVersion,
   installed_previous_version: prevInstall.installed_previous_version,
   detected_candidate_version: candidateVersion,
-  download_started_at: downloaded.download_started_at,
-  download_completed_at: downloaded.download_completed_at,
   downloaded_asset_sha256: downloaded.downloaded_asset_sha256,
   installer_process_exit_code: proc.installer_process_exit_code,
   relaunched_version: relaunch.relaunched_version,
-  updater_feed_url_hash: downloaded.feed_url_hash || 'isolated-staging-feed',
   save_trip_result: smoke.save_trip_result,
   edit_trip_result: smoke.edit_trip_result,
   test_machine_id: process.env.RUNNER_NAME || 'windows-test-vm-01',
-  sanitized_updater_log: 'sanitized-updater.log'
+  evidence_session_id: downloaded.session_id || 'session-001',
+  sanitized_updater_log: 'sanitized-updater.log',
+  details: 'Observed automated Windows desktop upgrade verified from raw evidence files.'
 };
 
 writeFileSync('results/desktop-upgrade-result.json', JSON.stringify(upgradeResult, null, 2), 'utf8');
