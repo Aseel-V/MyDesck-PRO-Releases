@@ -32,9 +32,12 @@ export function generateWhatsAppLink(phone: string, message: string): string {
 }
 
 export function sanitizeFilename(value: string, fallback: string = 'file'): string {
-    const cleaned = value
+    const withoutReservedCharacters = value
         .normalize('NFKD')
-        .replace(/[<>:"/\\|?*\u0000-\u001F]/g, '')
+        .replace(/[<>:"/\\|?*]/g, '');
+    const cleaned = Array.from(withoutReservedCharacters)
+        .filter((character) => (character.codePointAt(0) ?? 0) >= 0x20)
+        .join('')
         .replace(/\s+/g, '_')
         .replace(/\.+$/g, '')
         .trim();

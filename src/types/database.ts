@@ -703,6 +703,8 @@ export interface Database {
           spicy_level: number;
           dietary_tags: string[];
           barcode: string | null;
+          stock_quantity: number | null;
+          part_number: string | null;
           created_at: string;
         };
         Insert: {
@@ -732,6 +734,8 @@ export interface Database {
           spicy_level?: number;
           dietary_tags?: string[];
           barcode?: string | null;
+          stock_quantity?: number | null;
+          part_number?: string | null;
           created_at?: string;
         };
         Update: Partial<{
@@ -761,6 +765,8 @@ export interface Database {
           spicy_level: number;
           dietary_tags: string[];
           barcode: string | null;
+          stock_quantity: number | null;
+          part_number: string | null;
           created_at: string;
         }>;
         Relationships: [];

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, Search, Package, Edit2, Trash2, Car, Hash, 
@@ -24,13 +24,7 @@ export default function CarPartsInventory() {
   const [editingPart, setEditingPart] = useState<CarPart | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (profile?.id) {
-      fetchParts();
-    }
-  }, [profile?.id]);
-
-  const fetchParts = async () => {
+  const fetchParts = useCallback(async () => {
     if (!profile?.id) return;
     setLoading(true);
     try {
@@ -48,7 +42,13 @@ export default function CarPartsInventory() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [profile?.id, t]);
+
+  useEffect(() => {
+    if (profile?.id) {
+      void fetchParts();
+    }
+  }, [fetchParts, profile?.id]);
 
   const handleAddPart = async (partData: CarPartInput) => {
     if (!profile?.id) return;

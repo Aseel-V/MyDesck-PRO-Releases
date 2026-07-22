@@ -2,6 +2,8 @@ import { BusinessProfile } from './supabase';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
+type AutoTableDocument = jsPDF & { lastAutoTable: { finalY: number } };
+
 // Define the shape of our Repair Order for PDF purposes
 export interface RepairOrderPDFData {
   id: string;
@@ -88,8 +90,7 @@ export const generateRepairInvoicePDF = async (
       theme: 'grid',
       headStyles: { fillColor: [41, 128, 185] },
     });
-    // @ts-ignore
-    finalY = doc.lastAutoTable.finalY + 10;
+    finalY = (doc as AutoTableDocument).lastAutoTable.finalY + 10;
   }
 
   // -- Labor Table --
@@ -110,8 +111,7 @@ export const generateRepairInvoicePDF = async (
       theme: 'grid',
       headStyles: { fillColor: [41, 128, 185] },
     });
-    // @ts-ignore
-    finalY = doc.lastAutoTable.finalY + 10;
+    finalY = (doc as AutoTableDocument).lastAutoTable.finalY + 10;
   }
 
   // -- Totals --

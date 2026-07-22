@@ -352,7 +352,7 @@
       "defaultBody": "שלום {{clientName}}, הנסיעה שלך אל {{destination}} מתוכננת מ-{{startDate}} עד {{endDate}}. יתרה לתשלום: {{amountDue}} {{currency}}."
     },
     "actions": { "edit": "עריכה", "editAria": "עריכת הנסיעה", "pdf": "PDF", "pdfAria": "ייצוא הנסיעה ל-PDF", "pdfLoading": "הכנת PDF" },
-    "toolbar": { "mainActions": "פעולות ראשיות לנסיעות", "newTrip": "טיול חדש", "trash": "אשפה", "reports": "דוחות", "notifications": "התראות", "viewMode": "תצוגת נסיעות", "gridView": "תצוגת רשת", "listView": "תצוגת רשימה", "export": "ייצוא", "exportCsv": "ייצוא הנסיעות המסוננות ל-CSV", "exportXlsx": "ייצוא הנסיעות המסוננות ל-Excel", "exportInvoices": "ייצוא חשבוניות של נסיעות מסוננות", "saveFilter": "שמירת מסנן", "resetFilters": "איפוס מסננים", "moreActions": "פעולות נוספות", "templates": "תבניות", "help": "עזרה",
+    "toolbar": { "mainActions": "פעולות ראשיות לנסיעות", "newTrip": "טיול חדש", "trash": "אשפה", "reports": "דוחות", "notifications": "התראות", "viewMode": "תצוגת נסיעות", "gridView": "תצוגת רשת", "listView": "תצוגת רשימה", "export": "ייצוא", "exportCsv": "ייצוא הנסיעות המסוננות ל-CSV", "exportXlsx": "ייצוא הנסיעות המסוננות ל-Excel", "exportInvoices": "ייצוא חשבוניות של נסיעות מסוננות", "saveFilter": "שמירת מסנן", "resetFilters": "איפוס מסננים", "moreActions": "פעולות נוספות", "templates": "תבניות", "help": "עזרה" },
     "sortButtonLabel": "תפריט מיון טיולים",
     "sortLabel": "מיון",
     "sortTitle": "מיון טיולים",
@@ -381,7 +381,7 @@
       "remainingDesc": "יתרה לתשלום: מהגבוה לנמוך",
       "remainingAsc": "יתרה לתשלום: מהנמוך לגבוה",
       "overdueFirst": "פיגור בתשלום תחילה"
-    } },
+    },
     "templates": {
       "type": "סוג תבנית", "favorite": "מועדף", "includeArchived": "כולל ארכיון", "used": "בשימוש {{count}} פעמים",
       "types": { "full_trip": "נסיעה מלאה", "itinerary": "מסלול", "hotel": "מלון", "transportation": "תחבורה", "pricing": "תמחור", "checklist": "רשימת בדיקה", "message": "הודעה" },

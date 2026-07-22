@@ -7,7 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import { Database } from '../types/supabase';
+import { Database, Json } from '../types/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   RestaurantTable, 
@@ -902,14 +902,14 @@ export function useRestaurant() {
     }: { 
       staffId: string; 
       date: string; 
-      shifts: Record<string, unknown>[];
-      expenses: Record<string, unknown>[]; 
+      shifts: Json[];
+      expenses: Json[];
     }) => {
       const { data, error } = await supabase.rpc('close_business_day_secure', {
         p_auth_staff_id: staffId,
         p_date: date,
-        p_shifts: shifts as any,
-        p_expenses: expenses as any
+        p_shifts: shifts,
+        p_expenses: expenses
       });
 
       if (error) throw error;

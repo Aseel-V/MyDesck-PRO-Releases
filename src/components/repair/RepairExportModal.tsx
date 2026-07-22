@@ -17,7 +17,11 @@ export default function RepairExportModal({ order, onClose }: RepairExportModalP
     setLoading(true);
     try {
       const pdfBytes = await generateRepairInvoicePDF(order, profile);
-      const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
+      const pdfBuffer = pdfBytes.buffer.slice(
+        pdfBytes.byteOffset,
+        pdfBytes.byteOffset + pdfBytes.byteLength
+      ) as ArrayBuffer;
+      const blob = new Blob([pdfBuffer], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;

@@ -8,6 +8,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'sonner';
 import { fetchVehicleByPlate } from '../../services/govData';
 import { Search, Loader2 } from 'lucide-react';
+import type { Database } from '../../types/supabase';
 
 interface NewCarFormProps {
   onClose: () => void;
@@ -29,6 +30,7 @@ const carSchema = z.object({
 });
 
 type CarFormValues = z.infer<typeof carSchema>;
+type CustomerVehicleInsert = Database['public']['Tables']['customer_vehicles']['Insert'];
 
 export default function NewCarForm({ onClose, onSave }: NewCarFormProps) {
   const { profile } = useAuth();
@@ -101,13 +103,13 @@ export default function NewCarForm({ onClose, onSave }: NewCarFormProps) {
     try {
       // 1. Upsert Vehicle (Identify by plate + business_id)
       const { data: existingVehicle } = await supabase
-        .from('customer_vehicles' as any)
+        .from('customer_vehicles')
         .select('id')
         .eq('business_id', profile.id)
         .eq('plate_number', data.plate_number)
         .maybeSingle();
 
-      let vehicleId = (existingVehicle as any)?.id;
+      let vehicleId = existingVehicle?.id;
 
       let testExpiryDate = null;
       if (data.test_expiry) {
@@ -135,29 +137,29 @@ export default function NewCarForm({ onClose, onSave }: NewCarFormProps) {
             trim_level: data.trim_level,
             ownership: data.ownership,
             updated_at: new Date().toISOString()
-      };
+      } as unknown as CustomerVehicleInsert;
 
       if (!vehicleId) {
         // Create new vehicle
         const { data: newVehicle, error: vehicleError } = await supabase
-          .from('customer_vehicles' as any)
+          .from('customer_vehicles')
           .insert([{ ...vehicleData, created_at: new Date().toISOString() }])
           .select()
           .single();
 
         if (vehicleError) throw vehicleError;
-        vehicleId = (newVehicle as any).id;
+        vehicleId = newVehicle.id;
       } else {
         // Update existing
          await supabase
-          .from('customer_vehicles' as any)
+          .from('customer_vehicles')
           .update(vehicleData)
           .eq('id', vehicleId);
       }
 
       // 2. Create Repair Order
       const { error: orderError } = await supabase
-        .from('repair_orders' as any)
+        .from('repair_orders')
         .insert([{
             business_id: profile.id,
             vehicle_id: vehicleId,
@@ -175,9 +177,12 @@ export default function NewCarForm({ onClose, onSave }: NewCarFormProps) {
       onSave(); // Refresh list
       onClose();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating car:', error);
-      toast.error(error.message || 'Failed to create car');
+      const message = typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string'
+        ? error.message
+        : 'Failed to create car';
+      toast.error(message);
     } finally {
       setLoading(false);
     }

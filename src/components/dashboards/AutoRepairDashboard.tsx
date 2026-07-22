@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
@@ -10,6 +10,16 @@ import RepairOrderModal from '../repair/RepairOrderModal';
 import RepairExportModal from '../repair/RepairExportModal';
 
 import { RepairOrderPDFData } from '../../lib/repairPdfGenerator';
+import type { Database } from '../../types/supabase';
+
+type LedgerRow = Database['public']['Tables']['customers_ledger']['Row'];
+type CustomerVehicle = Database['public']['Tables']['customer_vehicles']['Row'];
+
+interface Debtor {
+  name: string | null;
+  phone: string;
+  debt: number;
+}
 
 export default function AutoRepairDashboard() {
   const { profile } = useAuth();
@@ -31,9 +41,9 @@ export default function AutoRepairDashboard() {
 
   // Stats
 
-  const [debtors, setDebtors] = useState<any[]>([]);
+  const [debtors, setDebtors] = useState<Debtor[]>([]);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
 
     if (!profile) return;
 
@@ -41,7 +51,7 @@ export default function AutoRepairDashboard() {
 
     // 2. Fetch Ledger for Debt
     const { data: lData } = await supabase
-        .from('customers_ledger' as any)
+        .from('customers_ledger')
         .select('*')
         .eq('business_id', profile.id);
 
@@ -49,47 +59,47 @@ export default function AutoRepairDashboard() {
 
 
     // Group debtors by phone or simple mapping
-    const debtorsMap = new Map();
-    ((lData as any) || []).forEach((l: any) => {
+    const debtorsMap = new Map<string, Debtor>();
+    (lData || []).forEach((l: LedgerRow) => {
         // Assuming simple one-row-per-transaction ledger, we need Aggregation
         // Or if 'balance' is a running balance column.
         // For simplicity: calculate sum of (debit - credit) per customer
         const k = l.customer_phone;
         const current = debtorsMap.get(k) || { name: l.customer_name, phone: k, debt: 0 };
-        current.debt += Number(l.debit) - Number(l.credit);
+        current.debt += Number(l.debit || 0) - Number(l.credit || 0);
         debtorsMap.set(k, current);
     });
     
     // Convert map to array where debt > 0
-    const finalDebtors: any[] = [];
+    const finalDebtors: Debtor[] = [];
     debtorsMap.forEach(v => {
         if (v.debt > 0) finalDebtors.push(v);
     });
     setDebtors(finalDebtors.sort((a, b) => b.debt - a.debt));
 
 
-  };
+  }, [profile]);
 
   useEffect(() => {
-    fetchDashboardData();
-  }, [profile]);
+    void fetchDashboardData();
+  }, [fetchDashboardData]);
 
   // Reception Logic
   const handleCheckPlate = async () => {
-    if (!receptionPlate) return;
+    if (!receptionPlate || !profile?.id) return;
     setReceptionWarning(null);
 
     // 1. Check if vehicle exists
     const { data: vData } = await supabase
-      .from('customer_vehicles' as any)
+      .from('customer_vehicles')
       .select('*')
       .eq('plate_number', receptionPlate)
-      .eq('business_id', profile?.id)
+      .eq('business_id', profile.id)
       .single();
 
     if (vData) {
         // 2. Check Debt
-        const v = vData as any;
+        const v: CustomerVehicle = vData;
         const debtor = debtors.find(d => d.phone === v.owner_phone);
         if (debtor && debtor.debt > 1) { // Tolerance
             setReceptionWarning(`⚠️ This customer owes ${format(debtor.debt, currency)}!`);

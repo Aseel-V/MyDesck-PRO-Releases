@@ -4,7 +4,13 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
 import { X, Plus, Search, Trash2, Save, Wrench, Package } from 'lucide-react';
-import { AutoRepairOrder, AutoRepairItem } from '../../types/autoRepair';
+import { AutoRepairOrder, AutoRepairItem, RepairStatus } from '../../types/autoRepair';
+import type { Database } from '../../types/supabase';
+
+type InventorySearchResult = Pick<
+  Database['public']['Tables']['restaurant_menu_items']['Row'],
+  'id' | 'name' | 'price' | 'cost_price' | 'stock_quantity'
+>;
 
 interface RepairOrderModalProps {
   onClose: () => void;
@@ -25,35 +31,34 @@ export default function RepairOrderModal({ onClose, onSaved, initialOrder, initi
   const [vehicleModel, setVehicleModel] = useState(initialOrder?.vehicle?.model || '');
   
   const [odometer, setOdometer] = useState(initialOrder?.odometer_reading || 0);
-  const [status, setStatus] = useState(initialOrder?.status || 'pending');
+  const [status, setStatus] = useState<RepairStatus>(initialOrder?.status || 'pending');
   const [notes] = useState(initialOrder?.notes || initialOrder?.technician_notes || '');
 
   const [items, setItems] = useState<Partial<AutoRepairItem>[]>(initialOrder?.items || []);
   
   // Inventory Search
   const [inventorySearch, setInventorySearch] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<InventorySearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false); (void isSearching);
 
   const [loading, setLoading] = useState(false);
 
   // Search for vehicle when plate changes (debounced ideal, but onBlur for simple)
   const handlePlateBlur = async () => {
-    if (!plate || vehicleId) return;
+    if (!plate || vehicleId || !profile?.id) return;
     const { data } = await supabase
-      .from('customer_vehicles' as any)
+      .from('customer_vehicles')
       .select('*')
       .eq('plate_number', plate)
-      .eq('business_id', profile?.id)
+      .eq('business_id', profile.id)
       .single();
     
     if (data) {
-      const v = data as any;
-      setVehicleId(v.id);
-      setOwnerName(v.owner_name);
-      setOwnerPhone(v.owner_phone);
-      setVehicleModel(v.model);
-      setOdometer(v.last_odometer || 0);
+      setVehicleId(data.id);
+      setOwnerName(data.owner_name);
+      setOwnerPhone(data.owner_phone);
+      setVehicleModel(data.model || '');
+      setOdometer(data.last_odometer || 0);
     }
   };
 
@@ -76,7 +81,7 @@ export default function RepairOrderModal({ onClose, onSaved, initialOrder, initi
     return () => clearTimeout(timer);
   }, [inventorySearch]);
 
-  const addItem = (type: 'part' | 'labor', invItem?: any) => {
+  const addItem = (type: 'part' | 'labor', invItem?: InventorySearchResult) => {
     setItems([
       ...items,
       {
@@ -99,7 +104,7 @@ export default function RepairOrderModal({ onClose, onSaved, initialOrder, initi
     setItems(newItems);
   };
 
-  const updateItem = (idx: number, field: keyof AutoRepairItem, value: any) => {
+  const updateItem = <K extends keyof AutoRepairItem>(idx: number, field: K, value: AutoRepairItem[K]) => {
     const newItems = [...items];
     newItems[idx] = { ...newItems[idx], [field]: value };
     setItems(newItems);
@@ -113,6 +118,7 @@ export default function RepairOrderModal({ onClose, onSaved, initialOrder, initi
   const estimatedProfit = grandTotal - totalCost;
 
   const handleSave = async () => {
+    if (!profile?.id) return;
     setLoading(true);
     try {
       let finalVehicleId = vehicleId;
@@ -120,25 +126,25 @@ export default function RepairOrderModal({ onClose, onSaved, initialOrder, initi
       // 1. Upsert Vehicle if new
       if (!vehicleId) {
         const { data: vData, error: vError } = await supabase
-            .from('customer_vehicles' as any)
+            .from('customer_vehicles')
             .upsert({
-                business_id: profile?.id,
+                business_id: profile.id,
                 plate_number: plate,
                 owner_name: ownerName,
                 owner_phone: ownerPhone,
                 model: vehicleModel,
                 last_odometer: odometer
-            } as any, { onConflict: 'business_id,plate_number' })
+            }, { onConflict: 'business_id,plate_number' })
             .select()
             .single();
         
         if (vError) throw vError;
-        finalVehicleId = (vData as any).id;
+        finalVehicleId = vData.id;
       }
 
       // 2. Upsert Order
       const orderPayload = {
-          business_id: profile?.id,
+          business_id: profile.id,
           vehicle_id: finalVehicleId,
           status,
           odometer_reading: odometer,
@@ -152,11 +158,11 @@ export default function RepairOrderModal({ onClose, onSaved, initialOrder, initi
       let orderId = initialOrder?.id;
 
       if (orderId) {
-          await supabase.from('repair_orders' as any).update(orderPayload).eq('id', orderId);
+          await supabase.from('repair_orders').update(orderPayload).eq('id', orderId);
       } else {
-          const { data: oData, error: oError } = await supabase.from('repair_orders' as any).insert(orderPayload).select().single();
+          const { data: oData, error: oError } = await supabase.from('repair_orders').insert(orderPayload).select().single();
           if (oError) throw oError;
-          orderId = (oData as any).id;
+          orderId = oData.id;
       }
 
       // 3. Upsert Items (Delete all and recreate is easiest for simple logic, but Upsert is better)
@@ -167,6 +173,9 @@ export default function RepairOrderModal({ onClose, onSaved, initialOrder, initi
       // Better: Only Insert new items (no id) and Update existing.
       
       for (const item of items) {
+          if (!orderId || !item.type || !item.name) {
+              throw new Error('Repair order item is incomplete');
+          }
           const itemPayload = {
               order_id: orderId,
               type: item.type,
@@ -178,14 +187,10 @@ export default function RepairOrderModal({ onClose, onSaved, initialOrder, initi
               warranty_days: item.warranty_days
           };
 
-          // If it has an ID, update. Else insert.
-          // Since we track `items` from state which might be Partial<AutoRepairItem> 
-          // (if loaded from DB it has ID, new ones don't).
-           // @ts-ignore
           if (item.id) {
-               await supabase.from('repair_order_items' as any).update(itemPayload).eq('id', item.id);
+               await supabase.from('repair_order_items').update(itemPayload).eq('id', item.id);
           } else {
-              await supabase.from('repair_order_items' as any).insert(itemPayload);
+              await supabase.from('repair_order_items').insert(itemPayload);
           }
       }
 
@@ -267,7 +272,7 @@ export default function RepairOrderModal({ onClose, onSaved, initialOrder, initi
              <label className="block text-xs font-medium text-slate-500 mb-1">Status</label>
                <select 
                  value={status}
-                 onChange={(e) => setStatus(e.target.value as any)}
+                 onChange={(e) => setStatus(e.target.value as RepairStatus)}
                  className="w-full p-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700"
                >
                  <option value="pending">Reception (Pending)</option>

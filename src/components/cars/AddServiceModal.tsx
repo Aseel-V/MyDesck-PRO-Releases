@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { X, Search, Plus, Wrench, Coins, Package } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '../../lib/supabase';
@@ -26,11 +26,7 @@ export default function AddServiceModal({ order, onClose, onSuccess }: AddServic
     const [laborCost, setLaborCost] = useState<string>('');
     const [saving, setSaving] = useState(false);
 
-    useEffect(() => {
-        fetchParts();
-    }, [profile?.id]);
-
-    const fetchParts = async () => {
+    const fetchParts = useCallback(async () => {
         if (!profile?.id) return;
         try {
             const { data, error } = await supabase
@@ -48,7 +44,11 @@ export default function AddServiceModal({ order, onClose, onSuccess }: AddServic
         } finally {
             setLoading(false);
         }
-    };
+    }, [profile?.id]);
+
+    useEffect(() => {
+        void fetchParts();
+    }, [fetchParts]);
 
     const filteredParts = parts.filter(part => {
         const searchLower = searchTerm.toLowerCase();
