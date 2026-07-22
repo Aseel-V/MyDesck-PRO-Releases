@@ -33,20 +33,47 @@ CREATE TABLE IF NOT EXISTS user_profiles (
   updated_at timestamptz DEFAULT now()
 );
 
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS role text;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'user_profiles'
+      AND column_name = 'role'
+      AND data_type = 'text'
+  ) THEN
+    RAISE EXCEPTION 'public.user_profiles.role must be text' USING ERRCODE = '42804';
+  END IF;
+END;
+$$;
+
+ALTER TABLE user_profiles ALTER COLUMN role SET DEFAULT 'user';
+UPDATE user_profiles SET role = 'user' WHERE role IS NULL;
+ALTER TABLE user_profiles ALTER COLUMN role SET NOT NULL;
+ALTER TABLE user_profiles DROP CONSTRAINT IF EXISTS user_profiles_role_check;
+ALTER TABLE user_profiles
+  ADD CONSTRAINT user_profiles_role_check CHECK (role IN ('user', 'admin'));
+
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can read own profile" ON user_profiles;
 CREATE POLICY "Users can read own profile"
   ON user_profiles
   FOR SELECT
   TO authenticated
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert own profile" ON user_profiles;
 CREATE POLICY "Users can insert own profile"
   ON user_profiles
   FOR INSERT
   TO authenticated
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own profile" ON user_profiles;
 CREATE POLICY "Users can update own profile"
   ON user_profiles
   FOR UPDATE

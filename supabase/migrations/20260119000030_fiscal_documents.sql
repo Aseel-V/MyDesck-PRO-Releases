@@ -227,25 +227,30 @@ ALTER TABLE fiscal_document_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE allocation_numbers_log ENABLE ROW LEVEL SECURITY;
 
 -- Counters policies
+DROP POLICY IF EXISTS "Users can manage their own fiscal counters" ON fiscal_counters;
 CREATE POLICY "Users can manage their own fiscal counters"
     ON fiscal_counters FOR ALL
     USING (auth.uid() = business_id);
 
 -- Documents policies
+DROP POLICY IF EXISTS "Users can read their own fiscal documents" ON fiscal_documents;
 CREATE POLICY "Users can read their own fiscal documents"
     ON fiscal_documents FOR SELECT
     USING (auth.uid() = business_id);
 
+DROP POLICY IF EXISTS "Users can insert their own fiscal documents" ON fiscal_documents;
 CREATE POLICY "Users can insert their own fiscal documents"
     ON fiscal_documents FOR INSERT
     WITH CHECK (auth.uid() = business_id);
 
 -- Note: Updates limited to specific fields (status, cancellation) - handled by functions
+DROP POLICY IF EXISTS "Users can update their own fiscal documents" ON fiscal_documents;
 CREATE POLICY "Users can update their own fiscal documents"
     ON fiscal_documents FOR UPDATE
     USING (auth.uid() = business_id);
 
 -- Items policies (inherit from document)
+DROP POLICY IF EXISTS "Users can manage items of their own documents" ON fiscal_document_items;
 CREATE POLICY "Users can manage items of their own documents"
     ON fiscal_document_items FOR ALL
     USING (
@@ -257,6 +262,7 @@ CREATE POLICY "Users can manage items of their own documents"
     );
 
 -- Allocation log policies
+DROP POLICY IF EXISTS "Users can manage their own allocation logs" ON allocation_numbers_log;
 CREATE POLICY "Users can manage their own allocation logs"
     ON allocation_numbers_log FOR ALL
     USING (auth.uid() = business_id);
@@ -423,11 +429,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_fiscal_documents_updated ON fiscal_documents;
 CREATE TRIGGER trigger_fiscal_documents_updated
     BEFORE UPDATE ON fiscal_documents
     FOR EACH ROW
     EXECUTE FUNCTION update_fiscal_updated_at();
 
+DROP TRIGGER IF EXISTS trigger_fiscal_counters_updated ON fiscal_counters;
 CREATE TRIGGER trigger_fiscal_counters_updated
     BEFORE UPDATE ON fiscal_counters
     FOR EACH ROW

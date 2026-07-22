@@ -8,6 +8,17 @@
 ALTER TABLE restaurant_menu_items 
 ADD COLUMN IF NOT EXISTS barcode TEXT;
 
+-- Market-mode indexes and later policies use direct ownership. Preserve
+-- restaurant ownership by backfilling from the item's category when present.
+ALTER TABLE restaurant_menu_items
+ADD COLUMN IF NOT EXISTS business_id UUID REFERENCES auth.users(id);
+
+UPDATE restaurant_menu_items item
+SET business_id = category.business_id
+FROM restaurant_menu_categories category
+WHERE item.category_id = category.id
+  AND item.business_id IS NULL;
+
 -- Create B-Tree index for O(1) barcode lookups
 -- Note: Not unique per business as same product might exist in multiple businesses
 CREATE INDEX IF NOT EXISTS idx_menu_items_barcode ON restaurant_menu_items(barcode);

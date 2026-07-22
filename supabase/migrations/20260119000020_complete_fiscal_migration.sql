@@ -162,6 +162,8 @@ CREATE TABLE IF NOT EXISTS public.fiscal_document_items (
     quantity NUMERIC(10, 3) NOT NULL DEFAULT 1,
     unit TEXT DEFAULT 'pcs',
     unit_price BIGINT NOT NULL,
+    unit_cost BIGINT DEFAULT 0,
+    total_cost BIGINT GENERATED ALWAYS AS (unit_cost * quantity) STORED,
     
     discount_amount BIGINT DEFAULT 0,
     discount_percentage NUMERIC(5, 2) DEFAULT 0,
@@ -399,6 +401,27 @@ CREATE TABLE IF NOT EXISTS public.z_report_counters (
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
+
+CREATE OR REPLACE VIEW public.view_daily_profit_summary WITH (security_invoker = true) AS
+SELECT
+    date_trunc('day', document.created_at) AS report_date,
+    document.business_id,
+    COUNT(document.id) AS transaction_count,
+    SUM(document.total_amount) AS total_revenue,
+    SUM(document.subtotal_before_vat) AS net_revenue,
+    SUM((
+        SELECT SUM(item.total_cost)
+        FROM public.fiscal_document_items item
+        WHERE item.document_id = document.id
+    )) AS total_cogs,
+    SUM(document.subtotal_before_vat) - SUM((
+        SELECT SUM(item.total_cost)
+        FROM public.fiscal_document_items item
+        WHERE item.document_id = document.id
+    )) AS gross_profit
+FROM public.fiscal_documents document
+WHERE document.status = 'issued'
+GROUP BY 1, 2;
 
 -- =====================================================================
 -- PART 12: RLS POLICIES

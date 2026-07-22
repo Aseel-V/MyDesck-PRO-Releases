@@ -1,4 +1,7 @@
 -- Fix: Only create default staff (Kitchen/Waiter) if business_type is 'restaurant'
+ALTER TABLE public.business_profiles
+ADD COLUMN IF NOT EXISTS business_type text NOT NULL DEFAULT 'tourism';
+
 CREATE OR REPLACE FUNCTION create_default_restaurant_staff()
 RETURNS TRIGGER
 LANGUAGE plpgsql

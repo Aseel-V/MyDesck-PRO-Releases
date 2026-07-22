@@ -40,18 +40,21 @@ CREATE TABLE IF NOT EXISTS business_profiles (
 
 ALTER TABLE business_profiles ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can read own profile" ON business_profiles;
 CREATE POLICY "Users can read own profile"
   ON business_profiles
   FOR SELECT
   TO authenticated
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert own profile" ON business_profiles;
 CREATE POLICY "Users can insert own profile"
   ON business_profiles
   FOR INSERT
   TO authenticated
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own profile" ON business_profiles;
 CREATE POLICY "Users can update own profile"
   ON business_profiles
   FOR UPDATE
@@ -59,6 +62,7 @@ CREATE POLICY "Users can update own profile"
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete own profile" ON business_profiles;
 CREATE POLICY "Users can delete own profile"
   ON business_profiles
   FOR DELETE

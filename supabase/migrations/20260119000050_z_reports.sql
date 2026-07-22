@@ -272,14 +272,17 @@ ALTER TABLE x_reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE shift_transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE z_report_counters ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can manage their own cash shifts" ON cash_shifts;
 CREATE POLICY "Users can manage their own cash shifts"
     ON cash_shifts FOR ALL
     USING (auth.uid() = business_id);
 
+DROP POLICY IF EXISTS "Users can read their own Z-reports" ON z_reports;
 CREATE POLICY "Users can read their own Z-reports"
     ON z_reports FOR SELECT
     USING (auth.uid() = business_id);
 
+DROP POLICY IF EXISTS "Users can create their own Z-reports" ON z_reports;
 CREATE POLICY "Users can create their own Z-reports"
     ON z_reports FOR INSERT
     WITH CHECK (auth.uid() = business_id);
@@ -287,10 +290,12 @@ CREATE POLICY "Users can create their own Z-reports"
 -- Z-reports cannot be updated or deleted once created
 -- This is enforced by NOT having UPDATE/DELETE policies
 
+DROP POLICY IF EXISTS "Users can manage their own X-reports" ON x_reports;
 CREATE POLICY "Users can manage their own X-reports"
     ON x_reports FOR ALL
     USING (auth.uid() = business_id);
 
+DROP POLICY IF EXISTS "Users can manage their own shift transactions" ON shift_transactions;
 CREATE POLICY "Users can manage their own shift transactions"
     ON shift_transactions FOR ALL
     USING (
@@ -301,6 +306,7 @@ CREATE POLICY "Users can manage their own shift transactions"
         )
     );
 
+DROP POLICY IF EXISTS "Users can manage their own Z-counters" ON z_report_counters;
 CREATE POLICY "Users can manage their own Z-counters"
     ON z_report_counters FOR ALL
     USING (auth.uid() = business_id);
@@ -568,12 +574,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trg_update_shift_after_transaction ON shift_transactions;
 CREATE TRIGGER trg_update_shift_after_transaction
     AFTER INSERT ON shift_transactions
     FOR EACH ROW
     EXECUTE FUNCTION trigger_update_shift_totals();
 
 -- Update timestamp trigger
+DROP TRIGGER IF EXISTS trigger_cash_shifts_updated ON cash_shifts;
 CREATE TRIGGER trigger_cash_shifts_updated
     BEFORE UPDATE ON cash_shifts
     FOR EACH ROW
