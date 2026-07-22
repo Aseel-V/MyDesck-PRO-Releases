@@ -88,26 +88,102 @@ export function validateResultFile(filePath, expectedTest, expectedSha, expected
       console.error(`❌ FAIL CLOSED: Field "${field}" in ${filePath} must be type ${type}, got ${typeof data[field]}`);
       process.exit(1);
     }
+    if (type === 'string' && data[field].trim() === '') {
+      console.error(`❌ FAIL CLOSED: Field "${field}" in ${filePath} must not be empty`);
+      process.exit(1);
+    }
+  }
+
+  function assertAllowed(field, allowed) {
+    assertField(field, 'string');
+    if (!allowed.includes(data[field])) {
+      console.error(`❌ FAIL CLOSED: Field "${field}" in ${filePath} has an unsupported value`);
+      process.exit(1);
+    }
+  }
+
+  function assertInteger(field, predicate, description) {
+    assertField(field, 'number');
+    if (!Number.isInteger(data[field]) || !predicate(data[field])) {
+      console.error(`❌ FAIL CLOSED: Field "${field}" in ${filePath} must be ${description}`);
+      process.exit(1);
+    }
+  }
+
+  function assertDigest(field, algorithm) {
+    assertField(field, 'string');
+    const pattern = algorithm === 'sha256' ? /^[a-f0-9]{64}$/i : /^[A-Za-z0-9+/]{86}==$/;
+    if (!pattern.test(data[field])) {
+      console.error(`❌ FAIL CLOSED: Field "${field}" in ${filePath} must be a valid ${algorithm.toUpperCase()} digest`);
+      process.exit(1);
+    }
+  }
+
+  function assertSemver(field) {
+    assertField(field, 'string');
+    if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(data[field])) {
+      console.error(`❌ FAIL CLOSED: Field "${field}" in ${filePath} must be a semantic version`);
+      process.exit(1);
+    }
   }
 
   if (expectedTest === 'staging-database') {
-    ['migration_status', 'rpc_resolution_status', 'cash_status', 'visa_status', 'mixed_status', 'rls_status', 'rollback_status', 'staging_database_host'].forEach(f => assertField(f, 'string'));
+    ['migration_status', 'rpc_resolution_status', 'cash_status', 'visa_status', 'mixed_status', 'rls_status', 'rollback_status']
+      .forEach(field => assertAllowed(field, ['STAGING PASS']));
+    assertField('staging_database_host', 'string');
+    if (data.staging_database_host === 'unknown' || !/^[a-z0-9.-]+$/i.test(data.staging_database_host)) {
+      console.error(`❌ FAIL CLOSED: staging_database_host in ${filePath} must be a real hostname`);
+      process.exit(1);
+    }
   } else if (expectedTest === 'playwright') {
-    ['staging_url', 'cash_status', 'visa_status', 'mixed_status', 'currency_status', 'validation_status', 'sorting_status', 'analytics_status', 'rls_status'].forEach(f => assertField(f, 'string'));
-    assertField('passed_tests', 'number');
-    assertField('failed_tests', 'number');
+    assertField('staging_url', 'string');
+    try {
+      if (new URL(data.staging_url).protocol !== 'https:') throw new Error('not HTTPS');
+    } catch {
+      console.error(`❌ FAIL CLOSED: staging_url in ${filePath} must be a valid HTTPS URL`);
+      process.exit(1);
+    }
+    ['cash_status', 'visa_status', 'mixed_status', 'currency_status', 'validation_status', 'sorting_status', 'analytics_status', 'rls_status']
+      .forEach(field => assertAllowed(field, ['STAGING PASS']));
+    assertInteger('passed_tests', value => value > 0, 'a positive integer');
+    assertInteger('failed_tests', value => value === 0, 'zero');
   } else if (expectedTest === 'desktop-updater-metadata') {
-    ['version', 'installer_filename', 'blockmap_filename', 'latest_yml_filename', 'latest_yml_sha512'].forEach(f => assertField(f, 'string'));
+    assertSemver('version');
+    assertAllowed('installer_filename', ['MyDesck-PRO-Setup.exe']);
+    assertAllowed('blockmap_filename', ['MyDesck-PRO-Setup.exe.blockmap']);
+    assertAllowed('latest_yml_filename', ['latest.yml']);
+    assertDigest('latest_yml_sha512', 'sha512');
     assertField('installer_exists', 'boolean');
     assertField('blockmap_exists', 'boolean');
+    if (!data.installer_exists || !data.blockmap_exists) {
+      console.error(`❌ FAIL CLOSED: Desktop updater assets in ${filePath} must exist`);
+      process.exit(1);
+    }
   } else if (expectedTest === 'desktop-upgrade') {
-    ['previous_version', 'candidate_version', 'installed_previous_version', 'detected_candidate_version', 'downloaded_asset_sha256', 'relaunched_version', 'save_trip_result', 'edit_trip_result', 'test_machine_id', 'evidence_session_id', 'sanitized_updater_log'].forEach(f => assertField(f, 'string'));
-    assertField('installer_process_exit_code', 'number');
+    ['previous_version', 'candidate_version', 'installed_previous_version', 'detected_candidate_version', 'relaunched_version'].forEach(assertSemver);
+    assertDigest('downloaded_asset_sha256', 'sha256');
+    assertInteger('installer_process_exit_code', value => value === 0, 'zero');
+    assertAllowed('save_trip_result', ['PASS']);
+    assertAllowed('edit_trip_result', ['PASS']);
+    ['test_machine_id', 'evidence_session_id', 'sanitized_updater_log'].forEach(field => assertField(field, 'string'));
+    if (data.previous_version !== data.installed_previous_version || data.candidate_version !== data.detected_candidate_version || data.candidate_version !== data.relaunched_version) {
+      console.error(`❌ FAIL CLOSED: Desktop upgrade versions in ${filePath} are inconsistent`);
+      process.exit(1);
+    }
   } else if (expectedTest === 'artifact-integrity') {
-    ['installer_filename', 'installer_sha256', 'blockmap_filename', 'blockmap_sha256', 'latest_yml_filename', 'latest_yml_sha256', 'latest_yml_version', 'latest_yml_installer_filename', 'latest_yml_sha512'].forEach(f => assertField(f, 'string'));
-    assertField('installer_size', 'number');
-    assertField('blockmap_size', 'number');
-    assertField('latest_yml_size', 'number');
+    assertAllowed('installer_filename', ['MyDesck-PRO-Setup.exe']);
+    assertDigest('installer_sha256', 'sha256');
+    assertAllowed('blockmap_filename', ['MyDesck-PRO-Setup.exe.blockmap']);
+    assertDigest('blockmap_sha256', 'sha256');
+    assertAllowed('latest_yml_filename', ['latest.yml']);
+    assertDigest('latest_yml_sha256', 'sha256');
+    assertSemver('latest_yml_version');
+    assertAllowed('latest_yml_installer_filename', ['MyDesck-PRO-Setup.exe']);
+    assertDigest('latest_yml_sha512', 'sha512');
+    ['installer_size', 'blockmap_size', 'latest_yml_size'].forEach(field => assertInteger(field, value => value > 0, 'a positive integer'));
+  } else {
+    console.error(`❌ FAIL CLOSED CONFIGURATION ERROR: No result schema is registered for "${expectedTest}"`);
+    process.exit(1);
   }
 
   console.log(`✓ Complete schema validation passed for ${filePath} (${expectedTest})`);

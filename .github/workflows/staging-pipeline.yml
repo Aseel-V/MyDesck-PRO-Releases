@@ -77,18 +77,7 @@ jobs:
             exit 1
           fi
 
-          node -e "
-            const feedUrl = process.env.STAGING_UPDATER_FEED_URL;
-            if (!feedUrl.startsWith('https://')) {
-              console.error('❌ STAGING_UPDATER_FEED_URL must be a secure HTTPS URL');
-              process.exit(1);
-            }
-            if (feedUrl.includes('github.com/Aseel-V/MyDesck-PRO-Releases') || feedUrl.includes('mydesck.app')) {
-              console.error('❌ STAGING_UPDATER_FEED_URL must NOT point to production GitHub Release or production website feed!');
-              process.exit(1);
-            }
-            console.log('✓ Isolated Staging Updater Feed URL validated.');
-          "
+          npm run test:staging-updater-feed:configuration
 
   check-runner-health:
     name: 3. Verify Self-Hosted Windows Upgrade Runner Health
@@ -108,23 +97,26 @@ jobs:
             const { execSync } = require('child_process');
             const repo = process.env.REPOSITORY;
             const token = process.env.GITHUB_TOKEN;
-            const curlCmd = \`curl -s -H "Authorization: Bearer \${token}" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/\${repo}/actions/runners"\`;
+            const curlCmd = \`curl -s -H "Authorization: Bearer \${token}" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/\${repo}/actions/runners?per_page=100"\`;
             const res = JSON.parse(execSync(curlCmd, { encoding: 'utf8' }));
             
             const runners = res.runners || [];
-            const upgradeRunner = runners.find(r => 
-              r.status === 'online' && 
-              r.os === 'Windows' && 
-              r.labels && r.labels.some(l => l.name === 'mydesck-upgrade-test')
-            );
+            const requiredLabels = new Set(['self-hosted', 'windows', 'mydesck-upgrade-test']);
+            const upgradeRunner = runners.find(r => {
+              const labels = new Set((r.labels || []).map(label => label.name));
+              return r.status === 'online' &&
+                r.busy === false &&
+                r.os === 'Windows' &&
+                [...requiredLabels].every(label => labels.has(label));
+            });
 
             if (!upgradeRunner) {
               console.log('DESKTOP UPGRADE RUNNER: BLOCKED');
-              console.error('❌ FAIL CLOSED: No online self-hosted Windows runner with label [mydesck-upgrade-test] is currently active for repo ' + repo);
+              console.error('Required self-hosted Windows upgrade runner is absent, offline, busy, or missing required labels.');
               process.exit(1);
             }
 
-            console.log('✓ Online self-hosted Windows runner detected:', upgradeRunner.name);
+            console.log('Ready self-hosted Windows upgrade runner detected.');
           "
 
   staging-database-migration:
@@ -360,6 +352,10 @@ jobs:
           name: desktop-candidate
           path: release
       - run: npm ci
+      - name: Verify Live Staging Updater Feed Assets
+        env:
+          STAGING_UPDATER_FEED_URL: ${{ secrets.STAGING_UPDATER_FEED_URL }}
+        run: npm run test:staging-updater-feed:live
       - name: Verify Metadata Contract
         env:
           COMMIT_SHA: ${{ github.sha }}

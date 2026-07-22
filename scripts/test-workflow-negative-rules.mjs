@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { readFileSync, existsSync } from 'node:fs';
 
 console.log('[test-workflow-negative-rules] Running comprehensive workflow architecture negative tests...');
@@ -57,11 +58,14 @@ console.log('✓ Scenario 3: Aggregator strictly REJECTS placeholder default str
 
 // 4. Runner Health Check Rule
 function checkSelfHostedRunnerHealth(runners) {
-  const onlineRunner = (runners || []).find(r => 
-    r.status === 'online' && 
-    r.os === 'Windows' && 
-    r.labels && r.labels.some(l => l.name === 'mydesck-upgrade-test')
-  );
+  const requiredLabels = new Set(['self-hosted', 'windows', 'mydesck-upgrade-test']);
+  const onlineRunner = (runners || []).find(r => {
+    const labels = new Set((r.labels || []).map(label => label.name));
+    return r.status === 'online' &&
+      r.busy === false &&
+      r.os === 'Windows' &&
+      [...requiredLabels].every(label => labels.has(label));
+  });
 
   if (!onlineRunner) {
     return 'DESKTOP UPGRADE RUNNER: BLOCKED';
@@ -70,9 +74,13 @@ function checkSelfHostedRunnerHealth(runners) {
 }
 
 assert.equal(checkSelfHostedRunnerHealth([]), 'DESKTOP UPGRADE RUNNER: BLOCKED');
-assert.equal(checkSelfHostedRunnerHealth([{ name: 'runner-1', status: 'offline', os: 'Windows', labels: [{ name: 'mydesck-upgrade-test' }] }]), 'DESKTOP UPGRADE RUNNER: BLOCKED');
-assert.equal(checkSelfHostedRunnerHealth([{ name: 'runner-1', status: 'online', os: 'Windows', labels: [{ name: 'mydesck-upgrade-test' }] }]), 'RUNNER_HEALTHY');
-console.log('✓ Scenario 4: Offline or missing self-hosted Windows runner fails preflight with DESKTOP UPGRADE RUNNER: BLOCKED');
+const requiredLabels = [{ name: 'self-hosted' }, { name: 'windows' }, { name: 'mydesck-upgrade-test' }];
+assert.equal(checkSelfHostedRunnerHealth([{ status: 'offline', busy: false, os: 'Windows', labels: requiredLabels }]), 'DESKTOP UPGRADE RUNNER: BLOCKED');
+assert.equal(checkSelfHostedRunnerHealth([{ status: 'online', busy: true, os: 'Windows', labels: requiredLabels }]), 'DESKTOP UPGRADE RUNNER: BLOCKED');
+assert.equal(checkSelfHostedRunnerHealth([{ status: 'online', busy: false, os: 'Windows', labels: requiredLabels.slice(1) }]), 'DESKTOP UPGRADE RUNNER: BLOCKED');
+assert.equal(checkSelfHostedRunnerHealth([{ status: 'online', busy: false, os: 'Linux', labels: requiredLabels }]), 'DESKTOP UPGRADE RUNNER: BLOCKED');
+assert.equal(checkSelfHostedRunnerHealth([{ status: 'online', busy: false, os: 'Windows', labels: requiredLabels }]), 'RUNNER_HEALTHY');
+console.log('✓ Scenario 4: Absent, offline, busy, non-Windows, or incorrectly labeled upgrade runners are BLOCKED');
 
 // 5. Staging Updater Feed URL Validation Rule
 function checkStagingUpdaterFeedUrl(url) {
@@ -90,5 +98,33 @@ assert.equal(checkStagingUpdaterFeedUrl('http://staging-feed.local'), 'REJECTED_
 assert.equal(checkStagingUpdaterFeedUrl('https://github.com/Aseel-V/MyDesck-PRO-Releases'), 'REJECTED_PRODUCTION_FEED_TARGET');
 assert.equal(checkStagingUpdaterFeedUrl('https://isolated-staging-feed.internal.net'), 'VALID_STAGING_FEED_URL');
 console.log('✓ Scenario 5: Missing or production-pointing STAGING_UPDATER_FEED_URL strictly REJECTED');
+
+// 6. Configuration preflight and live asset checks must remain separate.
+const workflow = readFileSync('.github/workflows/staging-pipeline.yml', 'utf8');
+assert.match(workflow, /staging-preflight:[\s\S]*test:staging-updater-feed:configuration/);
+assert.doesNotMatch(workflow.match(/staging-preflight:[\s\S]*?(?=\n  check-runner-health:)/)?.[0] || '', /test:staging-updater-feed:live/);
+assert.match(workflow, /staging-updater-metadata:[\s\S]*test:staging-updater-feed:live/);
+console.log('✓ Scenario 6: Feed configuration preflight is separate from post-build live asset verification');
+
+// 7. Result provenance is required validator configuration, never optional.
+const provenanceEnv = { ...process.env };
+delete provenanceEnv.COMMIT_SHA;
+delete provenanceEnv.GITHUB_SHA;
+delete provenanceEnv.RUN_ID;
+delete provenanceEnv.GITHUB_RUN_ID;
+const missingSha = spawnSync(process.execPath, ['scripts/validate-result-schema.mjs', 'missing.json', 'staging-database'], {
+  encoding: 'utf8',
+  env: provenanceEnv,
+});
+assert.notEqual(missingSha.status, 0);
+assert.match(missingSha.stderr, /expectedSha parameter is mandatory/);
+
+const missingRunId = spawnSync(process.execPath, ['scripts/validate-result-schema.mjs', 'missing.json', 'staging-database'], {
+  encoding: 'utf8',
+  env: { ...provenanceEnv, COMMIT_SHA: 'a'.repeat(40) },
+});
+assert.notEqual(missingRunId.status, 0);
+assert.match(missingRunId.stderr, /expectedRunId parameter is mandatory/);
+console.log('✓ Scenario 7: Missing expected SHA or run ID fails as a validator configuration error');
 
 console.log('[test-workflow-negative-rules] ALL COMPREHENSIVE WORKFLOW NEGATIVE TESTS PASSED.');
