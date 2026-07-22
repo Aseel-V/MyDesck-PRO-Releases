@@ -6,7 +6,7 @@ function normalizeIdentifier(identifier) {
   return value.toLowerCase();
 }
 
-function splitCommaSeparated(value) {
+export function splitCommaSeparated(value) {
   const parts = [];
   let current = '';
   let quoted = false;

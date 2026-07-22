@@ -2181,6 +2181,7 @@ export interface Database {
           p_trip_status?: string | null;
           p_month?: number | null;
           p_destination?: string | null;
+          p_sort_key?: string | null;
         };
         Returns: Json;
       };

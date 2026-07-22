@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { hasEffectiveRoutineExecuteGrant } from './sql-routine-grants.mjs';
+import { findLatestRoutineDefinition } from './sql-routine-contracts.mjs';
 
 const manifest = JSON.parse(readFileSync('supabase/database-compatibility-manifest.json', 'utf8'));
 const migrationsDir = 'supabase/migrations';
@@ -26,8 +27,18 @@ for (const rpc of manifest.rpcs) {
     assert.ok(argPattern.test(combinedSql), `RPC public.${rpc.name} must declare parameter ${arg.name} of type ${arg.type}`);
   }
 
+  let effectiveDefinition = null;
+  if (rpc.name === 'get_trips_page') {
+    effectiveDefinition = findLatestRoutineDefinition(migrations, { schema: 'public', functionName: rpc.name });
+    assert.ok(effectiveDefinition, `RPC function public.${rpc.name} must have an effective migration definition`);
+    assert.deepEqual(rpc.arguments, effectiveDefinition.arguments,
+      `Manifest arguments for public.${rpc.name} must exactly match ${effectiveDefinition.migration}`);
+    assert.equal(rpc.return_type, effectiveDefinition.returnType,
+      `Manifest return type for public.${rpc.name} must exactly match ${effectiveDefinition.migration}`);
+  }
+
   for (const grantRole of rpc.grants) {
-    const argumentTypes = rpc.name === 'save_trip_transaction'
+    const argumentTypes = rpc.name === 'save_trip_transaction' || effectiveDefinition
       ? rpc.arguments.map((argument) => argument.type)
       : undefined;
     assert.ok(hasEffectiveRoutineExecuteGrant(migrations, {

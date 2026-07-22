@@ -7,8 +7,8 @@ console.log('[check-pwa-cache-contract] Verifying PWA and website cache headers 
 const viteConfig = readFileSync('vite.config.ts', 'utf8');
 assert.ok(viteConfig.includes("registerType: 'prompt'"), "vite.config.ts must specify registerType: 'prompt'");
 assert.ok(viteConfig.includes('cleanupOutdatedCaches: true'), 'vite.config.ts must specify cleanupOutdatedCaches: true');
-assert.ok(viteConfig.includes('/version.json'), 'vite.config.ts navigateFallbackDenylist must exclude /version.json');
-assert.ok(viteConfig.includes('/release-notes.json'), 'vite.config.ts navigateFallbackDenylist must exclude /release-notes.json');
+assert.ok(viteConfig.includes('/^\\/version\\.json$/'), 'vite.config.ts navigateFallbackDenylist must exclude /version.json');
+assert.ok(viteConfig.includes('/^\\/release-notes\\.json$/'), 'vite.config.ts navigateFallbackDenylist must exclude /release-notes.json');
 
 // 2. Verify vercel.json
 const vercelJson = JSON.parse(readFileSync('vercel.json', 'utf8'));

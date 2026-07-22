@@ -16,30 +16,23 @@
     {
       "name": "get_trips_page",
       "arguments": [
+        { "name": "p_year", "type": "text" },
         { "name": "p_page", "type": "integer" },
-        { "name": "p_limit", "type": "integer" },
+        { "name": "p_page_size", "type": "integer" },
         { "name": "p_search", "type": "text" },
-        { "name": "p_status", "type": "text" },
         { "name": "p_payment_status", "type": "text" },
-        { "name": "p_sort_by", "type": "text" },
-        { "name": "p_sort_order", "type": "text" }
+        { "name": "p_trip_status", "type": "text" },
+        { "name": "p_month", "type": "integer" },
+        { "name": "p_destination", "type": "text" },
+        { "name": "p_sort_key", "type": "text" }
       ],
       "return_type": "jsonb",
       "grants": ["authenticated"]
     },
     {
-      "name": "encrypt_travelers_in_db",
+      "name": "trip_encrypt_travelers",
       "arguments": [
-        { "name": "p_trip_id", "type": "uuid" },
-        { "name": "p_travelers", "type": "jsonb" }
-      ],
-      "return_type": "jsonb",
-      "grants": ["authenticated"]
-    },
-    {
-      "name": "get_yearly_stats_overview",
-      "arguments": [
-        { "name": "p_year", "type": "integer" }
+        { "name": "input_travelers", "type": "jsonb" }
       ],
       "return_type": "jsonb",
       "grants": ["authenticated"]
@@ -70,15 +63,15 @@
       "check_constraints": [
         {
           "column": "currency",
-          "allowed_values": ["ILS", "USD", "EUR", "GBP", "JOD"]
+          "allowed_values": ["ILS", "USD", "EUR"]
         },
         {
           "column": "payment_method",
-          "allowed_values": ["cash", "card", "bank_transfer", "mixed"]
+          "allowed_values": ["cash", "card", "mixed"]
         },
         {
           "column": "status",
-          "allowed_values": ["active", "completed", "cancelled", "draft"]
+          "allowed_values": ["active", "completed", "cancelled", "archived"]
         }
       ],
       "rls_enabled": true
@@ -98,7 +91,7 @@
       "check_constraints": [
         {
           "column": "source",
-          "allowed_values": ["manual", "cash", "card", "mixed", "native"]
+          "allowed_values": ["native", "legacy"]
         }
       ],
       "rls_enabled": true
@@ -107,7 +100,7 @@
       "name": "trip_installments",
       "columns": [
         { "name": "id", "type": "uuid", "is_generated": false, "nullable": false },
-        { "name": "plan_id", "type": "uuid", "is_generated": false, "nullable": false },
+        { "name": "payment_plan_id", "type": "uuid", "is_generated": false, "nullable": false },
         { "name": "trip_id", "type": "uuid", "is_generated": false, "nullable": false },
         { "name": "user_id", "type": "uuid", "is_generated": false, "nullable": false },
         { "name": "installment_number", "type": "integer", "is_generated": false, "nullable": false },
@@ -118,19 +111,19 @@
       "check_constraints": [
         {
           "column": "status",
-          "allowed_values": ["scheduled", "paid", "partially_paid", "overdue", "cancelled"]
+          "allowed_values": ["scheduled", "paid", "partially_paid", "cancelled"]
         }
       ],
       "rls_enabled": true
     },
     {
-      "name": "trip_activity_logs",
+      "name": "trip_activity_log",
       "columns": [
-        { "name": "id", "type": "uuid", "is_generated": false, "nullable": false },
+        { "name": "id", "type": "bigint", "is_generated": true, "nullable": false },
         { "name": "trip_id", "type": "uuid", "is_generated": false, "nullable": false },
         { "name": "user_id", "type": "uuid", "is_generated": false, "nullable": false },
-        { "name": "action", "type": "text", "is_generated": false, "nullable": false },
-        { "name": "request_id", "type": "uuid", "is_generated": false, "nullable": true }
+        { "name": "activity_type", "type": "text", "is_generated": false, "nullable": false },
+        { "name": "metadata", "type": "jsonb", "is_generated": false, "nullable": false }
       ],
       "rls_enabled": true
     }

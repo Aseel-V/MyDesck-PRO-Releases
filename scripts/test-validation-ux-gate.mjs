@@ -14,6 +14,7 @@ const invalidForm = {
   sale_price: 1000,
   wholesale_cost: 800,
   amount_paid: 500,
+  payment_status: 'partial',
   payment_method: 'cash',
   service_type: 'hotel', // hotel required
   hotel_name: '', // missing hotel name!

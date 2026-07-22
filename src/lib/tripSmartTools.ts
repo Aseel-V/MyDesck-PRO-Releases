@@ -89,7 +89,7 @@ export function checkTripCompleteness(trip: Partial<TripFormData> | Partial<Trip
   else if (!getTripDuration(trip.start_date, trip.end_date)) add('date_range', 'error');
   if (!trip.travelers_count || trip.travelers_count < 1) add('travelers', 'error');
   if (!trip.client_phone?.trim()) add('client_phone', 'warning');
-  if (trip.service_type !== 'ticket' && !trip.hotel_name?.trim()) add('hotel', 'warning');
+  if (trip.service_type !== 'ticket' && !trip.hotel_name?.trim()) add('hotel', 'error');
   if (trip.service_type !== 'hotel' && !trip.flight_number?.trim()) add('flight', 'warning');
   if (!trip.sale_price || trip.sale_price <= 0) add('sale_price', 'warning');
   if (trip.payment_method === 'mixed') {
