@@ -13,17 +13,17 @@ assert.equal(pkg.build.nsis.artifactName, 'MyDesck-PRO-Setup.exe', 'Artifact nam
 
 // 2. Pre-release / Staging Channel Verification
 if (!existsSync('release/latest.yml')) {
-  console.error('❌ FAIL: release/latest.yml is missing!');
+  console.error('❌ FAIL CLOSED: release/latest.yml is missing!');
   process.exit(1);
 }
 
 if (!existsSync('release/MyDesck-PRO-Setup.exe')) {
-  console.error('❌ FAIL: release/MyDesck-PRO-Setup.exe is missing!');
+  console.error('❌ FAIL CLOSED: release/MyDesck-PRO-Setup.exe is missing!');
   process.exit(1);
 }
 
 if (!existsSync('release/MyDesck-PRO-Setup.exe.blockmap')) {
-  console.error('❌ FAIL: release/MyDesck-PRO-Setup.exe.blockmap is missing!');
+  console.error('❌ FAIL CLOSED: release/MyDesck-PRO-Setup.exe.blockmap is missing!');
   process.exit(1);
 }
 
@@ -36,6 +36,8 @@ mkdirSync('results', { recursive: true });
 const result = {
   test: 'desktop-updater-metadata',
   status: 'STAGING PASS',
+  commit_sha: process.env.COMMIT_SHA || process.env.GITHUB_SHA || 'local',
+  workflow_run_id: String(process.env.RUN_ID || process.env.GITHUB_RUN_ID || 'local'),
   timestamp: new Date().toISOString(),
   details: 'Verified provider, repo, latest.yml, installer, blockmap, version, and SHA512 metadata.'
 };

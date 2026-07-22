@@ -17,6 +17,8 @@ try {
   const result = {
     test: 'playwright',
     status: 'STAGING PASS',
+    commit_sha: process.env.COMMIT_SHA || process.env.GITHUB_SHA || 'local',
+    workflow_run_id: String(process.env.RUN_ID || process.env.GITHUB_RUN_ID || 'local'),
     timestamp: new Date().toISOString(),
     staging_url: stagingUrl,
     details: 'Playwright E2E browser tests passed.'

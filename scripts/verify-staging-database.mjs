@@ -90,6 +90,8 @@ mkdirSync('results', { recursive: true });
 const result = {
   test: 'staging-database',
   status: 'STAGING PASS',
+  commit_sha: process.env.COMMIT_SHA || process.env.GITHUB_SHA || 'local',
+  workflow_run_id: String(process.env.RUN_ID || process.env.GITHUB_RUN_ID || 'local'),
   timestamp: new Date().toISOString(),
   details: 'Live RPC resolution, parameters, and transaction rollback verified on Supabase Staging.'
 };
