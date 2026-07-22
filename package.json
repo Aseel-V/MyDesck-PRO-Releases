@@ -93,7 +93,7 @@
     "test:staging-e2e": "node scripts/test-staging-e2e.mjs",
     "test:state-machine": "node scripts/test-state-machine.mjs",
     "test:secret-leaks": "node scripts/check-secret-leaks.mjs",
-    "test:workflow-rules": "node scripts/test-workflow-negative-rules.mjs",
+    "test:workflow-rules": "node scripts/test-workflow-negative-rules.mjs && node scripts/test-tag-release-workflow.mjs",
     "test:staging-updater-feed:configuration": "node scripts/verify-staging-updater-feed.mjs --configuration",
     "test:staging-updater-feed:live": "node scripts/verify-staging-updater-feed.mjs --live",
     "test:release-static": "node scripts/release-pipeline.mjs --mode=static",

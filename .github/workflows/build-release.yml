@@ -37,6 +37,179 @@ jobs:
       - run: npm run build
       - run: npm run dist:win
 
+  tag-release-validation:
+    name: Validate Tag Release Contract
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - name: Verify Tag and Version Sources
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const tag = process.env.RELEASE_TAG;
+          if (!/^v(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)$/.test(tag)) {
+            throw new Error(`Invalid stable release tag: ${tag}`);
+          }
+          const version = tag.slice(1);
+          for (const file of ['package.json', 'package-lock.json', 'public/version.json', 'public/release-notes.json']) {
+            const value = JSON.parse(fs.readFileSync(file, 'utf8')).version;
+            if (value !== version) throw new Error(`${file} version ${value} does not match tag ${tag}`);
+          }
+          console.log(`Validated release tag ${tag} against all version sources.`);
+          NODE
+      - run: npm run test:secret-leaks
+      - run: npm run test:workflow-rules
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run i18n:check
+      - run: npm run test:database-compatibility
+      - run: npm run test:database-contracts
+      - run: npm run test:updater
+      - run: npm run test:release-version
+
+  tag-build-desktop:
+    name: Build Tag Windows Updater Assets
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: tag-release-validation
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run dist:win
+      - name: Require Complete Updater Asset Set
+        shell: pwsh
+        run: |
+          $minimumSizes = @{
+            'release/MyDesck-PRO-Setup.exe' = 1048576
+            'release/MyDesck-PRO-Setup.exe.blockmap' = 1024
+            'release/latest.yml' = 64
+          }
+          foreach ($entry in $minimumSizes.GetEnumerator()) {
+            if (-not (Test-Path -LiteralPath $entry.Key -PathType Leaf)) {
+              throw "Missing required release asset: $($entry.Key)"
+            }
+            if ((Get-Item -LiteralPath $entry.Key).Length -lt $entry.Value) {
+              throw "Release asset is unexpectedly small: $($entry.Key)"
+            }
+          }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-tag-candidate
+          if-no-files-found: error
+          retention-days: 7
+          path: |
+            release/MyDesck-PRO-Setup.exe
+            release/MyDesck-PRO-Setup.exe.blockmap
+            release/latest.yml
+
+  tag-verify-desktop-assets:
+    name: Verify Tag Updater Assets
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: tag-build-desktop
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: desktop-tag-candidate
+          path: release
+      - run: node scripts/verify-desktop-release-assets.mjs
+      - run: node scripts/verify-desktop-updater-metadata.mjs
+      - name: Verify latest.yml Installer SHA-512
+        run: |
+          node --input-type=module - <<'NODE'
+          import fs from 'node:fs';
+          import crypto from 'node:crypto';
+          import yaml from 'js-yaml';
+          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          const metadata = yaml.load(fs.readFileSync('release/latest.yml', 'utf8'));
+          const expectedName = 'MyDesck-PRO-Setup.exe';
+          if (metadata.version !== pkg.version) throw new Error('latest.yml version mismatch');
+          if (metadata.path !== expectedName) throw new Error('latest.yml installer filename mismatch');
+          const expectedSha512 = metadata.sha512 || metadata.files?.find((file) => file.url === expectedName)?.sha512;
+          if (!expectedSha512) throw new Error('latest.yml SHA-512 is missing');
+          const actualSha512 = crypto.createHash('sha512').update(fs.readFileSync(`release/${expectedName}`)).digest('base64');
+          if (actualSha512 !== expectedSha512) throw new Error('Installer SHA-512 does not match latest.yml');
+          console.log('Installer SHA-512 matches latest.yml.');
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-tag-verified
+          if-no-files-found: error
+          retention-days: 7
+          path: |
+            release/MyDesck-PRO-Setup.exe
+            release/MyDesck-PRO-Setup.exe.blockmap
+            release/latest.yml
+
+  publish-desktop-release:
+    name: Publish Tag GitHub Release
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: tag-verify-desktop-assets
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/download-artifact@v4
+        with:
+          name: desktop-tag-verified
+          path: release
+      - name: Generate Release Notes
+        run: node scripts/generate-release-notes-md.mjs
+      - name: Reject Duplicate Tags and Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          VERSION="${RELEASE_TAG#v}"
+          if git ls-remote --exit-code origin "refs/tags/$VERSION" >/dev/null 2>&1; then
+            echo "Alternate non-v tag already exists: $VERSION"
+            exit 1
+          fi
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1 || gh release view "$VERSION" >/dev/null 2>&1; then
+            echo "A release already exists for version $VERSION"
+            exit 1
+          fi
+      - name: Publish Complete GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          gh release create "$RELEASE_TAG" \
+            release/MyDesck-PRO-Setup.exe \
+            release/MyDesck-PRO-Setup.exe.blockmap \
+            release/latest.yml \
+            --verify-tag \
+            --title "MyDesck PRO $RELEASE_TAG" \
+            --notes-file release-notes.md
+
   verify-staging-run:
     name: 1. Query GitHub API & Verify Tamper-Resistant Staging Evidence
     if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
@@ -284,7 +457,7 @@ jobs:
           fi
           echo "✓ Production website live and healthy: $URL"
 
-  publish-desktop-release:
+  dispatch-publish-desktop-release:
     name: 8. Publish Exact Pre-Verified Desktop Release Artifacts
     needs: production-web-smoke-tests
     runs-on: ubuntu-latest
@@ -375,7 +548,7 @@ jobs:
 
   production-updater-verification:
     name: 9. Verify Public GitHub Release Assets & Hash Parity
-    needs: publish-desktop-release
+    needs: dispatch-publish-desktop-release
     runs-on: ubuntu-latest
     permissions:
       contents: read
