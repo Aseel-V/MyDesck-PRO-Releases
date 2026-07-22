@@ -75,7 +75,7 @@
     "test:website-release": "node scripts/check-website-release.mjs",
     "test:release-version": "node scripts/check-release-version.mjs",
     "sync:version": "node scripts/sync-version.mjs",
-    "test:database-compatibility": "node scripts/check-database-compatibility.mjs",
+    "test:database-compatibility": "node scripts/test-database-grant-parser.mjs && node scripts/check-database-compatibility.mjs",
     "test:migration-chain": "node scripts/verify-migrations.mjs",
     "test:database-contracts": "node scripts/test-database-contracts.mjs",
     "test:trip-smoke": "node scripts/test-trip-smoke-suite.mjs",

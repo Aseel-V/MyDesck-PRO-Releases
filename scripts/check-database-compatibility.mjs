@@ -1,13 +1,17 @@
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
+import { hasEffectiveRoutineExecuteGrant } from './sql-routine-grants.mjs';
 
 const manifest = JSON.parse(readFileSync('supabase/database-compatibility-manifest.json', 'utf8'));
 const migrationsDir = 'supabase/migrations';
-const migrationFiles = readdirSync(migrationsDir).filter((name) => name.endsWith('.sql'));
+const migrationFiles = readdirSync(migrationsDir).filter((name) => name.endsWith('.sql')).sort((left, right) => left.localeCompare(right));
 
 let combinedSql = '';
+const migrations = [];
 for (const file of migrationFiles) {
-  combinedSql += readFileSync(`${migrationsDir}/${file}`, 'utf8') + '\n';
+  const sql = readFileSync(`${migrationsDir}/${file}`, 'utf8');
+  combinedSql += sql + '\n';
+  migrations.push({ name: file, sql });
 }
 
 console.log(`[db-compatibility] Validating ${manifest.rpcs.length} RPCs and ${manifest.tables.length} tables against migration definitions...`);
@@ -23,8 +27,15 @@ for (const rpc of manifest.rpcs) {
   }
 
   for (const grantRole of rpc.grants) {
-    const grantPattern = new RegExp(`GRANT\\s+EXECUTE\\s+ON\\s+FUNCTION\\s+public\\.${rpc.name}\\s+TO\\s+${grantRole}`, 'i');
-    assert.ok(grantPattern.test(combinedSql), `RPC public.${rpc.name} must grant EXECUTE to ${grantRole}`);
+    const argumentTypes = rpc.name === 'save_trip_transaction'
+      ? rpc.arguments.map((argument) => argument.type)
+      : undefined;
+    assert.ok(hasEffectiveRoutineExecuteGrant(migrations, {
+      schema: 'public',
+      functionName: rpc.name,
+      argumentTypes,
+      grantee: grantRole,
+    }), `RPC public.${rpc.name} must grant EXECUTE to ${grantRole}`);
   }
 }
 
