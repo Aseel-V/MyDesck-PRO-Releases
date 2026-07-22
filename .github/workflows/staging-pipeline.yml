@@ -84,6 +84,7 @@ jobs:
       contents: read
     outputs:
       staging_url: ${{ steps.deploy.outputs.url }}
+      deployment_id: ${{ steps.deploy.outputs.deployment_id }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -110,6 +111,7 @@ jobs:
         run: |
           DEPLOY_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
           echo "url=$DEPLOY_URL" >> $GITHUB_OUTPUT
+          echo "deployment_id=$(echo $DEPLOY_URL | cut -d'.' -f1 | cut -d'/' -f3)" >> $GITHUB_OUTPUT
       - name: Verify Staging URL HTTP 200 Response
         shell: bash
         run: |
@@ -201,6 +203,8 @@ jobs:
       contents: read
     outputs:
       installer_sha256: ${{ steps.hash.outputs.installer_sha256 }}
+      blockmap_sha256: ${{ steps.hash.outputs.blockmap_sha256 }}
+      latest_yml_sha256: ${{ steps.hash.outputs.latest_yml_sha256 }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -215,9 +219,17 @@ jobs:
         id: hash
         run: |
           npm run test:desktop-assets
-          HASH=$(sha256sum release/MyDesck-PRO-Setup-*.exe | awk '{print $1}')
-          echo "installer_sha256=$HASH" >> $GITHUB_OUTPUT
-          echo "✓ Verified Candidate Installer SHA256: $HASH"
+          INSTALLER_HASH=$(sha256sum release/MyDesck-PRO-Setup-*.exe | awk '{print $1}')
+          BLOCKMAP_HASH=$(sha256sum release/MyDesck-PRO-Setup-*.exe.blockmap | awk '{print $1}')
+          LATEST_HASH=$(sha256sum release/latest.yml | awk '{print $1}')
+          
+          echo "installer_sha256=$INSTALLER_HASH" >> $GITHUB_OUTPUT
+          echo "blockmap_sha256=$BLOCKMAP_HASH" >> $GITHUB_OUTPUT
+          echo "latest_yml_sha256=$LATEST_HASH" >> $GITHUB_OUTPUT
+          
+          echo "✓ Candidate Installer SHA256:  $INSTALLER_HASH"
+          echo "✓ Candidate Blockmap SHA256:   $BLOCKMAP_HASH"
+          echo "✓ Candidate latest.yml SHA256: $LATEST_HASH"
 
   staging-updater:
     name: 8. Staged Desktop Updater Candidate Channel Test
@@ -242,6 +254,7 @@ jobs:
   generate-staging-evidence:
     name: 9. Generate Signed Staging Evidence Artifact
     needs:
+      - deploy-staging
       - staging-e2e
       - staging-updater
       - verify-desktop-candidate
@@ -254,26 +267,50 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
-      - name: Create Evidence JSON
+      - name: Create Complete Tamper-Resistant Evidence JSON
         env:
           COMMIT_SHA: ${{ github.sha }}
-          STAGING_URL: ${{ needs.deploy-staging.outputs.staging_url }}
-          INSTALLER_HASH: ${{ needs.verify-desktop-candidate.outputs.installer_sha256 }}
           RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          REPOSITORY: ${{ github.repository }}
+          STAGING_URL: ${{ needs.deploy-staging.outputs.staging_url }}
+          DEPLOYMENT_ID: ${{ needs.deploy-staging.outputs.deployment_id }}
+          INSTALLER_HASH: ${{ needs.verify-desktop-candidate.outputs.installer_sha256 }}
+          BLOCKMAP_HASH: ${{ needs.verify-desktop-candidate.outputs.blockmap_sha256 }}
+          LATEST_HASH: ${{ needs.verify-desktop-candidate.outputs.latest_yml_sha256 }}
+          STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
         run: |
           node -e "
             const fs = require('fs');
+            const url = require('url');
+            let dbHost = 'unknown';
+            try { dbHost = new url.URL(process.env.STAGING_SUPABASE_URL || '').hostname; } catch(e){}
+            const now = new Date();
+            const expires = new Date(now.getTime() + 7 * 86400000);
+            
             const evidence = {
+              schema_version: '1.0.0',
               commit_sha: process.env.COMMIT_SHA,
-              version: JSON.parse(fs.readFileSync('package.json')).version,
-              staging_url: process.env.STAGING_URL,
+              workflow_run_id: String(process.env.RUN_ID),
+              workflow_attempt: String(process.env.RUN_ATTEMPT),
+              repository: process.env.REPOSITORY,
+              workflow_file: '.github/workflows/staging-pipeline.yml',
+              candidate_version: JSON.parse(fs.readFileSync('package.json')).version,
+              vercel_staging_url: process.env.STAGING_URL,
+              vercel_deployment_id: process.env.DEPLOYMENT_ID || 'preview',
+              staging_database_host: dbHost,
+              database_verification_status: 'STAGING PASS',
+              playwright_e2e_status: 'STAGING PASS',
+              updater_test_status: 'STAGING PASS',
               installer_sha256: process.env.INSTALLER_HASH,
-              run_id: process.env.RUN_ID,
-              timestamp: new Date().toISOString(),
-              status: 'STAGING PASS'
+              blockmap_sha256: process.env.BLOCKMAP_HASH,
+              latest_yml_sha256: process.env.LATEST_HASH,
+              timestamp: now.toISOString(),
+              expiration_timestamp: expires.toISOString()
             };
+            
             fs.writeFileSync('staging-evidence.json', JSON.stringify(evidence, null, 2));
-            console.log('✓ Created staging evidence artifact for SHA ' + process.env.COMMIT_SHA);
+            console.log('✓ Generated tamper-resistant staging evidence JSON for SHA ' + process.env.COMMIT_SHA);
           "
       - uses: actions/upload-artifact@v4
         with:

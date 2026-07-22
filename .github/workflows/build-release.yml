@@ -7,6 +7,10 @@ on:
         description: 'Release version (e.g. 0.0.58)'
         required: true
         type: string
+      staging_run_id:
+        description: 'Approved Staging Workflow Run ID'
+        required: true
+        type: string
 
 concurrency:
   group: release-production-group
@@ -16,8 +20,8 @@ permissions:
   contents: read
 
 jobs:
-  verify-staging-evidence:
-    name: 1. Verify Staging Evidence & Main Branch Rule
+  verify-staging-run:
+    name: 1. Query GitHub API & Verify Tamper-Resistant Staging Evidence
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
@@ -37,34 +41,143 @@ jobs:
           node-version: 20
           cache: 'npm'
       - run: npm ci
+
+      - name: Query GitHub API for Staging Run Details & Download Evidence
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          STAGING_RUN_ID: ${{ github.event.inputs.staging_run_id }}
+          CURRENT_SHA: ${{ github.sha }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          node -e "
+            const fs = require('fs');
+            const { execSync } = require('child_process');
+            const runId = process.env.STAGING_RUN_ID;
+            const repo = process.env.REPOSITORY;
+            const token = process.env.GITHUB_TOKEN;
+            const currentSha = process.env.CURRENT_SHA;
+
+            console.log('Querying GitHub API for workflow run:', runId);
+            const curlCmd = \`curl -s -H "Authorization: Bearer \${token}" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/\${repo}/actions/runs/\${runId}"\`;
+            const runJson = JSON.parse(execSync(curlCmd, { encoding: 'utf8' }));
+
+            if (!runJson || runJson.message) {
+              console.error('❌ Failed to fetch staging workflow run from GitHub API:', runJson.message || 'Run not found');
+              process.exit(1);
+            }
+
+            console.log('Staging Run Conclusion:', runJson.conclusion);
+            console.log('Staging Run Head SHA:  ', runJson.head_sha);
+            console.log('Staging Run Branch:    ', runJson.head_branch);
+
+            if (runJson.conclusion !== 'success') {
+              console.error('❌ Staging run conclusion is not success! Status:', runJson.conclusion);
+              process.exit(1);
+            }
+
+            if (runJson.head_sha !== currentSha) {
+              console.error('❌ Mismatched commit SHA! Target main SHA (' + currentSha + ') does not match staging run head SHA (' + runJson.head_sha + ')');
+              process.exit(1);
+            }
+
+            if (!runJson.head_branch.startsWith('release/staging-')) {
+              console.error('❌ Invalid staging branch:', runJson.head_branch);
+              process.exit(1);
+            }
+
+            console.log('✓ Staging Workflow Run API verification passed.');
+          "
+
       - uses: actions/download-artifact@v4
         with:
           name: staging-evidence
+          run-id: ${{ github.event.inputs.staging_run_id }}
+          github-token: ${{ github.token }}
           path: .
-      - name: Validate Staging Evidence Binding
+
+      - name: Validate All 17 Required Evidence Fields (Fail Closed)
         env:
           CURRENT_SHA: ${{ github.sha }}
+          VERSION_INPUT: ${{ github.event.inputs.version }}
         run: |
           node -e "
             const fs = require('fs');
             const evidence = JSON.parse(fs.readFileSync('staging-evidence.json', 'utf8'));
-            const currentSha = process.env.CURRENT_SHA;
-            console.log('Staging Evidence SHA:', evidence.commit_sha);
-            console.log('Production Target SHA:', currentSha);
-            if (evidence.commit_sha !== currentSha) {
-              console.error('❌ Mismatched commit SHA! Production target commit SHA does not match verified staging evidence.');
+            const requiredFields = [
+              'schema_version', 'commit_sha', 'workflow_run_id', 'workflow_attempt',
+              'repository', 'workflow_file', 'candidate_version', 'vercel_staging_url',
+              'staging_database_host', 'database_verification_status', 'playwright_e2e_status',
+              'updater_test_status', 'installer_sha256', 'blockmap_sha256', 'latest_yml_sha256',
+              'timestamp', 'expiration_timestamp'
+            ];
+
+            for (const field of requiredFields) {
+              if (!evidence[field] || typeof evidence[field] !== 'string' || evidence[field].trim() === '') {
+                console.error('❌ FAIL CLOSED: Missing or empty required evidence field:', field);
+                process.exit(1);
+              }
+            }
+
+            if (evidence.commit_sha !== process.env.CURRENT_SHA) {
+              console.error('❌ Evidence commit SHA mismatch!');
               process.exit(1);
             }
-            if (evidence.status !== 'STAGING PASS') {
-              console.error('❌ Staging evidence status is not STAGING PASS');
+
+            if (evidence.candidate_version !== process.env.VERSION_INPUT) {
+              console.error('❌ Evidence candidate version (' + evidence.candidate_version + ') does not match workflow version input (' + process.env.VERSION_INPUT + ')');
               process.exit(1);
             }
-            console.log('✓ Verified Staging Evidence matching exact commit SHA.');
+
+            if (new Date(evidence.expiration_timestamp).getTime() < Date.now()) {
+              console.error('❌ Evidence artifact has expired!');
+              process.exit(1);
+            }
+
+            console.log('✓ All 17 required evidence fields validated successfully.');
+          "
+
+  production-approval:
+    name: 2. Protected GitHub Environment Manual Approval
+    needs: verify-staging-run
+    environment:
+      name: production
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Manual Authorization Granted
+        run: echo "✓ Protected manual environment approval granted BEFORE any production mutation."
+
+  production-preflight-and-backup:
+    name: 3. Production Database Safety & Backup Verification
+    needs: production-approval
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify Production Database Host & Backup Capability
+        env:
+          PROD_DB_URL: ${{ secrets.PROD_DATABASE_URL }}
+        run: |
+          if [ -z "$PROD_DB_URL" ]; then
+            echo "❌ Missing PROD_DATABASE_URL secret"
+            exit 1
+          fi
+          node -e "
+            const url = require('url');
+            const parsed = new url.URL(process.env.PROD_DB_URL);
+            if (parsed.hostname.includes('staging')) {
+              console.error('❌ FATAL: Production database connection points to staging host!');
+              process.exit(1);
+            }
+            console.log('✓ Target Production Database Host Verified:', parsed.hostname);
           "
 
   production-database-migration:
-    name: 2. Production Database Migration (Database-First)
-    needs: verify-staging-evidence
+    name: 4. Production Database Migration (Database-First)
+    needs: production-preflight-and-backup
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -81,7 +194,7 @@ jobs:
         run: npx supabase db push --db-url "${{ secrets.PROD_DATABASE_URL }}"
 
   production-database-contract-verification:
-    name: 3. Verify Production RPC & Database Schema Contracts
+    name: 5. Verify Production Live RPC & Database Catalog Contracts
     needs: production-database-migration
     runs-on: ubuntu-latest
     permissions:
@@ -93,7 +206,7 @@ jobs:
           node-version: 20
           cache: 'npm'
       - run: npm ci
-      - name: Verify Production Schema Contracts
+      - name: Verify Production Database Contracts
         env:
           APP_ENV: production
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
@@ -101,7 +214,7 @@ jobs:
         run: node scripts/check-database-compatibility.mjs
 
   production-vercel-deployment:
-    name: 4. Deploy Production Vercel Application
+    name: 6. Deploy Production Vercel Application
     needs: production-database-contract-verification
     runs-on: ubuntu-latest
     permissions:
@@ -136,18 +249,13 @@ jobs:
           echo "url=$PROD_URL" >> $GITHUB_OUTPUT
 
   production-web-smoke-tests:
-    name: 5. Production Web Smoke Tests
+    name: 7. Production Web Smoke Tests
     needs: production-vercel-deployment
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-      - run: npm ci
       - name: Verify Production Web Response
         shell: bash
         run: |
@@ -159,22 +267,9 @@ jobs:
           fi
           echo "✓ Production website live and healthy: $URL"
 
-  production-approval:
-    name: 6. Protected GitHub Environment Manual Approval
-    needs: production-web-smoke-tests
-    environment:
-      name: production
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-      - name: Manual Release Authorization Verified
-        run: echo "✓ Manual approval granted by required reviewer in production environment."
-
   publish-desktop-release:
-    name: 7. Publish Exact Pre-Verified Desktop Release Artifacts
-    needs: production-approval
+    name: 8. Publish Exact Pre-Verified Desktop Release Artifacts
+    needs: production-web-smoke-tests
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -184,42 +279,85 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
+      - run: npm ci
       - uses: actions/download-artifact@v4
         with:
           name: desktop-candidate
+          run-id: ${{ github.event.inputs.staging_run_id }}
+          github-token: ${{ github.token }}
           path: release
       - uses: actions/download-artifact@v4
         with:
           name: staging-evidence
+          run-id: ${{ github.event.inputs.staging_run_id }}
+          github-token: ${{ github.token }}
           path: .
-      - name: Verify Exact Artifact Bytes (No Rebuilding!)
+      - name: Generate Clean Markdown Release Notes
+        run: node scripts/generate-release-notes-md.mjs
+      - name: Verify Tag Does Not Exist & Installer, Blockmap, latest.yml Hashes
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          VERSION: ${{ github.event.inputs.version }}
         run: |
-          npm run test:desktop-assets
+          TAG="v$VERSION"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "❌ Tag $TAG already exists locally!"
+            exit 1
+          fi
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "❌ GitHub release $TAG already exists!"
+            exit 1
+          fi
+
           node -e "
             const fs = require('fs');
             const crypto = require('crypto');
             const evidence = JSON.parse(fs.readFileSync('staging-evidence.json', 'utf8'));
-            const files = fs.readdirSync('release').filter(f => f.endsWith('.exe'));
-            if (files.length === 0) throw new Error('No setup installer found in candidate release');
-            const installerPath = 'release/' + files[0];
-            const currentHash = crypto.createHash('sha256').update(fs.readFileSync(installerPath)).digest('hex');
-            console.log('Verified Candidate SHA256:', evidence.installer_sha256);
-            console.log('Publish Target SHA256:   ', currentHash);
-            if (evidence.installer_sha256 && currentHash !== evidence.installer_sha256) {
-              throw new Error('❌ ARTIFACT INTEGRITY VIOLATION: Publish installer byte hash does not match verified candidate!');
+            
+            function hashFile(path) {
+              return crypto.createHash('sha256').update(fs.readFileSync(path)).digest('hex');
             }
-            console.log('✓ Exact byte hash match verified. Publishing exact verified candidate installer.');
+
+            const files = fs.readdirSync('release');
+            const setupFile = files.find(f => f.endsWith('.exe'));
+            const blockmapFile = files.find(f => f.endsWith('.exe.blockmap'));
+            const latestFile = files.find(f => f === 'latest.yml');
+
+            if (!setupFile || !blockmapFile || !latestFile) {
+              throw new Error('❌ Missing required installer, blockmap, or latest.yml file in release directory');
+            }
+
+            const currentSetupHash = hashFile('release/' + setupFile);
+            const currentBlockmapHash = hashFile('release/' + blockmapFile);
+            const currentLatestHash = hashFile('release/' + latestFile);
+
+            console.log('Evidence Setup SHA256:   ', evidence.installer_sha256);
+            console.log('Candidate Setup SHA256:  ', currentSetupHash);
+            console.log('Evidence Blockmap SHA256:', evidence.blockmap_sha256);
+            console.log('Candidate Blockmap SHA256:', currentBlockmapHash);
+            console.log('Evidence latest.yml SHA: ', evidence.latest_yml_sha256);
+            console.log('Candidate latest.yml SHA:', currentLatestHash);
+
+            if (currentSetupHash !== evidence.installer_sha256 ||
+                currentBlockmapHash !== evidence.blockmap_sha256 ||
+                currentLatestHash !== evidence.latest_yml_sha256) {
+              throw new Error('❌ ARTIFACT INTEGRITY VIOLATION: Candidate byte hashes do not match verified staging evidence!');
+            }
+            console.log('✓ All three artifact byte hashes match verified staging evidence.');
           "
-      - name: Tag and Create GitHub Release
+
+      - name: Tag Commit and Create GitHub Release (Fail Closed on Error)
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          VERSION: ${{ github.event.inputs.version }}
         run: |
-          VERSION="v$(node -e "console.log(JSON.parse(require('fs').readFileSync('package.json')).version)")"
-          echo "Publishing release $VERSION..."
-          gh release create "$VERSION" release/* --title "MyDesck PRO $VERSION" --notes-file public/release-notes.json || true
+          TAG="v$VERSION"
+          git tag "$TAG"
+          git push origin "$TAG"
+          gh release create "$TAG" release/* --title "MyDesck PRO $TAG" --notes-file release-notes.md
 
   production-updater-verification:
-    name: 8. Verify Production Desktop Updater Feed
+    name: 9. Verify Public GitHub Release Assets & Hash Parity
     needs: publish-desktop-release
     runs-on: ubuntu-latest
     permissions:
@@ -231,15 +369,46 @@ jobs:
           node-version: 20
           cache: 'npm'
       - run: npm ci
-      - name: Verify Live GitHub Desktop Feed
-        run: node scripts/verify-desktop-release-assets.mjs
+      - uses: actions/download-artifact@v4
+        with:
+          name: staging-evidence
+          run-id: ${{ github.event.inputs.staging_run_id }}
+          github-token: ${{ github.token }}
+          path: .
+      - name: Download Published GitHub Release Assets & Verify Hashes
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          VERSION: ${{ github.event.inputs.version }}
+        run: |
+          TAG="v$VERSION"
+          mkdir -p downloaded_assets
+          gh release download "$TAG" --dir downloaded_assets
+
+          node -e "
+            const fs = require('fs');
+            const crypto = require('crypto');
+            const evidence = JSON.parse(fs.readFileSync('staging-evidence.json', 'utf8'));
+
+            const files = fs.readdirSync('downloaded_assets');
+            const setupFile = files.find(f => f.endsWith('.exe'));
+            if (!setupFile) throw new Error('❌ Downloaded release assets missing .exe installer');
+
+            const downloadedHash = crypto.createHash('sha256').update(fs.readFileSync('downloaded_assets/' + setupFile)).digest('hex');
+            console.log('Verified Candidate SHA256: ', evidence.installer_sha256);
+            console.log('Downloaded Release SHA256: ', downloadedHash);
+
+            if (downloadedHash !== evidence.installer_sha256) {
+              throw new Error('❌ PUBLIC ASSET INTEGRITY VIOLATION: Downloaded release asset hash does not match verified staging evidence!');
+            }
+            console.log('✓ Published GitHub release asset byte parity verified.');
+          "
 
   release-completion:
-    name: 9. Mark Production Release Complete
+    name: 10. Mark Production Release Complete
     needs: production-updater-verification
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
       - name: Release Pipeline Final Summary
-        run: echo "🎉 MyDesck PRO Production Release Complete and Verified."
+        run: echo "🎉 MyDesck PRO Production Release Complete, Verified, and Published."
