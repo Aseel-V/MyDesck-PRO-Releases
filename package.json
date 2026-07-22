@@ -90,6 +90,7 @@
     "test:desktop-updater-staging": "node scripts/verify-desktop-updater-staging.mjs",
     "test:state-machine": "node scripts/test-state-machine.mjs",
     "test:secret-leaks": "node scripts/check-secret-leaks.mjs",
+    "test:workflow-rules": "node scripts/test-workflow-negative-rules.mjs",
     "test:release-static": "node scripts/release-pipeline.mjs --mode=static",
     "test:release-publish-gate": "node scripts/release-pipeline.mjs --mode=publish",
     "test:release-gate": "node scripts/release-pipeline.mjs --mode=static",

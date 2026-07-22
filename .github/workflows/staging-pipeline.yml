@@ -1,0 +1,281 @@
+name: Staging Candidate Pipeline
+
+on:
+  push:
+    branches:
+      - 'release/staging-*'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: staging-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  static-gate:
+    name: 1. Static Contract & Code Gate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run test:release-static
+
+  staging-preflight:
+    name: 2. Staging Configuration Preflight
+    needs: static-gate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Staging Secret Presence
+        env:
+          STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+          STAGING_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
+          STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          STAGING_USER_A_EMAIL: ${{ secrets.STAGING_USER_A_EMAIL }}
+          STAGING_USER_A_PASSWORD: ${{ secrets.STAGING_USER_A_PASSWORD }}
+          STAGING_USER_B_EMAIL: ${{ secrets.STAGING_USER_B_EMAIL }}
+          STAGING_USER_B_PASSWORD: ${{ secrets.STAGING_USER_B_PASSWORD }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        shell: bash
+        run: |
+          MISSING=()
+          [ -z "$STAGING_SUPABASE_URL" ] && MISSING+=("STAGING_SUPABASE_URL")
+          [ -z "$STAGING_SUPABASE_ANON_KEY" ] && MISSING+=("STAGING_SUPABASE_ANON_KEY")
+          [ -z "$STAGING_SUPABASE_SERVICE_ROLE_KEY" ] && MISSING+=("STAGING_SUPABASE_SERVICE_ROLE_KEY")
+          [ -z "$STAGING_DATABASE_URL" ] && MISSING+=("STAGING_DATABASE_URL")
+          [ -z "$STAGING_USER_A_EMAIL" ] && MISSING+=("STAGING_USER_A_EMAIL")
+          [ -z "$STAGING_USER_A_PASSWORD" ] && MISSING+=("STAGING_USER_A_PASSWORD")
+          [ -z "$STAGING_USER_B_EMAIL" ] && MISSING+=("STAGING_USER_B_EMAIL")
+          [ -z "$STAGING_USER_B_PASSWORD" ] && MISSING+=("STAGING_USER_B_PASSWORD")
+          [ -z "$VERCEL_TOKEN" ] && MISSING+=("VERCEL_TOKEN")
+          [ -z "$VERCEL_ORG_ID" ] && MISSING+=("VERCEL_ORG_ID")
+          [ -z "$VERCEL_PROJECT_ID" ] && MISSING+=("VERCEL_PROJECT_ID")
+
+          if [ ${#MISSING[@]} -gt 0 ]; then
+            echo "❌ Missing required staging configuration:"
+            for key in "${MISSING[@]}"; do
+              echo "  - $key"
+            done
+            exit 1
+          fi
+          echo "✓ All required staging configuration variables are present."
+
+  deploy-staging:
+    name: 3. Real Vercel Staging Deployment
+    needs: staging-preflight
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      staging_url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+      - name: Pull Vercel Preview Environment
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Build Vercel Preview Artifacts
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Deploy Prebuilt Artifacts to Vercel Staging
+        id: deploy
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          DEPLOY_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$DEPLOY_URL" >> $GITHUB_OUTPUT
+      - name: Verify Staging URL HTTP 200 Response
+        shell: bash
+        run: |
+          URL="${{ steps.deploy.outputs.url }}"
+          echo "Verifying HTTP 200 response for URL: $URL"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
+          if [ "$STATUS" -ne 200 ]; then
+            echo "❌ Vercel staging deployment returned HTTP $STATUS (expected 200)"
+            exit 1
+          fi
+          echo "✓ Vercel staging URL returned HTTP 200"
+
+  staging-database:
+    name: 4. Verify Live Staging Database Contracts
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - name: Verify Staging Database
+        env:
+          APP_ENV: staging
+          STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          STAGING_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
+          STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+        run: npm run test:staging-db
+
+  staging-e2e:
+    name: 5. Playwright Browser E2E Staging Suite
+    needs:
+      - deploy-staging
+      - staging-database
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+      - name: Run E2E Staging Suite
+        env:
+          STAGING_APP_URL: ${{ needs.deploy-staging.outputs.staging_url }}
+          STAGING_USER_A_EMAIL: ${{ secrets.STAGING_USER_A_EMAIL }}
+          STAGING_USER_A_PASSWORD: ${{ secrets.STAGING_USER_A_PASSWORD }}
+          STAGING_USER_B_EMAIL: ${{ secrets.STAGING_USER_B_EMAIL }}
+          STAGING_USER_B_PASSWORD: ${{ secrets.STAGING_USER_B_PASSWORD }}
+        run: npm run test:staging-e2e
+
+  build-desktop-candidate:
+    name: 6. Build Unsigned Desktop Candidate Installer
+    needs: staging-e2e
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - name: Build Candidate Setup Installer
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+        run: npm run dist:win
+      - name: Upload Candidate Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-candidate
+          path: release/*
+
+  verify-desktop-candidate:
+    name: 7. Verify Built Candidate Installer & Compute Hashes
+    needs: build-desktop-candidate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      installer_sha256: ${{ steps.hash.outputs.installer_sha256 }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - uses: actions/download-artifact@v4
+        with:
+          name: desktop-candidate
+          path: release
+      - name: Verify Candidate Assets & Hashes
+        id: hash
+        run: |
+          npm run test:desktop-assets
+          HASH=$(sha256sum release/MyDesck-PRO-Setup-*.exe | awk '{print $1}')
+          echo "installer_sha256=$HASH" >> $GITHUB_OUTPUT
+          echo "✓ Verified Candidate Installer SHA256: $HASH"
+
+  staging-updater:
+    name: 8. Staged Desktop Updater Candidate Channel Test
+    needs: verify-desktop-candidate
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - uses: actions/download-artifact@v4
+        with:
+          name: desktop-candidate
+          path: release
+      - run: npm ci
+      - name: Test Staged Updater with Built Candidate Artifacts
+        run: npm run test:desktop-updater-staging
+
+  generate-staging-evidence:
+    name: 9. Generate Signed Staging Evidence Artifact
+    needs:
+      - staging-e2e
+      - staging-updater
+      - verify-desktop-candidate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - name: Create Evidence JSON
+        env:
+          COMMIT_SHA: ${{ github.sha }}
+          STAGING_URL: ${{ needs.deploy-staging.outputs.staging_url }}
+          INSTALLER_HASH: ${{ needs.verify-desktop-candidate.outputs.installer_sha256 }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          node -e "
+            const fs = require('fs');
+            const evidence = {
+              commit_sha: process.env.COMMIT_SHA,
+              version: JSON.parse(fs.readFileSync('package.json')).version,
+              staging_url: process.env.STAGING_URL,
+              installer_sha256: process.env.INSTALLER_HASH,
+              run_id: process.env.RUN_ID,
+              timestamp: new Date().toISOString(),
+              status: 'STAGING PASS'
+            };
+            fs.writeFileSync('staging-evidence.json', JSON.stringify(evidence, null, 2));
+            console.log('✓ Created staging evidence artifact for SHA ' + process.env.COMMIT_SHA);
+          "
+      - uses: actions/upload-artifact@v4
+        with:
+          name: staging-evidence
+          path: staging-evidence.json

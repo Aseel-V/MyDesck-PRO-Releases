@@ -87,7 +87,7 @@ runStep('2. Database contract validation', 'node scripts/check-database-compatib
 
 // Execute Stage 3: Local static contract tests
 pipelineState.current_stage = '3. Local integration tests';
-runStep('3. Local integration tests', 'node scripts/test-database-contracts.mjs && node scripts/test-trip-smoke-suite.mjs && node scripts/test-currency-regression.mjs && node scripts/test-validation-ux-gate.mjs && node scripts/test-rls-security.mjs && node scripts/check-pwa-cache-contract.mjs && node scripts/verify-desktop-release-assets.mjs && node scripts/verify-upgrade-path.mjs', STAGE_STATUS.STATIC_CONTRACT_PASS);
+runStep('3. Local integration tests', 'node scripts/test-database-contracts.mjs && node scripts/test-trip-smoke-suite.mjs && node scripts/test-currency-regression.mjs && node scripts/test-validation-ux-gate.mjs && node scripts/test-rls-security.mjs && node scripts/check-pwa-cache-contract.mjs && node scripts/verify-desktop-release-assets.mjs && node scripts/verify-upgrade-path.mjs && node scripts/test-workflow-negative-rules.mjs', STAGE_STATUS.STATIC_CONTRACT_PASS);
 
 // Staging deployment & test evaluation
 const hasStagingEnv = Boolean(process.env.STAGING_SUPABASE_URL && process.env.VERCEL_TOKEN);
