@@ -84,6 +84,9 @@ jobs:
     runs-on: windows-latest
     permissions:
       contents: read
+    env:
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -91,6 +94,16 @@ jobs:
           node-version: 20
           cache: 'npm'
       - run: npm ci
+      - name: Require Production Frontend Auth Configuration
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:VITE_SUPABASE_URL)) {
+            throw 'Tag Windows build requires repository secret VITE_SUPABASE_URL.'
+          }
+          if ([string]::IsNullOrWhiteSpace($env:VITE_SUPABASE_ANON_KEY)) {
+            throw 'Tag Windows build requires repository secret VITE_SUPABASE_ANON_KEY.'
+          }
+          Write-Host 'Production frontend auth configuration is present.'
       - run: npm run dist:win
       - name: Require Complete Updater Asset Set
         shell: pwsh

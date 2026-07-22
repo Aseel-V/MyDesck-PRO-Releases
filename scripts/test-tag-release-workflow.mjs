@@ -31,6 +31,20 @@ assert.equal(jobs['tag-verify-desktop-assets'].needs, 'tag-build-desktop');
 assert.equal(jobs['publish-desktop-release'].needs, 'tag-verify-desktop-assets');
 assert.equal(jobs['publish-desktop-release'].permissions?.contents, 'write');
 
+const tagBuild = jobs['tag-build-desktop'];
+assert.equal(tagBuild.env?.VITE_SUPABASE_URL, '${{ secrets.VITE_SUPABASE_URL }}');
+assert.equal(tagBuild.env?.VITE_SUPABASE_ANON_KEY, '${{ secrets.VITE_SUPABASE_ANON_KEY }}');
+
+const authPreflight = tagBuild.steps?.find(
+  (step) => step.name === 'Require Production Frontend Auth Configuration',
+);
+assert.ok(authPreflight, 'tag Windows build must check production frontend auth configuration');
+assert.equal(authPreflight.shell, 'pwsh');
+assert.match(authPreflight.run, /IsNullOrWhiteSpace\(\$env:VITE_SUPABASE_URL\)/);
+assert.match(authPreflight.run, /IsNullOrWhiteSpace\(\$env:VITE_SUPABASE_ANON_KEY\)/);
+assert.doesNotMatch(authPreflight.run, /(?:echo|Write-(?:Host|Output|Verbose|Debug)).*\$env:VITE_SUPABASE_/i);
+assert.doesNotMatch(authPreflight.run, /(?:Out-File|Set-Content|Add-Content|>).*\.env/i);
+
 const stepsText = (jobName) => JSON.stringify(jobs[jobName].steps ?? []);
 assert.match(stepsText('tag-release-validation'), /npm run test:updater/);
 assert.match(stepsText('tag-release-validation'), /npm run test:release-version/);
