@@ -1,0 +1,39 @@
+{
+  "version": "0.0.57",
+  "mode": "STATIC_VALIDATION",
+  "commit_sha": "f18a23d4e789c0123456789abcdef0123456789a",
+  "timestamp": "2026-07-22T14:38:00.000Z",
+  "current_stage": "4. Staging deployment",
+  "stages": {
+    "1. Code validation": {
+      "status": "STATIC CONTRACT PASS",
+      "details": "Typecheck, lint, i18n key parity, and single-source version contracts verified statically"
+    },
+    "2. Database contract validation": {
+      "status": "STATIC CONTRACT PASS",
+      "details": "Database compatibility manifest structure and forward-only migration chain order verified statically"
+    },
+    "3. Local integration tests": {
+      "status": "STATIC CONTRACT PASS",
+      "details": "Payload builders, financial formulas, Zod schemas, RLS policy definitions, and SemVer upgrade policies verified statically"
+    },
+    "4. Staging deployment": {
+      "status": "BLOCKED",
+      "details": "BLOCKED: Requires STAGING_SUPABASE_URL, STAGING_DATABASE_URL, and VERCEL_TOKEN repository secrets in GitHub Actions"
+    },
+    "5. Staging smoke tests": {
+      "status": "NOT RUN",
+      "details": "NOT RUN: Dependent on Stage 4 Staging Deployment"
+    },
+    "6. Manual approval": {
+      "status": "NOT RUN",
+      "details": "NOT RUN: Manual approval becomes available only after Stages 4 and 5 are STAGING PASS"
+    },
+    "7. Production database migration": { "status": "NOT RUN", "details": "Blocked until manual approval" },
+    "8. Production website deployment": { "status": "NOT RUN", "details": "Blocked until manual approval" },
+    "9. GitHub desktop release": { "status": "NOT RUN", "details": "Blocked until manual approval" },
+    "10. Production smoke tests": { "status": "NOT RUN", "details": "Blocked until manual approval" },
+    "11. Upgrade verification": { "status": "NOT RUN", "details": "Blocked until manual approval" },
+    "12. Release completion": { "status": "NOT RUN", "details": "Blocked until manual approval" }
+  }
+}

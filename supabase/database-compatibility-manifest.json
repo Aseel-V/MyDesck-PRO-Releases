@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0.0",
+  "expected_migration_version": "20260721120000",
+  "rpcs": [
+    {
+      "name": "save_trip_transaction",
+      "arguments": [
+        { "name": "p_trip_data", "type": "jsonb" },
+        { "name": "p_payment_plan", "type": "jsonb" },
+        { "name": "p_client_request_id", "type": "uuid" }
+      ],
+      "return_type": "jsonb",
+      "grants": ["authenticated"]
+    },
+    {
+      "name": "get_trips_page",
+      "arguments": [
+        { "name": "p_page", "type": "integer" },
+        { "name": "p_limit", "type": "integer" },
+        { "name": "p_search", "type": "text" },
+        { "name": "p_status", "type": "text" },
+        { "name": "p_payment_status", "type": "text" },
+        { "name": "p_sort_by", "type": "text" },
+        { "name": "p_sort_order", "type": "text" }
+      ],
+      "return_type": "jsonb",
+      "grants": ["authenticated"]
+    },
+    {
+      "name": "encrypt_travelers_in_db",
+      "arguments": [
+        { "name": "p_trip_id", "type": "uuid" },
+        { "name": "p_travelers", "type": "jsonb" }
+      ],
+      "return_type": "jsonb",
+      "grants": ["authenticated"]
+    },
+    {
+      "name": "get_yearly_stats_overview",
+      "arguments": [
+        { "name": "p_year", "type": "integer" }
+      ],
+      "return_type": "jsonb",
+      "grants": ["authenticated"]
+    }
+  ],
+  "tables": [
+    {
+      "name": "trips",
+      "columns": [
+        { "name": "id", "type": "uuid", "is_generated": false, "nullable": false },
+        { "name": "user_id", "type": "uuid", "is_generated": false, "nullable": false },
+        { "name": "client_name", "type": "text", "is_generated": false, "nullable": false },
+        { "name": "destination", "type": "text", "is_generated": false, "nullable": false },
+        { "name": "start_date", "type": "date", "is_generated": false, "nullable": false },
+        { "name": "end_date", "type": "date", "is_generated": false, "nullable": false },
+        { "name": "currency", "type": "text", "is_generated": false, "nullable": false },
+        { "name": "sale_price", "type": "numeric", "is_generated": false, "nullable": false },
+        { "name": "wholesale_cost", "type": "numeric", "is_generated": false, "nullable": false },
+        { "name": "amount_paid", "type": "numeric", "is_generated": false, "nullable": false },
+        { "name": "payment_method", "type": "text", "is_generated": false, "nullable": false },
+        { "name": "status", "type": "text", "is_generated": false, "nullable": false },
+        { "name": "profit", "type": "numeric", "is_generated": true, "write_forbidden": true },
+        { "name": "profit_percentage", "type": "numeric", "is_generated": true, "write_forbidden": true },
+        { "name": "amount_due", "type": "numeric", "is_generated": true, "write_forbidden": true },
+        { "name": "search_document", "type": "tsvector", "is_generated": true, "write_forbidden": true },
+        { "name": "created_at", "type": "timestamp with time zone", "is_generated": true, "write_forbidden": true }
+      ],
+      "check_constraints": [
+        {
+          "column": "currency",
+          "allowed_values": ["ILS", "USD", "EUR", "GBP", "JOD"]
+        },
+        {
+          "column": "payment_method",
+          "allowed_values": ["cash", "card", "bank_transfer", "mixed"]
+        },
+        {
+          "column": "status",
+          "allowed_values": ["active", "completed", "cancelled", "draft"]
+        }
+      ],
+      "rls_enabled": true
+    },
+    {
+      "name": "trip_payment_plans",
+      "columns": [
+        { "name": "id", "type": "uuid", "is_generated": false, "nullable": false },
+        { "name": "trip_id", "type": "uuid", "is_generated": false, "nullable": false },
+        { "name": "user_id", "type": "uuid", "is_generated": false, "nullable": false },
+        { "name": "source", "type": "text", "is_generated": false, "nullable": false },
+        { "name": "payment_method", "type": "text", "is_generated": false, "nullable": false },
+        { "name": "currency", "type": "text", "is_generated": false, "nullable": false },
+        { "name": "card_total_minor", "type": "bigint", "is_generated": false, "nullable": false },
+        { "name": "cash_total_minor", "type": "bigint", "is_generated": false, "nullable": false }
+      ],
+      "check_constraints": [
+        {
+          "column": "source",
+          "allowed_values": ["manual", "cash", "card", "mixed", "native"]
+        }
+      ],
+      "rls_enabled": true
+    },
+    {
+      "name": "trip_installments",
+      "columns": [
+        { "name": "id", "type": "uuid", "is_generated": false, "nullable": false },
+        { "name": "plan_id", "type": "uuid", "is_generated": false, "nullable": false },
+        { "name": "trip_id", "type": "uuid", "is_generated": false, "nullable": false },
+        { "name": "user_id", "type": "uuid", "is_generated": false, "nullable": false },
+        { "name": "installment_number", "type": "integer", "is_generated": false, "nullable": false },
+        { "name": "due_date", "type": "date", "is_generated": false, "nullable": false },
+        { "name": "expected_amount_minor", "type": "bigint", "is_generated": false, "nullable": false },
+        { "name": "status", "type": "text", "is_generated": false, "nullable": false }
+      ],
+      "check_constraints": [
+        {
+          "column": "status",
+          "allowed_values": ["scheduled", "paid", "partially_paid", "overdue", "cancelled"]
+        }
+      ],
+      "rls_enabled": true
+    },
+    {
+      "name": "trip_activity_logs",
+      "columns": [
+        { "name": "id", "type": "uuid", "is_generated": false, "nullable": false },
+        { "name": "trip_id", "type": "uuid", "is_generated": false, "nullable": false },
+        { "name": "user_id", "type": "uuid", "is_generated": false, "nullable": false },
+        { "name": "action", "type": "text", "is_generated": false, "nullable": false },
+        { "name": "request_id", "type": "uuid", "is_generated": false, "nullable": true }
+      ],
+      "rls_enabled": true
+    }
+  ]
+}

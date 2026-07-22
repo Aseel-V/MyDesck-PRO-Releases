@@ -352,7 +352,36 @@
       "defaultBody": "שלום {{clientName}}, הנסיעה שלך אל {{destination}} מתוכננת מ-{{startDate}} עד {{endDate}}. יתרה לתשלום: {{amountDue}} {{currency}}."
     },
     "actions": { "edit": "עריכה", "editAria": "עריכת הנסיעה", "pdf": "PDF", "pdfAria": "ייצוא הנסיעה ל-PDF", "pdfLoading": "הכנת PDF" },
-    "toolbar": { "mainActions": "פעולות ראשיות לנסיעות", "newTrip": "טיול חדש", "trash": "אשפה", "reports": "דוחות", "notifications": "התראות", "viewMode": "תצוגת נסיעות", "gridView": "תצוגת רשת", "listView": "תצוגת רשימה", "export": "ייצוא", "exportCsv": "ייצוא הנסיעות המסוננות ל-CSV", "exportXlsx": "ייצוא הנסיעות המסוננות ל-Excel", "exportInvoices": "ייצוא חשבוניות של נסיעות מסוננות", "saveFilter": "שמירת מסנן", "resetFilters": "איפוס מסננים", "moreActions": "פעולות נוספות", "templates": "תבניות", "help": "עזרה" },
+    "toolbar": { "mainActions": "פעולות ראשיות לנסיעות", "newTrip": "טיול חדש", "trash": "אשפה", "reports": "דוחות", "notifications": "התראות", "viewMode": "תצוגת נסיעות", "gridView": "תצוגת רשת", "listView": "תצוגת רשימה", "export": "ייצוא", "exportCsv": "ייצוא הנסיעות המסוננות ל-CSV", "exportXlsx": "ייצוא הנסיעות המסוננות ל-Excel", "exportInvoices": "ייצוא חשבוניות של נסיעות מסוננות", "saveFilter": "שמירת מסנן", "resetFilters": "איפוס מסננים", "moreActions": "פעולות נוספות", "templates": "תבניות", "help": "עזרה",
+    "sortButtonLabel": "תפריט מיון טיולים",
+    "sortLabel": "מיון",
+    "sortTitle": "מיון טיולים",
+    "resetSort": "איפוס מיון",
+    "sortGroups": {
+      "date": "תאריך",
+      "alphabetical": "אלפביתי",
+      "financial": "פיננסי",
+      "status": "סטטוס"
+    },
+    "sortOptions": {
+      "updatedDesc": "עודכן לאחרונה",
+      "updatedAsc": "הכי פחות מעודכן",
+      "createdDesc": "החדשים ביותר ראשונים",
+      "createdAsc": "הישנים ביותר ראשונים",
+      "startDateAsc": "תאריך נסיעה: הקרוב ביותר",
+      "startDateDesc": "תאריך נסיעה: הרחוק ביותר",
+      "destinationAsc": "יעד: א׳ ← ת׳",
+      "destinationDesc": "יעד: ת׳ ← א׳",
+      "clientNameAsc": "שם לקוח: א׳ ← ת׳",
+      "clientNameDesc": "שם לקוח: ת׳ ← א׳",
+      "salePriceDesc": "מחיר מכירה: מהגבוה לנמוך",
+      "salePriceAsc": "מחיר מכירה: מהנמוך לגבוה",
+      "profitDesc": "רווח: מהגבוה לנמוך",
+      "profitAsc": "רווח: מהנמוך לגבוה",
+      "remainingDesc": "יתרה לתשלום: מהגבוה לנמוך",
+      "remainingAsc": "יתרה לתשלום: מהנמוך לגבוה",
+      "overdueFirst": "פיגור בתשלום תחילה"
+    } },
     "templates": {
       "type": "סוג תבנית", "favorite": "מועדף", "includeArchived": "כולל ארכיון", "used": "בשימוש {{count}} פעמים",
       "types": { "full_trip": "נסיעה מלאה", "itinerary": "מסלול", "hotel": "מלון", "transportation": "תחבורה", "pricing": "תמחור", "checklist": "רשימת בדיקה", "message": "הודעה" },
@@ -518,6 +547,11 @@
     "notProvided": "לא סופק",
     "incompleteSection": "חסר מידע חובה",
     "validationSummaryTitle": "יש להשלים את השדות המסומנים",
+    "cannotSaveSummary": "עדיין לא ניתן לשמור את הטיול. יש להשלים את שדות החובה.",
+    "missingRequiredInfo": "חסרים פרטים נדרשים",
+    "goToFirstError": "מעבר לשדה החסר הראשון",
+    "accommodationNotIncluded": "לינה: לא כלולה",
+    "stepContainsErrors": "{{step}} מכיל {{count}} שגיאות",
     "invalidField": "ערך לא תקין",
     "calculatedPaymentStatus": "סטטוס תשלום מחושב",
     "formSteps": {
@@ -577,6 +611,7 @@
       "titleRequired": "חובה להזין כותרת",
       "startDateRequired": "חובה להזין תאריך התחלה",
       "endDateRequired": "חובה להזין תאריך סיום",
+      "hotelNameRequired": "חובה להזין שם מלון",
       "costNegative": "העלות לא יכולה להיות שלילית",
       "priceNegative": "המחיר לא יכול להיות שלילי",
       "amountPaidNegative": "הסכום ששולם לא יכול להיות שלילי",
@@ -790,8 +825,8 @@
     "outstandingBalanceDesc": "יתרות פתוחות שטרם שולמו.",
     "profitMargin": "שיעור רווח",
     "profitMarginDesc": "אחוז הרווח מתוך סך ההכנסות.",
-    "averageTripValue": "שווי טיול ממוצע",
-    "averageTripValueDesc": "סך ההכנסות חלקי מספר הטיולים.",
+    "averageProfit": "שווי רווח ממוצע",
+    "averageProfitDesc": "סך הרווח חלקי מספר הטיולים.",
     "averagePassengers": "ממוצע נוסעים לטיול",
     "averagePassengersDesc": "סך הנוסעים חלקי מספר הטיולים.",
     "fullyPaidTrips": "טיולים ששולמו במלואם",
@@ -830,8 +865,8 @@
       "outstandingBalanceDecrease": "היתרה לגבייה קטנה ב-{{percent}}% בהשוואה לתקופה הקודמת.",
       "topProfitDestination": "היעד {{destination}} ייצר את הרווח הגבוה ביותר בתקופה זו.",
       "upcomingUnpaidTrips": "ל-{{count}} טיולים קרובים יש עדיין יתרות שלא שולמו.",
-      "averageTripValueDecrease": "ערך הטיול הממוצע ירד ב-{{percent}}% בתקופה זו.",
-      "averageTripValueIncrease": "ערך הטיול הממוצע עלה ב-{{percent}}% בתקופה זו.",
+      "averageProfitDecrease": "שווי הרווח הממוצע ירד ב-{{percent}}% בתקופה זו.",
+      "averageProfitIncrease": "שווי הרווח הממוצע עלה ב-{{percent}}% בתקופה זו.",
       "lowCollectionRate": "שיעור גביית התשלומים נמוך מ-70% (כעת {{rate}}%).",
       "healthyCollectionRate": "שיעור גביית התשלומים תקין ועומד על {{rate}}%.",
       "negativeProfitTrips": "ל-{{count}} טיולים יש רווח שלילי או אפס.",
@@ -875,9 +910,9 @@
       "error": { "title": "העדכון נכשל", "description": "לא ניתן להשלים את העדכון." }
     },
     "errors": {
-      "check": "לא ניתן לבדוק עדכונים. אפשר לנסות שוב או לפתוח את דף הגרסאות הרשמי.",
-      "download": "לא ניתן להוריד את העדכון. אפשר לנסות שוב או לפתוח את דף הגרסאות הרשמי.",
-      "metadata": "פרטי העדכון אינם תקינים. היישום ימשיך לפעול ללא עדכון."
+      "check": "לא ניתן היה להתקין את העדכון. ניתן להמשיך להשתמש בבטחה בגרסה הנוכחית. נסה שוב מאוחר יותר.",
+      "download": "לא ניתן היה להתקין את העדכון. ניתן להמשיך להשתמש בבטחה בגרסה הנוכחית. נסה שוב מאוחר יותר.",
+      "metadata": "לא ניתן היה להתקין את העדכון. ניתן להמשיך להשתמש בבטחה בגרסה הנוכחית. נסה שוב מאוחר יותר."
     }
   },
   "websiteUpdate": { "availableTitle": "גרסה חדשה זמינה", "availableDescription": "גרסה {{version}} כוללת שיפורים בניהול טיולים, תשלומים, הודעות WhatsApp ודוחות.", "whatsNew": "מה חדש", "updateNow": "עדכון עכשיו", "later": "מאוחר יותר", "close": "סגירה", "releaseNotesUnavailable": "פרטי הגרסה אינם זמינים כעת." },

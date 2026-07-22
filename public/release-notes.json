@@ -1,29 +1,32 @@
 {
-  "version": "0.0.56",
-  "releasedAt": "2026-07-20T18:00:00.000Z",
+  "version": "0.0.57",
+  "releasedAt": "2026-07-21T10:30:00.000Z",
   "title": {
-    "en": "Single-Transaction Trip Save & Room Composition Redesign",
-    "he": "שמירת טיול בעסקה אחת ועיצוב מחדש של הרכב חדרים",
-    "ar": "حفظ الرحلة بمعاملة واحدة وإعادة تصميم توزيع الغرف"
+    "en": "Average Profit Metric, Trip Sorting Controls & Save Reliability Fixes",
+    "he": "מדד שווי רווח ממוצע, בקרות מיון טיולים ותיקוני אמינות שמירה",
+    "ar": "مقياس متوسط الربح، أدوات ترتيب الرحلات وإصلاحات موثوقية الحفظ"
   },
   "changes": {
     "en": [
-      "Atomic single-transaction trip save & payment plan sync",
-      "Redesigned Room Composition UI with modern cards and steppers",
-      "Idempotency protection against duplicate saves",
-      "Fixed traveler encryption contract PostgreSQL error"
+      "Replaced Average Trip Value with Average Profit in Analytics",
+      "Added server-side trip sorting controls with instant pagination sync",
+      "Fixed currency persistence contract for ILS and USD trips",
+      "Improved Review step validation and dynamic step error indicators",
+      "Fixed payment plan source constraint compliance for Card/Visa payments"
     ],
     "he": [
-      "שמירת טיול וסנכרון תוכנית תשלום בעסקה אטומית אחת",
-      "עיצוב מחדש של תצוגת הרכב החדרים עם כרטיסים ובקרות מתקדמות",
-      "הגנת Idempotency למניעת כפילויות בשמירה",
-      "תיקון שגיאת מסד הנתונים בהצפנת נוסעים"
+      "שווי טיול ממוצע הוחלף בשווי רווח ממוצע באנליטיקה",
+      "נוספו אפשרויות מיון מתקדמות לטיולים עם סנכרון דפדוף",
+      "תוקנה שמירת מטבעות לטיולים בשקלים ובדולרים",
+      "שופרה הצגת שגיאות בשלב הסקירה והניווט לשדות חסרים",
+      "תוקנה תאימות תוכניות תשלום בכרטיסי אשראי"
     ],
     "ar": [
-      "حفظ الرحلة ومزامنة خطة الدفع في معاملة واحدة ذكية",
-      "إعادة تصميم واجهة توزيع الغرف باستخدام بطاقات وأزرار تحكم حديثة",
-      "حماية Idempotency لمنع تكرار الحفظ عند إعادة المحاولة",
-      "إصلاح خطأ قاعدة البيانات المتعلق بتشفير المسافرين"
+      "تم استبدال متوسط قيمة الرحلة بمتوسط الربح في التحليلات",
+      "تمت إضافة أدوات ترتيب متقدمة للرحلات مع مزامنة التصفح",
+      "تم إصلاح حفظ العملات للرحلات بالشيقل والدولار",
+      "تم تحسين إظهار الحقول الناقصة والانتفال التلقائي في مرحلة المراجعة",
+      "تم إصلاح قيود خطط الدفع لبطاقات الائتمان"
     ]
   }
 }

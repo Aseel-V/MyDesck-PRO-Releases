@@ -59,6 +59,8 @@ import { mapWithConcurrency } from '../../lib/asyncPool';
 import { TripPagination } from './TripPagination';
 import { getSafeErrorCode } from '../../lib/safeError';
 import { TripTrash } from './TripTrash';
+import { TripSortControl } from './TripSortControl';
+import type { TripSortKey } from '../../lib/tripQueries';
 import { createTripCsv, createTripXlsx, downloadBlob, type TripExportLabels } from '../../lib/tripExport';
 import { TripNotificationCenter } from './TripNotificationCenter';
 import { TripTemplatesPanel } from './TripTemplatesPanel';
@@ -88,6 +90,25 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
   const [isExportingBatch, setIsExportingBatch] = useState(false);
   const [batchExportProgress, setBatchExportProgress] = useState({ completed: 0, total: 0 });
   const [page, setPage] = useState(1);
+  const [sortKey, setSortKey] = useState<TripSortKey>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('travel_mode_sort_key');
+      if (saved) return saved as TripSortKey;
+    }
+    return 'updated_desc';
+  });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('travel_mode_sort_key', sortKey);
+    }
+  }, [sortKey]);
+
+  const handleSortChange = (newSortKey: TripSortKey) => {
+    setSortKey(newSortKey);
+    setPage(1);
+  };
+
   const [loadingTripId, setLoadingTripId] = useState<string | null>(null);
   const [pdfGeneratingTripIds, setPdfGeneratingTripIds] = useState<string[]>([]);
   const [pdfPreview, setPdfPreview] = useState<{ trip: Trip; url: string; filename: string } | null>(null);
@@ -227,7 +248,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
     error,
     refetch,
   } = useQuery({
-    queryKey: ['trips-page', user?.id, filters, page],
+    queryKey: ['trips-page', user?.id, filters, sortKey, page],
     queryFn: async () => {
       if (!user?.id) return null;
       return fetchTripPage({
@@ -238,6 +259,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
         tripStatus: filters.tripStatus,
         month: filters.month,
         destination: filters.destination,
+        sortKey,
       });
     },
     enabled: !!user?.id,
@@ -701,6 +723,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
           availableYears={availableYears}
           availableDestinations={availableDestinations}
           leadingControls={<>
+            <TripSortControl sortKey={sortKey} onChange={handleSortChange} />
             <div className="inline-flex min-h-10 items-center rounded-xl border border-slate-200 bg-slate-100 p-1 dark:border-slate-700 dark:bg-slate-900" role="group" aria-label={t('trips.toolbar.viewMode')}>
               <button type="button" onClick={() => setViewMode('grid')} aria-pressed={viewMode === 'grid'} className={cn('inline-flex min-h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500', viewMode === 'grid' ? 'bg-white text-sky-700 shadow-sm dark:bg-slate-800 dark:text-sky-300' : 'text-slate-600 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-800')}><LayoutGrid className="h-4 w-4" aria-hidden="true"/>{t('trips.toolbar.gridView')}</button>
               <button type="button" onClick={() => setViewMode('list')} aria-pressed={viewMode === 'list'} className={cn('inline-flex min-h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500', viewMode === 'list' ? 'bg-white text-sky-700 shadow-sm dark:bg-slate-800 dark:text-sky-300' : 'text-slate-600 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-800')}><List className="h-4 w-4" aria-hidden="true"/>{t('trips.toolbar.listView')}</button>

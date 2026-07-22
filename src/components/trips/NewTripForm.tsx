@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { X, Save, FileText, CreditCard, BedDouble, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Save, FileText, CreditCard, BedDouble, CheckCircle2, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
 import { FieldErrors, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -19,6 +19,7 @@ import { getTripDuration } from '../../lib/tripDates';
 import TripDateRangePicker from './TripDateRangePicker';
 import { useCurrency } from '../../contexts/CurrencyContext';
 import { calculateTripFinancials } from '../../lib/tripFinancials';
+import { getTripCurrencyMode } from '../../lib/tripCurrency';
 import { useTripDraft } from '../../hooks/useTripDraft';
 import { toast } from 'sonner';
 import { getSafeErrorCode } from '../../lib/safeError';
@@ -203,7 +204,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
     first_installment_date: watchedPaymentPlan?.first_installment_date || '',
   };
   const serviceType = watch('service_type');
-  const isLegacyCurrencyTrip = Boolean(editTrip && editTrip.currency !== 'ILS');
+  const isLegacyCurrencyTrip = Boolean(editTrip && getTripCurrencyMode(editTrip) === 'legacy_usd');
   const tripCurrency = isLegacyCurrencyTrip ? editTrip?.currency || 'ILS' : 'ILS';
   const displayedCurrency = tripCurrency;
 
@@ -361,6 +362,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
     'Title is required': 'trips.validation.titleRequired',
     'Start date is required': 'trips.validation.startDateRequired',
     'End date is required': 'trips.validation.endDateRequired',
+    'Hotel name is required': 'trips.validation.hotelNameRequired',
     'Cost cannot be negative': 'trips.validation.costNegative',
     'Price cannot be negative': 'trips.validation.priceNegative',
     'Amount paid cannot be negative': 'trips.validation.amountPaidNegative',
@@ -514,50 +516,76 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
   const profitSign = profit >= 0 ? '+' : '';
   const profitColor = profit >= 0 ? 'text-emerald-300' : 'text-rose-300';
   const amountDueColor = amountDue > 0 ? 'text-rose-300' : 'text-emerald-300';
+  const allowMissingLegacyHotel = Boolean(
+    editTrip && editTrip.service_type !== 'ticket' && !editTrip.hotel_name?.trim()
+  );
+  const currentValues = watchedValues;
   const currentPaymentStatus = watch('payment_status');
   const isRtl = direction === 'rtl';
-  const currentValues = watch();
   const tripDuration = useMemo(
     () => getTripDuration(currentValues.start_date, currentValues.end_date),
     [currentValues.end_date, currentValues.start_date]
   );
-  const steps: Array<{ id: FormStep; label: string; icon: typeof FileText }> = [
+
+  const steps = useMemo<Array<{ id: FormStep; label: string; icon: typeof FileText }>>(() => [
     { id: 'details', label: t('trips.formSteps.details'), icon: FileText },
-    { id: 'rooms', label: t('trips.formSteps.rooms'), icon: BedDouble },
+    ...(serviceType !== 'ticket' ? [{ id: 'rooms' as FormStep, label: t('trips.formSteps.rooms'), icon: BedDouble }] : []),
     { id: 'financials', label: t('trips.formSteps.payment'), icon: CreditCard },
     { id: 'review', label: t('trips.formSteps.review'), icon: CheckCircle2 },
-  ];
+  ], [serviceType, t]);
+
+  useEffect(() => {
+    if (activeStep >= steps.length) {
+      setActiveStep(Math.max(0, steps.length - 1));
+    }
+  }, [steps.length, activeStep]);
+
+  useEffect(() => {
+    if (serviceType === 'ticket') {
+      clearErrors('hotel_name');
+    }
+  }, [serviceType, clearErrors]);
+
   const currentStepId = steps[activeStep]?.id || 'details';
-  const stepFields: Record<FormStep, Array<keyof TripFormValues>> = {
+
+  const stepFields = useMemo<Record<FormStep, Array<keyof TripFormValues>>>(() => ({
     details: ['destination', 'client_name', 'travelers_count', 'start_date', 'end_date'],
-    rooms: [],
-    financials: ['wholesale_cost', 'sale_price', 'amount_paid', 'payment_method', 'payment_plan'],
+    rooms: ['hotel_name'],
+    financials: ['wholesale_cost', 'sale_price', 'amount_paid', 'payment_method', 'payment_plan', 'card_paid_amount', 'cash_paid_amount'],
     review: [],
-  };
-  const fieldLabels: Partial<Record<keyof TripFormValues, string>> = {
+  }), []);
+
+  const fieldLabels = useMemo<Partial<Record<keyof TripFormValues, string>>>(() => ({
     destination: t('trips.destination'),
     client_name: t('trips.clientName'),
     travelers_count: t('trips.travelersCount'),
     start_date: t('trips.startDate'),
     end_date: t('trips.endDate'),
+    hotel_name: t('trips.hotelName'),
     wholesale_cost: t('trips.wholesaleCost'),
     sale_price: t('trips.salePrice'),
     amount_paid: t('trips.amountPaid'),
     payment_method: t('trips.paymentMethod'),
     payment_plan: t('trips.installments.formTitle'),
-  };
-  const orderedValidationFields: Array<keyof TripFormValues> = [
+    card_paid_amount: t('trips.cardPaidAmount'),
+    cash_paid_amount: t('trips.cashPaidAmount'),
+  }), [t]);
+
+  const orderedValidationFields: Array<keyof TripFormValues> = useMemo(() => [
     'destination',
     'client_name',
     'travelers_count',
     'start_date',
     'end_date',
+    ...(serviceType !== 'ticket' ? ['hotel_name' as keyof TripFormValues] : []),
     'wholesale_cost',
     'sale_price',
     'amount_paid',
     'payment_method',
     'payment_plan',
-  ];
+    'card_paid_amount',
+    'cash_paid_amount',
+  ], [serviceType]);
 
   const scrollFormToTop = () => {
     document.getElementById('new-trip-form-content')?.scrollTo({ top: 0, behavior: 'smooth' });
@@ -585,12 +613,16 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
     );
 
     if (firstInvalid) {
-      setActiveStep(getStepForField(firstInvalid));
+      const targetStepIndex = getStepForField(firstInvalid);
+      setActiveStep(targetStepIndex);
       window.setTimeout(() => {
         scrollFormToTop();
-        if (firstInvalid === 'payment_plan') document.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
-        else setFocus(firstInvalid);
-      }, 0);
+        if (firstInvalid === 'payment_plan') {
+          document.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+        } else {
+          setFocus(firstInvalid);
+        }
+      }, 50);
     }
   };
 
@@ -702,30 +734,78 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
           {steps.map((step, index) => {
             const Icon = step.icon;
             const isActive = activeStep === index;
-            const isComplete = activeStep > index;
+
+            const fieldsInStep = stepFields[step.id] || [];
+            const stepErrorCount = fieldsInStep.filter((field) => errors[field]).length;
+            const hasErrors = stepErrorCount > 0;
+
+            let isComplete = false;
+            if (!hasErrors) {
+              if (step.id === 'details') {
+                isComplete = Boolean(
+                  currentValues.destination?.trim() &&
+                  currentValues.client_name?.trim() &&
+                  currentValues.start_date &&
+                  currentValues.end_date &&
+                  (Number(currentValues.travelers_count) >= 1)
+                );
+              } else if (step.id === 'rooms') {
+                isComplete = serviceType === 'ticket' || Boolean(
+                  allowMissingLegacyHotel || currentValues.hotel_name?.trim()
+                );
+              } else if (step.id === 'financials') {
+                isComplete = Boolean(
+                  currentValues.wholesale_cost !== undefined &&
+                  currentValues.sale_price !== undefined &&
+                  !errors.amount_paid &&
+                  !errors.payment_method &&
+                  !errors.payment_plan
+                );
+              }
+            }
+
+            const stepAccessibleLabel = hasErrors
+              ? t('trips.stepContainsErrors', { step: step.label, count: stepErrorCount })
+              : `${step.label} - ${isComplete ? t('trips.completed') || 'Complete' : t('trips.incomplete') || 'Incomplete'}`;
+
             return (
               <button
                 key={step.id}
                 type="button"
                 onClick={() => goToStep(index)}
                 aria-current={isActive ? 'step' : undefined}
+                aria-label={stepAccessibleLabel}
+                title={stepAccessibleLabel}
                 className={cn(
-                  'flex min-h-10 items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors whitespace-normal text-start',
+                  'flex min-h-10 items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors whitespace-normal text-start relative',
                   isActive
                     ? 'border-sky-400 bg-white text-sky-700 shadow-sm dark:bg-slate-950 dark:text-sky-300'
-                    : isComplete
-                      ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300'
-                      : 'border-slate-200 bg-white/60 text-slate-500 hover:bg-white hover:text-slate-700 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-400 dark:hover:bg-slate-950 dark:hover:text-slate-200',
+                    : hasErrors
+                      ? 'border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-300'
+                      : isComplete
+                        ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300'
+                        : 'border-slate-200 bg-white/60 text-slate-500 hover:bg-white hover:text-slate-700 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-400 dark:hover:bg-slate-950 dark:hover:text-slate-200',
                 )}
               >
                 <span className={cn(
-                  'inline-flex h-6 w-6 items-center justify-center rounded-full text-[11px]',
-                  isComplete ? 'bg-emerald-500 text-white' : isActive ? 'bg-sky-500 text-white' : 'bg-slate-200 text-slate-500 dark:bg-slate-800',
+                  'inline-flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold',
+                  hasErrors
+                    ? 'bg-rose-500 text-white'
+                    : isComplete
+                      ? 'bg-emerald-500 text-white'
+                      : isActive
+                        ? 'bg-sky-500 text-white'
+                        : 'bg-slate-200 text-slate-500 dark:bg-slate-800',
                 )}>
-                  {isComplete ? <CheckCircle2 className="h-3.5 w-3.5" /> : index + 1}
+                  {hasErrors ? <AlertCircle className="h-3.5 w-3.5" /> : isComplete ? <CheckCircle2 className="h-3.5 w-3.5" /> : index + 1}
                 </span>
                 <Icon className="w-4 h-4" />
-                {step.label}
+                <span>{step.label}</span>
+                {hasErrors && (
+                  <span className="inline-flex items-center justify-center rounded-full bg-rose-600 text-white text-[10px] font-bold h-4 min-w-[16px] px-1">
+                    {stepErrorCount}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -746,8 +826,34 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
         >
           <div id="new-trip-form-content" className="max-h-[calc(92vh-15rem)] overflow-y-auto space-y-5 px-4 py-4 md:px-6 md:py-5">
             {validationSummary.length > 0 && (
-              <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-100" role="alert">
-                <p className="text-sm font-bold">{t('trips.validationSummaryTitle')}</p>
+              <div className="rounded-2xl border border-rose-300 bg-rose-50 p-4 text-rose-900 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-100" role="alert">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-bold">{t('trips.cannotSaveSummary')}</p>
+                    <p className="text-xs font-semibold text-rose-700 dark:text-rose-300 mt-0.5">{t('trips.missingRequiredInfo')}:</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const firstInvalid = orderedValidationFields.find((field) => errors[field]);
+                      if (firstInvalid) {
+                        const targetStepIndex = getStepForField(firstInvalid);
+                        setActiveStep(targetStepIndex);
+                        window.setTimeout(() => {
+                          scrollFormToTop();
+                          if (firstInvalid === 'payment_plan') {
+                            document.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+                          } else {
+                            setFocus(firstInvalid);
+                          }
+                        }, 50);
+                      }
+                    }}
+                    className="shrink-0 rounded-xl bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700 transition-colors shadow-sm"
+                  >
+                    {t('trips.goToFirstError')}
+                  </button>
+                </div>
                 <ul className="mt-2 list-disc space-y-1 ps-5 text-sm">
                   {validationSummary.map((item) => (
                     <li key={item}>{item}</li>
@@ -893,9 +999,21 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
 
                 <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                   <div>
-                    <label className={labelClasses}>{t('trips.hotelName')}</label>
-                    <input type="text" dir="auto" {...register('hotel_name')} placeholder={t('trips.hotelName')} className={cn(baseInputClasses, errors.hotel_name && errorInputClasses)} />
-                    {errors.hotel_name && <p className="mt-1 text-xs text-rose-500">{translateValidationMessage(errors.hotel_name.message)}</p>}
+                    <label className={labelClasses}>{t('trips.hotelName')} *</label>
+                    <input
+                      type="text"
+                      dir="auto"
+                      {...register('hotel_name')}
+                      aria-invalid={Boolean(errors.hotel_name)}
+                      aria-describedby={errors.hotel_name ? 'hotel_name-error' : undefined}
+                      placeholder={t('trips.hotelName')}
+                      className={cn(baseInputClasses, errors.hotel_name && errorInputClasses)}
+                    />
+                    {errors.hotel_name && (
+                      <p id="hotel_name-error" className="mt-1 text-xs text-rose-500 font-medium">
+                        {translateValidationMessage(errors.hotel_name.message)}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className={labelClasses}>{t('trips.boardBasis')}</label>
@@ -1149,12 +1267,26 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                   {completenessFindings.map((finding) => <p key={finding.code} className={cn('border-s-4 p-3 text-sm', finding.level === 'error' ? 'border-rose-500 bg-rose-50 text-rose-800 dark:bg-rose-500/10 dark:text-rose-200' : finding.level === 'warning' ? 'border-amber-500 bg-amber-50 text-amber-800 dark:bg-amber-500/10 dark:text-amber-200' : 'border-sky-500 bg-sky-50 text-sky-800 dark:bg-sky-500/10 dark:text-sky-200')}>{t(`trips.smartTools.findings.${finding.code}`)}</p>)}
                 </section>}
 
+                {serviceType === 'ticket' && (
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-slate-700 dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-300 flex items-center gap-3">
+                    <BedDouble className="w-5 h-5 text-slate-400" />
+                    <span className="text-sm font-semibold">{t('trips.accommodationNotIncluded')}</span>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {[
-                    { title: t('trips.formSteps.details'), step: 0, items: reviewItems.slice(0, 4), incomplete: requiredDetailsMissing },
-                    { title: t('trips.formSteps.rooms'), step: 1, items: reviewItems.slice(4, 6) },
-                    { title: t('trips.formSteps.payment'), step: 2, items: reviewItems.slice(6) },
-                  ].map((section) => (
+                  {(
+                    serviceType === 'ticket'
+                      ? [
+                          { title: t('trips.formSteps.details'), step: steps.findIndex((s) => s.id === 'details'), items: reviewItems.slice(0, 4), incomplete: requiredDetailsMissing },
+                          { title: t('trips.formSteps.payment'), step: steps.findIndex((s) => s.id === 'financials'), items: reviewItems.slice(6), incomplete: false },
+                        ]
+                      : [
+                          { title: t('trips.formSteps.details'), step: steps.findIndex((s) => s.id === 'details'), items: reviewItems.slice(0, 4), incomplete: requiredDetailsMissing },
+                          { title: t('trips.formSteps.rooms'), step: steps.findIndex((s) => s.id === 'rooms'), items: reviewItems.slice(4, 6), incomplete: !allowMissingLegacyHotel && !currentValues.hotel_name?.trim() },
+                          { title: t('trips.formSteps.payment'), step: steps.findIndex((s) => s.id === 'financials'), items: reviewItems.slice(6), incomplete: false },
+                        ]
+                  ).map((section) => (
                     <section
                       key={section.title}
                       className={cn(
@@ -1175,7 +1307,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                         </div>
                         <button
                           type="button"
-                          onClick={() => goToStep(section.step)}
+                          onClick={() => goToStep(section.step >= 0 ? section.step : 0)}
                           className="text-xs font-semibold text-sky-600 hover:text-sky-500 dark:text-sky-400"
                         >
                           {t('trips.editSection')}

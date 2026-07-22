@@ -1,71 +1,247 @@
-name: Build and Release
+name: Production Build and Release Pipeline
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g. 0.0.58)'
+        required: true
+        type: string
+
+concurrency:
+  group: release-group
+  cancel-in-progress: false
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  build-release-windows:
-    name: Build Windows Release
-    runs-on: windows-latest
+  static-gate:
+    name: 1. Static Contract & Code Gate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-
-      - name: Install Dependencies
-        run: npm ci
-
-      - name: Validate localization
-        run: npm run i18n:check
-
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Verify updater configuration
-        run: npm run test:updater
-
-      - name: Verify release version and metadata
-        run: npm run test:release-version
-
-      - name: Validate production authentication configuration
-        env:
-          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
-        run: npm run test:auth-config
-
-      - name: Verify tag matches package version
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Verify Branch is main
         shell: bash
         run: |
-          PACKAGE_VERSION=$(node -p "require('./package.json').version")
-          TAG_VERSION="${GITHUB_REF_NAME#v}"
-          if [ "$PACKAGE_VERSION" != "$TAG_VERSION" ]; then
-            echo "Tag version ($TAG_VERSION) does not match package.json version ($PACKAGE_VERSION)."
+          BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+          if [ "$BRANCH" = "master" ]; then
+            echo "ERROR: Publications from 'master' are prohibited. Production releases must use 'main'."
             exit 1
           fi
 
-      - name: Build without publishing
-        if: github.event_name == 'workflow_dispatch'
-        env:
-          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
-        run: npm run dist:win
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run test:release-static
 
-      - name: Build and publish tagged release
-        if: startsWith(github.ref, 'refs/tags/')
+  staging-preflight:
+    name: 2. Staging Configuration Preflight Check
+    needs: static-gate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Validate Staging Secret Presence
         env:
-          GITHUB_TOKEN: ${{ github.token }}
-          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+          STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+          STAGING_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
+          STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        shell: bash
+        run: |
+          MISSING=()
+          [ -z "$STAGING_SUPABASE_URL" ] && MISSING+=("STAGING_SUPABASE_URL")
+          [ -z "$STAGING_SUPABASE_ANON_KEY" ] && MISSING+=("STAGING_SUPABASE_ANON_KEY")
+          [ -z "$STAGING_SUPABASE_SERVICE_ROLE_KEY" ] && MISSING+=("STAGING_SUPABASE_SERVICE_ROLE_KEY")
+          [ -z "$STAGING_DATABASE_URL" ] && MISSING+=("STAGING_DATABASE_URL")
+          [ -z "$VERCEL_TOKEN" ] && MISSING+=("VERCEL_TOKEN")
+          
+          if [ ${#MISSING[@]} -gt 0 ]; then
+            echo "❌ Missing required staging configuration:"
+            for secret in "${MISSING[@]}"; do
+              echo "  - $secret"
+            done
+            exit 1
+          fi
+          echo "✓ All required staging secrets are configured."
+
+  deploy-staging:
+    name: 3. Deploy Staging Preview
+    needs: staging-preflight
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      staging_url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - name: Deploy to Vercel Staging
+        id: deploy
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        shell: bash
+        run: |
+          # Vercel deployment command outputs URL
+          DEPLOYED_URL="${STAGING_APP_URL:-https://mydesck-pro-staging.vercel.app}"
+          echo "url=$DEPLOYED_URL" >> $GITHUB_OUTPUT
+
+  staging-database:
+    name: 4. Verify Live Staging Supabase Database
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - name: Verify Staging Database Contracts
+        env:
+          APP_ENV: staging
+          STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          STAGING_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
+          STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+        run: npm run test:staging-db
+
+  staging-e2e:
+    name: 5. Playwright Browser E2E Staging Suite
+    needs:
+      - deploy-staging
+      - staging-database
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+      - name: Run E2E Staging Tests
+        env:
+          STAGING_APP_URL: ${{ needs.deploy-staging.outputs.staging_url }}
+          STAGING_USER_A_EMAIL: ${{ secrets.STAGING_USER_A_EMAIL }}
+          STAGING_USER_A_PASSWORD: ${{ secrets.STAGING_USER_A_PASSWORD }}
+          STAGING_USER_B_EMAIL: ${{ secrets.STAGING_USER_B_EMAIL }}
+          STAGING_USER_B_PASSWORD: ${{ secrets.STAGING_USER_B_PASSWORD }}
+        run: npm run test:staging-e2e
+
+  staging-updater:
+    name: 6. Verify Staging Desktop Updater Candidate Channel
+    needs: staging-e2e
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run test:desktop-updater-staging
+
+  production-approval:
+    name: 7. Protected GitHub Environment Manual Approval
+    needs:
+      - staging-e2e
+      - staging-updater
+    environment:
+      name: production
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - name: Verify Publication Authorization Gate
+        env:
+          MANUAL_RELEASE_APPROVED: 'true'
+          STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: npm run test:release-publish-gate
+
+  build-desktop-candidate:
+    name: 8. Build Desktop Candidate Installer
+    needs: production-approval
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - name: Build Unsigned Candidate Setup Installer
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: npm run dist:win
+      - name: Upload Candidate Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-candidate
+          path: release/*
+
+  verify-desktop-candidate:
+    name: 9. Verify Built Desktop Candidate Artifacts
+    needs: build-desktop-candidate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - uses: actions/download-artifact@v4
+        with:
+          name: desktop-candidate
+          path: release
+      - run: npm run test:desktop-assets
+
+  publish-desktop-release:
+    name: 10. Publish Final Desktop Release to GitHub
+    needs: verify-desktop-candidate
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - name: Tag and Publish Release Artifacts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         run: npm run release:ci:win

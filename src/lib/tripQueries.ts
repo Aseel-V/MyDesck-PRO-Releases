@@ -21,6 +21,25 @@ export interface TripPageResult {
   destinations: string[];
 }
 
+export type TripSortKey =
+  | 'updated_desc'
+  | 'updated_asc'
+  | 'created_desc'
+  | 'created_asc'
+  | 'start_date_asc'
+  | 'start_date_desc'
+  | 'destination_asc'
+  | 'destination_desc'
+  | 'client_name_asc'
+  | 'client_name_desc'
+  | 'sale_price_desc'
+  | 'sale_price_asc'
+  | 'profit_desc'
+  | 'profit_asc'
+  | 'remaining_desc'
+  | 'remaining_asc'
+  | 'overdue_first';
+
 export interface TripPageInput {
   year: string;
   page: number;
@@ -30,6 +49,7 @@ export interface TripPageInput {
   tripStatus?: string;
   month?: string;
   destination?: string;
+  sortKey?: TripSortKey;
 }
 
 const TRIP_LIST_FIELDS = 'id,user_id,destination,client_name,travelers_count,start_date,end_date,currency,exchange_rate,wholesale_cost,sale_price,profit,profit_percentage,payment_date,payment_status,amount_paid,amount_due,payment_method,card_paid_amount,cash_paid_amount,room_type,board_basis,hotel_name,service_type,trip_type,airline_name,flight_number,booking_reference,departure_airport,arrival_airport,departure_datetime,arrival_datetime,return_flight_number,return_departure_airport,return_arrival_airport,return_departure_datetime,return_arrival_datetime,ticket_class,ticket_cost_ils,wholesale_original_amount,wholesale_currency,sale_original_amount,sale_currency,checklist_flight,checklist_hotel,checklist_payment,status,export_to_pdf,created_at,updated_at';
@@ -117,6 +137,7 @@ export async function fetchTripPage(input: TripPageInput): Promise<TripPageResul
     p_trip_status: input.tripStatus || null,
     p_month: input.month ? Number(input.month) : null,
     p_destination: input.destination || null,
+    p_sort_key: input.sortKey || 'updated_desc',
   });
   if (error) {
     if (!recordRpcFallback('get_trips_page', error)) throw error;
@@ -172,7 +193,55 @@ async function fetchTripPageFallback(input: TripPageInput): Promise<TripPageResu
       query = query.gte('start_date', monthStart).lt('start_date', nextMonth);
     }
     if (search) query = query.or(`destination.ilike.%${search}%,client_name.ilike.%${search}%,hotel_name.ilike.%${search}%`);
-    return query.order('start_date', { ascending: false }).order('created_at', { ascending: false }).order('id', { ascending: false }).range(from, from + pageSize - 1);
+
+    const sortKey = input.sortKey || 'updated_desc';
+    switch (sortKey) {
+      case 'updated_asc':
+        query = query.order('updated_at', { ascending: true });
+        break;
+      case 'created_desc':
+        query = query.order('created_at', { ascending: false });
+        break;
+      case 'created_asc':
+        query = query.order('created_at', { ascending: true });
+        break;
+      case 'start_date_asc':
+        query = query.order('start_date', { ascending: true, nullsFirst: false });
+        break;
+      case 'start_date_desc':
+        query = query.order('start_date', { ascending: false, nullsFirst: false });
+        break;
+      case 'destination_asc':
+        query = query.order('destination', { ascending: true });
+        break;
+      case 'destination_desc':
+        query = query.order('destination', { ascending: false });
+        break;
+      case 'client_name_asc':
+        query = query.order('client_name', { ascending: true });
+        break;
+      case 'client_name_desc':
+        query = query.order('client_name', { ascending: false });
+        break;
+      case 'sale_price_desc':
+        query = query.order('sale_price', { ascending: false });
+        break;
+      case 'sale_price_asc':
+        query = query.order('sale_price', { ascending: true });
+        break;
+      case 'profit_desc':
+        query = query.order('profit', { ascending: false });
+        break;
+      case 'profit_asc':
+        query = query.order('profit', { ascending: true });
+        break;
+      case 'updated_desc':
+      default:
+        query = query.order('updated_at', { ascending: false });
+        break;
+    }
+
+    return query.order('id', { ascending: false }).range(from, from + pageSize - 1);
   };
 
   let response = await buildListQuery(true);

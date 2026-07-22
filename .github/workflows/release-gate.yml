@@ -1,0 +1,226 @@
+name: Release Gate Safety Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: release-group
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  branch-check:
+    name: Verify Production Branch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Branch Name
+        run: |
+          if [ "${{ github.ref_name }}" = "master" ]; then
+            echo "ERROR: Releases from 'master' branch are permanently disabled. Use 'main'."
+            exit 1
+          fi
+
+  version-contract:
+    name: Version Parity Contract
+    needs: branch-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run test:release-version
+
+  migration-chain:
+    name: Migration Chain Verification
+    needs: branch-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run test:migration-chain
+
+  production-schema-contract:
+    name: Database Compatibility Manifest
+    needs: branch-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run test:database-compatibility
+
+  database-generated-columns:
+    name: Generated Columns Write Safety
+    needs: branch-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run test:database-contracts
+
+  conflict-and-check-constraints:
+    name: ON CONFLICT & CHECK Constraints
+    needs: branch-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run test:database-contracts
+
+  unit-tests:
+    name: Code & Type Validation
+    needs: branch-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run test:secret-leaks
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run i18n:check
+
+  travel-e2e:
+    name: Travel Trip Smoke Suite
+    needs: branch-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run test:trip-smoke
+
+  currency-regression:
+    name: Currency Persistence Gate
+    needs: branch-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run test:currency-regression
+
+  rls-two-user:
+    name: RLS Multi-Tenant Security Gate
+    needs: branch-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run test:rls-security
+
+  frontend-build:
+    name: Frontend Application Build
+    needs: branch-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build
+
+  pwa-update-contract:
+    name: PWA Cache & Update Contract
+    needs: branch-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run test:pwa-contract
+
+  electron-updater-assets:
+    name: Desktop Updater Asset Integrity
+    needs: branch-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run test:desktop-assets
+
+  previous-version-upgrade:
+    name: Desktop Upgrade Path Contract
+    needs: branch-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run test:upgrade-path
+
+  release-gate:
+    name: Mandatory Comprehensive Release Gate
+    needs:
+      - branch-check
+      - version-contract
+      - migration-chain
+      - production-schema-contract
+      - database-generated-columns
+      - conflict-and-check-constraints
+      - unit-tests
+      - travel-e2e
+      - currency-regression
+      - rls-two-user
+      - frontend-build
+      - pwa-update-contract
+      - electron-updater-assets
+      - previous-version-upgrade
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run test:release-gate

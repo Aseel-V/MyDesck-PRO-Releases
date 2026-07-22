@@ -11,7 +11,7 @@ const lockfile = JSON.parse(readFileSync('package-lock.json', 'utf8'));
 const versionMetadata = JSON.parse(readFileSync('public/version.json', 'utf8'));
 const releaseNotes = JSON.parse(readFileSync('public/release-notes.json', 'utf8'));
 
-assert.equal(packageJson.version, '0.0.56');
+assert.ok(typeof packageJson.version === 'string' && packageJson.version.length > 0, 'packageJson.version must be a valid non-empty string');
 assert.equal(lockfile.version, packageJson.version);
 assert.equal(lockfile.packages[''].version, packageJson.version);
 assert.equal(versionMetadata.version, packageJson.version);
@@ -37,17 +37,17 @@ try {
   await build({ entryPoints: ['src/lib/websiteRelease.ts'], outfile, bundle: true, platform: 'node', format: 'esm', define: { 'import.meta.env': JSON.stringify({ BASE_URL: '/' }), __APP_VERSION__: JSON.stringify(packageJson.version) }, logLevel: 'warning' });
   const release = await import(`${pathToFileURL(outfile).href}?run=${Date.now()}`);
   assert.equal(release.APP_VERSION, packageJson.version);
-  assert.equal(release.compareStableVersions('0.0.56', '0.0.55'), 1);
-  assert.equal(release.compareStableVersions('v0.0.56', '0.0.55'), 1);
-  assert.equal(release.compareStableVersions('0.0.56', 'V0.0.56'), 0);
-  assert.equal(release.compareStableVersions('0.0.100', '0.0.56'), 1);
+  assert.equal(release.compareStableVersions(packageJson.version, '0.0.55'), 1);
+  assert.equal(release.compareStableVersions(`v${packageJson.version}`, '0.0.55'), 1);
+  assert.equal(release.compareStableVersions(packageJson.version, `V${packageJson.version}`), 0);
+  assert.equal(release.compareStableVersions('0.0.100', packageJson.version), 1);
   assert.equal(release.compareStableVersions('1.0.0', '0.9.99'), 1);
-  assert.equal(release.compareStableVersions('invalid', '0.0.56'), null);
-  assert.equal(release.isNewerWebsiteVersion('0.0.56', '0.0.55'), true);
-  assert.equal(release.isNewerWebsiteVersion('v0.0.56', '0.0.55'), true);
-  assert.equal(release.isNewerWebsiteVersion('0.0.56', 'v0.0.56'), false);
-  assert.equal(release.isNewerWebsiteVersion('0.0.56', '0.0.56'), false);
-  assert.equal(release.shouldDeferWebsiteUpdate('0.0.56'), false);
+  assert.equal(release.compareStableVersions('invalid', packageJson.version), null);
+  assert.equal(release.isNewerWebsiteVersion(packageJson.version, '0.0.55'), true);
+  assert.equal(release.isNewerWebsiteVersion(`v${packageJson.version}`, '0.0.55'), true);
+  assert.equal(release.isNewerWebsiteVersion(packageJson.version, `v${packageJson.version}`), false);
+  assert.equal(release.isNewerWebsiteVersion(packageJson.version, packageJson.version), false);
+  assert.equal(release.shouldDeferWebsiteUpdate(packageJson.version), false);
 } finally {
   await rm(directory, { recursive: true, force: true });
 }

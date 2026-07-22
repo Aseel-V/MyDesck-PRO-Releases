@@ -367,6 +367,6 @@ assert.ok(newTripFormSource.includes("fetchTripPaymentPlan(editTrip!.id)") && ne
 assert.ok(newTripFormSource.includes('<TripInstallmentPlanFields') && newTripFormSource.includes('direction={direction}'), 'the live installment section must preserve RTL direction');
 assert.ok(installmentFieldsSource.includes("paymentMethodIncludesInstallments(method)") && installmentFieldsSource.includes('if (!includesCard) return null'), 'cash must hide installment fields while card and mixed reveal them');
 for (const field of ['card_total', 'cash_total', 'installment_count', 'first_installment_date']) assert.ok(installmentFieldsSource.includes(field), `installment form must include ${field}`);
-assert.ok(tripMutationsSource.includes('toTripPaymentPlanInput(formData)') && tripMutationsSource.includes('syncTripPaymentPlan(data.id, paymentPlan)'), 'trip submission must persist its payment plan');
+assert.ok(tripMutationsSource.includes('toTripPaymentPlanInput(formData)') && (tripMutationsSource.includes('save_trip_transaction') || tripMutationsSource.includes('syncTripPaymentPlan(data.id, paymentPlan)')), 'trip submission must persist its payment plan');
 
 console.log('Travel Mode focused tests passed');

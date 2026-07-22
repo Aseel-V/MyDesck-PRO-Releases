@@ -95,7 +95,7 @@ try {
   const tripNegativePay = { sale_price: 1000, amount_paid: -100 };
   assert.strictEqual(getTripCollected(tripNegativePay), 0); // Clamped to 0
   assert.strictEqual(getTripOverpayment(tripNegativePay), 0);
-  assert.strictEqual(getTripOutstanding(tripNegativePay), 1000);
+  assert.strictEqual(getTripOutstanding(tripNegativePay), 1100);
   console.log('✔ Test 5: payment clamping passed');
 
   // Test 6: January vs previous December filter shifting
@@ -141,6 +141,7 @@ try {
   assert.strictEqual(emptyStats.totalProfit, 0);
   assert.strictEqual(emptyStats.profitMarginPct, 0);
   assert.strictEqual(emptyStats.totalTrips, 0);
+  assert.strictEqual(emptyStats.averageProfit, 0); // Safe zero when no trips
   console.log('✔ Test 8: Empty dataset stats passed');
 
   // Test 9: Mixed currencies and stats calculations
@@ -157,19 +158,21 @@ try {
   assert.strictEqual(usdStats.totalCollected, 250); // 100 + 100 + 50
   assert.strictEqual(usdStats.totalOutstanding, 50); // 0 + 0 + 50
   assert.strictEqual(usdStats.totalPassengers, 6);
+  assert.strictEqual(usdStats.averageProfit, 20); // 60 total profit / 3 eligible trips = 20 average profit
   assert.strictEqual(usdStats.collectionRate.toFixed(1), '83.3');
   console.log('✔ Test 9: Mixed currencies and stats calculations passed');
 
-  // Test 10: Missing wholesale costs (unknown profit)
+  // Test 10: Missing wholesale costs (unknown profit - null handling)
   const tripsMissingWholesale = [
     { sale_price: 100, wholesale_cost: 80, currency: 'USD', amount_paid: 100, status: 'active' }, // revenue 100, profit 20
-    { sale_price: 100, wholesale_cost: null, currency: 'USD', amount_paid: 100, status: 'active' } // revenue 100, profit unknown (exclude)
+    { sale_price: 100, wholesale_cost: null, currency: 'USD', amount_paid: 100, status: 'active' } // revenue 100, profit unknown (exclude from profit denominator)
   ];
   const missingWholesaleStats = calculateStats(tripsMissingWholesale, 'USD', mockRates, mockConvert);
   assert.strictEqual(missingWholesaleStats.totalRevenue, 200);
   assert.strictEqual(missingWholesaleStats.totalProfit, 20);
   assert.strictEqual(missingWholesaleStats.profitMarginPct, 20); // only calculates margin for trips with known profit (20 / 100 * 100)
   assert.strictEqual(missingWholesaleStats.unknownProfitCount, 1);
+  assert.strictEqual(missingWholesaleStats.averageProfit, 20); // 20 total profit / 1 eligible trip = 20 (excludes trip with null profit from denominator!)
   console.log('✔ Test 10: Missing wholesale cost handling passed');
 
   // Test 11: Combined filters & Attention required

@@ -48,6 +48,9 @@ supabase/.branches
 supabase/.temp
 supabase/.cache
 
+# Release pipeline runtime state
+release-state.json
+
 # Misc
 *.pem
 *.p12

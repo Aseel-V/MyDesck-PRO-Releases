@@ -17,7 +17,7 @@ export interface PeriodStats {
   totalOutstanding: number;
   totalTrips: number;
   totalPassengers: number;
-  averageTripValue: number;
+  averageProfit: number;
   averagePassengers: number;
   collectionRate: number;
   totalOverpayment: number;
@@ -272,7 +272,8 @@ export function calculateStats(
 
   const totalTrips = trips.length;
   const profitMarginPct = revenueForProfitMargin > 0 ? (totalProfit / revenueForProfitMargin) * 100 : 0;
-  const averageTripValue = totalTrips > 0 ? totalRevenue / totalTrips : 0;
+  const eligibleProfitTripsCount = totalTrips - unknownProfitCount;
+  const averageProfit = eligibleProfitTripsCount > 0 ? totalProfit / eligibleProfitTripsCount : 0;
   const averagePassengers = totalTrips > 0 ? totalPassengers / totalTrips : 0;
   const collectionRate = totalRevenue > 0 ? (totalCollected / totalRevenue) * 100 : 0;
 
@@ -284,7 +285,7 @@ export function calculateStats(
     totalOutstanding,
     totalTrips,
     totalPassengers,
-    averageTripValue,
+    averageProfit,
     averagePassengers,
     collectionRate: Math.min(100, Math.max(0, collectionRate)),
     totalOverpayment,
@@ -558,18 +559,18 @@ export function generateBusinessInsights(
     });
   }
 
-  // Insight 4: Average Trip Value change
-  if (prevStats && prevStats.averageTripValue > 0) {
-    const pct = ((currentStats.averageTripValue - prevStats.averageTripValue) / prevStats.averageTripValue) * 100;
+  // Insight 4: Average Profit change
+  if (prevStats && prevStats.averageProfit > 0) {
+    const pct = ((currentStats.averageProfit - prevStats.averageProfit) / prevStats.averageProfit) * 100;
     if (pct <= -5) {
       insights.push({
-        key: 'averageTripValueDecrease',
+        key: 'averageProfitDecrease',
         type: 'warning',
         params: { percent: Math.abs(pct).toFixed(1) },
       });
     } else if (pct >= 5) {
       insights.push({
-        key: 'averageTripValueIncrease',
+        key: 'averageProfitIncrease',
         type: 'success',
         params: { percent: pct.toFixed(1) },
       });

@@ -129,6 +129,15 @@ export const validateSupabasePublicConfig = (
   const { origin, hostname, protocol } = getWindowContext();
   const apiBaseUrl = parsedUrl.origin;
 
+  // HARD STAGING GUARD: Block accidental connection to production Supabase from staging builds
+  const PRODUCTION_HOST = 'pubugnfaqqukelvgckdr.supabase.co';
+  const isStagingEnv = import.meta.env.MODE === 'staging' || (hostname && hostname.includes('staging'));
+  if (isStagingEnv && parsedUrl.hostname === PRODUCTION_HOST) {
+    const message = `[FATAL] CRITICAL SECURITY GUARD: Staging build detected production Supabase URL (${PRODUCTION_HOST})! Staging builds must never connect to production data.`;
+    console.error(message);
+    throw new Error(message);
+  }
+
   console.info('[Auth Config] Runtime auth diagnostics', {
     appOrigin: origin,
     apiHostname: parsedUrl.hostname,
