@@ -1,6 +1,6 @@
 {
-  "version": "0.0.57",
-  "releasedAt": "2026-07-21T10:30:00.000Z",
+  "version": "0.0.58",
+  "releasedAt": "2026-07-22T19:24:30.251Z",
   "title": {
     "en": "Average Profit Metric, Trip Sorting Controls & Save Reliability Fixes",
     "he": "מדד שווי רווח ממוצע, בקרות מיון טיולים ותיקוני אמינות שמירה",
@@ -8,6 +8,7 @@
   },
   "changes": {
     "en": [
+      "Fixed GitHub tag-driven updater publication and production authentication configuration during Windows release builds",
       "Replaced Average Trip Value with Average Profit in Analytics",
       "Added server-side trip sorting controls with instant pagination sync",
       "Fixed currency persistence contract for ILS and USD trips",
@@ -15,6 +16,7 @@
       "Fixed payment plan source constraint compliance for Card/Visa payments"
     ],
     "he": [
+      "תוקנו פרסום העדכונים המופעל באמצעות תגיות GitHub ותצורת האימות לייצור בבניות Windows",
       "שווי טיול ממוצע הוחלף בשווי רווח ממוצע באנליטיקה",
       "נוספו אפשרויות מיון מתקדמות לטיולים עם סנכרון דפדוף",
       "תוקנה שמירת מטבעות לטיולים בשקלים ובדולרים",
@@ -22,6 +24,7 @@
       "תוקנה תאימות תוכניות תשלום בכרטיסי אשראי"
     ],
     "ar": [
+      "تم إصلاح نشر التحديثات المستند إلى وسوم GitHub وإعداد مصادقة الإنتاج في إصدارات Windows",
       "تم استبدال متوسط قيمة الرحلة بمتوسط الربح في التحليلات",
       "تمت إضافة أدوات ترتيب متقدمة للرحلات مع مزامنة التصفح",
       "تم إصلاح حفظ العملات للرحلات بالشيقل والدولار",
