@@ -2,6 +2,7 @@ import { supabase } from './supabase';
 import type { Trip } from '../types/trip';
 import { recordRpcFallback, recordRpcSuccess } from './rpcAvailability';
 import { calculateTripFinancials } from './tripFinancials';
+import { getSafeErrorCode } from './safeError';
 
 export const TRIPS_PAGE_SIZE = 24;
 
@@ -19,6 +20,77 @@ export interface TripPageResult {
   summary: TripPageSummary[];
   upcoming_count: number;
   destinations: string[];
+}
+
+type PaymentContractSnapshot = Record<string, string | number | null>;
+
+function getPaymentContractSnapshot(value: Partial<Trip> | null | undefined): PaymentContractSnapshot | null {
+  if (!value) return null;
+  const summary = value.payment_plan_summary;
+  return {
+    payment_method: value.payment_method ?? null,
+    payment_status: value.payment_status ?? null,
+    amount_paid_minor: Math.round(Number(value.amount_paid ?? 0) * 100),
+    amount_due_minor: Math.round(Number(value.amount_due ?? 0) * 100),
+    summary_method: summary?.payment_method ?? null,
+    summary_source: summary?.source ?? null,
+    cash_paid_minor: summary?.cash_paid_minor ?? null,
+    stored_cash_paid_minor: summary?.stored_cash_paid_minor ?? null,
+    processed_installments: summary?.processed_installments ?? null,
+    scheduled_minor_to_date: summary?.scheduled_minor_to_date ?? null,
+    remaining_scheduled_minor: summary?.remaining_scheduled_minor ?? null,
+    combined_remaining_minor: summary?.combined_remaining_minor ?? null,
+    authoritative_payment_status: summary?.authoritative_payment_status ?? null,
+  };
+}
+
+export async function logTripPaymentContractComparison(tripId: string, year: string): Promise<void> {
+  if (!import.meta.env.DEV) return;
+
+  const pageArgs = {
+    p_year: year,
+    p_page: 1,
+    p_page_size: 100,
+    p_search: null,
+    p_payment_status: null,
+    p_trip_status: null,
+    p_month: null,
+    p_destination: null,
+    p_sort_key: 'updated_desc',
+  };
+  const [detailResult, pageResult, dashboardResult] = await Promise.all([
+    supabase.rpc('get_trip_details', { p_trip_id: tripId }),
+    supabase.rpc('get_trips_page', pageArgs),
+    supabase.rpc('get_trip_dashboard_items', { p_year: year }),
+  ]);
+  const errors = [detailResult.error, pageResult.error, dashboardResult.error].filter(Boolean);
+  if (errors.length > 0) {
+    console.warn('[Travel payment contract] comparison unavailable', {
+      tripId,
+      errorCodes: errors.map(getSafeErrorCode),
+    });
+    return;
+  }
+
+  const pagePayload = pageResult.data as unknown as Partial<TripPageResult> | null;
+  const detail = detailResult.data as unknown as Partial<Trip> | null;
+  const listItem = pagePayload?.items?.find((item) => item.id === tripId);
+  const dashboardItems = dashboardResult.data as unknown as Array<Partial<Trip>> | null;
+  const dashboardItem = dashboardItems?.find((item) => item.id === tripId);
+  const snapshots = {
+    details: getPaymentContractSnapshot(detail),
+    list: getPaymentContractSnapshot(listItem),
+    dashboard: getPaymentContractSnapshot(dashboardItem),
+  };
+  const fields = new Set(Object.values(snapshots).flatMap((snapshot) => snapshot ? Object.keys(snapshot) : []));
+  const differences = [...fields].filter((field) => {
+    const values = Object.values(snapshots).map((snapshot) => snapshot?.[field] ?? null);
+    return new Set(values).size > 1;
+  });
+
+  const output = { tripId, differences, snapshots };
+  if (differences.length > 0) console.warn('[Travel payment contract] mismatch', output);
+  else console.info('[Travel payment contract] aligned', output);
 }
 
 export type TripSortKey =

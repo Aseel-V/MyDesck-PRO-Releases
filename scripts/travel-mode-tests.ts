@@ -142,6 +142,7 @@ const scheduledTrip: Trip = {
     card_total_minor: 60000, cash_total_minor: 40000, cash_paid_minor: 10000, installment_count: 6,
     processed_installments: 2, scheduled_minor_to_date: 20000, remaining_scheduled_minor: 40000,
     next_installment_minor: 10000, next_installment_date: '2025-03-15', final_installment_date: '2025-06-15',
+    authoritative_payment_status: 'partial', combined_remaining_minor: 70000,
   },
 };
 const cardPayment = getTripCardPaymentState(scheduledTrip, '2025-03-10');
@@ -149,9 +150,50 @@ assert.equal(cardPayment.hasVisaSchedule, true);
 assert.equal(cardPayment.processedInstallments, 2);
 assert.equal(Math.round(cardPayment.visaProgress), 33);
 assert.equal(cardPayment.combinedRemainingMinor, 70000);
+assert.equal(cardPayment.confirmedCashMinor, 10000);
+assert.equal(cardPayment.remainingCashMinor, 30000);
 assert.equal(cardPayment.nextInstallmentDate, '2025-03-15');
 assert.equal(cardPayment.attention?.key, 'visaAfterTrip');
 assert.equal(getTripCardPaymentState({ ...scheduledTrip, payment_plan_summary: { ...scheduledTrip.payment_plan_summary!, processed_installments: 6, scheduled_minor_to_date: 60000, remaining_scheduled_minor: 0, next_installment_minor: null, next_installment_date: null } }, '2025-07-01').statusChip?.key, 'visaComplete');
+const visaState = getTripCardPaymentState({
+  ...scheduledTrip,
+  payment_method: 'card',
+  payment_plan_summary: {
+    ...scheduledTrip.payment_plan_summary!, payment_method: 'card', cash_total_minor: 0, cash_paid_minor: 0,
+    combined_remaining_minor: 40000,
+  },
+}, '2025-03-10');
+assert.equal(visaState.hasVisaSchedule, true);
+assert.equal(visaState.confirmedCashMinor, 0);
+assert.equal(visaState.remainingCashMinor, 0);
+assert.equal(visaState.combinedRemainingMinor, 40000);
+const paidCashTrip: Trip = {
+  ...completeTrip,
+  sale_price: 3850,
+  amount_paid: 3850,
+  amount_due: 0,
+  payment_method: 'cash',
+  payment_status: 'paid',
+  payment_plan_summary: {
+    plan_id: '44444444-4444-4444-8444-444444444444', source: 'native', payment_method: 'cash', currency: 'ILS',
+    card_total_minor: 0, cash_total_minor: 385000, cash_paid_minor: 385000, stored_cash_paid_minor: 0,
+    installment_count: 0, processed_installments: 0, scheduled_minor_to_date: 0, remaining_scheduled_minor: 0,
+    next_installment_minor: null, next_installment_date: null, final_installment_date: null,
+    authoritative_paid_minor: 385000, authoritative_remaining_minor: 0,
+    authoritative_payment_status: 'paid', combined_remaining_minor: 0,
+  },
+};
+const paidCashState = getTripCardPaymentState(paidCashTrip, '2025-03-10');
+assert.equal(paidCashState.confirmedCashMinor, 385000);
+assert.equal(paidCashState.remainingCashMinor, 0);
+assert.equal(paidCashState.combinedRemainingMinor, 0);
+assert.equal(paidCashState.cashProgress, 100);
+assert.equal(paidCashState.authoritativePaymentStatus, 'paid');
+assert.equal(
+  getTripCardPaymentState({ ...paidCashTrip, service_type: 'ticket', flight_number: '', airline_name: '', itinerary: [] }, '2025-03-10').attention,
+  null,
+  'optional flight details and itinerary must not create card attention',
+);
 const planForm: TripFormData = { ...sampleForm, service_type: 'ticket', sale_price: 1000.01, amount_paid: 100, payment_method: 'mixed', card_paid_amount: 0, cash_paid_amount: 100, payment_date: '2026-01-15', payment_plan: { plan_id: null, card_total: 600, cash_total: 400.01, installment_count: 6, first_installment_date: '2026-01-31' } };
 const mappedPlan = toTripPaymentPlanInput(planForm);
 assert.deepEqual(mappedPlan, { existingPlanId: null, method: 'mixed', currency: 'EUR', cardTotalMinor: 60000, cashTotalMinor: 40001, installmentCount: 6, firstDate: '2026-01-31', confirmedCashMinor: 10000, paymentDate: '2026-01-15' });
@@ -194,6 +236,11 @@ assert.equal(organized.organized[0].id, 'fixed');
 assert.equal(organized.warnings.length, 1);
 assert.ok(!JSON.stringify(generatePackingList({ days: 4, weather: 'cold', activities: ['hiking'] })).toLowerCase().includes('passport'));
 assert.ok(checkTripCompleteness({}).some((finding) => finding.code === 'client_name' && finding.level === 'error'));
+assert.ok(
+  !checkTripCompleteness({ ...completeTrip, service_type: 'ticket', flight_number: '', airline_name: '', itinerary: [] })
+    .some((finding) => finding.code === 'flight' || finding.code === 'itinerary'),
+  'optional flight details and itinerary must not produce warnings',
+);
 assert.deepEqual(suggestPrice({ wholesaleCost: 100, targetMarkup: 25, minimumProfit: 10 }), { suggestedSalePrice: 125, expectedProfit: 25, markup: 25, historicalAverage: null, hasSufficientHistory: false });
 
 const otherCurrencyTrip = { ...completeTrip, id: '22222222-2222-4222-8222-222222222222', currency: 'ILS' as const, sale_price: 200, wholesale_cost: 150, profit: 50, amount_paid: 100, amount_due: 100 };
@@ -232,6 +279,8 @@ assert.ok(!visaMessage.message.match(/confirmed by|bank confirmed/i), 'scheduled
 const noHotelMessage = generateTripWhatsappMessage('hotel_details', completeTrip, 'en', translateWhatsapp);
 assert.deepEqual(noHotelMessage.missing, ['hotel']);
 assert.ok(!noHotelMessage.message.match(/undefined|null/i));
+const noFlightMessage = generateTripWhatsappMessage('flight_details', completeTrip, 'en', translateWhatsapp);
+assert.ok(!noFlightMessage.missing.includes('flight'), 'missing optional flight details must not block WhatsApp');
 assert.equal(recommendWhatsappMessage({ ...completeTrip, start_date: '2025-03-15', end_date: '2025-03-20' }, { plan: null, installments: [] }, '2025-03-10'), 'final_reminder');
 assert.equal(recommendWhatsappMessage({ ...completeTrip, start_date: '2025-02-01', end_date: '2025-02-05' }, { plan: null, installments: [] }, '2025-03-10'), 'thank_you');
 
@@ -265,6 +314,9 @@ const newTripFormSource = readFileSync('src/components/trips/NewTripForm.tsx', '
 const installmentFieldsSource = readFileSync('src/components/trips/TripInstallmentPlanFields.tsx', 'utf8');
 const tripMutationsSource = readFileSync('src/hooks/useTripMutations.ts', 'utf8');
 const cardSummaryMigration = readFileSync('supabase/migrations/20260719170000_trip_card_payment_summary.sql', 'utf8');
+const paymentSaveContractMigration = readFileSync('supabase/migrations/20260723100000_fix_trip_payment_save_contract.sql', 'utf8');
+const paymentSummaryContractMigration = readFileSync('supabase/migrations/20260723110000_sync_trip_payment_summaries.sql', 'utf8');
+const tripQueriesSource = readFileSync('src/lib/tripQueries.ts', 'utf8');
 const whatsappMigration = readFileSync('supabase/migrations/20260719180000_travel_whatsapp_composer.sql', 'utf8');
 const whatsappDialogSource = readFileSync('src/components/trips/TripWhatsappDialog.tsx', 'utf8');
 for (const requiredSql of [
@@ -368,5 +420,53 @@ assert.ok(newTripFormSource.includes('<TripInstallmentPlanFields') && newTripFor
 assert.ok(installmentFieldsSource.includes("paymentMethodIncludesInstallments(method)") && installmentFieldsSource.includes('if (!includesCard) return null'), 'cash must hide installment fields while card and mixed reveal them');
 for (const field of ['card_total', 'cash_total', 'installment_count', 'first_installment_date']) assert.ok(installmentFieldsSource.includes(field), `installment form must include ${field}`);
 assert.ok(tripMutationsSource.includes('toTripPaymentPlanInput(formData)') && (tripMutationsSource.includes('save_trip_transaction') || tripMutationsSource.includes('syncTripPaymentPlan(data.id, paymentPlan)')), 'trip submission must persist its payment plan');
+assert.ok(tripMutationsSource.includes('restoreTripPages(queryClient, context?.snapshot)'), 'failed trip saves must roll back optimistic card state');
+for (const queryKey of ['trips-page', 'trips-search', 'trip-dashboard', 'trip-payment-plan', 'trip-details', 'travel-reports']) {
+  assert.ok(tripMutationsSource.includes(`queryKey: ['${queryKey}']`), `successful trip saves must invalidate ${queryKey}`);
+}
+for (const contract of [
+  'CREATE OR REPLACE FUNCTION public.save_trip_transaction(',
+  'SET search_path =',
+  "p_payment_plan->>'confirmedCashMinor'",
+  'cash_paid_minor = v_confirmed_cash_minor',
+  'expected_amount_minor',
+  "'scheduled'",
+  'PAYMENT_PLAN_SPLIT_MISMATCH',
+  "source = 'native'",
+  'REVOKE ALL ON FUNCTION public.save_trip_transaction(jsonb, jsonb, uuid) FROM PUBLIC, anon',
+  'GRANT EXECUTE ON FUNCTION public.save_trip_transaction(jsonb, jsonb, uuid) TO authenticated',
+  "NOTIFY pgrst, 'reload schema'",
+]) assert.ok(paymentSaveContractMigration.includes(contract), `payment save correction must include ${contract}`);
+const installmentInsertColumns = [...paymentSaveContractMigration.matchAll(/INSERT\s+INTO\s+public\.trip_installments\s*\(([^)]*)\)/gi)]
+  .map((match) => match[1].split(',').map((column) => column.trim()));
+assert.ok(installmentInsertColumns.length > 0, 'the correction must insert installment rows');
+for (const columns of installmentInsertColumns) {
+  assert.ok(columns.includes('expected_amount_minor'), 'installment writes must use expected_amount_minor');
+  assert.ok(!columns.includes('amount_minor'), 'installment writes must not use the removed amount_minor column');
+  assert.ok(!columns.includes('currency'), 'trip_installments has no currency column');
+}
+assert.ok(!paymentSaveContractMigration.match(/\bstatus\s*=\s*'pending'|,\s*'pending'\s*\)/), 'installment writes must use the canonical scheduled status');
+assert.ok(!paymentSaveContractMigration.match(/DELETE\s+FROM\s+public\.trips/i), 'the payment save correction must not delete existing trips');
+for (const contract of [
+  'public.get_owned_trip_payment_summary',
+  'public.get_trip_details',
+  'public.get_trips_page',
+  'public.get_trip_dashboard_items',
+  "plan.payment_method = 'cash'",
+  'greatest(plan.cash_paid_minor, financial.paid_minor)',
+  'stored_cash_paid_minor',
+  'authoritative_remaining_minor',
+  'authoritative_payment_status',
+  'combined_remaining_minor',
+  "plan.payment_method = 'card' AND plan.installment_count > 0",
+  "NOTIFY pgrst, 'reload schema'",
+]) assert.ok(paymentSummaryContractMigration.includes(contract), `payment summary correction must include ${contract}`);
+assert.ok((paymentSummaryContractMigration.match(/public\.get_owned_trip_payment_summary\(/g) || []).length >= 5, 'all read RPCs must use the shared payment summary contract');
+assert.ok(!paymentSummaryContractMigration.match(/(?:DELETE|TRUNCATE)\s+(?:TABLE\s+)?public\.trips/i), 'payment summary correction must not delete trips');
+for (const rpcName of ['get_trip_details', 'get_trips_page', 'get_trip_dashboard_items']) {
+  assert.ok(tripQueriesSource.includes(`supabase.rpc('${rpcName}'`), `development comparison must call ${rpcName}`);
+}
+assert.ok(tripQueriesSource.includes("'[Travel payment contract] mismatch'"), 'development diagnostics must identify differing financial fields');
+assert.ok(tripCardSource.includes('payment.authoritativePaymentStatus'), 'cash cards must render the authoritative payment status');
 
 console.log('Travel Mode focused tests passed');

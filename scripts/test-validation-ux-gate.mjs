@@ -38,4 +38,15 @@ const ticketOnlyForm = {
 const ticketValidation = createTripSchema().safeParse(ticketOnlyForm);
 assert.equal(ticketValidation.success, true, 'Ticket-only trips MUST NOT require hotel name');
 
+const optionalTravelDataFindings = checkTripCompleteness({
+  ...ticketOnlyForm,
+  flight_number: '',
+  airline_name: '',
+  itinerary: [],
+});
+assert.ok(
+  !optionalTravelDataFindings.some((finding) => finding.code === 'flight' || finding.code === 'itinerary'),
+  'Missing flight details and an empty itinerary must not produce completeness warnings',
+);
+
 console.log('[test-validation-ux-gate] VALIDATION UX GATE PASSED.');

@@ -327,7 +327,7 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
             </section>
           )}
 
-          {trip.itinerary && trip.itinerary.length > 0 ? (
+          {trip.itinerary && trip.itinerary.length > 0 && (
             <section className="animate-fadeIn">
               <div className="flex items-center gap-2 mb-3 px-1">
                 <Calendar className="w-4 h-4 text-fuchsia-500" />
@@ -349,13 +349,6 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
                     <p className="text-sm text-slate-500 leading-relaxed dark:text-slate-400">{item.description}</p>
                   </div>
                 ))}
-              </div>
-            </section>
-          ) : (
-            <section className="space-y-2">
-              <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('trips.itinerary')}</h3>
-              <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-5 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
-                {t('trips.emptyStates.noItineraryInTrip')}
               </div>
             </section>
           )}

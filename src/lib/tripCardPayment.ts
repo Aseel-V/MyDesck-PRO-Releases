@@ -1,4 +1,5 @@
 import type { Trip, TripPaymentPlanSummary } from '../types/trip';
+import { getEffectivePaymentStatus } from './tripStatus';
 
 export interface TripCardPaymentState {
   method: 'card' | 'cash' | 'mixed' | 'legacy';
@@ -15,6 +16,7 @@ export interface TripCardPaymentState {
   nextInstallmentMinor: number | null;
   nextInstallmentDate: string | null;
   finalInstallmentDate: string | null;
+  authoritativePaymentStatus: Trip['payment_status'];
   statusChip: { key: string; values?: Record<string, number> } | null;
   attention: { key: string; values?: Record<string, number | string> } | null;
 }
@@ -29,7 +31,7 @@ function clampPercent(value: number): number {
 
 export function getTripCardPaymentState(trip: Pick<Trip,
   'payment_method' | 'payment_status' | 'sale_price' | 'amount_paid' | 'amount_due' | 'start_date' | 'end_date' |
-  'status' | 'service_type' | 'hotel_name' | 'flight_number' | 'has_itinerary' | 'payment_plan_summary'
+  'status' | 'service_type' | 'hotel_name' | 'payment_plan_summary'
 >, today: string): TripCardPaymentState {
   const summary: TripPaymentPlanSummary | null = trip.payment_plan_summary ?? null;
   const hasVisaSchedule = Boolean(summary && summary.source === 'native' && summary.card_total_minor > 0 && summary.installment_count > 0);
@@ -40,6 +42,7 @@ export function getTripCardPaymentState(trip: Pick<Trip,
   const confirmedCashMinor = summary?.cash_paid_minor ?? Math.round((trip.payment_method === 'cash' || trip.payment_method === 'mixed' ? trip.amount_paid : 0) * 100);
   const cashTotalMinor = summary?.cash_total_minor ?? Math.round((trip.payment_method === 'cash' || trip.payment_method === 'mixed' ? trip.sale_price : 0) * 100);
   const remainingCashMinor = Math.max(0, cashTotalMinor - confirmedCashMinor);
+  const authoritativePaymentStatus = summary?.authoritative_payment_status ?? getEffectivePaymentStatus(trip);
   const visaProgress = hasVisaSchedule ? clampPercent(processedInstallments / installmentCount * 100) : 0;
   const cashProgress = cashTotalMinor > 0 ? clampPercent(confirmedCashMinor / cashTotalMinor * 100) : 0;
   const remainingInstallments = Math.max(0, installmentCount - processedInstallments);
@@ -59,17 +62,17 @@ export function getTripCardPaymentState(trip: Pick<Trip,
   if (tripStartsIn >= 0 && tripStartsIn <= 7 && remainingCashMinor > 0) attention = { key: 'cashBeforeTravel' };
   else if (continuesAfterTrip) attention = { key: 'visaAfterTrip', values: { count: remainingInstallments, date: summary!.final_installment_date! } };
   else if (trip.service_type !== 'ticket' && !trip.hotel_name?.trim()) attention = { key: 'missingHotel' };
-  else if (trip.service_type !== 'hotel' && !trip.flight_number?.trim()) attention = { key: 'missingFlight' };
-  else if (trip.has_itinerary === false) attention = { key: 'missingItinerary' };
 
   return {
     method, hasVisaSchedule, visaProgress, cashProgress, processedInstallments, installmentCount,
     scheduledMinor: summary?.scheduled_minor_to_date ?? 0,
     remainingVisaMinor, confirmedCashMinor, remainingCashMinor,
-    combinedRemainingMinor: hasVisaSchedule || summary ? remainingVisaMinor + remainingCashMinor : Math.round(Math.max(0, trip.amount_due) * 100),
+    combinedRemainingMinor: summary?.combined_remaining_minor
+      ?? (hasVisaSchedule || summary ? remainingVisaMinor + remainingCashMinor : Math.round(Math.max(0, trip.amount_due) * 100)),
     nextInstallmentMinor: summary?.next_installment_minor ?? null,
     nextInstallmentDate: summary?.next_installment_date ?? null,
     finalInstallmentDate: summary?.final_installment_date ?? null,
+    authoritativePaymentStatus,
     statusChip, attention,
   };
 }

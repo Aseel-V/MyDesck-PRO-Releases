@@ -190,7 +190,7 @@
       "travelers": "{{count}} נוסעים", "visa": "ויזה / כרטיס", "createdFromTemplate": "תבנית: {{name}}", "openDetails": "פתיחת פרטים", "financialSummary": "סיכום כספי", "paymentSummary": "סיכום תשלום ותשלומים", "combinedRemaining": "יתרה כוללת", "visaProcessed": "ויזה — {{processed}}/{{total}} עובדו לפי לוח הזמנים", "visaProgressLabel": "תשלומי ויזה שעובדו לפי לוח הזמנים", "cardTotal": "סה״כ בכרטיס", "scheduledUntilToday": "מתוכנן עד היום", "remainingScheduled": "נותר מתוכנן", "nextInstallment": "התשלום הבא", "finalInstallment": "התשלום האחרון", "confirmedPaid": "שולם ואושר", "paymentProgressLabel": "התקדמות תשלום מתועד", "cashProgressLabel": "התקדמות תשלום מזומן מאושר", "cashTotal": "סה״כ מזומן", "cashConfirmed": "מזומן מאושר", "cashRemaining": "יתרת מזומן", "moreDetails": "פרטים נוספים", "lessDetails": "פחות פרטים", "available": "קיים", "notAdded": "לא נוסף", "open": "פתיחה", "moreActions": "פעולות נוספות", "prepareWhatsapp": "הכנת WhatsApp",
       "lastUpdated": "עודכן לאחרונה",
       "chips": { "visaComplete": "תוכנית הוויזה הושלמה", "scheduledToday": "תשלום מתוכנן להיום", "paymentTomorrow": "תשלום מחר", "paymentInDays": "תשלום בעוד {{count}} ימים", "installmentsRemaining": "נותרו {{count}} תשלומים", "cashOutstanding": "נותר תשלום במזומן" },
-      "alerts": { "cashBeforeTravel": "הנסיעה מתחילה בקרוב ונותרה יתרת מזומן מאושרת לתשלום.", "visaAfterTrip": "תשלומי הוויזה ממשיכים לאחר הנסיעה: נותרו {{count}} עד {{date}}.", "missingHotel": "חסרים פרטי מלון לנסיעה זו.", "missingFlight": "חסרים פרטי טיסה לנסיעה זו.", "missingItinerary": "לא נוסף מסלול נסיעה." }
+      "alerts": { "cashBeforeTravel": "הנסיעה מתחילה בקרוב ונותרה יתרת מזומן מאושרת לתשלום.", "visaAfterTrip": "תשלומי הוויזה ממשיכים לאחר הנסיעה: נותרו {{count}} עד {{date}}.", "missingHotel": "חסרים פרטי מלון לנסיעה זו." }
     },
     "installments": {
       "title": "תוכנית תשלומים", "saved": "תוכנית התשלומים נשמרה.", "saveFailed": "לא ניתן לשמור את תוכנית התשלומים.", "paymentSaved": "התשלום נרשם.", "legacySummary": "זהו סיכום תשלומים ישן שנשמר. לא נוצרה היסטוריית תשלומים מלאכותית.",
@@ -201,7 +201,7 @@
     "smartTools": {
       "title": "כלים חכמים לנסיעה", "review": "בדיקת שלמות", "itinerary": "מסלול", "packing": "רשימת אריזה", "summary": "סיכום", "pricing": "תמחור", "copied": "הועתק.", "saveFailed": "לא ניתן לשמור את השינוי.", "confirmItinerary": "להחליף את המסלול הנוכחי בטיוטה שנבדקה?", "itinerarySaved": "המסלול נשמר.", "packingSaved": "רשימת האריזה נשמרה.", "complete": "לא נמצא מידע חסר.", "apply": "החלת המסלול", "copy": "העתקה", "savePacking": "שמירת רשימת אריזה", "day": "יום {{day}}", "targetMarkup": "אחוז תוספת יעד", "suggestedPrice": "מחיר מכירה מוצע", "pricingExplanation": "החישוב מבוסס על העלות ותוספת יעד של {{markup}}%. זוהי הצעה בלבד ואינה ייעוץ פיננסי.",
       "level": { "error": "חוסם", "warning": "חשוב", "suggestion": "הצעה" },
-      "findings": { "client_name": "שם הלקוח חסר.", "destination": "היעד חסר.", "dates": "תאריכי הנסיעה חסרים.", "date_range": "טווח התאריכים אינו תקין.", "travelers": "מספר הנוסעים חסר.", "client_phone": "טלפון הלקוח חסר.", "hotel": "פרטי המלון חסרים.", "flight": "פרטי הטיסה חסרים.", "sale_price": "מחיר המכירה חסר.", "payment_split": "חלוקת התשלום אינה תואמת.", "itinerary": "המסלול ריק." },
+      "findings": { "client_name": "שם הלקוח חסר.", "destination": "היעד חסר.", "dates": "תאריכי הנסיעה חסרים.", "date_range": "טווח התאריכים אינו תקין.", "travelers": "מספר הנוסעים חסר.", "client_phone": "טלפון הלקוח חסר.", "hotel": "פרטי המלון חסרים.", "sale_price": "מחיר המכירה חסר.", "payment_split": "חלוקת התשלום אינה תואמת." },
       "categories": { "culture": "תרבות", "shopping": "קניות", "local": "חוויה מקומית", "rest": "מנוחה" },
       "generated": { "arrival": "יום הגעה", "departure": "יום עזיבה", "free_day": "יום חופשי", "activity_day": "יום פעילות", "transfer_to_hotel": "העברה למלון", "departure_transfer": "העברה ליציאה", "shopping_or_free_time": "קניות או זמן חופשי", "city_tour": "סיור בעיר", "culture": "מוזיאון או פעילות תרבות", "shopping": "קניות או זמן חופשי", "local": "חוויה מקומית", "rest": "זמן מנוחה" },
       "weather": { "warm": "חם", "cold": "קר", "rainy": "גשום" },
@@ -600,7 +600,6 @@
       "archivedHiddenTitle": "כרגע רק טיולים בארכיון תואמים",
       "archivedHiddenDescription": "טיולים בארכיון מוסתרים מהרשימה הראשית עד שמסננים אליהם.",
       "noTravelerDetailsInTrip": "לא נוספו פרטי נוסעים מפורטים לטיול זה.",
-      "noItineraryInTrip": "לא נוספו שלבי מסלול לטיול זה.",
       "noAttachmentsInTrip": "עדיין לא נוספו קבצים לטיול זה.",
       "noNotesInTrip": "עדיין לא נוספו הערות או דרישות נוספות לטיול."
     },
@@ -1424,6 +1423,8 @@
     },
     "tripSaved": "הטיול נשמר בהצלחה",
     "tripSaveError": "שמירת הטיול נכשלה",
+    "tripPaymentPlanSaveError": "לא ניתן לשמור את הטיול בגלל תוכנית תשלומים לא תקינה. יש לבדוק את הסכום בכרטיס, מספר התשלומים ותאריך התשלום הראשון.",
+    "tripPaymentSplitError": "סכומי הכרטיס והמזומן חייבים להיות שווים למחיר המכירה של הטיול.",
     "tripMovedToTrash": "הטיול הועבר לסל המחזור",
     "tripRestored": "הטיול שוחזר",
     "tripRestoreError": "שחזור הטיול נכשל",

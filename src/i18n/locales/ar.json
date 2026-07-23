@@ -190,7 +190,7 @@
       "travelers": "{{count}} مسافرون", "visa": "فيزا / بطاقة", "createdFromTemplate": "القالب: {{name}}", "openDetails": "فتح التفاصيل", "financialSummary": "الملخص المالي", "paymentSummary": "ملخص الدفع والأقساط", "combinedRemaining": "إجمالي المتبقي", "visaProcessed": "فيزا — تمت جدولة {{processed}} من {{total}}", "visaProgressLabel": "أقساط فيزا المعالجة حسب الجدول", "cardTotal": "إجمالي البطاقة", "scheduledUntilToday": "المجدول حتى اليوم", "remainingScheduled": "المتبقي المجدول", "nextInstallment": "القسط التالي", "finalInstallment": "القسط الأخير", "confirmedPaid": "المدفوع المؤكد", "paymentProgressLabel": "تقدم الدفع المسجل", "cashProgressLabel": "تقدم الدفع النقدي المؤكد", "cashTotal": "إجمالي النقد", "cashConfirmed": "النقد المؤكد", "cashRemaining": "النقد المتبقي", "moreDetails": "تفاصيل أكثر", "lessDetails": "تفاصيل أقل", "available": "متوفر", "notAdded": "غير مضاف", "open": "فتح", "moreActions": "إجراءات إضافية", "prepareWhatsapp": "تحضير WhatsApp",
       "lastUpdated": "آخر تحديث",
       "chips": { "visaComplete": "اكتملت خطة فيزا", "scheduledToday": "دفعة مجدولة اليوم", "paymentTomorrow": "دفعة غداً", "paymentInDays": "دفعة خلال {{count}} أيام", "installmentsRemaining": "{{count}} أقساط متبقية", "cashOutstanding": "دفعة نقدية مستحقة" },
-      "alerts": { "cashBeforeTravel": "تبدأ الرحلة قريباً وما زال هناك رصيد نقدي مؤكد مستحق.", "visaAfterTrip": "تستمر أقساط فيزا بعد الرحلة: تبقى {{count}} حتى {{date}}.", "missingHotel": "معلومات الفندق ناقصة لهذه الرحلة.", "missingFlight": "معلومات الطيران ناقصة لهذه الرحلة.", "missingItinerary": "لم تتم إضافة برنامج للرحلة." }
+      "alerts": { "cashBeforeTravel": "تبدأ الرحلة قريباً وما زال هناك رصيد نقدي مؤكد مستحق.", "visaAfterTrip": "تستمر أقساط فيزا بعد الرحلة: تبقى {{count}} حتى {{date}}.", "missingHotel": "معلومات الفندق ناقصة لهذه الرحلة." }
     },
     "installments": {
       "title": "خطة الدفع", "saved": "تم حفظ خطة الدفع.", "saveFailed": "تعذر حفظ خطة الدفع.", "paymentSaved": "تم تسجيل الدفعة.", "legacySummary": "هذا ملخص محفوظ لدفعات قديمة. لم يتم إنشاء سجل أقساط غير حقيقي.",
@@ -201,7 +201,7 @@
     "smartTools": {
       "title": "أدوات الرحلة الذكية", "review": "فحص الاكتمال", "itinerary": "البرنامج", "packing": "قائمة الأمتعة", "summary": "الملخص", "pricing": "التسعير", "copied": "تم النسخ.", "saveFailed": "تعذر حفظ التغيير.", "confirmItinerary": "هل تريد استبدال البرنامج الحالي بهذه المسودة بعد مراجعتها؟", "itinerarySaved": "تم حفظ البرنامج.", "packingSaved": "تم حفظ قائمة الأمتعة.", "complete": "لم يتم العثور على معلومات ناقصة.", "apply": "تطبيق البرنامج", "copy": "نسخ", "savePacking": "حفظ قائمة الأمتعة", "day": "اليوم {{day}}", "targetMarkup": "نسبة هامش الربح المستهدفة", "suggestedPrice": "سعر البيع المقترح", "pricingExplanation": "تم الحساب من تكلفة الجملة وهامش مستهدف {{markup}}%. هذا اقتراح وليس نصيحة مالية.",
       "level": { "error": "مانع", "warning": "مهم", "suggestion": "اقتراح" },
-      "findings": { "client_name": "اسم العميل ناقص.", "destination": "الوجهة ناقصة.", "dates": "تواريخ الرحلة ناقصة.", "date_range": "نطاق التواريخ غير صالح.", "travelers": "عدد المسافرين ناقص.", "client_phone": "هاتف العميل ناقص.", "hotel": "تفاصيل الفندق ناقصة.", "flight": "تفاصيل الرحلة الجوية ناقصة.", "sale_price": "سعر البيع ناقص.", "payment_split": "تقسيم الدفع غير متطابق.", "itinerary": "البرنامج فارغ." },
+      "findings": { "client_name": "اسم العميل ناقص.", "destination": "الوجهة ناقصة.", "dates": "تواريخ الرحلة ناقصة.", "date_range": "نطاق التواريخ غير صالح.", "travelers": "عدد المسافرين ناقص.", "client_phone": "هاتف العميل ناقص.", "hotel": "تفاصيل الفندق ناقصة.", "sale_price": "سعر البيع ناقص.", "payment_split": "تقسيم الدفع غير متطابق." },
       "categories": { "culture": "ثقافة", "shopping": "تسوق", "local": "تجربة محلية", "rest": "راحة" },
       "generated": { "arrival": "يوم الوصول", "departure": "يوم المغادرة", "free_day": "يوم حر", "activity_day": "يوم نشاط", "transfer_to_hotel": "نقل إلى الفندق", "departure_transfer": "نقل للمغادرة", "shopping_or_free_time": "تسوق أو وقت حر", "city_tour": "جولة في المدينة", "culture": "متحف أو نشاط ثقافي", "shopping": "تسوق أو وقت حر", "local": "تجربة محلية", "rest": "فترة راحة" },
       "weather": { "warm": "دافئ", "cold": "بارد", "rainy": "ماطر" },
@@ -600,7 +600,6 @@
       "archivedHiddenTitle": "الرحلات المطابقة حالياً مؤرشفة فقط",
       "archivedHiddenDescription": "الرحلات المؤرشفة مخفية من القائمة الرئيسية حتى تقوم بتصفيتها.",
       "noTravelerDetailsInTrip": "لم تتم إضافة تفاصيل مسافرين لهذه الرحلة.",
-      "noItineraryInTrip": "لم تتم إضافة خطوات برنامج لهذه الرحلة.",
       "noAttachmentsInTrip": "لم تتم إضافة ملفات لهذه الرحلة بعد.",
       "noNotesInTrip": "لم تتم إضافة ملاحظات أو متطلبات إضافية بعد."
     },
@@ -1424,6 +1423,8 @@
     },
     "tripSaved": "تم حفظ الرحلة بنجاح",
     "tripSaveError": "فشل حفظ الرحلة",
+    "tripPaymentPlanSaveError": "تعذر حفظ الرحلة بسبب خطة دفع غير صالحة. راجع مبلغ البطاقة وعدد الدفعات وتاريخ الدفعة الأولى.",
+    "tripPaymentSplitError": "يجب أن يساوي مجموع البطاقة والنقد سعر بيع الرحلة.",
     "tripMovedToTrash": "تم نقل الرحلة إلى سلة المحذوفات",
     "tripRestored": "تمت استعادة الرحلة",
     "tripRestoreError": "فشلت استعادة الرحلة",

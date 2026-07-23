@@ -1,7 +1,7 @@
 {
   "name": "my-desck-pro",
   "private": true,
-  "version": "0.0.58",
+  "version": "0.0.59",
   "description": "Professional Travel Agency Dashboard",
   "repository": "https://github.com/Aseel-V/MyDesck-PRO-Releases",
   "type": "module",
@@ -75,7 +75,7 @@
     "test:website-release": "node scripts/check-website-release.mjs",
     "test:release-version": "node scripts/check-release-version.mjs",
     "sync:version": "node scripts/sync-version.mjs",
-    "test:database-compatibility": "node scripts/test-database-grant-parser.mjs && node scripts/test-database-rpc-contracts.mjs && node scripts/test-migration-policy-idempotency.mjs && node scripts/check-database-compatibility.mjs",
+    "test:database-compatibility": "node scripts/test-database-grant-parser.mjs && node scripts/test-database-rpc-contracts.mjs && node scripts/test-migration-policy-idempotency.mjs && node scripts/test-restaurant-security-reconciliation.mjs && node scripts/check-database-compatibility.mjs",
     "test:migrations:policy-idempotency": "node scripts/test-migration-policy-idempotency.mjs",
     "test:migration-chain": "node scripts/verify-migrations.mjs",
     "test:database-contracts": "node scripts/test-database-contracts.mjs",

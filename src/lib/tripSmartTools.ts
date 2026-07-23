@@ -90,13 +90,11 @@ export function checkTripCompleteness(trip: Partial<TripFormData> | Partial<Trip
   if (!trip.travelers_count || trip.travelers_count < 1) add('travelers', 'error');
   if (!trip.client_phone?.trim()) add('client_phone', 'warning');
   if (trip.service_type !== 'ticket' && !trip.hotel_name?.trim()) add('hotel', 'error');
-  if (trip.service_type !== 'hotel' && !trip.flight_number?.trim()) add('flight', 'warning');
   if (!trip.sale_price || trip.sale_price <= 0) add('sale_price', 'warning');
   if (trip.payment_method === 'mixed') {
     const split = (trip.card_paid_amount || 0) + (trip.cash_paid_amount || 0);
     if (Math.abs(split - (trip.amount_paid || 0)) > 0.005) add('payment_split', 'error');
   }
-  if (!trip.itinerary?.length) add('itinerary', 'suggestion');
   return findings;
 }
 

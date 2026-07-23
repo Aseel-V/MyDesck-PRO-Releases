@@ -146,7 +146,6 @@
             "archivedHiddenTitle": "Only archived trips match right now",
             "archivedHiddenDescription": "Archived trips are hidden from the main list until you filter for them.",
             "noTravelerDetailsInTrip": "No detailed traveler entries were added to this trip.",
-            "noItineraryInTrip": "No itinerary steps were added for this trip.",
             "noAttachmentsInTrip": "No files were added to this trip yet.",
             "noNotesInTrip": "No notes or extra trip requirements were added yet."
         },

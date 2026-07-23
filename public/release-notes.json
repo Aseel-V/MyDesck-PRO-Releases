@@ -1,35 +1,32 @@
 {
-  "version": "0.0.58",
-  "releasedAt": "2026-07-22T19:24:30.251Z",
+  "version": "0.0.59",
+  "releasedAt": "2026-07-23T12:00:00.000Z",
   "title": {
-    "en": "Average Profit Metric, Trip Sorting Controls & Save Reliability Fixes",
-    "he": "מדד שווי רווח ממוצע, בקרות מיון טיולים ותיקוני אמינות שמירה",
-    "ar": "مقياس متوسط الربح، أدوات ترتيب الرحلات وإصلاحات موثوقية الحفظ"
+    "en": "Travel Payment Reliability and Cleaner Trip Warnings",
+    "he": "אמינות תשלומי טיולים והתראות נקיות יותר",
+    "ar": "موثوقية مدفوعات الرحلات وتنبيهات أوضح"
   },
   "changes": {
     "en": [
-      "Fixed GitHub tag-driven updater publication and production authentication configuration during Windows release builds",
-      "Replaced Average Trip Value with Average Profit in Analytics",
-      "Added server-side trip sorting controls with instant pagination sync",
-      "Fixed currency persistence contract for ILS and USD trips",
-      "Improved Review step validation and dynamic step error indicators",
-      "Fixed payment plan source constraint compliance for Card/Visa payments"
+      "Fixed Visa and Mixed payment saving",
+      "Fixed stale or incorrect payment information on trip cards",
+      "Corrected paid Cash trip progress and remaining balance",
+      "Removed optional missing-flight and empty-itinerary warnings",
+      "Improved payment card refresh after saving"
     ],
     "he": [
-      "תוקנו פרסום העדכונים המופעל באמצעות תגיות GitHub ותצורת האימות לייצור בבניות Windows",
-      "שווי טיול ממוצע הוחלף בשווי רווח ממוצע באנליטיקה",
-      "נוספו אפשרויות מיון מתקדמות לטיולים עם סנכרון דפדוף",
-      "תוקנה שמירת מטבעות לטיולים בשקלים ובדולרים",
-      "שופרה הצגת שגיאות בשלב הסקירה והניווט לשדות חסרים",
-      "תוקנה תאימות תוכניות תשלום בכרטיסי אשראי"
+      "תוקנה שמירת תשלומי ויזה ותשלום משולב",
+      "תוקן מידע מיושן או שגוי על תשלומים בכרטיסי הטיול",
+      "תוקנו התקדמות התשלום והיתרה בטיולי מזומן ששולמו במלואם",
+      "הוסרו התראות אופציונליות על פרטי טיסה חסרים ומסלול ריק",
+      "שופר רענון כרטיס התשלום לאחר שמירה"
     ],
     "ar": [
-      "تم إصلاح نشر التحديثات المستند إلى وسوم GitHub وإعداد مصادقة الإنتاج في إصدارات Windows",
-      "تم استبدال متوسط قيمة الرحلة بمتوسط الربح في التحليلات",
-      "تمت إضافة أدوات ترتيب متقدمة للرحلات مع مزامنة التصفح",
-      "تم إصلاح حفظ العملات للرحلات بالشيقل والدولار",
-      "تم تحسين إظهار الحقول الناقصة والانتفال التلقائي في مرحلة المراجعة",
-      "تم إصلاح قيود خطط الدفع لبطاقات الائتمان"
+      "تم إصلاح حفظ دفعات فيزا والدفع المختلط",
+      "تم إصلاح معلومات الدفع القديمة أو غير الصحيحة في بطاقات الرحلات",
+      "تم تصحيح تقدم الدفع والرصيد المتبقي لرحلات النقد المدفوعة بالكامل",
+      "تمت إزالة تنبيهات معلومات الرحلة الجوية المفقودة وبرنامج الرحلة الفارغ الاختيارية",
+      "تم تحسين تحديث بطاقة الدفع بعد الحفظ"
     ]
   }
 }

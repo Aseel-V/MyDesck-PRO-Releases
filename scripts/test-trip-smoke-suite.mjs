@@ -74,6 +74,7 @@ const mixedForm = {
   sale_price: 2000,
   wholesale_cost: 1500,
   amount_paid: 500,
+  cash_paid_amount: 500,
   payment_method: 'mixed',
   status: 'active',
   payment_plan: {
@@ -88,6 +89,11 @@ const mixedForm = {
 const mixedPlan = toTripPaymentPlanInput(mixedForm);
 assert.equal(mixedPlan.cardTotalMinor, 150000);
 assert.equal(mixedPlan.cashTotalMinor, 50000);
+assert.equal(mixedPlan.confirmedCashMinor, 50000);
+assert.throws(
+  () => toTripPaymentPlanInput({ ...mixedForm, payment_plan: { ...mixedForm.payment_plan, cash_total: 499 } }),
+  /PAYMENT_PLAN_SPLIT_MISMATCH/,
+);
 console.log('✓ Mixed trip create & split payment plan verified');
 
 // 4. Edit Cash to Mixed

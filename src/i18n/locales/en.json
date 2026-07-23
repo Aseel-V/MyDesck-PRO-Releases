@@ -190,7 +190,7 @@
       "travelers": "{{count}} travelers", "visa": "Visa / card", "createdFromTemplate": "Template: {{name}}", "openDetails": "Open details", "financialSummary": "Financial summary", "paymentSummary": "Payment and installment summary", "combinedRemaining": "Combined remaining", "visaProcessed": "Visa — {{processed}}/{{total}} processed by schedule", "visaProgressLabel": "Visa installments processed by schedule", "cardTotal": "Card total", "scheduledUntilToday": "Scheduled until today", "remainingScheduled": "Remaining scheduled", "nextInstallment": "Next installment", "finalInstallment": "Final installment", "confirmedPaid": "Confirmed paid", "paymentProgressLabel": "Recorded payment progress", "cashProgressLabel": "Confirmed cash payment progress", "cashTotal": "Cash total", "cashConfirmed": "Cash confirmed", "cashRemaining": "Cash remaining", "moreDetails": "More details", "lessDetails": "Less details", "available": "Available", "notAdded": "Not added", "open": "Open", "moreActions": "More actions", "prepareWhatsapp": "Prepare WhatsApp",
       "lastUpdated": "Last updated",
       "chips": { "visaComplete": "Visa plan complete", "scheduledToday": "Payment scheduled today", "paymentTomorrow": "Payment tomorrow", "paymentInDays": "Payment in {{count}} days", "installmentsRemaining": "{{count}} installments remaining", "cashOutstanding": "Outstanding cash payment" },
-      "alerts": { "cashBeforeTravel": "The trip starts soon and a confirmed cash balance remains.", "visaAfterTrip": "Visa installments continue after the trip: {{count}} remain through {{date}}.", "missingHotel": "Hotel information is missing for this trip.", "missingFlight": "Flight information is missing for this trip.", "missingItinerary": "No itinerary has been added." }
+      "alerts": { "cashBeforeTravel": "The trip starts soon and a confirmed cash balance remains.", "visaAfterTrip": "Visa installments continue after the trip: {{count}} remain through {{date}}.", "missingHotel": "Hotel information is missing for this trip." }
     },
     "installments": {
       "title": "Payment plan", "saved": "Payment plan saved.", "saveFailed": "The payment plan could not be saved.", "paymentSaved": "Payment recorded.", "legacySummary": "This is a preserved legacy payment summary. No installment history was invented.",
@@ -201,7 +201,7 @@
     "smartTools": {
       "title": "Smart trip tools", "review": "Completeness", "itinerary": "Itinerary", "packing": "Packing list", "summary": "Summary", "pricing": "Pricing", "copied": "Copied.", "saveFailed": "The change could not be saved.", "confirmItinerary": "Replace the current itinerary with this reviewed draft?", "itinerarySaved": "Itinerary saved.", "packingSaved": "Packing list saved.", "complete": "No missing information was found.", "apply": "Apply itinerary", "copy": "Copy", "savePacking": "Save packing list", "day": "Day {{day}}", "targetMarkup": "Target markup percentage", "suggestedPrice": "Suggested sale price", "pricingExplanation": "Calculated from wholesale cost and a {{markup}}% target markup. This is a suggestion, not financial advice.",
       "level": { "error": "Blocking", "warning": "Important", "suggestion": "Suggestion" },
-      "findings": { "client_name": "Client name is missing.", "destination": "Destination is missing.", "dates": "Trip dates are missing.", "date_range": "The date range is invalid.", "travelers": "Traveler count is missing.", "client_phone": "Client phone is missing.", "hotel": "Hotel details are missing.", "flight": "Flight details are missing.", "sale_price": "Sale price is missing.", "payment_split": "Payment split does not match.", "itinerary": "The itinerary is empty." },
+      "findings": { "client_name": "Client name is missing.", "destination": "Destination is missing.", "dates": "Trip dates are missing.", "date_range": "The date range is invalid.", "travelers": "Traveler count is missing.", "client_phone": "Client phone is missing.", "hotel": "Hotel details are missing.", "sale_price": "Sale price is missing.", "payment_split": "Payment split does not match." },
       "categories": { "culture": "Culture", "shopping": "Shopping", "local": "Local experience", "rest": "Rest" },
       "generated": { "arrival": "Arrival day", "departure": "Departure day", "free_day": "Free day", "activity_day": "Activity day", "transfer_to_hotel": "Transfer to hotel", "departure_transfer": "Departure transfer", "shopping_or_free_time": "Shopping or free time", "city_tour": "City tour", "culture": "Museum or cultural activity", "shopping": "Shopping or free time", "local": "Local experience", "rest": "Rest period" },
       "weather": { "warm": "Warm", "cold": "Cold", "rainy": "Rainy" },
@@ -601,7 +601,6 @@
       "archivedHiddenTitle": "Only archived trips match right now",
       "archivedHiddenDescription": "Archived trips are hidden from the main list until you filter for them.",
       "noTravelerDetailsInTrip": "No detailed traveler entries were added to this trip.",
-      "noItineraryInTrip": "No itinerary steps were added for this trip.",
       "noAttachmentsInTrip": "No files were added to this trip yet.",
       "noNotesInTrip": "No notes or extra trip requirements were added yet."
     },
@@ -1425,6 +1424,8 @@
     },
     "tripSaved": "Trip saved successfully",
     "tripSaveError": "Failed to save trip",
+    "tripPaymentPlanSaveError": "The trip could not be saved because its card payment plan is invalid. Review the card total, installment count, and first payment date.",
+    "tripPaymentSplitError": "The card and cash totals must equal the trip sale price.",
     "tripMovedToTrash": "Trip moved to trash",
     "tripRestored": "Trip restored",
     "tripRestoreError": "Failed to restore trip",

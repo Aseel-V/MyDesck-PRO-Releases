@@ -174,7 +174,6 @@ export function generateTripWhatsappMessage(
   if (!variables.destination) missing.push('destination');
   if ((type === 'visa_installment' || type === 'payment_summary') && !variables.installment_count) missing.push('payment_plan');
   if (type === 'hotel_details' && !variables.hotel_name) missing.push('hotel');
-  if (type === 'flight_details' && !variables.flight_information) missing.push('flight');
   const body = type === 'custom' ? '' : translate(`trips.whatsapp.messages.${type}`);
   const signature = includeSignature && variables.business_name ? `\n\n${translate('trips.whatsapp.messages.signature', { businessName: variables.business_name, businessPhone: variables.business_phone })}` : '';
   return { message: interpolateWhatsappVariables(`${body}${signature}`, variables), missing, variables };

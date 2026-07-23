@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { toTripInsert, toTripPaymentPlanInput, toTripUpdate } from '../lib/tripPayload';
 import type { Json } from '../types/database';
 import { getSafeErrorCode, logSafeDatabaseError } from '../lib/safeError';
+import { logTripPaymentContractComparison } from '../lib/tripQueries';
 import {
     addOptimisticTrip,
     patchTripInPages,
@@ -47,20 +48,40 @@ export function useTripMutations() {
             else if (user?.id && temporaryId) addOptimisticTrip(queryClient, formData, user.id, temporaryId);
             return { snapshot, temporaryId };
         },
-        onSuccess: async (result, _variables, context) => {
+        onSuccess: async (result, variables, context) => {
             if (context?.temporaryId) replaceOptimisticTripId(queryClient, context.temporaryId, result.id);
             await Promise.all([
                 queryClient.invalidateQueries({ queryKey: ['trips-page'] }),
+                queryClient.invalidateQueries({ queryKey: ['trips-search'] }),
                 queryClient.invalidateQueries({ queryKey: ['trip-dashboard'] }),
                 queryClient.invalidateQueries({ queryKey: ['trip-years'] }),
                 queryClient.invalidateQueries({ queryKey: ['distinct-clients'] }),
                 queryClient.invalidateQueries({ queryKey: ['trip-payment-plan'] }),
+                queryClient.invalidateQueries({ queryKey: ['trip-details'] }),
+                queryClient.invalidateQueries({ queryKey: ['trip-detail'] }),
+                queryClient.invalidateQueries({ queryKey: ['travel-reports'] }),
+                queryClient.invalidateQueries({ queryKey: ['trip-activity'] }),
+                queryClient.invalidateQueries({ queryKey: ['trip-financial-audit'] }),
+                queryClient.invalidateQueries({ queryKey: ['trip-notifications'] }),
             ]);
+            const effectiveDate = variables.formData.payment_date || variables.formData.start_date || '';
+            const year = /^\d{4}/.test(effectiveDate) ? effectiveDate.slice(0, 4) : String(new Date().getFullYear());
+            void logTripPaymentContractComparison(result.id, year);
             toast.success(t('notifications.tripSaved'));
         },
-        onError: (error: Error) => {
-            logSafeDatabaseError('Trip save failed:', error);
-            toast.error(t('notifications.tripSaveError'));
+        onError: (error: Error, variables, context) => {
+            restoreTripPages(queryClient, context?.snapshot);
+            const paymentMode = variables.formData.payment_method || 'none';
+            logSafeDatabaseError(`Trip save_trip_transaction failed (${paymentMode}):`, error);
+            const code = getSafeErrorCode(error);
+            const message = typeof error.message === 'string' ? error.message : '';
+            if (code === 'PAYMENT_PLAN_SPLIT_MISMATCH' || message.includes('PAYMENT_PLAN_SPLIT_MISMATCH')) {
+                toast.error(t('notifications.tripPaymentSplitError'));
+            } else if (paymentMode === 'card' || paymentMode === 'mixed') {
+                toast.error(t('notifications.tripPaymentPlanSaveError'));
+            } else {
+                toast.error(t('notifications.tripSaveError'));
+            }
         }
     });
 

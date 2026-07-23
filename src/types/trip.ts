@@ -35,6 +35,7 @@ export interface TripPaymentPlanSummary {
   card_total_minor: number;
   cash_total_minor: number;
   cash_paid_minor: number;
+  stored_cash_paid_minor?: number;
   installment_count: number;
   processed_installments: number;
   scheduled_minor_to_date: number;
@@ -42,6 +43,10 @@ export interface TripPaymentPlanSummary {
   next_installment_minor: number | null;
   next_installment_date: string | null;
   final_installment_date: string | null;
+  authoritative_paid_minor?: number;
+  authoritative_remaining_minor?: number;
+  authoritative_payment_status?: 'paid' | 'partial' | 'unpaid';
+  combined_remaining_minor?: number;
 }
 
 export interface TripPaymentPlanDraft {
