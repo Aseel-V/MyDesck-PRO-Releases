@@ -164,7 +164,12 @@ FROM auth.users
 WHERE id IN (SELECT DISTINCT business_id FROM public.restaurant_staff)
 ON CONFLICT DO NOTHING;
 
--- 9. UPDATE authorize_staff_action to support hashed PINs (Iterative check)
+-- 9. Replace the obsolete plaintext/business-id overload with the authoritative
+-- hashed-PIN contract. Keeping both overloads makes a clean migration replay
+-- fail the later security reconciliation and leaves an unsafe API callable.
+DROP FUNCTION IF EXISTS public.authorize_staff_action(TEXT, UUID, TEXT);
+
+-- UPDATE authorize_staff_action to support hashed PINs (Iterative check)
 CREATE OR REPLACE FUNCTION public.authorize_staff_action(
   p_pin_code TEXT,
   p_required_role TEXT DEFAULT NULL

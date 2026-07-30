@@ -1,31 +1,41 @@
 import JSZip from 'jszip';
 import type { Trip } from '../types/trip';
 import { sanitizeFilename } from './utils';
+import { normalizeIsraeliPhoneNumber } from './phoneNumbers';
+import { fromPaymentMinor, getCanonicalTripPayment } from './tripPaymentSummary';
 
-export type TripExportColumn = 'destination' | 'client' | 'start' | 'end' | 'status' | 'paymentStatus' | 'currency' | 'salePrice' | 'amountPaid' | 'amountDue';
+export type TripExportColumn = 'destination' | 'client' | 'clientPhone' | 'start' | 'end' | 'status' | 'paymentStatus' | 'currency' |
+  'salePrice' | 'confirmedCash' | 'confirmedVisa' | 'confirmedReceived' | 'overdueVisa' | 'futureVisa' | 'totalUnpaid';
 export type TripExportLabels = Record<TripExportColumn, string>;
 
-const columns: TripExportColumn[] = ['destination', 'client', 'start', 'end', 'status', 'paymentStatus', 'currency', 'salePrice', 'amountPaid', 'amountDue'];
+const columns: TripExportColumn[] = ['destination', 'client', 'clientPhone', 'start', 'end', 'status', 'paymentStatus', 'currency',
+  'salePrice', 'confirmedCash', 'confirmedVisa', 'confirmedReceived', 'overdueVisa', 'futureVisa', 'totalUnpaid'];
 
 function cellValue(trip: Trip, column: TripExportColumn): string | number {
+  const payment = getCanonicalTripPayment(trip);
   const values: Record<TripExportColumn, string | number> = {
     destination: trip.destination,
     client: trip.client_name,
+    clientPhone: trip.client_phone ? normalizeIsraeliPhoneNumber(trip.client_phone) || trip.client_phone : '',
     start: trip.start_date,
     end: trip.end_date,
     status: trip.status,
-    paymentStatus: trip.payment_status,
+    paymentStatus: payment.status,
     currency: trip.currency,
     salePrice: trip.sale_price,
-    amountPaid: trip.amount_paid,
-    amountDue: trip.amount_due,
+    confirmedCash: fromPaymentMinor(payment.cashConfirmedMinor),
+    confirmedVisa: fromPaymentMinor(payment.visaConfirmedMinor),
+    confirmedReceived: fromPaymentMinor(payment.confirmedTotalMinor),
+    overdueVisa: fromPaymentMinor(payment.visaOverdueUnconfirmedMinor),
+    futureVisa: fromPaymentMinor(payment.visaFutureScheduledMinor),
+    totalUnpaid: fromPaymentMinor(payment.totalUnpaidMinor),
   };
   return values[column];
 }
 
 export function escapeCsvCell(value: string | number): string {
   let text = String(value ?? '');
-  if (/^[=+\-@]/.test(text)) text = `'${text}`;
+  if (/^[=+\-@\t\r]/.test(text)) text = `'${text}`;
   return `"${text.replace(/"/g, '""')}"`;
 }
 

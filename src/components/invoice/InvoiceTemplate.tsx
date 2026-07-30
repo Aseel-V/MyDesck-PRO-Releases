@@ -3,6 +3,7 @@ import { Trip } from '../../types/trip';
 import { BusinessProfile } from '../../lib/supabase';
 import { formatRoomConfiguration } from '../../lib/tripRoom';
 import { formatCurrency, formatDate, getTextDirection } from '../../utils/localeFormatting';
+import { fromPaymentMinor, getCanonicalTripPayment } from '../../lib/tripPaymentSummary';
 
 type Language = 'en' | 'ar' | 'he';
 type PdfMode = 'invoice' | 'summary';
@@ -33,9 +34,13 @@ const LABELS: Record<Language, Record<string, string>> = {
     travelers: 'Travelers',
     roomType: 'Room Type',
     boardBasis: 'Board Basis',
-    salePrice: 'Sale Price',
-    paidAmount: 'Paid Amount',
-    amountDue: 'Amount Due',
+    salePrice: 'Sales value',
+    paidAmount: 'Confirmed received',
+    amountDue: 'Total unpaid',
+    confirmedCash: 'Confirmed Cash',
+    confirmedVisa: 'Confirmed Visa payments',
+    overdueUnconfirmedVisa: 'Overdue and unconfirmed Visa',
+    futureScheduledVisa: 'Future scheduled Visa',
     paymentStatus: 'Payment Status',
     notes: 'Notes',
     tripId: 'Trip ID',
@@ -45,9 +50,9 @@ const LABELS: Record<Language, Record<string, string>> = {
     paymentUnpaid: 'Unpaid',
     notSpecified: 'Not specified',
     totalTrips: 'Total Trips',
-    totalRevenue: 'Total Revenue',
-    totalPaid: 'Total Paid',
-    totalDue: 'Total Due',
+    totalRevenue: 'Sales value',
+    totalPaid: 'Confirmed received',
+    totalDue: 'Total unpaid',
     tripPeriod: 'Trip Period',
   },
   he: {
@@ -60,9 +65,13 @@ const LABELS: Record<Language, Record<string, string>> = {
     travelers: 'נוסעים',
     roomType: 'סוג חדר',
     boardBasis: 'פנסיון',
-    salePrice: 'מחיר מכירה',
-    paidAmount: 'שולם',
-    amountDue: 'יתרה',
+    salePrice: 'שווי מכירות',
+    paidAmount: 'התקבל בפועל',
+    amountDue: 'יתרה כוללת שלא שולמה',
+    confirmedCash: 'מזומן שהתקבל',
+    confirmedVisa: 'תשלומי ויזה שאושרו',
+    overdueUnconfirmedVisa: 'ויזה באיחור וטרם אושרה',
+    futureScheduledVisa: 'תשלומי ויזה עתידיים מתוכננים',
     paymentStatus: 'סטטוס תשלום',
     notes: 'הערות',
     tripId: 'מספר טיול',
@@ -72,9 +81,9 @@ const LABELS: Record<Language, Record<string, string>> = {
     paymentUnpaid: 'לא שולם',
     notSpecified: 'לא צוין',
     totalTrips: 'סה״כ טיולים',
-    totalRevenue: 'סה״כ הכנסות',
-    totalPaid: 'סה״כ שולם',
-    totalDue: 'סה״כ יתרה',
+    totalRevenue: 'שווי מכירות',
+    totalPaid: 'התקבל בפועל',
+    totalDue: 'יתרה כוללת שלא שולמה',
     tripPeriod: 'תקופת הטיול',
   },
   ar: {
@@ -87,9 +96,13 @@ const LABELS: Record<Language, Record<string, string>> = {
     travelers: 'المسافرون',
     roomType: 'نوع الغرفة',
     boardBasis: 'نوع الإقامة',
-    salePrice: 'سعر البيع',
-    paidAmount: 'المدفوع',
-    amountDue: 'المتبقي',
+    salePrice: 'قيمة المبيعات',
+    paidAmount: 'المبلغ المحصل فعلياً',
+    amountDue: 'إجمالي المبلغ غير المدفوع',
+    confirmedCash: 'النقد المستلم',
+    confirmedVisa: 'دفعات فيزا المؤكدة',
+    overdueUnconfirmedVisa: 'فيزا متأخرة وغير مؤكدة',
+    futureScheduledVisa: 'دفعات فيزا مستقبلية مجدولة',
     paymentStatus: 'حالة الدفع',
     notes: 'ملاحظات',
     tripId: 'رقم الرحلة',
@@ -99,9 +112,9 @@ const LABELS: Record<Language, Record<string, string>> = {
     paymentUnpaid: 'غير مدفوع',
     notSpecified: 'غير محدد',
     totalTrips: 'إجمالي الرحلات',
-    totalRevenue: 'إجمالي الإيراد',
-    totalPaid: 'إجمالي المدفوع',
-    totalDue: 'إجمالي المتبقي',
+    totalRevenue: 'قيمة المبيعات',
+    totalPaid: 'المبلغ المحصل فعلياً',
+    totalDue: 'إجمالي المبلغ غير المدفوع',
     tripPeriod: 'مدة الرحلة',
   },
 };
@@ -142,6 +155,7 @@ function TripDetailGrid({
   labels: Record<string, string>;
 }) {
   const roomTypeLabel = formatRoomConfiguration(trip.room_type, labels.notSpecified);
+  const payment = getCanonicalTripPayment(trip);
 
   return (
     <div className="grid grid-cols-2 gap-4">
@@ -155,9 +169,13 @@ function TripDetailGrid({
       <MetricCard label={labels.roomType} value={roomTypeLabel} />
       <MetricCard label={labels.boardBasis} value={trip.board_basis || labels.notSpecified} />
       <MetricCard label={labels.salePrice} value={formatCurrency(trip.sale_price || 0, trip.currency || 'USD', language)} />
-      <MetricCard label={labels.paidAmount} value={formatCurrency(trip.amount_paid || 0, trip.currency || 'USD', language)} />
-      <MetricCard label={labels.amountDue} value={formatCurrency(trip.amount_due || 0, trip.currency || 'USD', language)} />
-      <MetricCard label={labels.paymentStatus} value={getPaymentStatusLabel(trip.payment_status, labels)} />
+      <MetricCard label={labels.confirmedCash} value={formatCurrency(fromPaymentMinor(payment.cashConfirmedMinor), trip.currency || 'USD', language)} />
+      <MetricCard label={labels.confirmedVisa} value={formatCurrency(fromPaymentMinor(payment.visaConfirmedMinor), trip.currency || 'USD', language)} />
+      <MetricCard label={labels.paidAmount} value={formatCurrency(fromPaymentMinor(payment.confirmedTotalMinor), trip.currency || 'USD', language)} />
+      <MetricCard label={labels.overdueUnconfirmedVisa} value={formatCurrency(fromPaymentMinor(payment.visaOverdueUnconfirmedMinor), trip.currency || 'USD', language)} />
+      <MetricCard label={labels.futureScheduledVisa} value={formatCurrency(fromPaymentMinor(payment.visaFutureScheduledMinor), trip.currency || 'USD', language)} />
+      <MetricCard label={labels.amountDue} value={formatCurrency(fromPaymentMinor(payment.totalUnpaidMinor), trip.currency || 'USD', language)} />
+      <MetricCard label={labels.paymentStatus} value={getPaymentStatusLabel(payment.status, labels)} />
     </div>
   );
 }
@@ -229,10 +247,25 @@ function SummaryLayout({
   language: Language;
 }) {
   const labels = LABELS[language];
-  const totalRevenue = trips.reduce((sum, trip) => sum + (trip.sale_price || 0), 0);
-  const totalPaid = trips.reduce((sum, trip) => sum + (trip.amount_paid || 0), 0);
-  const totalDue = trips.reduce((sum, trip) => sum + (trip.amount_due || 0), 0);
-  const summaryCurrency = trips[0]?.currency || profile.preferred_currency || 'USD';
+  const fallbackCurrency = profile.preferred_currency || 'USD';
+  const totalsByCurrency = useMemo(() => {
+    const totals = new Map<string, { sales: number; confirmed: number; unpaid: number }>();
+    trips.forEach((trip) => {
+      const currency = trip.currency || fallbackCurrency;
+      const current = totals.get(currency) || { sales: 0, confirmed: 0, unpaid: 0 };
+      const payment = getCanonicalTripPayment(trip);
+      current.sales += trip.sale_price || 0;
+      current.confirmed += fromPaymentMinor(payment.confirmedTotalMinor);
+      current.unpaid += fromPaymentMinor(payment.totalUnpaidMinor);
+      totals.set(currency, current);
+    });
+    return totals;
+  }, [fallbackCurrency, trips]);
+  const formatTotals = (field: 'sales' | 'confirmed' | 'unpaid') =>
+    Array.from(totalsByCurrency.entries())
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([currency, totals]) => formatCurrency(totals[field], currency, language))
+      .join(' / ');
 
   return (
     <div className="bg-white p-10 text-slate-900">
@@ -253,9 +286,9 @@ function SummaryLayout({
 
       <section className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
         <MetricCard label={labels.totalTrips} value={trips.length} />
-        <MetricCard label={labels.totalRevenue} value={formatCurrency(totalRevenue, summaryCurrency, language)} />
-        <MetricCard label={labels.totalPaid} value={formatCurrency(totalPaid, summaryCurrency, language)} />
-        <MetricCard label={labels.totalDue} value={formatCurrency(totalDue, summaryCurrency, language)} />
+        <MetricCard label={labels.totalRevenue} value={formatTotals('sales')} />
+        <MetricCard label={labels.totalPaid} value={formatTotals('confirmed')} />
+        <MetricCard label={labels.totalDue} value={formatTotals('unpaid')} />
       </section>
 
       <section className="mt-8 overflow-hidden rounded-2xl border border-slate-200">
@@ -266,25 +299,34 @@ function SummaryLayout({
               <th className="border-b border-slate-200 px-4 py-3 text-start font-semibold text-slate-600">{labels.destination}</th>
               <th className="border-b border-slate-200 px-4 py-3 text-start font-semibold text-slate-600">{labels.tripPeriod}</th>
               <th className="border-b border-slate-200 px-4 py-3 text-start font-semibold text-slate-600">{labels.salePrice}</th>
+              <th className="border-b border-slate-200 px-4 py-3 text-start font-semibold text-slate-600">{labels.confirmedCash}</th>
+              <th className="border-b border-slate-200 px-4 py-3 text-start font-semibold text-slate-600">{labels.confirmedVisa}</th>
               <th className="border-b border-slate-200 px-4 py-3 text-start font-semibold text-slate-600">{labels.paidAmount}</th>
+              <th className="border-b border-slate-200 px-4 py-3 text-start font-semibold text-slate-600">{labels.overdueUnconfirmedVisa}</th>
+              <th className="border-b border-slate-200 px-4 py-3 text-start font-semibold text-slate-600">{labels.futureScheduledVisa}</th>
               <th className="border-b border-slate-200 px-4 py-3 text-start font-semibold text-slate-600">{labels.amountDue}</th>
               <th className="border-b border-slate-200 px-4 py-3 text-start font-semibold text-slate-600">{labels.paymentStatus}</th>
             </tr>
           </thead>
           <tbody>
-            {trips.map((trip) => (
-              <tr key={trip.id} className="align-top odd:bg-white even:bg-slate-50/30">
+            {trips.map((trip) => {
+              const payment = getCanonicalTripPayment(trip);
+              return <tr key={trip.id} className="align-top odd:bg-white even:bg-slate-50/30">
                 <td className="border-b border-slate-100 px-4 py-3">{trip.client_name}</td>
                 <td className="border-b border-slate-100 px-4 py-3">{trip.destination}</td>
                 <td className="border-b border-slate-100 px-4 py-3">
                   {formatDate(trip.start_date, language)} - {formatDate(trip.end_date, language)}
                 </td>
-                <td className="border-b border-slate-100 px-4 py-3">{formatCurrency(trip.sale_price || 0, trip.currency || summaryCurrency, language)}</td>
-                <td className="border-b border-slate-100 px-4 py-3">{formatCurrency(trip.amount_paid || 0, trip.currency || summaryCurrency, language)}</td>
-                <td className="border-b border-slate-100 px-4 py-3">{formatCurrency(trip.amount_due || 0, trip.currency || summaryCurrency, language)}</td>
-                <td className="border-b border-slate-100 px-4 py-3">{getPaymentStatusLabel(trip.payment_status, labels)}</td>
-              </tr>
-            ))}
+                <td className="border-b border-slate-100 px-4 py-3">{formatCurrency(trip.sale_price || 0, trip.currency || fallbackCurrency, language)}</td>
+                <td className="border-b border-slate-100 px-4 py-3">{formatCurrency(fromPaymentMinor(payment.cashConfirmedMinor), trip.currency || fallbackCurrency, language)}</td>
+                <td className="border-b border-slate-100 px-4 py-3">{formatCurrency(fromPaymentMinor(payment.visaConfirmedMinor), trip.currency || fallbackCurrency, language)}</td>
+                <td className="border-b border-slate-100 px-4 py-3">{formatCurrency(fromPaymentMinor(payment.confirmedTotalMinor), trip.currency || fallbackCurrency, language)}</td>
+                <td className="border-b border-slate-100 px-4 py-3">{formatCurrency(fromPaymentMinor(payment.visaOverdueUnconfirmedMinor), trip.currency || fallbackCurrency, language)}</td>
+                <td className="border-b border-slate-100 px-4 py-3">{formatCurrency(fromPaymentMinor(payment.visaFutureScheduledMinor), trip.currency || fallbackCurrency, language)}</td>
+                <td className="border-b border-slate-100 px-4 py-3">{formatCurrency(fromPaymentMinor(payment.totalUnpaidMinor), trip.currency || fallbackCurrency, language)}</td>
+                <td className="border-b border-slate-100 px-4 py-3">{getPaymentStatusLabel(payment.status, labels)}</td>
+              </tr>;
+            })}
           </tbody>
         </table>
       </section>

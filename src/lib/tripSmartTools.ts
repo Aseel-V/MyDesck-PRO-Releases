@@ -92,8 +92,15 @@ export function checkTripCompleteness(trip: Partial<TripFormData> | Partial<Trip
   if (trip.service_type !== 'ticket' && !trip.hotel_name?.trim()) add('hotel', 'error');
   if (!trip.sale_price || trip.sale_price <= 0) add('sale_price', 'warning');
   if (trip.payment_method === 'mixed') {
-    const split = (trip.card_paid_amount || 0) + (trip.cash_paid_amount || 0);
-    if (Math.abs(split - (trip.amount_paid || 0)) > 0.005) add('payment_split', 'error');
+    const plan = trip.payment_plan;
+    const summary = 'payment_plan_summary' in trip ? trip.payment_plan_summary : null;
+    const allocated = plan
+      ? Number(plan.card_total || 0) + Number(plan.cash_total || 0)
+      : summary
+        ? (Number(summary.visa_schedule_total_minor ?? summary.card_total_minor ?? 0)
+          + Number(summary.cash_total_minor ?? 0)) / 100
+        : null;
+    if (allocated !== null && Math.abs(allocated - Number(trip.sale_price || 0)) > 0.005) add('payment_split', 'error');
   }
   return findings;
 }

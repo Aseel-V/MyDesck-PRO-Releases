@@ -1,14 +1,14 @@
 import { useMemo } from 'react';
 import { useLanguage } from '../../../contexts/LanguageContext';
-import { PeriodStats } from '../AnalyticsEngine';
+import { analyticsDifference, analyticsPercentageChange, PeriodAggregateStats } from '../../../lib/analyticsQueries';
 
 interface YearOverYearComparisonProps {
   selectedYear: string;
   month: string;
-  currentStats: PeriodStats;
-  previousStats: PeriodStats;
-  previousTripCount: number;
-  conversionUnavailable: boolean;
+  currentStats: PeriodAggregateStats;
+  previousStats: PeriodAggregateStats;
+  canViewFinancials?: boolean;
+  conversionUnavailable?: boolean;
   formatCurrency: (value: number) => string;
 }
 
@@ -20,59 +20,61 @@ const toneClass: Record<ChangeTone, string> = {
   neutral: 'text-slate-700 dark:text-slate-300',
 };
 
-const getTone = (value: number): ChangeTone => value > 0 ? 'positive' : value < 0 ? 'negative' : 'neutral';
+const getTone = (value: number): ChangeTone => (value > 0 ? 'positive' : value < 0 ? 'negative' : 'neutral');
 
 export default function YearOverYearComparison({
   selectedYear,
   month,
   currentStats,
   previousStats,
-  previousTripCount,
+  canViewFinancials = true,
   conversionUnavailable,
   formatCurrency,
 }: YearOverYearComparisonProps) {
   const { t } = useLanguage();
 
   const comparison = useMemo(() => {
-    if (!/^\d{4}$/.test(selectedYear) || month) return null;
+    const currentYearNum = Number(selectedYear);
+    if (!Number.isFinite(currentYearNum)) return null;
 
-    const currentYear = Number(selectedYear);
-    if (!Number.isFinite(currentYear)) return null;
-
-    const previousYear = currentYear - 1;
-    const currentProfit = currentStats.totalProfit;
-    const previousProfit = previousStats.totalProfit;
-    const currentProfitAvailable = currentStats.totalTrips === 0 || currentStats.unknownProfitCount < currentStats.totalTrips;
-    const previousProfitAvailable = previousStats.totalTrips > 0 && previousStats.unknownProfitCount < previousStats.totalTrips;
+    const previousYearNum = currentYearNum - 1;
+    const currentProfit = currentStats.total_profit;
+    const previousProfit = previousStats.total_profit;
 
     let profitChange: number | null = null;
-    if (
-      currentProfitAvailable &&
-      previousProfitAvailable &&
-      Number.isFinite(currentProfit) &&
-      Number.isFinite(previousProfit)
-    ) {
-      if (previousProfit === 0) {
-        profitChange = currentProfit === 0 ? 0 : null;
-      } else {
-        const calculated = ((currentProfit - previousProfit) / Math.abs(previousProfit)) * 100;
-        profitChange = Number.isFinite(calculated) ? calculated : null;
-      }
+    if (canViewFinancials && currentProfit !== null && previousProfit !== null && previousProfit !== 0 && Number.isFinite(currentProfit) && Number.isFinite(previousProfit)) {
+      profitChange = analyticsPercentageChange(currentProfit, previousProfit);
     }
 
-    const revenueDifference = currentStats.totalRevenue - previousStats.totalRevenue;
+    const revenueDifference = canViewFinancials
+      ? analyticsDifference(currentStats.total_revenue, previousStats.total_revenue)
+      : null;
+    const tripDifference = analyticsDifference(currentStats.total_trips, previousStats.total_trips);
 
     return {
-      currentYear,
-      previousYear,
+      currentYear: currentYearNum,
+      previousYear: previousYearNum,
       profitChange,
       revenueDifference: Number.isFinite(revenueDifference) ? revenueDifference : null,
+      tripDifference: tripDifference !== null && Number.isFinite(tripDifference) ? tripDifference : null,
+      previousTripCount: previousStats.total_trips,
     };
-  }, [currentStats, month, previousStats, selectedYear]);
+  }, [canViewFinancials, currentStats, previousStats, selectedYear]);
 
   if (!comparison) return null;
 
-  const { currentYear, previousYear, profitChange, revenueDifference } = comparison;
+  const { currentYear, previousYear, profitChange, revenueDifference, tripDifference, previousTripCount } = comparison;
+
+  if (tripDifference === null || previousTripCount === null) {
+    return (
+      <aside
+        aria-label={t('analytics.yearComparison.accessibleLabel', { currentYear, previousYear })}
+        className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-400"
+      >
+        {t('analytics.yearComparison.unavailable')}
+      </aside>
+    );
+  }
 
   if (previousTripCount === 0) {
     return (
@@ -112,30 +114,43 @@ export default function YearOverYearComparison({
       className="flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs dark:border-slate-800 dark:bg-slate-900/50"
     >
       <span className="font-medium text-slate-500 dark:text-slate-400">
-        {t('analytics.yearComparison.comparedWith')} <span dir="ltr" className="tabular-nums">{previousYear}</span>
+        {month
+          ? `${t('analytics.yearComparison.comparedWith') || 'Compared with'} ${previousYear}-${month}`
+          : `${t('analytics.yearComparison.comparedWith') || 'Compared with'} ${previousYear}`}
       </span>
 
       <span className="inline-flex items-baseline gap-1.5">
-        <span className="text-slate-600 dark:text-slate-400">{t('analytics.yearComparison.profitChange')}</span>
-        {profitChange === null ? (
-          <span aria-label={t('analytics.yearComparison.valueUnavailable')} className="font-semibold text-slate-500">—</span>
-        ) : (
-          <span dir="ltr" className={`font-bold tabular-nums ${toneClass[getTone(profitChange)]}`}>
-            {formatSignedPercent(profitChange)}
-          </span>
-        )}
+        <span className="text-slate-600 dark:text-slate-400">{t('dashboard.trips')}</span>
+        <span dir="ltr" className={`font-bold tabular-nums ${toneClass[getTone(tripDifference)]}`}>
+          {tripDifference >= 0 ? `+${tripDifference}` : tripDifference}
+        </span>
       </span>
 
-      <span className="inline-flex items-baseline gap-1.5">
-        <span className="text-slate-600 dark:text-slate-400">{t('analytics.yearComparison.salesDifference')}</span>
-        {revenueDifference === null ? (
-          <span aria-label={t('analytics.yearComparison.valueUnavailable')} className="font-semibold text-slate-500">—</span>
-        ) : (
-          <span dir="ltr" className={`font-bold tabular-nums ${toneClass[getTone(revenueDifference)]}`}>
-            {formatSignedCurrency(revenueDifference)}
+      {canViewFinancials && (
+        <>
+          <span className="inline-flex items-baseline gap-1.5">
+            <span className="text-slate-600 dark:text-slate-400">{t('analytics.yearComparison.profitChange')}</span>
+            {profitChange === null ? (
+              <span aria-label={t('analytics.yearComparison.valueUnavailable')} className="font-semibold text-slate-500">—</span>
+            ) : (
+              <span dir="ltr" className={`font-bold tabular-nums ${toneClass[getTone(profitChange)]}`}>
+                {formatSignedPercent(profitChange)}
+              </span>
+            )}
           </span>
-        )}
-      </span>
+
+          <span className="inline-flex items-baseline gap-1.5">
+            <span className="text-slate-600 dark:text-slate-400">{t('analytics.yearComparison.salesDifference')}</span>
+            {revenueDifference === null ? (
+              <span aria-label={t('analytics.yearComparison.valueUnavailable')} className="font-semibold text-slate-500">—</span>
+            ) : (
+              <span dir="ltr" className={`font-bold tabular-nums ${toneClass[getTone(revenueDifference)]}`}>
+                {formatSignedCurrency(revenueDifference)}
+              </span>
+            )}
+          </span>
+        </>
+      )}
     </aside>
   );
 }

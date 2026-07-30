@@ -26,7 +26,15 @@ export function TripPaymentPlanPanel({ trip, onClose }: Props) {
   const [cashPaid, setCashPaid] = useState('');
   const [recalculatedCardTotal, setRecalculatedCardTotal] = useState('');
   const [showWhatsapp, setShowWhatsapp] = useState(false);
-  const refresh = () => client.invalidateQueries({ queryKey: ['trip-payment-plan', trip.id] });
+  const refresh = () => Promise.all([
+    client.invalidateQueries({ queryKey: ['trip-payment-plan', trip.id] }),
+    client.invalidateQueries({ queryKey: ['trip-details'] }),
+    client.invalidateQueries({ queryKey: ['trip-detail'] }),
+    client.invalidateQueries({ queryKey: ['trips-page'] }),
+    client.invalidateQueries({ queryKey: ['trip-dashboard'] }),
+    client.invalidateQueries({ queryKey: ['travel-analytics-summary'] }),
+    client.invalidateQueries({ queryKey: ['travel-reports'] }),
+  ]);
   const money = (minor: number) => new Intl.NumberFormat(language === 'en' ? 'en-IL' : `${language}-IL-u-nu-latn`, { style: 'currency', currency: trip.currency }).format(fromMinorUnits(minor));
   const totalMinor = toMinorUnits(trip.sale_price);
   const cardMinor = toMinorUnits(cardTotal || 0);
@@ -54,8 +62,8 @@ export function TripPaymentPlanPanel({ trip, onClose }: Props) {
   const summary = query.data?.plan && installmentSummary ? {
     ...installmentSummary,
     expectedMinor: query.data.plan.card_total_minor + query.data.plan.cash_total_minor,
-    paidMinor: query.data.plan.card_paid_minor + query.data.plan.cash_paid_minor,
-    remainingMinor: query.data.plan.card_total_minor + query.data.plan.cash_total_minor - query.data.plan.card_paid_minor - query.data.plan.cash_paid_minor,
+    paidMinor: installmentSummary.paidMinor + query.data.plan.cash_paid_minor,
+    remainingMinor: Math.max(0, query.data.plan.card_total_minor + query.data.plan.cash_total_minor - installmentSummary.paidMinor - query.data.plan.cash_paid_minor),
   } : null;
 
   return <div className="fixed inset-0 z-[115] overflow-y-auto bg-slate-950/75 p-4" dir={direction} role="dialog" aria-modal="true" aria-labelledby="payment-plan-title">

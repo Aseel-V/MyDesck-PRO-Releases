@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { Payment, TripFormData } from '../types/trip';
+import { TripFormData } from '../types/trip';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { toast } from 'sonner';
@@ -8,6 +8,7 @@ import { toTripInsert, toTripPaymentPlanInput, toTripUpdate } from '../lib/tripP
 import type { Json } from '../types/database';
 import { getSafeErrorCode, logSafeDatabaseError } from '../lib/safeError';
 import { logTripPaymentContractComparison } from '../lib/tripQueries';
+import { requireCanonicalPaymentWriteContract } from '../lib/paymentContractCompatibility';
 import {
     addOptimisticTrip,
     patchTripInPages,
@@ -27,6 +28,19 @@ export function useTripMutations() {
         mutationFn: async ({ formData, editTripId, clientRequestId }: { formData: TripFormData; editTripId?: string; clientRequestId?: string }) => {
             if (!user?.id) throw new Error('USER_NOT_AUTHENTICATED');
             const paymentPlan = toTripPaymentPlanInput(formData);
+            await requireCanonicalPaymentWriteContract();
+            if (import.meta.env.DEV && paymentPlan) {
+                console.info('[Travel payment write] Redacted plan payload.', {
+                    method: paymentPlan.method,
+                    currency: paymentPlan.currency,
+                    cardTotalMinor: paymentPlan.cardTotalMinor,
+                    cashTotalMinor: paymentPlan.cashTotalMinor,
+                    confirmedCashMinor: paymentPlan.confirmedCashMinor,
+                    installmentCount: paymentPlan.installmentCount,
+                    firstDatePresent: Boolean(paymentPlan.firstDate),
+                    existingPlan: Boolean(paymentPlan.existingPlanId),
+                });
+            }
             const rawPayload = editTripId ? { id: editTripId, ...toTripUpdate(formData) } : toTripInsert(formData, user.id);
 
             const requestId = clientRequestId || crypto.randomUUID();
@@ -63,6 +77,7 @@ export function useTripMutations() {
                 queryClient.invalidateQueries({ queryKey: ['trip-activity'] }),
                 queryClient.invalidateQueries({ queryKey: ['trip-financial-audit'] }),
                 queryClient.invalidateQueries({ queryKey: ['trip-notifications'] }),
+                queryClient.invalidateQueries({ queryKey: ['travel-analytics-summary'] }),
             ]);
             const effectiveDate = variables.formData.payment_date || variables.formData.start_date || '';
             const year = /^\d{4}/.test(effectiveDate) ? effectiveDate.slice(0, 4) : String(new Date().getFullYear());
@@ -75,7 +90,9 @@ export function useTripMutations() {
             logSafeDatabaseError(`Trip save_trip_transaction failed (${paymentMode}):`, error);
             const code = getSafeErrorCode(error);
             const message = typeof error.message === 'string' ? error.message : '';
-            if (code === 'PAYMENT_PLAN_SPLIT_MISMATCH' || message.includes('PAYMENT_PLAN_SPLIT_MISMATCH')) {
+            if (code === 'CANONICAL_PAYMENT_CONTRACT_REQUIRED' || message.includes('CANONICAL_PAYMENT_CONTRACT_REQUIRED')) {
+                toast.error(t('notifications.paymentContractUpgradeRequired'));
+            } else if (code === 'PAYMENT_PLAN_SPLIT_MISMATCH' || message.includes('PAYMENT_PLAN_SPLIT_MISMATCH')) {
                 toast.error(t('notifications.tripPaymentSplitError'));
             } else if (paymentMode === 'card' || paymentMode === 'mixed') {
                 toast.error(t('notifications.tripPaymentPlanSaveError'));
@@ -104,6 +121,7 @@ export function useTripMutations() {
             queryClient.invalidateQueries({ queryKey: ['trips-page'] });
             queryClient.invalidateQueries({ queryKey: ['trip-dashboard'] });
             queryClient.invalidateQueries({ queryKey: ['trip-years'] });
+            queryClient.invalidateQueries({ queryKey: ['travel-analytics-summary'] });
             toast.success(t('notifications.tripRestored'));
         },
         onError: (error: Error) => {
@@ -138,6 +156,7 @@ export function useTripMutations() {
             queryClient.invalidateQueries({ queryKey: ['trips-page'] });
             queryClient.invalidateQueries({ queryKey: ['trip-dashboard'] });
             queryClient.invalidateQueries({ queryKey: ['trip-years'] });
+            queryClient.invalidateQueries({ queryKey: ['travel-analytics-summary'] });
             toast.success(t('notifications.tripMovedToTrash'), {
                 action: {
                     label: t('trips.undo'),
@@ -174,46 +193,13 @@ export function useTripMutations() {
             queryClient.invalidateQueries({ queryKey: ['trips-page'] });
             queryClient.invalidateQueries({ queryKey: ['trip-dashboard'] });
             queryClient.invalidateQueries({ queryKey: ['trip-years'] });
+            queryClient.invalidateQueries({ queryKey: ['travel-analytics-summary'] });
             toast.success(t(variables.archived ? 'notifications.tripArchived' : 'notifications.tripRestored'));
         },
         onError: (error: Error, _variables, context: { snapshot: TripCacheSnapshot } | undefined) => {
             restoreTripPages(queryClient, context?.snapshot);
             console.error('Trip archive failed:', getSafeErrorCode(error));
             toast.error(t('notifications.tripArchiveError'));
-        }
-    });
-
-    const updatePaymentMutation = useMutation({
-        mutationFn: async ({ tripId, amountPaid, paymentStatus, payments }: { tripId: string, amountPaid: number, paymentStatus: 'paid' | 'partial' | 'unpaid', payments?: Payment[] }) => {
-            if (!user?.id) throw new Error('USER_NOT_AUTHENTICATED');
-            const { error } = await supabase
-                .from('trips')
-                .update({
-                    amount_paid: amountPaid,
-                    payment_status: paymentStatus,
-                    payments: (payments ?? []) as unknown as Json,
-                    updated_at: new Date().toISOString(),
-                })
-                .eq('id', tripId)
-                .eq('user_id', user.id)
-                .is('deleted_at', null);
-            if (error) throw error;
-        },
-        onMutate: async ({ tripId, amountPaid, paymentStatus, payments }) => {
-            await queryClient.cancelQueries({ queryKey: ['trips-page'] });
-            const snapshot = snapshotTripPages(queryClient);
-            patchTripInPages(queryClient, tripId, { amount_paid: amountPaid, payment_status: paymentStatus, payments: payments ?? [] });
-            return { snapshot };
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['trips-page'] });
-            queryClient.invalidateQueries({ queryKey: ['trip-dashboard'] });
-            toast.success(t('notifications.paymentUpdated'));
-        },
-        onError: (error: Error, _variables, context) => {
-            restoreTripPages(queryClient, context?.snapshot);
-            console.error('Trip payment update failed:', getSafeErrorCode(error));
-            toast.error(t('notifications.paymentUpdateError'));
         }
     });
 
@@ -244,7 +230,6 @@ export function useTripMutations() {
         restoreTrip: restoreTripMutation.mutateAsync,
         archiveTrip: (id: string) => archiveTripMutation.mutateAsync({ id, archived: true }),
         unarchiveTrip: (id: string) => archiveTripMutation.mutateAsync({ id, archived: false }),
-        updatePayment: updatePaymentMutation.mutateAsync,
         toggleExport: toggleExportMutation.mutate,
         isSaving: saveTripMutation.isPending,
         isDeleting: deleteTripMutation.isPending,

@@ -3,6 +3,12 @@ import { getTripDuration } from './tripDates';
 import { fromMinorUnits } from './tripInstallments';
 import type { Trip } from '../types/trip';
 import type { TripInstallment, TripPaymentPlan } from './tripPayments';
+import { getCanonicalTripPayment } from './tripPaymentSummary';
+import {
+  formatIsraeliPhoneForDisplay,
+  getWhatsAppPhoneNumber,
+  normalizeIsraeliPhoneNumber,
+} from './phoneNumbers';
 
 export type WhatsappLanguage = 'en' | 'he' | 'ar';
 export type WhatsappMessageType =
@@ -60,19 +66,11 @@ const SAFE_VARIABLES = new Set([
 ]);
 
 export function normalizeWhatsAppPhone(value: string): string | null {
-  const compact = value.trim().replace(/[\s().-]/g, '');
-  if (/^05\d{8}$/.test(compact)) return `+972${compact.slice(1)}`;
-  if (/^9725\d{8}$/.test(compact)) return `+${compact}`;
-  if (/^\+\d{8,15}$/.test(compact)) return compact;
-  if (/^00\d{8,15}$/.test(compact)) return `+${compact.slice(2)}`;
-  return null;
+  return normalizeIsraeliPhoneNumber(value);
 }
 
 export function formatWhatsAppPhone(value: string): string {
-  const normalized = normalizeWhatsAppPhone(value);
-  if (!normalized) return value.trim();
-  if (/^\+9725\d{8}$/.test(normalized)) return `${normalized.slice(0, 4)} ${normalized.slice(4, 6)}-${normalized.slice(6, 9)}-${normalized.slice(9)}`;
-  return normalized;
+  return formatIsraeliPhoneForDisplay(value);
 }
 
 export function maskWhatsAppPhone(value: string): string | null {
@@ -119,13 +117,19 @@ export function buildWhatsappVariables(
   payment: WhatsappPaymentContext = { plan: null, installments: [] },
 ): Record<string, string> {
   const duration = getTripDuration(trip.start_date, trip.end_date);
+  const canonical = getCanonicalTripPayment(trip);
   const active = payment.installments.filter((item) => item.status !== 'cancelled');
   const next = active.find((item) => item.paid_amount_minor < item.expected_amount_minor) ?? null;
   const processed = active.filter((item) => item.status === 'paid').length;
   const plan = payment.plan;
-  const cardRemainingMinor = plan ? Math.max(0, plan.card_total_minor - plan.card_paid_minor) : Math.round(Math.max(0, trip.payment_plan_summary?.remaining_scheduled_minor ?? 0));
-  const cashConfirmedMinor = plan?.cash_paid_minor ?? Math.round((trip.cash_paid_amount ?? 0) * 100);
-  const cashRemainingMinor = plan ? Math.max(0, plan.cash_total_minor - plan.cash_paid_minor) : 0;
+  const visaConfirmedMinor = plan ? active.reduce((sum, item) => sum + item.paid_amount_minor, 0) : canonical.visaConfirmedMinor;
+  const cardRemainingMinor = plan ? Math.max(0, plan.card_total_minor - visaConfirmedMinor) : canonical.visaScheduleTotalMinor - canonical.visaConfirmedMinor;
+  const cashConfirmedMinor = plan?.cash_paid_minor ?? canonical.cashConfirmedMinor;
+  const cashRemainingMinor = plan ? Math.max(0, plan.cash_total_minor - plan.cash_paid_minor) : canonical.cashRemainingMinor;
+  const today = new Date().toISOString().slice(0, 10);
+  const scheduledThroughTodayMinor = plan
+    ? active.filter((item) => item.due_date <= today).reduce((sum, item) => sum + item.expected_amount_minor, 0)
+    : canonical.visaScheduledThroughTodayMinor;
   const nextMinor = next ? Math.max(0, next.expected_amount_minor - next.paid_amount_minor) : trip.payment_plan_summary?.next_installment_minor ?? 0;
   const currency = plan?.currency || trip.currency;
   return {
@@ -138,8 +142,8 @@ export function buildWhatsappVariables(
     sale_amount: formatMoney(trip.sale_price, trip.currency, language), currency,
     cash_confirmed: cashConfirmedMinor > 0 ? formatMoney(fromMinorUnits(cashConfirmedMinor), currency, language) : '',
     cash_remaining: cashRemainingMinor > 0 ? formatMoney(fromMinorUnits(cashRemainingMinor), currency, language) : '',
-    scheduled_through_today: plan?.card_paid_minor ? formatMoney(fromMinorUnits(plan.card_paid_minor), currency, language) : '',
-    combined_remaining: cardRemainingMinor + cashRemainingMinor > 0 ? formatMoney(fromMinorUnits(cardRemainingMinor + cashRemainingMinor), currency, language) : '',
+    scheduled_through_today: scheduledThroughTodayMinor > 0 ? formatMoney(fromMinorUnits(scheduledThroughTodayMinor), currency, language) : '',
+    combined_remaining: canonical.totalUnpaidMinor > 0 ? formatMoney(fromMinorUnits(canonical.totalUnpaidMinor), currency, language) : '',
     installment_number: next ? String(next.installment_number) : trip.payment_plan_summary?.next_installment_date ? String((trip.payment_plan_summary.processed_installments || 0) + 1) : '',
     installment_count: String(plan?.installment_count || trip.payment_plan_summary?.installment_count || active.length || ''),
     next_installment_amount: nextMinor > 0 ? formatMoney(fromMinorUnits(nextMinor), currency, language) : '',
@@ -182,16 +186,17 @@ export function generateTripWhatsappMessage(
 // Backward-compatible adapter for saved templates created before snake_case variables.
 export function interpolateWhatsAppTemplate(body: string, trip: Trip, businessName: string, payment?: { nextAmount?: string; nextDate?: string }): string {
   const aliases = buildWhatsappVariables(trip, 'en', { businessName });
+  const canonical = getCanonicalTripPayment(trip);
   Object.assign(aliases, {
     clientname: trip.client_name, startdate: trip.start_date, enddate: trip.end_date,
-    amountpaid: String(trip.amount_paid), amountdue: String(trip.amount_due), currency: trip.currency,
+    amountpaid: String(fromMinorUnits(canonical.confirmedTotalMinor)), amountdue: String(fromMinorUnits(canonical.totalUnpaidMinor)), currency: trip.currency,
     businessname: businessName, nextinstallmentamount: payment?.nextAmount || '', nextinstallmentdate: payment?.nextDate || '',
   });
   return interpolateWhatsappVariables(body, aliases);
 }
 
 export function createWhatsAppUrl(phone: string, message: string): string | null {
-  const normalized = normalizeWhatsAppPhone(phone);
+  const normalized = getWhatsAppPhoneNumber(phone);
   const trimmed = message.trim();
   if (!normalized || !trimmed) return null;
   return `https://wa.me/${normalized.replace(/\D/g, '')}?text=${encodeURIComponent(trimmed)}`;

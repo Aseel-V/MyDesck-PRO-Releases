@@ -77,6 +77,8 @@ export function TripWhatsappDialog({ trip, onClose, initialType }: Props) {
   }, [onClose]);
 
   const normalizedPhone = normalizeWhatsAppPhone(phone);
+  const persistedPhone = normalizeWhatsAppPhone(trip.client_phone || '');
+  const phoneMatchesTrip = Boolean(normalizedPhone && normalizedPhone === persistedPhone);
   const sensitive = containsSensitiveWhatsAppContent(body);
   const unknownVariables = findUnknownWhatsappVariables(body);
   const url = createWhatsAppUrl(phone, body);
@@ -102,6 +104,13 @@ export function TripWhatsappDialog({ trip, onClose, initialType }: Props) {
   const deleteMutation = useMutation({ mutationFn: deleteWhatsAppTemplate, onSuccess: () => void refreshTemplates() });
   const stateMutation = useMutation({ mutationFn: ({ id, values }: { id: string; values: { is_favorite?: boolean; is_archived?: boolean } }) => updateWhatsappTemplateState(id, values), onSuccess: () => void refreshTemplates() });
   const duplicateMutation = useMutation({ mutationFn: (template: TripWhatsappTemplate) => saveWhatsAppTemplate(user!.id, { name: `${template.name} ${t('trips.whatsapp.copySuffix')}`, body: template.body, language: template.language, category: template.category }), onSuccess: () => void refreshTemplates() });
+  const persistPhoneIfRequested = async () => {
+    if (!updatePhone || !normalizedPhone || phoneMatchesTrip) return;
+    const { data, error } = await supabase.from('trips').update({ client_phone: normalizedPhone })
+      .eq('id', trip.id).eq('user_id', user!.id).select('id').maybeSingle();
+    if (error || !data) throw new Error('PHONE_UPDATE_FAILED');
+    await client.invalidateQueries({ queryKey: ['trips-page'] });
+  };
 
   const copy = async () => {
     await navigator.clipboard.writeText(body);
@@ -109,10 +118,7 @@ export function TripWhatsappDialog({ trip, onClose, initialType }: Props) {
   };
   const openWhatsapp = async () => {
     if (!url || !canOpen) return;
-    if (updatePhone && normalizedPhone && normalizedPhone !== normalizeWhatsAppPhone(trip.client_phone || '')) {
-      const { error } = await supabase.from('trips').update({ client_phone: normalizedPhone }).eq('id', trip.id);
-      if (error) { toast.error(t('trips.whatsapp.phoneUpdateFailed')); return; }
-    }
+    try { await persistPhoneIfRequested(); } catch { toast.error(t('trips.whatsapp.phoneUpdateFailed')); return; }
     const metadata = { action: 'whatsapp_opened', category: messageType, language: selectedLanguage, phone_suffix: maskWhatsAppPhone(phone) };
     const { error } = await supabase.rpc('log_trip_activity', { p_trip_id: trip.id, p_activity_type: 'whatsapp_prepared', p_metadata: metadata });
     if (error) console.warn('[Travel WhatsApp] Activity logging failed', { code: error.code });
@@ -134,7 +140,7 @@ export function TripWhatsappDialog({ trip, onClose, initialType }: Props) {
           <div><span className="text-xs text-slate-500">{t('trips.whatsapp.recipient')}</span><strong className="block">{trip.client_name}</strong></div>
           <div><span className="text-xs text-slate-500">{t('trips.whatsapp.savedPhone')}</span><strong className="block font-mono" dir="ltr">{normalizedPhone ? formatWhatsAppPhone(phone) : t('trips.whatsapp.invalidPhone')}</strong></div>
           <Button size="sm" variant="ghost" className="self-center justify-self-start" onClick={() => setEditNumber((value) => !value)}>{t('trips.whatsapp.changeNumber')}</Button>
-          {editNumber && <div className="col-span-full grid gap-2 sm:grid-cols-[1fr_auto]"><label className="text-sm">{t('trips.whatsapp.phoneLabel')}<input value={phone} onChange={(event) => { setPhone(event.target.value); setConfirmed(false); }} className={`mt-1 h-10 w-full rounded border bg-white px-3 font-mono dark:bg-slate-950 ${phone && !normalizedPhone ? 'border-rose-500' : 'border-slate-300 dark:border-slate-700'}`} dir="ltr" aria-invalid={Boolean(phone && !normalizedPhone)}/></label><label className="flex items-end gap-2 pb-2 text-sm"><input type="checkbox" checked={updatePhone} onChange={(event) => setUpdatePhone(event.target.checked)}/>{t('trips.whatsapp.updateClientPhone')}</label>{phone && !normalizedPhone && <p className="col-span-full text-sm text-rose-600" role="alert">{t('trips.whatsapp.invalidPhone')}</p>}</div>}
+          {editNumber && <div className="col-span-full grid gap-2 sm:grid-cols-[1fr_auto]"><label className="text-sm">{t('trips.whatsapp.phoneLabel')}<input value={phone} onChange={(event) => { setPhone(event.target.value); setConfirmed(false); }} onBlur={() => { if (normalizedPhone) setPhone(normalizedPhone); }} className={`mt-1 h-10 w-full rounded border bg-white px-3 font-mono dark:bg-slate-950 ${phone && !normalizedPhone ? 'border-rose-500' : 'border-slate-300 dark:border-slate-700'}`} dir="ltr" aria-invalid={Boolean(phone && !normalizedPhone)}/></label><label className="flex items-end gap-2 pb-2 text-sm"><input type="checkbox" checked={updatePhone} onChange={(event) => setUpdatePhone(event.target.checked)}/>{t('trips.whatsapp.updateClientPhone')}</label>{phone && !normalizedPhone && <p className="col-span-full text-sm text-rose-600" role="alert">{t('trips.whatsapp.invalidPhone')}</p>}</div>}
         </section>
 
         {showPreferences && <section className="grid gap-3 border border-slate-200 p-4 sm:grid-cols-2 dark:border-slate-700"><h3 className="col-span-full font-semibold">{t('trips.whatsapp.preferences.title')}</h3>{(['includeEmojis','includeSignature','rememberLastType','confirmBeforeOpen'] as const).map((key) => <label key={key} className="flex items-center justify-between gap-3 text-sm"><span>{t(`trips.whatsapp.preferences.${key}`)}</span><input type="checkbox" checked={preferences[key]} onChange={(event) => persistPreferences({ ...preferences, [key]: event.target.checked })}/></label>)}<label className="text-sm">{t('trips.whatsapp.preferences.greetingStyle')}<select value={preferences.greetingStyle} onChange={(event) => persistPreferences({ ...preferences, greetingStyle: event.target.value as 'friendly' | 'formal' })} className="mt-1 h-10 w-full rounded border bg-transparent px-3"><option value="friendly">{t('trips.whatsapp.preferences.friendly')}</option><option value="formal">{t('trips.whatsapp.preferences.formal')}</option></select></label><label className="text-sm">{t('trips.whatsapp.preferences.businessName')}<input value={preferences.businessDisplayName} onChange={(event) => persistPreferences({ ...preferences, businessDisplayName: event.target.value })} className="mt-1 h-10 w-full rounded border bg-transparent px-3"/></label><label className="text-sm">{t('trips.whatsapp.preferences.businessPhone')}<input value={preferences.businessContactNumber} onChange={(event) => persistPreferences({ ...preferences, businessContactNumber: event.target.value })} className="mt-1 h-10 w-full rounded border bg-transparent px-3" dir="ltr"/></label><label className="col-span-full text-sm">{t('trips.whatsapp.preferences.closingText')}<input value={preferences.closingText} onChange={(event) => persistPreferences({ ...preferences, closingText: event.target.value })} className="mt-1 h-10 w-full rounded border bg-transparent px-3"/></label></section>}

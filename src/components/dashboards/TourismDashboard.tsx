@@ -22,11 +22,11 @@ import {
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
 import { Trip } from '../../types/trip';
-import { getEffectiveTripDate, getEffectivePaymentStatus } from '../../lib/tripStatus';
 import { Button } from '../travel-ui/Button';
 import { StatusBadge } from '../travel-ui/StatusBadge';
 import { TravelOperationsDashboard } from './TravelOperationsDashboard';
 import { MeasuredChart } from '../travel-ui/MeasuredChart';
+import { fromPaymentMinor, getCanonicalTripPayment } from '../../lib/tripPaymentSummary';
 
 interface UserProfile {
   full_name?: string | null;
@@ -137,7 +137,7 @@ export default function TourismDashboard({
     return { totalTrips, upcoming, clients, travelers };
   }, [filteredTrips]);
 
-  // Generate monthly statistics for Stripe-style Area Chart with dynamic locale month formatting
+  // Generate monthly financial statistics for Area Chart based on payment_date with start_date fallback
   const monthlyData = useMemo(() => {
     const locale = language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-EG' : 'en-US';
     const data = Array.from({ length: 12 }, (_, i) => {
@@ -147,9 +147,9 @@ export default function TourismDashboard({
     });
 
     filteredTrips.forEach((trip) => {
-      const dateStr = getEffectiveTripDate(trip);
-      if (!dateStr) return;
-      const date = new Date(dateStr);
+      const finDateStr = trip.payment_date || trip.start_date;
+      if (!finDateStr) return;
+      const date = new Date(finDateStr);
       if (isNaN(date.getTime())) return;
       const mIndex = date.getMonth();
 
@@ -179,8 +179,8 @@ export default function TourismDashboard({
   const upcomingTrips = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
     return filteredTrips
-      .filter((trip) => getEffectiveTripDate(trip) >= today)
-      .sort((a, b) => getEffectiveTripDate(a).localeCompare(getEffectiveTripDate(b)))
+      .filter((trip) => trip.start_date >= today)
+      .sort((a, b) => a.start_date.localeCompare(b.start_date))
       .slice(0, 5);
   }, [filteredTrips]);
 
@@ -190,7 +190,9 @@ export default function TourismDashboard({
         const from = trip.currency || currency;
         const toDashboardCurrency = (value: number) => from === currency ? value : (convert ? convert(value, from, currency) : value);
         const revenue = Number(trip.sale_price) || 0;
-        const paid = Number(trip.amount_paid) || 0;
+        const payment = getCanonicalTripPayment(trip);
+        const paid = fromPaymentMinor(payment.confirmedTotalMinor);
+        const unpaid = fromPaymentMinor(payment.totalUnpaidMinor);
         const wholesale = Number(trip.wholesale_cost) || 0;
         const profit = trip.profit !== null && trip.profit !== undefined && Number.isFinite(Number(trip.profit))
           ? Number(trip.profit)
@@ -198,11 +200,12 @@ export default function TourismDashboard({
 
         totals.revenue += toDashboardCurrency(revenue);
         totals.collected += toDashboardCurrency(paid);
-        totals.outstanding += toDashboardCurrency(Math.max(0, revenue - paid));
+        totals.outstanding += toDashboardCurrency(unpaid);
         totals.profit += toDashboardCurrency(profit);
+        totals.tripsSold += 1;
         return totals;
       },
-      { revenue: 0, collected: 0, outstanding: 0, profit: 0 }
+      { revenue: 0, collected: 0, outstanding: 0, profit: 0, tripsSold: 0 }
     );
   }, [filteredTrips, currency, convert]);
 
@@ -437,11 +440,11 @@ export default function TourismDashboard({
       {alerts.length > 0 && (
         <motion.div variants={itemVariants} className="space-y-3">
           {alerts.map(trip => {
-            const tripDate = new Date(getEffectiveTripDate(trip));
-            const todayDate = new Date();
-            todayDate.setHours(0, 0, 0, 0);
-            tripDate.setHours(0, 0, 0, 0);
-            const daysUntil = Math.ceil((tripDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24));
+            const payment = getCanonicalTripPayment(trip);
+            const dueDate = payment.nextInstallmentDueDate;
+            const daysUntil = dueDate
+              ? Math.ceil((Date.parse(`${dueDate}T12:00:00Z`) - Date.parse(`${new Date().toISOString().slice(0, 10)}T12:00:00Z`)) / 86400000)
+              : null;
 
             return (
               <div 
@@ -456,7 +459,9 @@ export default function TourismDashboard({
                     <h4 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-800 dark:text-amber-200">
                       {t('notifications.paymentReminder')}
                         <span className="rounded bg-amber-200 px-1.5 py-0.5 text-[10px] font-bold text-amber-800 dark:bg-amber-900/50 dark:text-amber-100">
-                        {daysUntil === 0 
+                        {daysUntil === null
+                          ? t('dashboard.outstandingCash')
+                          : daysUntil === 0
                           ? t('notifications.today') 
                           : t('notifications.inDays', { count: daysUntil })}
                       </span>
@@ -828,7 +833,7 @@ export default function TourismDashboard({
               ) : (
                 <div className="divide-y divide-slate-200 dark:divide-slate-800">
                   {recentTrips.map((trip) => {
-                    const status = getEffectivePaymentStatus(trip);
+                    const status = getCanonicalTripPayment(trip).status;
                     const steps = [
                       { label: t('trips.steps.flights'), completed: true },
                       { label: t('trips.steps.hotel'), completed: Number(trip.wholesale_cost) > 0 },

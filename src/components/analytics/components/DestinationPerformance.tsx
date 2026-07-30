@@ -18,40 +18,65 @@ import {
   Award,
 } from 'lucide-react';
 import { useLanguage } from '../../../contexts/LanguageContext';
-import { getDestinationHighlights, calculateDestinationStats } from '../AnalyticsEngine';
-import { Trip } from '../../../types/trip';
+import { DestinationAggregate } from '../../../lib/analyticsQueries';
 
 interface DestinationPerformanceProps {
-  filteredTrips: Trip[];
+  destinationStats: DestinationAggregate[];
+  canViewFinancials?: boolean;
   currency: string;
   formatCurrency: (value: number) => string;
   formatNumber: (value: number) => string;
-  rates: Record<string, number> | null;
-  convert: (amt: number, from: string, to: string) => number;
+  onOpenTripsWithFilter?: (options: { destination?: string }) => void;
 }
 
 export default function DestinationPerformance({
-  filteredTrips,
-  currency,
+  destinationStats: rawDestinationStats,
+  canViewFinancials = true,
   formatCurrency,
   formatNumber,
-  rates,
-  convert,
+  onOpenTripsWithFilter,
 }: DestinationPerformanceProps) {
   const { t, direction } = useLanguage();
   const isRtl = direction === 'rtl';
-
-  // Calculate destination statistics
-  const destinationStats = useMemo(() => {
-    return calculateDestinationStats(filteredTrips, currency, rates, convert);
-  }, [filteredTrips, currency, rates, convert]);
+  const destinationStats = useMemo(() => rawDestinationStats.map((stat) => ({
+    ...stat,
+  })), [rawDestinationStats]);
+  const numericValue = (value: number | null | undefined) => value ?? 0;
+  const formatCount = (value: number | null | undefined) => value === null || value === undefined
+    ? t('analytics.noData')
+    : formatNumber(value);
 
   const highlights = useMemo(() => {
-    return getDestinationHighlights(destinationStats);
+    if (!destinationStats || destinationStats.length === 0) {
+      return {
+        bestRevenueDest: '',
+        bestRevenueValue: 0,
+        bestProfitDest: '',
+        bestProfitValue: 0,
+        highestPaxDest: '',
+        highestPaxValue: 0,
+        weakestDest: '',
+        weakestValue: 0,
+      };
+    }
+
+    const sortedRev = [...destinationStats].sort((a, b) => numericValue(b.revenue) - numericValue(a.revenue));
+    const sortedProfit = [...destinationStats].sort((a, b) => numericValue(b.profit) - numericValue(a.profit));
+    const sortedPax = [...destinationStats].sort((a, b) => numericValue(b.passengers) - numericValue(a.passengers));
+
+    return {
+      bestRevenueDest: sortedRev[0]?.name || '',
+      bestRevenueValue: numericValue(sortedRev[0]?.revenue),
+      bestProfitDest: sortedProfit[0]?.name || '',
+      bestProfitValue: numericValue(sortedProfit[0]?.profit),
+      highestPaxDest: sortedPax[0]?.name || '',
+      highestPaxValue: numericValue(sortedPax[0]?.passengers),
+      weakestDest: sortedRev[sortedRev.length - 1]?.name || '',
+      weakestValue: numericValue(sortedRev[sortedRev.length - 1]?.revenue),
+    };
   }, [destinationStats]);
 
   const chartData = useMemo(() => {
-    // Return top 6 destinations for the chart to keep it clean and legible
     return destinationStats.slice(0, 6);
   }, [destinationStats]);
 
@@ -85,7 +110,7 @@ export default function DestinationPerformance({
                   : 'text-slate-950 dark:text-white'
               }`}
             >
-              {formatCurrency(entry.value)}
+              {entry.dataKey === 'trips' || entry.dataKey === 'passengers' ? entry.value : formatCurrency(entry.value)}
             </span>
           </div>
         ))}
@@ -124,7 +149,7 @@ export default function DestinationPerformance({
                 {highlights.bestRevenueDest || '-'}
               </p>
               <p dir="ltr" className="text-xs font-semibold tabular-nums text-slate-700 dark:text-slate-300">
-                {highlights.bestRevenueDest ? formatCurrency(highlights.bestRevenueValue) : ''}
+                {canViewFinancials && highlights.bestRevenueDest ? formatCurrency(highlights.bestRevenueValue) : '• • • •'}
               </p>
             </div>
 
@@ -140,7 +165,7 @@ export default function DestinationPerformance({
                 {highlights.bestProfitDest || '-'}
               </p>
               <p dir="ltr" className="text-xs font-semibold tabular-nums text-emerald-700 dark:text-emerald-300">
-                {highlights.bestProfitDest ? formatCurrency(highlights.bestProfitValue) : ''}
+                {canViewFinancials && highlights.bestProfitDest ? formatCurrency(highlights.bestProfitValue) : '• • • •'}
               </p>
             </div>
 
@@ -172,7 +197,7 @@ export default function DestinationPerformance({
                 {highlights.weakestDest || '-'}
               </p>
               <p dir="ltr" className="text-xs font-semibold tabular-nums text-rose-600 dark:text-rose-300">
-                {highlights.weakestDest ? formatCurrency(highlights.weakestValue) : ''}
+                {canViewFinancials && highlights.weakestDest ? formatCurrency(highlights.weakestValue) : '• • • •'}
               </p>
             </div>
           </div>
@@ -186,18 +211,20 @@ export default function DestinationPerformance({
                     <tr className="border-b border-slate-100 bg-slate-50/50 text-slate-500 dark:border-slate-800/40 dark:bg-slate-950/20 dark:text-slate-400">
                       <th className="p-3 text-start">{t('trips.destination')}</th>
                       <th className="p-3 text-center">{t('dashboard.trips')}</th>
-                      <th className="p-3 text-start">{t('analytics.revenue')}</th>
-                      <th className="p-3 text-start">{t('analytics.profit')}</th>
-                      <th className="p-3 text-center">{t('analytics.profitMargin')}</th>
+                      {canViewFinancials && <th className="p-3 text-start">{t('analytics.revenue')}</th>}
+                      {canViewFinancials && <th className="p-3 text-start">{t('analytics.profit')}</th>}
+                      {canViewFinancials && <th className="p-3 text-center">{t('analytics.profitMargin')}</th>}
+                      {canViewFinancials && <th className="p-3 text-center">{t('analytics.markup') || 'Markup %'}</th>}
                       <th className="p-3 text-center">{t('analytics.travelers')}</th>
-                      <th className="p-3 text-start">{t('analytics.outstandingBalance')}</th>
+                      {canViewFinancials && <th className="p-3 text-start">{t('analytics.outstandingBalance')}</th>}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50 text-slate-700 dark:divide-slate-800/30 dark:text-slate-350">
                     {destinationStats.map((stat, idx) => (
                       <tr
                         key={stat.name}
-                        className="transition hover:bg-slate-50/50 dark:hover:bg-slate-950/20"
+                        onClick={() => onOpenTripsWithFilter?.({ destination: stat.name })}
+                        className="cursor-pointer transition hover:bg-slate-50/80 dark:hover:bg-slate-950/40"
                       >
                         <td className="p-3 text-start">
                           <div className="flex items-center gap-2">
@@ -207,39 +234,52 @@ export default function DestinationPerformance({
                             <span className="font-bold text-slate-800 dark:text-slate-200">
                               {stat.name}
                             </span>
-                            {stat.unknownProfitCount > 0 && (
-                              <span title={t('analytics.insights.missingCostWarning').replace('{{count}}', String(stat.unknownProfitCount))}>
+                            {numericValue(stat.unknown_profit_count) > 0 && (
+                              <span title={`Missing cost for ${stat.unknown_profit_count} trip(s)`}>
                                 <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
                               </span>
                             )}
                           </div>
                         </td>
-                        <td dir="ltr" className="p-3 text-center font-mono tabular-nums text-sky-700 dark:text-sky-300">{formatNumber(stat.trips)}</td>
-                        <td dir="ltr" className="p-3 text-start font-bold tabular-nums text-slate-950 dark:text-white">{formatCurrency(stat.revenue)}</td>
-                        <td
-                          dir="ltr"
-                          className={`p-3 text-start font-bold tabular-nums ${
-                            stat.profit > 0
-                              ? 'text-emerald-600 dark:text-emerald-400'
-                              : stat.profit < 0
-                                ? 'text-rose-600 dark:text-rose-400'
-                                : 'text-slate-500'
-                          }`}
-                        >
-                          {formatCurrency(stat.profit)}
-                        </td>
-                        <td dir="ltr" className={`p-3 text-center font-mono font-bold tabular-nums ${stat.profitMargin > 0 ? 'text-emerald-700 dark:text-emerald-300' : stat.profitMargin < 0 ? 'text-rose-600 dark:text-rose-300' : 'text-slate-600 dark:text-slate-400'}`}>{stat.profitMargin.toFixed(1)}%</td>
-                        <td dir="ltr" className="p-3 text-center font-mono tabular-nums text-sky-700 dark:text-sky-300">{formatNumber(stat.passengers)}</td>
-                        <td
-                          dir="ltr"
-                          className={`p-3 text-start font-bold tabular-nums ${
-                            stat.outstandingBalance > 0
-                              ? 'text-rose-600 dark:text-rose-300'
-                              : 'text-slate-450 dark:text-slate-500'
-                          }`}
-                        >
-                          {stat.outstandingBalance > 0 ? formatCurrency(stat.outstandingBalance) : '-'}
-                        </td>
+                        <td dir="ltr" className="p-3 text-center font-mono tabular-nums text-sky-700 dark:text-sky-300">{formatCount(stat.trips)}</td>
+                        {canViewFinancials && <td dir="ltr" className="p-3 text-start font-bold tabular-nums text-slate-950 dark:text-white">{stat.revenue === null ? t('analytics.noData') : formatCurrency(stat.revenue)}</td>}
+                        {canViewFinancials && (
+                          <td
+                            dir="ltr"
+                            className={`p-3 text-start font-bold tabular-nums ${
+                              numericValue(stat.profit) > 0
+                                ? 'text-emerald-600 dark:text-emerald-400'
+                                : numericValue(stat.profit) < 0
+                                  ? 'text-rose-600 dark:text-rose-400'
+                                  : 'text-slate-500'
+                            }`}
+                          >
+                            {stat.profit === null ? t('analytics.noData') : formatCurrency(stat.profit)}
+                          </td>
+                        )}
+                        {canViewFinancials && (
+                          <td dir="ltr" className={`p-3 text-center font-mono font-bold tabular-nums ${numericValue(stat.profit_margin) > 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-500'}`}>
+                            {stat.profit_margin === null ? t('analytics.noData') : `${stat.profit_margin.toFixed(1)}%`}
+                          </td>
+                        )}
+                        {canViewFinancials && (
+                          <td dir="ltr" className={`p-3 text-center font-mono font-bold tabular-nums ${numericValue(stat.markup_pct) > 0 ? 'text-cyan-700 dark:text-cyan-300' : 'text-slate-500'}`}>
+                            {stat.markup_pct === null ? t('analytics.noData') : `${stat.markup_pct.toFixed(1)}%`}
+                          </td>
+                        )}
+                        <td dir="ltr" className="p-3 text-center font-mono tabular-nums text-sky-700 dark:text-sky-300">{formatCount(stat.passengers)}</td>
+                        {canViewFinancials && (
+                          <td
+                            dir="ltr"
+                            className={`p-3 text-start font-bold tabular-nums ${
+                              numericValue(stat.outstanding_balance) > 0
+                                ? 'text-rose-600 dark:text-rose-300'
+                                : 'text-slate-450 dark:text-slate-500'
+                            }`}
+                          >
+                            {numericValue(stat.outstanding_balance) > 0 ? formatCurrency(numericValue(stat.outstanding_balance)) : '-'}
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
@@ -254,6 +294,13 @@ export default function DestinationPerformance({
                   <BarChart
                     data={chartData}
                     layout="vertical"
+                    onClick={(e) => {
+                      const event = e as unknown as { activePayload?: Array<{ payload: DestinationAggregate }> };
+                      if (event.activePayload?.[0]) {
+                        const payload = event.activePayload[0].payload;
+                        onOpenTripsWithFilter?.({ destination: payload.name });
+                      }
+                    }}
                     margin={{
                       top: 10,
                       right: isRtl ? 10 : 20,
@@ -273,18 +320,29 @@ export default function DestinationPerformance({
                     />
                     <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(10,165,200,0.04)' }} />
                     <Legend wrapperStyle={{ fontSize: 10 }} />
-                    <Bar
-                      dataKey="revenue"
-                      fill="#0EA5E9"
-                      name={t('analytics.revenue')}
-                      radius={isRtl ? [4, 0, 0, 4] : [0, 4, 4, 0]}
-                    />
-                    <Bar
-                      dataKey="profit"
-                      fill="#16A34A"
-                      name={t('analytics.profit')}
-                      radius={isRtl ? [4, 0, 0, 4] : [0, 4, 4, 0]}
-                    />
+                    {canViewFinancials ? (
+                      <>
+                        <Bar
+                          dataKey="revenue"
+                          fill="#0EA5E9"
+                          name={t('analytics.revenue')}
+                          radius={isRtl ? [4, 0, 0, 4] : [0, 4, 4, 0]}
+                        />
+                        <Bar
+                          dataKey="profit"
+                          fill="#16A34A"
+                          name={t('analytics.profit')}
+                          radius={isRtl ? [4, 0, 0, 4] : [0, 4, 4, 0]}
+                        />
+                      </>
+                    ) : (
+                      <Bar
+                        dataKey="passengers"
+                        fill="#0EA5E9"
+                        name={t('analytics.travelers')}
+                        radius={isRtl ? [4, 0, 0, 4] : [0, 4, 4, 0]}
+                      />
+                    )}
                   </BarChart>
                 </ResponsiveContainer>
               </MeasuredChart>

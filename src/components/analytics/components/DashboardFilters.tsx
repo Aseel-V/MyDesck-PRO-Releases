@@ -73,7 +73,7 @@ export default function DashboardFilters({
 
         {/* Trip Status Filter */}
         <label className="min-w-0 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-          <span className="mb-1.5 block">{t('trips.tripStatus')}</span>
+          <span className="mb-1.5 block">{t('analytics.tripStatus')}</span>
           <select
             value={filters.tripStatus}
             onChange={(e) => onFilterChange('tripStatus', e.target.value)}

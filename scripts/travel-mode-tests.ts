@@ -19,6 +19,7 @@ import { generateInitialItinerary, generatePackingList, organizeActivities, chec
 import { aggregateSalesByCurrency, createReportCsv } from '../src/lib/travelReports';
 import { getTripCardPaymentState } from '../src/lib/tripCardPayment';
 import { createTripSchema } from '../src/lib/schemas';
+import { PaymentContractCompatibilityError, requireCanonicalPaymentWriteContract } from '../src/lib/paymentContractCompatibility';
 
 const sampleForm: TripFormData = {
   destination: ' Paris ',
@@ -126,7 +127,7 @@ assert.equal(shouldRetryQuery(3, { status: 503 }), false);
 
 assert.equal(escapeCsvCell('=HYPERLINK("bad")'), '"\'=HYPERLINK(""bad"")"');
 assert.equal(escapeCsvCell('+1'), '"\'+1"');
-const exportLabels = { destination: 'Destination', client: 'Client', start: 'Start', end: 'End', status: 'Status', paymentStatus: 'Payment', currency: 'Currency', salePrice: 'Sale', amountPaid: 'Paid', amountDue: 'Due' };
+const exportLabels = { destination: 'Destination', client: 'Client', clientPhone: 'Phone', start: 'Start', end: 'End', status: 'Status', paymentStatus: 'Payment', currency: 'Currency', salePrice: 'Sale', confirmedCash: 'Confirmed cash', confirmedVisa: 'Confirmed Visa', confirmedReceived: 'Confirmed received', overdueVisa: 'Overdue Visa', futureVisa: 'Future Visa', totalUnpaid: 'Total unpaid' };
 const completeTrip: Trip = {
   ...sampleForm, id: '11111111-1111-4111-8111-111111111111', user_id: 'user', destination: '=Danger', client_name: 'Client',
   profit: 20, profit_percentage: 20, amount_due: 60, export_to_pdf: false, created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z',
@@ -134,14 +135,20 @@ const completeTrip: Trip = {
 };
 const scheduledTrip: Trip = {
   ...completeTrip,
+  sale_price: 1000,
   payment_method: 'mixed',
   start_date: '2025-03-20',
   end_date: '2025-03-25',
   payment_plan_summary: {
-    plan_id: '33333333-3333-4333-8333-333333333333', source: 'native', payment_method: 'mixed', currency: 'EUR',
-    card_total_minor: 60000, cash_total_minor: 40000, cash_paid_minor: 10000, installment_count: 6,
-    processed_installments: 2, scheduled_minor_to_date: 20000, remaining_scheduled_minor: 40000,
+    plan_id: '33333333-3333-4333-8333-333333333333', source: 'native', payment_source: 'native', reconciliation_state: 'aligned', payment_method: 'mixed', currency: 'EUR',
+    sale_total_minor: 100000, card_total_minor: 60000, visa_schedule_total_minor: 60000, cash_total_minor: 40000,
+    cash_paid_minor: 10000, cash_confirmed_minor: 10000, cash_remaining_minor: 30000, visa_confirmed_minor: 20000,
+    visa_scheduled_through_today_minor: 20000, visa_overdue_unconfirmed_minor: 0, visa_future_scheduled_minor: 40000,
+    currently_due_unconfirmed_minor: 0, confirmed_total_minor: 30000, total_unpaid_minor: 70000,
+    installment_count: 6, confirmed_installments: 2, processed_installments: 2, scheduled_minor_to_date: 20000, remaining_scheduled_minor: 40000,
     next_installment_minor: 10000, next_installment_date: '2025-03-15', final_installment_date: '2025-06-15',
+    next_installment_due_date: '2025-03-15', next_installment_expected_minor: 10000, next_installment_confirmed_minor: 0,
+    derived_payment_status: 'partial', authoritative_paid_minor: 30000, authoritative_remaining_minor: 70000,
     authoritative_payment_status: 'partial', combined_remaining_minor: 70000,
   },
 };
@@ -154,19 +161,20 @@ assert.equal(cardPayment.confirmedCashMinor, 10000);
 assert.equal(cardPayment.remainingCashMinor, 30000);
 assert.equal(cardPayment.nextInstallmentDate, '2025-03-15');
 assert.equal(cardPayment.attention?.key, 'visaAfterTrip');
-assert.equal(getTripCardPaymentState({ ...scheduledTrip, payment_plan_summary: { ...scheduledTrip.payment_plan_summary!, processed_installments: 6, scheduled_minor_to_date: 60000, remaining_scheduled_minor: 0, next_installment_minor: null, next_installment_date: null } }, '2025-07-01').statusChip?.key, 'visaComplete');
+assert.equal(getTripCardPaymentState({ ...scheduledTrip, payment_plan_summary: { ...scheduledTrip.payment_plan_summary!, confirmed_installments: 6, processed_installments: 6, visa_scheduled_through_today_minor: 60000, scheduled_minor_to_date: 60000, visa_future_scheduled_minor: 0, remaining_scheduled_minor: 0, next_installment_due_date: null, next_installment_expected_minor: null, next_installment_confirmed_minor: null, next_installment_minor: null, next_installment_date: null } }, '2025-07-01').statusChip?.key, 'allInstallmentDatesElapsed');
 const visaState = getTripCardPaymentState({
   ...scheduledTrip,
   payment_method: 'card',
   payment_plan_summary: {
     ...scheduledTrip.payment_plan_summary!, payment_method: 'card', cash_total_minor: 0, cash_paid_minor: 0,
-    combined_remaining_minor: 40000,
+    cash_confirmed_minor: 0, cash_remaining_minor: 0, confirmed_total_minor: 20000, total_unpaid_minor: 80000,
+    authoritative_paid_minor: 20000, authoritative_remaining_minor: 80000, combined_remaining_minor: 80000,
   },
 }, '2025-03-10');
 assert.equal(visaState.hasVisaSchedule, true);
 assert.equal(visaState.confirmedCashMinor, 0);
 assert.equal(visaState.remainingCashMinor, 0);
-assert.equal(visaState.combinedRemainingMinor, 40000);
+assert.equal(visaState.combinedRemainingMinor, 80000);
 const paidCashTrip: Trip = {
   ...completeTrip,
   sale_price: 3850,
@@ -175,8 +183,11 @@ const paidCashTrip: Trip = {
   payment_method: 'cash',
   payment_status: 'paid',
   payment_plan_summary: {
-    plan_id: '44444444-4444-4444-8444-444444444444', source: 'native', payment_method: 'cash', currency: 'ILS',
-    card_total_minor: 0, cash_total_minor: 385000, cash_paid_minor: 385000, stored_cash_paid_minor: 0,
+    plan_id: '44444444-4444-4444-8444-444444444444', source: 'native', payment_source: 'native', reconciliation_state: 'aligned', payment_method: 'cash', currency: 'ILS',
+    sale_total_minor: 385000, card_total_minor: 0, visa_schedule_total_minor: 0, visa_confirmed_minor: 0,
+    visa_scheduled_through_today_minor: 0, visa_overdue_unconfirmed_minor: 0, visa_future_scheduled_minor: 0,
+    currently_due_unconfirmed_minor: 0, cash_total_minor: 385000, cash_paid_minor: 385000, cash_confirmed_minor: 385000, cash_remaining_minor: 0, stored_cash_paid_minor: 0,
+    confirmed_total_minor: 385000, total_unpaid_minor: 0, derived_payment_status: 'paid',
     installment_count: 0, processed_installments: 0, scheduled_minor_to_date: 0, remaining_scheduled_minor: 0,
     next_installment_minor: null, next_installment_date: null, final_installment_date: null,
     authoritative_paid_minor: 385000, authoritative_remaining_minor: 0,
@@ -189,6 +200,8 @@ assert.equal(paidCashState.remainingCashMinor, 0);
 assert.equal(paidCashState.combinedRemainingMinor, 0);
 assert.equal(paidCashState.cashProgress, 100);
 assert.equal(paidCashState.authoritativePaymentStatus, 'paid');
+assert.equal(paidCashState.isFullyPaid, true);
+assert.equal(paidCashState.hasReconciliationIssue, false);
 assert.equal(
   getTripCardPaymentState({ ...paidCashTrip, service_type: 'ticket', flight_number: '', airline_name: '', itinerary: [] }, '2025-03-10').attention,
   null,
@@ -200,6 +213,54 @@ assert.deepEqual(mappedPlan, { existingPlanId: null, method: 'mixed', currency: 
 assert.equal(createTripSchema().safeParse(planForm).success, true, 'valid submitted payload includes an exact installment plan');
 assert.equal(createTripSchema().safeParse({ ...planForm, payment_plan: { ...planForm.payment_plan!, installment_count: 0 } }).success, false);
 assert.equal(createTripSchema().safeParse({ ...planForm, payment_plan: { ...planForm.payment_plan!, cash_total: 1 } }).success, false);
+const cashOnlyForm: TripFormData = {
+  ...planForm,
+  payment_method: 'cash',
+  amount_paid: 500,
+  cash_paid_amount: 500,
+  payment_plan: { plan_id: null, card_total: 0, cash_total: 1000.01, installment_count: 0, first_installment_date: '' },
+};
+assert.equal(createTripSchema().safeParse(cashOnlyForm).success, true, 'Cash-only must not validate a Visa installment count');
+assert.equal(createTripSchema().safeParse({
+  ...cashOnlyForm,
+  payment_plan: { ...cashOnlyForm.payment_plan!, installment_count: '' as unknown as number, card_total: '' as unknown as number },
+}).success, true, 'Cash-only must accept empty inactive Visa fields');
+assert.equal(toTripPaymentPlanInput(cashOnlyForm)?.installmentCount, 0, 'Cash-only must not submit Visa installments');
+const runtimeCashPlan = toTripPaymentPlanInput({ ...cashOnlyForm, sale_price: 17500, amount_paid: 17500, cash_paid_amount: 17500 });
+assert.deepEqual(runtimeCashPlan && {
+  method: runtimeCashPlan.method,
+  cardTotalMinor: runtimeCashPlan.cardTotalMinor,
+  cashTotalMinor: runtimeCashPlan.cashTotalMinor,
+  confirmedCashMinor: runtimeCashPlan.confirmedCashMinor,
+  installmentCount: runtimeCashPlan.installmentCount,
+}, { method: 'cash', cardTotalMinor: 0, cashTotalMinor: 1750000, confirmedCashMinor: 1750000, installmentCount: 0 });
+await requireCanonicalPaymentWriteContract(async () => ({ data: 2, error: null }));
+await assert.rejects(
+  requireCanonicalPaymentWriteContract(async () => ({ data: null, error: { code: 'PGRST202', message: 'function missing' } })),
+  (error: unknown) => error instanceof PaymentContractCompatibilityError && error.code === 'CANONICAL_PAYMENT_CONTRACT_REQUIRED',
+  'an older database contract must block before the write RPC',
+);
+
+const cardOnlyForm: TripFormData = {
+  ...planForm,
+  payment_method: 'card',
+  amount_paid: 0,
+  cash_paid_amount: 0,
+  payment_plan: { plan_id: null, card_total: 1000.01, cash_total: 0, installment_count: 1, first_installment_date: '2026-01-31' },
+};
+assert.equal(createTripSchema().safeParse(cardOnlyForm).success, true, 'Card with one installment must be valid');
+assert.equal(createTripSchema().safeParse({ ...cardOnlyForm, payment_plan: { ...cardOnlyForm.payment_plan!, installment_count: 0 } }).success, false, 'Card allocation must require at least one installment');
+
+const mixedWithoutVisa = createTripSchema().safeParse({
+  ...planForm,
+  payment_method: 'mixed',
+  payment_plan: { ...planForm.payment_plan!, card_total: 0, cash_total: 1000.01, installment_count: 0, first_installment_date: '' },
+});
+assert.equal(mixedWithoutVisa.success, false, 'Mixed without a Visa allocation must be rejected as an allocation problem');
+if (!mixedWithoutVisa.success) {
+  assert.ok(mixedWithoutVisa.error.issues.some((issue) => issue.path.join('.') === 'payment_plan.card_total'));
+  assert.ok(!mixedWithoutVisa.error.issues.some((issue) => issue.path.join('.') === 'payment_plan.installment_count'), 'Mixed without Visa must not show a hidden installment error');
+}
 assert.deepEqual((stripSensitiveTravelerDraftFields(planForm) as TripFormData).payment_plan, planForm.payment_plan, 'draft persistence must retain non-sensitive payment-plan fields');
 const csv = createTripCsv([completeTrip], exportLabels);
 assert.ok(csv.includes("'=Danger"));
@@ -297,7 +358,6 @@ const measuredChart = readFileSync('src/components/travel-ui/MeasuredChart.tsx',
 const tripDetailsSource = readFileSync('src/components/trips/ViewTripModal.tsx', 'utf8');
 const tripTypeSource = readFileSync('src/types/trip.ts', 'utf8');
 const travelChartSources = [
-  readFileSync('src/components/analytics/Analytics.tsx', 'utf8'),
   readFileSync('src/components/dashboards/TourismDashboard.tsx', 'utf8'),
   readFileSync('src/components/dashboards/TravelOperationsDashboard.tsx', 'utf8'),
   readFileSync('src/components/analytics/components/TrendChart.tsx', 'utf8'),
@@ -312,10 +372,12 @@ const tripCardSource = readFileSync('src/components/trips/TripCard.tsx', 'utf8')
 const tripCardTranslations = Object.fromEntries(['en', 'he', 'ar'].map((locale) => [locale, JSON.parse(readFileSync(`src/i18n/locales/${locale}.json`, 'utf8')).trips.actions])) as Record<string, Record<string, string>>;
 const newTripFormSource = readFileSync('src/components/trips/NewTripForm.tsx', 'utf8');
 const installmentFieldsSource = readFileSync('src/components/trips/TripInstallmentPlanFields.tsx', 'utf8');
+const tripFormStylesSource = readFileSync('src/components/trips/tripFormStyles.ts', 'utf8');
 const tripMutationsSource = readFileSync('src/hooks/useTripMutations.ts', 'utf8');
 const cardSummaryMigration = readFileSync('supabase/migrations/20260719170000_trip_card_payment_summary.sql', 'utf8');
 const paymentSaveContractMigration = readFileSync('supabase/migrations/20260723100000_fix_trip_payment_save_contract.sql', 'utf8');
 const paymentSummaryContractMigration = readFileSync('supabase/migrations/20260723110000_sync_trip_payment_summaries.sql', 'utf8');
+const cashCompatibilityMigration = readFileSync('supabase/migrations/20260729120000_fix_cash_payment_plan_compatibility.sql', 'utf8');
 const tripQueriesSource = readFileSync('src/lib/tripQueries.ts', 'utf8');
 const whatsappMigration = readFileSync('supabase/migrations/20260719180000_travel_whatsapp_composer.sql', 'utf8');
 const whatsappDialogSource = readFileSync('src/components/trips/TripWhatsappDialog.tsx', 'utf8');
@@ -390,7 +452,7 @@ assert.ok(optionalPassportCleanup.includes('OPTIONAL, DESTRUCTIVE ADMIN CLEANUP'
 assert.ok(tripCardSource.includes('role="progressbar"') && tripCardSource.includes('aria-expanded={expanded}'));
 assert.ok(tripCardSource.includes("event.key === 'ArrowDown'") && tripCardSource.includes("event.key === 'Escape'"));
 assert.ok(tripCardSource.includes("direction === 'rtl'") && tripCardSource.includes("'rotate-180'"));
-assert.ok(tripCardSource.includes('break-words') && tripsSource.includes('grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3'));
+assert.ok(tripCardSource.includes('break-words') && tripsSource.includes('grid-cols-1') && tripsSource.includes('lg:grid-cols-2') && tripsSource.includes('2xl:grid-cols-3'));
 assert.ok(!tripCardSource.match(/recordPayment|markAsPaid|record_trip_installment_payment/i), 'trip cards must not provide a payment write shortcut');
 assert.deepEqual([tripCardTranslations.en.edit, tripCardTranslations.he.edit, tripCardTranslations.ar.edit], ['Edit', 'עריכה', 'تعديل']);
 assert.deepEqual([tripCardTranslations.en.pdf, tripCardTranslations.he.pdf, tripCardTranslations.ar.pdf], ['PDF', 'PDF', 'PDF']);
@@ -399,7 +461,7 @@ assert.ok(tripCardSource.includes("t('trips.actions.edit')") && tripCardSource.i
 assert.ok(tripCardSource.includes('bg-amber-400') && tripCardSource.includes('text-slate-950'), 'Edit must use the high-contrast amber action style');
 assert.ok(tripCardSource.includes('bg-sky-700') && tripCardSource.includes('text-white'), 'PDF must use the high-contrast blue action style');
 assert.ok(tripCardSource.includes('onClick={() => onEdit(trip)}') && tripCardSource.includes('onClick={() => void onOpenPdfPreview(trip)}'), 'Edit and PDF callbacks must remain unchanged');
-assert.ok(tripCardSource.includes('grid-cols-3') && tripCardSource.includes('min-w-0') && tripCardSource.includes('min-h-11'), 'mobile action row must retain three visible 44px actions without overflow');
+assert.ok(tripCardSource.includes('flex min-w-0 flex-1 items-center') && (tripCardSource.match(/min-h-11/g) || []).length >= 3 && tripCardSource.includes('min-w-0'), 'compact mobile action row must retain three visible 44px actions without overflow');
 assert.ok(tripCardSource.includes('aria-busy={isPreparingPdf}') && tripCardSource.includes('role="status"'), 'PDF loading must be announced accessibly');
 assert.ok(tripCardSource.includes('dir={direction}') && tripCardSource.includes('end-0'), 'card actions and overflow menu must inherit RTL and use logical alignment');
 assert.ok(!tripCardSource.match(/aria-label=\{t\('trips\.edit'\)\}[\s\S]{0,100}<Edit[^>]*\/>\s*<\/button>/), 'Edit must not regress to an icon-only action');
@@ -412,13 +474,17 @@ for (const cardContract of ['payment_plan_summary', 'LEFT JOIN LATERAL', 'trip_p
 assert.ok(!cardSummaryMigration.match(/UPDATE\s+public\.trips\s+(?:AS\s+\w+\s+)?SET/i), 'card summary migration must not rewrite trip rows');
 assert.ok(!cardSummaryMigration.match(/DELETE\s+FROM\s+public\.trips/i), 'card summary migration must not delete trip rows');
 for (const contract of ['Change number', 'window.open(url', "'noopener,noreferrer'", 'phone_suffix', 'confirmBeforeOpen']) assert.ok(whatsappDialogSource.includes(contract) || whatsappDialogSource.includes(contract.replace('Change number', 'changeNumber')), `WhatsApp composer must include ${contract}`);
-assert.ok(!whatsappDialogSource.match(/send-whatsapp|message.*sent|delivered|read_at/i), 'Travel WhatsApp composer must remain manual and must not claim delivery');
+assert.ok(whatsappDialogSource.includes('window.open(url') && whatsappDialogSource.includes('sendOfficialWhatsappMessage'), 'Travel WhatsApp composer must preserve manual sending and expose the authenticated official-send path');
 assert.ok(!whatsappDialogSource.includes('p_metadata: { body') && !whatsappDialogSource.includes('p_metadata: { message'), 'activity metadata must not store message bodies');
 assert.ok(whatsappMigration.includes("to_regclass('public.trip_whatsapp_templates')") && whatsappMigration.includes("NOTIFY pgrst, 'reload schema'"));
 assert.ok(newTripFormSource.includes("fetchTripPaymentPlan(editTrip!.id)") && newTripFormSource.includes("setValue('payment_plan'"), 'edit mode must hydrate the existing payment plan');
 assert.ok(newTripFormSource.includes('<TripInstallmentPlanFields') && newTripFormSource.includes('direction={direction}'), 'the live installment section must preserve RTL direction');
 assert.ok(installmentFieldsSource.includes("paymentMethodIncludesInstallments(method)") && installmentFieldsSource.includes('if (!includesCard) return null'), 'cash must hide installment fields while card and mixed reveal them');
 for (const field of ['card_total', 'cash_total', 'installment_count', 'first_installment_date']) assert.ok(installmentFieldsSource.includes(field), `installment form must include ${field}`);
+assert.ok(newTripFormSource.includes("clearErrors(['payment_plan'") && newTripFormSource.includes('if (methodChanged) setValidationSummary([])'), 'Visa or Mixed to Cash must clear stale hidden errors and the missing-fields summary');
+assert.ok(newTripFormSource.includes("...(usesVisaAllocation ? ['payment_plan'"), 'Cash missing-fields navigation must exclude the hidden payment plan');
+assert.ok(tripFormStylesSource.includes('appearance:textfield') && tripFormStylesSource.includes('webkit-inner-spin-button') && tripFormStylesSource.includes('webkit-outer-spin-button'), 'Travel numeric style must hide Firefox and Chromium spinners');
+assert.ok(newTripFormSource.includes('travelNumberInputClass') && installmentFieldsSource.includes('travelNumberInputClass'), 'Travel financial and installment inputs must opt into no-spinner styling');
 assert.ok(tripMutationsSource.includes('toTripPaymentPlanInput(formData)') && (tripMutationsSource.includes('save_trip_transaction') || tripMutationsSource.includes('syncTripPaymentPlan(data.id, paymentPlan)')), 'trip submission must persist its payment plan');
 assert.ok(tripMutationsSource.includes('restoreTripPages(queryClient, context?.snapshot)'), 'failed trip saves must roll back optimistic card state');
 for (const queryKey of ['trips-page', 'trips-search', 'trip-dashboard', 'trip-payment-plan', 'trip-details', 'travel-reports']) {
@@ -468,5 +534,10 @@ for (const rpcName of ['get_trip_details', 'get_trips_page', 'get_trip_dashboard
 }
 assert.ok(tripQueriesSource.includes("'[Travel payment contract] mismatch'"), 'development diagnostics must identify differing financial fields');
 assert.ok(tripCardSource.includes('payment.authoritativePaymentStatus'), 'cash cards must render the authoritative payment status');
+assert.ok(tripCardSource.includes('payment.isFullyPaid') && tripCardSource.includes("t('trips.card.noOutstandingBalance')"), 'fully paid cards must replace the red zero balance with a success state');
+assert.ok(tripCardSource.includes('payment.hasReconciliationIssue'), 'reconciliation errors must not be hidden by the fully-paid state');
+for (const contract of ['enforce_cash_payment_plan_row', 'new.card_paid_minor := 0', 'new.first_installment_date := NULL', 'PAYMENT_PLAN_CONFIRMED_SCHEDULE_CONFLICT', 'get_travel_payment_contract_version', 'SELECT 2']) {
+  assert.ok(cashCompatibilityMigration.includes(contract), `Cash compatibility migration must include ${contract}`);
+}
 
 console.log('Travel Mode focused tests passed');

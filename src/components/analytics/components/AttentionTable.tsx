@@ -1,38 +1,29 @@
-import { useMemo } from 'react';
 import { AlertCircle, ArrowUpRight, CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '../../../contexts/LanguageContext';
-import { Trip } from '../../../types/trip';
 import { getPaymentStatusLabel } from '../../../lib/tripStatus';
-import { getAttentionRequiredTrips } from '../AnalyticsEngine';
+import { AttentionItem } from '../../../lib/analyticsQueries';
 
 interface AttentionTableProps {
-  filteredTrips: Trip[];
+  attentionItems: AttentionItem[];
+  canViewFinancials?: boolean;
   currency: string;
   formatCurrency: (value: number) => string;
-  rates: Record<string, number> | null;
-  convert: (amt: number, from: string, to: string) => number;
-  onSelectTrip?: (trip: Trip) => void;
+  onSelectTrip?: (tripId: string) => void;
 }
 
 export default function AttentionTable({
-  filteredTrips,
-  currency,
+  attentionItems,
+  canViewFinancials = true,
   formatCurrency,
-  rates,
-  convert,
   onSelectTrip,
 }: AttentionTableProps) {
   const { t } = useLanguage();
 
-  const attentionItems = useMemo(() => {
-    return getAttentionRequiredTrips(filteredTrips, currency, rates, convert);
-  }, [filteredTrips, currency, rates, convert]);
-
   const getReasonLabel = (reasonKey: string) => {
-    return t(`analytics.attentionReasons.${reasonKey}`);
+    return t(`analytics.attentionReasons.${reasonKey}`) || reasonKey;
   };
 
-  const getPaymentStatusBadgeClass = (status: Trip['payment_status']) => {
+  const getPaymentStatusBadgeClass = (status: string) => {
     switch (status) {
       case 'paid':
         return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400';
@@ -74,13 +65,13 @@ export default function AttentionTable({
                 <th className="p-3 text-start">{t('trips.destination')}</th>
                 <th className="p-3 text-start">{t('trips.startDate')}</th>
                 <th className="p-3 text-center">{t('trips.paymentStatus')}</th>
-                <th className="p-3 text-start">{t('analytics.outstandingBalance')}</th>
+                {canViewFinancials && <th className="p-3 text-start">{t('analytics.outstandingBalance')}</th>}
                 <th className="p-3 text-start">{t('analytics.reason')}</th>
                 <th className="p-3 text-end">{t('analytics.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50 text-slate-700 dark:divide-slate-800/30 dark:text-slate-350">
-              {attentionItems.map(({ trip, outstandingBalance, reasons }) => (
+              {attentionItems.map(({ trip, outstanding_balance, reasons }) => (
                 <tr
                   key={trip.id}
                   className="transition hover:bg-slate-50/50 dark:hover:bg-slate-950/20"
@@ -99,9 +90,11 @@ export default function AttentionTable({
                       {getPaymentStatusLabel(trip.payment_status, t)}
                     </span>
                   </td>
-                  <td dir="ltr" className="p-3 text-start font-bold tabular-nums text-rose-600 dark:text-rose-300">
-                    {outstandingBalance > 0 ? formatCurrency(outstandingBalance) : '-'}
-                  </td>
+                  {canViewFinancials && (
+                    <td dir="ltr" className="p-3 text-start font-bold tabular-nums text-rose-600 dark:text-rose-300">
+                      {(outstanding_balance ?? 0) > 0 ? formatCurrency(outstanding_balance ?? 0) : '-'}
+                    </td>
+                  )}
                   <td className="p-3 text-start">
                     <div className="flex flex-wrap gap-1.5 max-w-[320px]">
                       {reasons.map((r, index) => (
@@ -118,7 +111,7 @@ export default function AttentionTable({
                     {onSelectTrip && (
                       <button
                         type="button"
-                        onClick={() => onSelectTrip(trip)}
+                        onClick={() => onSelectTrip(trip.id)}
                         className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-slate-700 transition hover:bg-slate-50 hover:text-slate-900 dark:border-slate-800 dark:text-slate-350 dark:hover:bg-slate-900 dark:hover:text-slate-100"
                       >
                         <span>{t('analytics.openDetails')}</span>

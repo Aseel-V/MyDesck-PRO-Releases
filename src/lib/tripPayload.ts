@@ -2,6 +2,7 @@ import type { Database, Json } from '../types/database';
 import type { TripFormData } from '../types/trip';
 import { finiteMoney } from './tripFinancials';
 import { toMinorUnits, validatePaymentSplit } from './tripInstallments';
+import { normalizeIsraeliPhoneNumber } from './phoneNumbers';
 
 type TripInsert = Database['public']['Tables']['trips']['Insert'];
 type TripUpdate = Database['public']['Tables']['trips']['Update'];
@@ -11,10 +12,13 @@ export type WritableTripInsertPayload = Omit<TripInsert, ReadonlyTripGeneratedCo
 export type WritableTripUpdatePayload = Omit<TripUpdate, ReadonlyTripGeneratedColumns>;
 
 export function sanitizeTripFormData(formData: TripFormData): TripFormData {
+  const rawPhone = formData.client_phone?.trim();
+  const normalizedPhone = rawPhone ? normalizeIsraeliPhoneNumber(rawPhone) : null;
+  if (rawPhone && !normalizedPhone) throw new Error('INVALID_CLIENT_PHONE');
   return {
     destination: formData.destination.trim(),
     client_name: formData.client_name.trim(),
-    client_phone: formData.client_phone?.trim() || undefined,
+    client_phone: normalizedPhone || undefined,
     travelers: Array.isArray(formData.travelers) ? formData.travelers.map((traveler) => ({
       full_name: traveler.full_name.trim(),
       nationality: traveler.nationality?.trim() || undefined,

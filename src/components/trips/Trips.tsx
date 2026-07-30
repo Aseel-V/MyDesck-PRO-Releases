@@ -68,6 +68,7 @@ import { DuplicateTripDialog } from './DuplicateTripDialog';
 import { TripWhatsappDialog } from './TripWhatsappDialog';
 import type { WhatsappMessageType } from '../../lib/tripWhatsapp';
 import { TravelReportsPanel } from '../analytics/TravelReportsPanel';
+import { useVisaPaymentArrivals } from '../../hooks/useVisaPaymentArrivals';
 
 interface TripsProps {
   filters: TripFilterState;
@@ -83,6 +84,7 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
   const { user, profile, userProfile } = useAuth();
   const { convert, format, currency, isLoading: isCurrencyLoading } = useCurrency();
   const { deleteTrip, archiveTrip, isDeleting } = useTripMutations();
+  const visaArrivals = useVisaPaymentArrivals(Boolean(user?.id));
 
   const [viewTrip, setViewTrip] = useState<Trip | undefined>(undefined);
   const [tripPendingDelete, setTripPendingDelete] = useState<Trip | null>(null);
@@ -316,9 +318,15 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
         month: filters.month, destination: filters.destination,
       });
       const labels: TripExportLabels = {
-        destination: t('trips.destination'), client: t('trips.clientName'), start: t('trips.startDate'), end: t('trips.endDate'),
+        destination: t('trips.destination'), client: t('trips.clientName'), clientPhone: t('trips.clientPhone'), start: t('trips.startDate'), end: t('trips.endDate'),
         status: t('trips.status'), paymentStatus: t('trips.paymentStatus'), currency: t('trips.mainTripCurrency'),
-        salePrice: t('trips.salePrice'), amountPaid: t('trips.amountPaid'), amountDue: t('trips.amountDue'),
+        salePrice: t('trips.card.salesValue'),
+        confirmedCash: t('trips.card.cashConfirmed'),
+        confirmedVisa: t('trips.card.confirmedVisaPayments'),
+        confirmedReceived: t('trips.card.confirmedReceived'),
+        overdueVisa: t('trips.card.overdueUnconfirmed'),
+        futureVisa: t('trips.card.futureScheduledVisa'),
+        totalUnpaid: t('trips.card.totalUnpaid'),
       };
       const name = `${t('trips.export.dataFileName')}_${filters.year}_${language}`;
       if (kind === 'csv') downloadBlob(new Blob([createTripCsv(exportTrips, labels)], { type: 'text/csv;charset=utf-8' }), name, 'csv');
@@ -808,11 +816,12 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
             </div>
           )
         ) : viewMode === 'grid' ? (
-          <motion.div layout className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-5">
+          <motion.div layout className="grid grid-cols-1 items-stretch gap-5 lg:grid-cols-2 2xl:grid-cols-3">
             <AnimatePresence mode="popLayout">
               {displayTrips.map((trip) => (
                 <motion.div
                   layout
+                  className="h-full min-w-0"
                   key={trip.id}
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -831,6 +840,8 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
                     onOpenSourceTemplate={(value) => setCardAction({ type: 'source-template', trip: value })}
                     onWhatsapp={(value) => void openCardAction('whatsapp', value)}
                     onArchive={(value) => void handleArchiveTrip(value)}
+                    visaArrival={visaArrivals.byTrip.get(trip.id)}
+                    onVisaArrivalSeen={visaArrivals.markSeen}
                   />
                 </motion.div>
               ))}

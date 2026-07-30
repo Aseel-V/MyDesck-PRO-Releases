@@ -26,8 +26,10 @@ import { getSafeErrorCode } from '../../lib/safeError';
 import { checkTripCompleteness } from '../../lib/tripSmartTools';
 import { RoomCompositionSection } from './RoomCompositionSection';
 import { fetchTripPaymentPlan } from '../../lib/tripPayments';
-import { buildInstallmentSchedule, fromMinorUnits, toMinorUnits } from '../../lib/tripInstallments';
+import { buildInstallmentSchedule, fromMinorUnits, requiresVisaInstallmentSchedule, toMinorUnits } from '../../lib/tripInstallments';
 import TripInstallmentPlanFields from './TripInstallmentPlanFields';
+import { normalizeIsraeliPhoneNumber } from '../../lib/phoneNumbers';
+import { travelNumberInputClass } from './tripFormStyles';
 
 interface NewTripFormProps {
   onClose: () => void;
@@ -70,6 +72,12 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
     ?? (editTrip?.payment_plan_summary ? fromMinorUnits(editTrip.payment_plan_summary.card_total_minor) : initialPaymentMethod === 'card' ? editTrip?.sale_price || 0 : 0);
   const initialCashTotal = editTrip?.payment_plan?.cash_total
     ?? (editTrip?.payment_plan_summary ? fromMinorUnits(editTrip.payment_plan_summary.cash_total_minor) : initialPaymentMethod === 'cash' ? editTrip?.sale_price || 0 : 0);
+  const initialVisaConfirmed = editTrip?.payment_plan_summary
+    ? fromMinorUnits(editTrip.payment_plan_summary.visa_confirmed_minor ?? 0)
+    : Number(editTrip?.card_paid_amount || (initialPaymentMethod === 'card' ? editTrip?.amount_paid : 0) || 0);
+  const initialConfirmedTotal = editTrip?.payment_plan_summary
+    ? fromMinorUnits(editTrip.payment_plan_summary.confirmed_total_minor ?? editTrip.payment_plan_summary.authoritative_paid_minor ?? 0)
+    : Number(editTrip?.amount_paid || 0);
 
   const {
     register,
@@ -111,11 +119,13 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
       payments: editTrip?.payments || [],
       payment_status:
         (editTrip?.payment_status as TripFormValues['payment_status']) || 'unpaid',
-      amount_paid: editTrip?.amount_paid !== undefined ? editTrip.amount_paid : '' as unknown as number,
+      amount_paid: editTrip ? initialConfirmedTotal : 0,
       payment_date: editTrip?.payment_date || '',
       payment_method: initialPaymentMethod,
-      card_paid_amount: editTrip?.card_paid_amount ?? undefined,
-      cash_paid_amount: editTrip?.cash_paid_amount ?? undefined,
+      card_paid_amount: initialVisaConfirmed,
+      cash_paid_amount: editTrip?.payment_plan_summary
+        ? fromMinorUnits(editTrip.payment_plan_summary.cash_confirmed_minor ?? editTrip.payment_plan_summary.cash_paid_minor)
+        : editTrip?.cash_paid_amount ?? undefined,
       payment_plan: editTrip && editTrip.currency !== 'ILS' && !editTrip.payment_plan && !editTrip.payment_plan_summary ? null : {
         plan_id: editTrip?.payment_plan?.plan_id ?? editTrip?.payment_plan_summary?.plan_id ?? null,
         card_total: initialCardTotal,
@@ -193,6 +203,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
   const wholesaleCost = watch('wholesale_cost');
   const salePrice = watch('sale_price');
   const amountPaid = watch('amount_paid');
+  const cashPaidAmount = watch('cash_paid_amount');
   const paymentMethod = watch('payment_method');
   const paymentDate = watch('payment_date');
   const watchedPaymentPlan = watch('payment_plan');
@@ -200,13 +211,25 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
     plan_id: watchedPaymentPlan?.plan_id ?? null,
     card_total: Number(watchedPaymentPlan?.card_total) || 0,
     cash_total: Number(watchedPaymentPlan?.cash_total) || 0,
-    installment_count: Number(watchedPaymentPlan?.installment_count) || 1,
+    installment_count: Number.isFinite(Number(watchedPaymentPlan?.installment_count)) ? Number(watchedPaymentPlan?.installment_count) : 0,
     first_installment_date: watchedPaymentPlan?.first_installment_date || '',
   };
+  const usesVisaAllocation = paymentMethod === 'card' || paymentMethod === 'mixed';
+  const requiresVisaSchedule = requiresVisaInstallmentSchedule(paymentMethod, toMinorUnits(Math.max(0, paymentPlan.card_total)));
   const serviceType = watch('service_type');
   const isLegacyCurrencyTrip = Boolean(editTrip && getTripCurrencyMode(editTrip) === 'legacy_usd');
   const tripCurrency = isLegacyCurrencyTrip ? editTrip?.currency || 'ILS' : 'ILS';
   const displayedCurrency = tripCurrency;
+
+  useEffect(() => {
+    if (paymentMethod !== 'card' && paymentMethod !== 'mixed') return;
+    const confirmedCash = paymentMethod === 'mixed' && Number.isFinite(Number(cashPaidAmount))
+      ? Math.max(0, Number(cashPaidAmount))
+      : 0;
+    const confirmedTotal = initialVisaConfirmed + confirmedCash;
+    setValue('card_paid_amount', initialVisaConfirmed, { shouldValidate: false });
+    setValue('amount_paid', confirmedTotal, { shouldValidate: true });
+  }, [cashPaidAmount, initialVisaConfirmed, paymentMethod, setValue]);
 
   useEffect(() => {
     if (paymentMethod && typeof window !== 'undefined') window.localStorage.setItem('travel:last-payment-method', paymentMethod);
@@ -226,7 +249,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
       plan_id: plan.id,
       card_total: fromMinorUnits(plan.card_total_minor),
       cash_total: fromMinorUnits(plan.cash_total_minor),
-      installment_count: Math.max(1, plan.installment_count),
+      installment_count: plan.card_total_minor > 0 ? Math.max(1, plan.installment_count) : 0,
       first_installment_date: plan.first_installment_date || paymentDate || today,
     }, { shouldDirty: false, shouldValidate: false });
   }, [existingPaymentPlan.data?.plan, paymentDate, setValue, today]);
@@ -244,7 +267,10 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
     if (paymentMethod === 'card') {
       setValue('payment_plan', { ...current, plan_id: current?.plan_id ?? null, card_total: sale, cash_total: 0, installment_count: current?.installment_count || 1, first_installment_date: firstDate }, { shouldDirty: methodChanged, shouldValidate: true });
     } else if (paymentMethod === 'cash') {
-      setValue('payment_plan', { ...current, plan_id: current?.plan_id ?? null, card_total: 0, cash_total: sale, installment_count: current?.installment_count || 1, first_installment_date: firstDate }, { shouldDirty: methodChanged, shouldValidate: true });
+      clearErrors(['payment_plan', 'card_paid_amount', 'cash_paid_amount', 'payment_method']);
+      if (methodChanged) setValidationSummary([]);
+      setValue('payment_plan', { ...current, plan_id: current?.plan_id ?? null, card_total: 0, cash_total: sale, installment_count: 0, first_installment_date: firstDate }, { shouldDirty: methodChanged, shouldValidate: false });
+      clearErrors(['payment_plan', 'card_paid_amount', 'cash_paid_amount', 'payment_method']);
     } else if (paymentMethod === 'mixed' && (methodChanged || (!current?.card_total && !current?.cash_total))) {
       const saleMinor = toMinorUnits(sale);
       const cardMinor = Math.floor(saleMinor / 2);
@@ -252,15 +278,16 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
     }
     previousPaymentMethod.current = paymentMethod;
     previousSalePrice.current = sale;
-  }, [getValues, paymentDate, paymentMethod, salePrice, setValue, today]);
+  }, [getValues, paymentDate, paymentMethod, salePrice, setValue, today, clearErrors]);
 
   useEffect(() => {
+    if (paymentMethod !== 'card' && paymentMethod !== 'mixed') return;
     if (!paymentDate || paymentPlan.first_installment_date === paymentDate) return;
     if (!paymentPlan.first_installment_date || paymentPlan.first_installment_date === automaticFirstDate.current) {
       setValue('payment_plan.first_installment_date', paymentDate, { shouldDirty: false, shouldValidate: true });
       automaticFirstDate.current = paymentDate;
     }
-  }, [paymentDate, paymentPlan.first_installment_date, setValue]);
+  }, [paymentDate, paymentMethod, paymentPlan.first_installment_date, setValue]);
 
   const updatePaymentPlan = <K extends keyof TripPaymentPlanDraft>(field: K, value: TripPaymentPlanDraft[K]) => {
     if (field === 'first_installment_date') automaticFirstDate.current = '';
@@ -376,6 +403,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
     'Installment schedule is invalid': 'trips.validation.installmentScheduleInvalid',
     'Cash total must be greater than 0 for mixed payment': 'trips.validation.mixedCashTotalPositive',
     'Confirmed cash cannot exceed the cash total': 'trips.validation.cashPaidExceedsCashTotal',
+    'Invalid phone number': 'trips.validation.invalidPhone',
   };
 
   const translateValidationMessage = (message?: unknown) => {
@@ -417,9 +445,6 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
         data.sale_original_amount = Number(data.sale_price) || 0;
         data.sale_currency = 'ILS';
 
-        if (data.payments && data.payments.length > 0) {
-          data.amount_paid = data.payments.reduce((sum, payment) => sum + payment.amount, 0);
-        }
       }
       
       // Auto-update travelers count
@@ -446,10 +471,22 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
         return;
       }
 
-      if (data.payment_method === 'mixed' && Math.abs((Number(data.card_paid_amount || 0) + Number(data.cash_paid_amount || 0)) - Number(data.amount_paid)) >= 0.01) {
-        setError('card_paid_amount', { type: 'manual', message: t('trips.validation.mixedPaymentTotal') });
-        setActiveStep(getStepForField('amount_paid'));
-        return;
+      if (data.payment_method === 'cash') {
+        clearErrors(['payment_plan', 'card_paid_amount', 'cash_paid_amount']);
+        data.card_paid_amount = 0;
+        data.cash_paid_amount = Number(data.amount_paid) || 0;
+        if (data.payment_plan) {
+          data.payment_plan.card_total = 0;
+          data.payment_plan.cash_total = Number(data.sale_price) || 0;
+          data.payment_plan.installment_count = 0;
+        }
+      }
+
+      if (data.payment_method === 'card' || data.payment_method === 'mixed') {
+        const confirmedVisa = initialVisaConfirmed;
+        const confirmedCash = data.payment_method === 'mixed' ? Number(data.cash_paid_amount || 0) : 0;
+        data.card_paid_amount = confirmedVisa;
+        data.amount_paid = confirmedVisa + confirmedCash;
       }
 
       data.room_type = serializeRoomConfiguration(data.room_type);
@@ -463,7 +500,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
       // Sanitize date fields - convert empty strings to null to avoid Postgres "invalid input syntax" error
       const sanitizedData = {
         ...data,
-        client_phone: data.client_phone?.trim() || null,
+        client_phone: data.client_phone?.trim() ? normalizeIsraeliPhoneNumber(data.client_phone) : null,
         start_date: data.start_date || null,
         end_date: data.end_date || null,
         payment_date: data.payment_date || null,
@@ -551,9 +588,9 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
   const stepFields = useMemo<Record<FormStep, Array<keyof TripFormValues>>>(() => ({
     details: ['destination', 'client_name', 'travelers_count', 'start_date', 'end_date'],
     rooms: ['hotel_name'],
-    financials: ['wholesale_cost', 'sale_price', 'amount_paid', 'payment_method', 'payment_plan', 'card_paid_amount', 'cash_paid_amount'],
+    financials: ['wholesale_cost', 'sale_price', 'amount_paid', 'payment_method', ...(usesVisaAllocation ? ['payment_plan' as keyof TripFormValues] : []), 'card_paid_amount', 'cash_paid_amount'],
     review: [],
-  }), []);
+  }), [usesVisaAllocation]);
 
   const fieldLabels = useMemo<Partial<Record<keyof TripFormValues, string>>>(() => ({
     destination: t('trips.destination'),
@@ -582,10 +619,10 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
     'sale_price',
     'amount_paid',
     'payment_method',
-    'payment_plan',
+    ...(usesVisaAllocation ? ['payment_plan' as keyof TripFormValues] : []),
     'card_paid_amount',
     'cash_paid_amount',
-  ], [serviceType]);
+  ], [serviceType, usesVisaAllocation]);
 
   const scrollFormToTop = () => {
     document.getElementById('new-trip-form-content')?.scrollTo({ top: 0, behavior: 'smooth' });
@@ -650,7 +687,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
     return String(value);
   };
   const reviewInstallments = (() => {
-    if (paymentMethod !== 'card' && paymentMethod !== 'mixed') return [];
+    if (!requiresVisaSchedule) return [];
     try { return buildInstallmentSchedule(toMinorUnits(paymentPlan.card_total), paymentPlan.installment_count, paymentPlan.first_installment_date); }
     catch { return []; }
   })();
@@ -675,13 +712,15 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
       { label: t('trips.cardPaidAmount'), value: format(Number(currentValues.card_paid_amount || 0), tripCurrency, tripCurrency), missing: false },
       { label: t('trips.cashPaidAmount'), value: format(Number(currentValues.cash_paid_amount || 0), tripCurrency, tripCurrency), missing: false },
     ] : []),
-    ...(paymentMethod === 'card' || paymentMethod === 'mixed' ? [
+    ...(usesVisaAllocation ? [
       { label: t('trips.installments.cardAmount'), value: format(paymentPlan.card_total, tripCurrency, tripCurrency), missing: paymentPlan.card_total <= 0 },
       ...(paymentMethod === 'mixed' ? [{ label: t('trips.installments.cashAmount'), value: format(paymentPlan.cash_total, tripCurrency, tripCurrency), missing: false }] : []),
+      ...(requiresVisaSchedule ? [
       { label: t('trips.installments.count'), value: getReviewValue(paymentPlan.installment_count), missing: paymentPlan.installment_count < 1 },
       { label: t('trips.installments.firstDate'), value: getReviewValue(paymentPlan.first_installment_date), missing: !paymentPlan.first_installment_date },
       { label: t('trips.installments.amountEach'), value: reviewInstallments[0] ? format(fromMinorUnits(reviewInstallments[0].expectedAmountMinor), tripCurrency, tripCurrency) : notProvided, missing: reviewInstallments.length === 0 },
       { label: t('trips.installments.finalDate'), value: reviewInstallments.length ? reviewInstallments[reviewInstallments.length - 1].dueDate : notProvided, missing: reviewInstallments.length === 0 },
+      ] : []),
     ] : []),
     { label: t('trips.amountDue'), value: format(amountDue, tripCurrency, tripCurrency), missing: false },
   ];
@@ -930,13 +969,21 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                   <label className={labelClasses}>{t('trips.clientPhone')}</label>
                   <input
                     type="tel"
-                    {...register('client_phone')}
-                    className={baseInputClasses}
+                    {...register('client_phone', {
+                      onBlur: (event) => {
+                        const normalized = normalizeIsraeliPhoneNumber(event.target.value);
+                        if (normalized) setValue('client_phone', normalized, { shouldDirty: true, shouldValidate: true });
+                      },
+                    })}
+                    className={cn(baseInputClasses, errors.client_phone && errorInputClasses)}
                     placeholder={t('trips.clientPhonePlaceholder')}
+                    dir="ltr"
+                    aria-invalid={Boolean(errors.client_phone)}
                   />
                   <p className="mt-1 text-xs text-slate-400">
                     {t('trips.clientPhoneHelper')}
                   </p>
+                  {errors.client_phone && <p className="mt-1 text-xs text-rose-400" role="alert">{t('trips.validation.invalidPhone')}</p>}
                 </div>
 
                 <div>
@@ -1082,6 +1129,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                                readOnly={isLegacyCurrencyTrip}
                                 className={cn(
                                   baseInputClasses,
+                                  travelNumberInputClass,
                                   'h-10 rounded-lg py-2 ps-8 tabular-nums',
                                   isLegacyCurrencyTrip && 'cursor-not-allowed bg-slate-100 text-slate-500 dark:bg-slate-900/50 dark:text-slate-400',
                                  errors.wholesale_cost && errorInputClasses,
@@ -1106,7 +1154,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                                  register('sale_price', { valueAsNumber: true }).onChange(e);
                                  handleSalePriceChange();
                                }}
-                                 className={cn(baseInputClasses, 'h-10 rounded-lg py-2 ps-8 tabular-nums', errors.sale_price && errorInputClasses)}
+                                 className={cn(baseInputClasses, travelNumberInputClass, 'h-10 rounded-lg py-2 ps-8 tabular-nums', errors.sale_price && errorInputClasses)}
                              />
                         </div>
                       </div>
@@ -1152,7 +1200,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                                 dir="ltr"
                                 placeholder={t('trips.amountPlaceholder')}
                                 {...register('amount_paid', { valueAsNumber: true })}
-                                readOnly={isLegacyCurrencyTrip}
+                                readOnly={isLegacyCurrencyTrip || paymentMethod === 'card' || paymentMethod === 'mixed'}
                                 onChange={(e) => {
                                     register('amount_paid', { valueAsNumber: true }).onChange(e);
                                     const val = parseFloat(e.target.value);
@@ -1165,8 +1213,9 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                                 }}
                                 className={cn(
                                     baseInputClasses,
+                                    travelNumberInputClass,
                                     'h-10 rounded-lg py-2 ps-8 tabular-nums',
-                                    isLegacyCurrencyTrip && 'cursor-not-allowed bg-slate-100 text-slate-500 dark:bg-slate-900/50 dark:text-slate-400',
+                                    (isLegacyCurrencyTrip || paymentMethod === 'card' || paymentMethod === 'mixed') && 'cursor-not-allowed bg-slate-100 text-slate-500 dark:bg-slate-900/50 dark:text-slate-400',
                                     errors.amount_paid && errorInputClasses,
                                 )}
                             />
@@ -1227,10 +1276,10 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
                   onChange={updatePaymentPlan}
                 />}
 
-                {paymentMethod === 'mixed' && Number(amountPaid || 0) > 0 && !isLegacyCurrencyTrip && (
+                {paymentMethod === 'mixed' && !isLegacyCurrencyTrip && (
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div className="max-w-sm"><label className={labelClasses}>{t('trips.cardPaidAmount')}</label><div className="relative"><span aria-hidden="true" className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3 text-xs font-semibold text-slate-500">{displayedCurrency}</span><input type="number" step="0.01" min={0} dir="ltr" placeholder={t('trips.amountPlaceholder')} {...register('card_paid_amount', { valueAsNumber: true })} className={cn(baseInputClasses, 'h-10 rounded-lg py-2 ps-11 tabular-nums', errors.card_paid_amount && errorInputClasses)} /></div></div>
-                    <div className="max-w-sm"><label className={labelClasses}>{t('trips.cashPaidAmount')}</label><div className="relative"><span aria-hidden="true" className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3 text-xs font-semibold text-slate-500">{displayedCurrency}</span><input type="number" step="0.01" min={0} dir="ltr" placeholder={t('trips.amountPlaceholder')} {...register('cash_paid_amount', { valueAsNumber: true })} className={cn(baseInputClasses, 'h-10 rounded-lg py-2 ps-11 tabular-nums', errors.cash_paid_amount && errorInputClasses)} /></div>{(errors.card_paid_amount || errors.cash_paid_amount) && <p className="mt-1 text-xs text-rose-500">{translateValidationMessage(errors.cash_paid_amount?.message || errors.card_paid_amount?.message) || t('trips.validation.mixedPaymentTotal')}</p>}</div>
+                    <div className="max-w-sm"><label className={labelClasses}>{t('trips.card.confirmedVisaPayments')}</label><div className="relative"><span aria-hidden="true" className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3 text-xs font-semibold text-slate-500">{displayedCurrency}</span><input type="number" value={initialVisaConfirmed} readOnly dir="ltr" className={cn(baseInputClasses, travelNumberInputClass, 'h-10 cursor-not-allowed rounded-lg bg-slate-100 py-2 ps-11 tabular-nums dark:bg-slate-900/50')} /></div></div>
+                    <div className="max-w-sm"><label className={labelClasses}>{t('trips.cashPaidAmount')}</label><div className="relative"><span aria-hidden="true" className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3 text-xs font-semibold text-slate-500">{displayedCurrency}</span><input type="number" step="0.01" min={0} dir="ltr" placeholder={t('trips.amountPlaceholder')} {...register('cash_paid_amount', { valueAsNumber: true })} className={cn(baseInputClasses, travelNumberInputClass, 'h-10 rounded-lg py-2 ps-11 tabular-nums', errors.cash_paid_amount && errorInputClasses)} /></div>{errors.cash_paid_amount && <p className="mt-1 text-xs text-rose-500">{translateValidationMessage(errors.cash_paid_amount.message)}</p>}</div>
                   </div>
                 )}
 

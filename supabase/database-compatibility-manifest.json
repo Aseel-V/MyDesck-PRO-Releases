@@ -1,8 +1,14 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "version": "1.0.0",
-  "expected_migration_version": "20260721120000",
+  "expected_migration_version": "20260729130000",
   "rpcs": [
+    {
+      "name": "get_travel_payment_contract_version",
+      "arguments": [],
+      "return_type": "integer",
+      "grants": ["authenticated"]
+    },
     {
       "name": "save_trip_transaction",
       "arguments": [
@@ -33,6 +39,42 @@
       "name": "trip_encrypt_travelers",
       "arguments": [
         { "name": "input_travelers", "type": "jsonb" }
+      ],
+      "return_type": "jsonb",
+      "grants": ["authenticated"]
+    },
+    {
+      "name": "get_travel_analytics_summary",
+      "arguments": [
+        { "name": "p_year", "type": "text" },
+        { "name": "p_month", "type": "integer" },
+        { "name": "p_trip_status", "type": "text" },
+        { "name": "p_payment_status", "type": "text" },
+        { "name": "p_destination", "type": "text" },
+        { "name": "p_start_date", "type": "date" },
+        { "name": "p_end_date", "type": "date" }
+      ],
+      "return_type": "jsonb",
+      "grants": ["authenticated"]
+    },
+    {
+      "name": "get_owned_trip_payment_summary",
+      "arguments": [
+        { "name": "p_trip_id", "type": "uuid" }
+      ],
+      "return_type": "jsonb",
+      "grants": ["authenticated"]
+    },
+    {
+      "name": "get_travel_payment_analytics",
+      "arguments": [
+        { "name": "p_year", "type": "text" },
+        { "name": "p_month", "type": "integer" },
+        { "name": "p_trip_status", "type": "text" },
+        { "name": "p_payment_status", "type": "text" },
+        { "name": "p_destination", "type": "text" },
+        { "name": "p_start_date", "type": "date" },
+        { "name": "p_end_date", "type": "date" }
       ],
       "return_type": "jsonb",
       "grants": ["authenticated"]

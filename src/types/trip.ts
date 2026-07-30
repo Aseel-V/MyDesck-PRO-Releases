@@ -28,10 +28,31 @@ export interface Attachment {
 }
 
 export interface TripPaymentPlanSummary {
-  plan_id: string;
+  plan_id: string | null;
   source: 'native' | 'legacy';
+  payment_source?: 'native' | 'legacy_fallback';
+  reconciliation_state?: 'aligned' | 'legacy_fallback' | 'legacy_mismatch' | 'ledger_mismatch' | 'allocation_mismatch';
   payment_method: 'card' | 'cash' | 'mixed';
   currency: string;
+  sale_total_minor?: number;
+  cash_confirmed_minor?: number;
+  cash_remaining_minor?: number;
+  visa_schedule_total_minor?: number;
+  visa_confirmed_minor?: number;
+  visa_scheduled_through_today_minor?: number;
+  visa_overdue_unconfirmed_minor?: number;
+  visa_future_scheduled_minor?: number;
+  confirmed_total_minor?: number;
+  total_unpaid_minor?: number;
+  currently_due_unconfirmed_minor?: number;
+  confirmed_installments?: number;
+  partial_installments?: number;
+  next_installment_due_date?: string | null;
+  next_installment_expected_minor?: number | null;
+  next_installment_confirmed_minor?: number | null;
+  last_confirmed_visa_at?: string | null;
+  last_confirmed_visa_minor?: number | null;
+  derived_payment_status?: 'paid' | 'partial' | 'unpaid';
   card_total_minor: number;
   cash_total_minor: number;
   cash_paid_minor: number;
@@ -98,7 +119,7 @@ export interface Trip {
   payments: Payment[];
   payment_date?: string; // One-off payment date
   payment_status: 'paid' | 'partial' | 'unpaid';
-  amount_paid: number; // Calculated sum of payments
+  amount_paid: number; // Compatibility mirror of total confirmed receipts
   amount_due: number;
   payment_method?: 'card' | 'cash' | 'mixed' | null;
   card_paid_amount?: number | null;

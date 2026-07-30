@@ -2066,6 +2066,10 @@ export interface Database {
     };
 
     Functions: {
+      get_travel_payment_contract_version: {
+        Args: Record<PropertyKey, never>;
+        Returns: number;
+      };
       save_trip_transaction: {
         Args: {
           p_trip_data: Json;
@@ -2194,6 +2198,34 @@ export interface Database {
       get_trip_dashboard_items: {
         Args: {
           p_year: string;
+        };
+        Returns: Json;
+      };
+      get_owned_trip_payment_summary: {
+        Args: { p_trip_id: string };
+        Returns: Json;
+      };
+      get_travel_analytics_summary: {
+        Args: {
+          p_year?: string | null;
+          p_month?: number | null;
+          p_trip_status?: string | null;
+          p_payment_status?: string | null;
+          p_destination?: string | null;
+          p_start_date?: string | null;
+          p_end_date?: string | null;
+        };
+        Returns: Json;
+      };
+      get_travel_payment_analytics: {
+        Args: {
+          p_year?: string | null;
+          p_month?: number | null;
+          p_trip_status?: string | null;
+          p_payment_status?: string | null;
+          p_destination?: string | null;
+          p_start_date?: string | null;
+          p_end_date?: string | null;
         };
         Returns: Json;
       };

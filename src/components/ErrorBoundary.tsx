@@ -2,162 +2,130 @@ import { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 interface Props {
-    children: ReactNode;
+  children: ReactNode;
 }
 
 interface State {
-    hasError: boolean;
-    error: Error | null;
-    isAuthError: boolean;
-    hasCleared: boolean;
+  hasError: boolean;
+  error: Error | null;
+  isAuthError: boolean;
+  hasCleared: boolean;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
-    public state: State = {
-        hasError: false,
-        error: null,
-        isAuthError: false,
-        hasCleared: false,
-    };
+  public state: State = {
+    hasError: false,
+    error: null,
+    isAuthError: false,
+    hasCleared: false,
+  };
 
-    private static hasSupabaseData(): boolean {
-        return Object.keys(localStorage).some(key => 
-            key.startsWith('sb-') || key.startsWith('supabase.')
+  private static isAuthRelatedError(error: Error | null): boolean {
+    if (!error) return false;
+    const message = error.message?.toLowerCase() || '';
+
+    // Verified auth/JWT errors ONLY
+    return (
+      message.includes('refresh_token_not_found') ||
+      message.includes('invalid refresh token') ||
+      message.includes('jwt expired') ||
+      message.includes('jwt claims') ||
+      (message.includes('auth') && message.includes('session_not_found')) ||
+      message.includes('pgrst301')
+    );
+  }
+
+  public static getDerivedStateFromError(error: Error): Partial<State> {
+    const isAuthError = ErrorBoundary.isAuthRelatedError(error);
+    return { hasError: true, error, isAuthError };
+  }
+
+  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('[ErrorBoundary] React render error caught:', error, errorInfo);
+
+    // Only auto-recover if verified auth/JWT error
+    if (this.state.isAuthError && !this.state.hasCleared) {
+      this.autoRecoverFromAuthError();
+    }
+  }
+
+  private clearAuthStorage = () => {
+    console.warn('[ErrorBoundary] Clearing auth storage for verified session error...');
+    Object.keys(localStorage).forEach((key) => {
+      if (
+        key.startsWith('sb-') ||
+        key.startsWith('supabase.') ||
+        key === 'app_business_profile' ||
+        key === 'app_user_profile'
+      ) {
+        localStorage.removeItem(key);
+      }
+    });
+    this.setState({ hasCleared: true });
+  };
+
+  private autoRecoverFromAuthError = () => {
+    console.warn('[ErrorBoundary] Auto-recovering from verified auth failure...');
+    this.clearAuthStorage();
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 1500);
+  };
+
+  private handleReload = () => {
+    window.location.reload();
+  };
+
+  private handleResetState = () => {
+    this.setState({ hasError: false, error: null, isAuthError: false, hasCleared: false });
+  };
+
+  public render() {
+    if (this.state.hasError) {
+      if (this.state.isAuthError) {
+        return (
+          <div className="flex min-h-[400px] flex-col items-center justify-center p-6 text-center">
+            <AlertTriangle className="h-12 w-12 text-amber-500" />
+            <h2 className="mt-4 text-lg font-bold text-slate-900 dark:text-slate-100">
+              Session Expired
+            </h2>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+              Your session has expired. Redirecting to sign-in...
+            </p>
+          </div>
         );
+      }
+
+      return (
+        <div className="flex min-h-[350px] flex-col items-center justify-center rounded-2xl border border-rose-200 bg-rose-50/50 p-6 text-center dark:border-rose-900/50 dark:bg-rose-950/20">
+          <AlertTriangle className="h-10 w-10 text-rose-500" />
+          <h2 className="mt-3 text-base font-bold text-rose-900 dark:text-rose-200">
+            Component Error
+          </h2>
+          <p className="mt-1 max-w-md text-xs text-rose-700 dark:text-rose-300">
+            A temporary display error occurred in this view. Your data is safe.
+          </p>
+          <div className="mt-4 flex gap-3">
+            <button
+              type="button"
+              onClick={this.handleResetState}
+              className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-xs font-bold text-white hover:bg-rose-700"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Try Again
+            </button>
+            <button
+              type="button"
+              onClick={this.handleReload}
+              className="inline-flex items-center gap-2 rounded-xl border border-rose-300 bg-white px-4 py-2 text-xs font-bold text-rose-800 hover:bg-rose-100 dark:border-rose-800 dark:bg-slate-900 dark:text-rose-200"
+            >
+              Reload Page
+            </button>
+          </div>
+        </div>
+      );
     }
 
-    private static isAuthRelatedError(error: Error | null): boolean {
-        if (!error) return false;
-        const message = error.message?.toLowerCase() || '';
-        
-        // Direct auth errors
-        const isDirectAuthError = (
-            message.includes('refresh token') ||
-            message.includes('invalid token') ||
-            message.includes('session') ||
-            message.includes('auth') ||
-            message.includes('not found')
-        );
-        
-        // React error #31: "Objects are not valid as React children"
-        // This often happens when corrupted auth data causes render issues
-        const isReactRenderError = (
-            message.includes('objects are not valid') ||
-            message.includes('minified react error #31') ||
-            message.includes('object with keys')
-        );
-        
-        // If it's a React render error AND we have Supabase data, treat it as auth-related
-        // because corrupted session data is often the cause
-        if (isReactRenderError && ErrorBoundary.hasSupabaseData()) {
-            console.warn('[ErrorBoundary] React render error detected with Supabase data present - treating as auth error');
-            return true;
-        }
-        
-        return isDirectAuthError;
-    }
-
-    public static getDerivedStateFromError(error: Error): Partial<State> {
-        const isAuthError = ErrorBoundary.isAuthRelatedError(error);
-        return { hasError: true, error, isAuthError };
-    }
-
-    public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-        console.error('Uncaught error:', error, errorInfo);
-        
-        // If it's an auth error OR we have Supabase data and app crashed, auto-recover
-        const shouldAutoRecover = ErrorBoundary.isAuthRelatedError(error) || ErrorBoundary.hasSupabaseData();
-        
-        if (shouldAutoRecover && !this.state.hasCleared) {
-            this.autoRecoverFromAuthError();
-        }
-    }
-
-    private clearAuthStorage = () => {
-        console.warn('[ErrorBoundary] Clearing auth storage to recover from crash...');
-        
-        // Clear all Supabase-related keys from localStorage
-        Object.keys(localStorage).forEach(key => {
-            if (
-                key.startsWith('sb-') ||
-                key.startsWith('supabase.') ||
-                key === 'app_business_profile' ||
-                key === 'app_user_profile'
-            ) {
-                localStorage.removeItem(key);
-            }
-        });
-        
-        this.setState({ hasCleared: true });
-    };
-
-    private autoRecoverFromAuthError = () => {
-        console.warn('[ErrorBoundary] Auto-recovering from auth error...');
-        this.clearAuthStorage();
-        
-        // Auto-redirect after a brief delay to show the user what's happening
-        setTimeout(() => {
-            window.location.href = '/';
-        }, 1500);
-    };
-
-    private handleReload = () => {
-        // Ensure storage is cleared before reload
-        if (this.state.isAuthError && !this.state.hasCleared) {
-            this.clearAuthStorage();
-        }
-        window.location.reload();
-    };
-
-    public render() {
-        if (this.state.hasError) {
-            const { isAuthError } = this.state;
-            
-            return (
-                <div className="min-h-screen flex items-center justify-center bg-slate-950 p-4">
-                    <div className="glass-panel max-w-md w-full bg-slate-900/90 border border-rose-500/30 rounded-2xl p-8 text-center shadow-[0_0_50px_rgba(225,29,72,0.2)]">
-                        <div className="inline-flex p-4 rounded-full bg-rose-500/10 border border-rose-500/20 mb-6">
-                            <AlertTriangle className="w-8 h-8 text-rose-400" />
-                        </div>
-
-                        <h1 className="text-2xl font-bold text-slate-50 mb-2">
-                            {isAuthError ? 'Session Expired' : 'Something went wrong'}
-                        </h1>
-
-                        <p className="text-slate-400 mb-6 text-sm leading-relaxed">
-                            {isAuthError 
-                                ? 'Recovering your session... You\'ll be redirected to sign in shortly.'
-                                : 'We encountered an unexpected error. Please try refreshing the page or contact support if the problem persists.'
-                            }
-                        </p>
-
-                        {isAuthError && (
-                            <div className="flex justify-center mb-6">
-                                <RefreshCw className="w-6 h-6 text-cyan-400 animate-spin" />
-                            </div>
-                        )}
-
-                        {!isAuthError && (
-                            <>
-                                <div className="bg-slate-950/50 rounded-lg p-4 mb-6 text-left overflow-auto max-h-32 border border-slate-800">
-                                    <p className="text-xs font-mono text-rose-300 break-all">
-                                        {this.state.error?.message}
-                                    </p>
-                                </div>
-                                <button
-                                    onClick={this.handleReload}
-                                    className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-slate-50 text-slate-950 font-semibold hover:bg-slate-200 transition-colors"
-                                >
-                                    <RefreshCw className="w-4 h-4" />
-                                    Reload Application
-                                </button>
-                            </>
-                        )}
-                    </div>
-                </div>
-            );
-        }
-
-        return this.props.children;
-    }
+    return this.props.children;
+  }
 }

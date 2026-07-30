@@ -3,6 +3,7 @@ import { CalendarClock, CreditCard } from 'lucide-react';
 import { buildInstallmentSchedule, fromMinorUnits, paymentMethodIncludesInstallments, toMinorUnits, validatePaymentSplit } from '../../lib/tripInstallments';
 import type { TripPaymentPlanDraft } from '../../types/trip';
 import { cn } from '../../lib/utils';
+import { travelNumberInputClass } from './tripFormStyles';
 
 interface Props {
   method: 'card' | 'cash' | 'mixed' | null | undefined;
@@ -36,7 +37,7 @@ export default function TripInstallmentPlanFields({ method, salePrice, amountPai
   const finalItem = schedule[schedule.length - 1];
   const confirmedCash = Math.max(0, method === 'mixed' ? cashPaid : amountPaid);
   const remainingCash = Math.max(0, Number(plan.cash_total) - confirmedCash);
-  const inputClass = 'mt-1 h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-400';
+  const inputClass = cn('mt-1 h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-400', travelNumberInputClass);
   const errorClass = 'border-rose-500 focus:ring-rose-500';
 
   return <section className="space-y-4 border-s-2 border-cyan-400 bg-slate-950/70 p-4" dir={direction} aria-labelledby="installment-plan-heading">

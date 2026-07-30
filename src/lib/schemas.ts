@@ -1,18 +1,20 @@
 import { z } from 'zod';
-import { buildInstallmentSchedule, toMinorUnits, validatePaymentSplit } from './tripInstallments';
-
-const nonNegativeMoney = z.preprocess(
-    (value) => value === '' || value === null || value === undefined || Number.isNaN(Number(value)) ? 0 : Number(value),
-    z.number().min(0)
-);
+import { buildInstallmentSchedule, requiresVisaInstallmentSchedule, toMinorUnits, validatePaymentSplit } from './tripInstallments';
+import { normalizeIsraeliPhoneNumber } from './phoneNumbers';
 
 const paymentPlanSchema = z.object({
     plan_id: z.string().uuid().nullable().optional(),
-    card_total: nonNegativeMoney,
-    cash_total: nonNegativeMoney,
+    card_total: z.preprocess(
+        (value) => value === '' || value === null || value === undefined || Number.isNaN(Number(value)) ? 0 : Number(value),
+        z.number().finite()
+    ),
+    cash_total: z.preprocess(
+        (value) => value === '' || value === null || value === undefined || Number.isNaN(Number(value)) ? 0 : Number(value),
+        z.number().finite()
+    ),
     installment_count: z.preprocess(
-        (value) => value === '' || value === null || value === undefined || Number.isNaN(Number(value)) ? 1 : Number(value),
-        z.number().int().min(1, 'Installment count must be at least 1').max(120)
+        (value) => value === '' || value === null || value === undefined || Number.isNaN(Number(value)) ? 0 : Number(value),
+        z.number().finite()
     ),
     first_installment_date: z.string().default(''),
 });
@@ -20,7 +22,11 @@ const paymentPlanSchema = z.object({
 const tripBaseSchema = z.object({
     destination: z.string().min(1, 'Destination is required'),
     client_name: z.string().min(1, 'Client name is required'),
-    client_phone: z.string().optional(),
+    client_phone: z.string().optional().superRefine((value, context) => {
+        if (value?.trim() && !normalizeIsraeliPhoneNumber(value)) {
+            context.addIssue({ code: z.ZodIssueCode.custom, message: 'Invalid phone number' });
+        }
+    }).transform((value) => value?.trim() ? normalizeIsraeliPhoneNumber(value) ?? value.trim() : undefined),
 
     travelers: z.array(z.object({
         full_name: z.string().optional(),
@@ -122,18 +128,18 @@ export function createTripSchema({ allowMissingLegacyHotel = false } = {}) {
 }, {
     message: 'Hotel name is required',
     path: ['hotel_name'],
-}).refine((data) => {
-    if (data.payment_method !== 'mixed') return true;
-    return Math.abs(((data.card_paid_amount || 0) + (data.cash_paid_amount || 0)) - data.amount_paid) < 0.01;
-}, {
-    message: 'Card and cash amounts must equal the paid amount',
-    path: ['card_paid_amount'],
 }).superRefine((data, context) => {
-    if (data.payment_method !== 'card' && data.payment_method !== 'mixed') return;
+    if (data.payment_method === 'cash' || !data.payment_method) return;
     const plan = data.payment_plan;
     if (!plan || plan.card_total <= 0) {
         context.addIssue({ code: z.ZodIssueCode.custom, message: 'Card total must be greater than 0', path: ['payment_plan', 'card_total'] });
         return;
+    }
+    const requiresVisaSchedule = requiresVisaInstallmentSchedule(data.payment_method, toMinorUnits(plan.card_total));
+    if (requiresVisaSchedule && (!Number.isInteger(plan.installment_count) || plan.installment_count < 1)) {
+        context.addIssue({ code: z.ZodIssueCode.custom, message: 'Installment count must be at least 1', path: ['payment_plan', 'installment_count'] });
+    } else if (requiresVisaSchedule && plan.installment_count > 120) {
+        context.addIssue({ code: z.ZodIssueCode.custom, message: 'Installment schedule is invalid', path: ['payment_plan', 'installment_count'] });
     }
     if (!plan.first_installment_date) {
         context.addIssue({ code: z.ZodIssueCode.custom, message: 'First installment date is required', path: ['payment_plan', 'first_installment_date'] });
@@ -147,7 +153,7 @@ export function createTripSchema({ allowMissingLegacyHotel = false } = {}) {
     if (data.payment_method === 'mixed' && (data.cash_paid_amount || 0) > plan.cash_total) {
         context.addIssue({ code: z.ZodIssueCode.custom, message: 'Confirmed cash cannot exceed the cash total', path: ['cash_paid_amount'] });
     }
-    if (!plan.first_installment_date) return;
+    if (!requiresVisaSchedule || !plan.first_installment_date || !Number.isInteger(plan.installment_count) || plan.installment_count < 1 || plan.installment_count > 120) return;
     try {
         const totalMinor = toMinorUnits(plan.card_total);
         const schedule = buildInstallmentSchedule(totalMinor, plan.installment_count, plan.first_installment_date);

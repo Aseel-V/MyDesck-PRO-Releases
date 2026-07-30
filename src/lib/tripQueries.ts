@@ -3,6 +3,7 @@ import type { Trip } from '../types/trip';
 import { recordRpcFallback, recordRpcSuccess } from './rpcAvailability';
 import { calculateTripFinancials } from './tripFinancials';
 import { getSafeErrorCode } from './safeError';
+import { fromPaymentMinor, getCanonicalTripPayment } from './tripPaymentSummary';
 
 export const TRIPS_PAGE_SIZE = 24;
 
@@ -40,6 +41,13 @@ function getPaymentContractSnapshot(value: Partial<Trip> | null | undefined): Pa
     scheduled_minor_to_date: summary?.scheduled_minor_to_date ?? null,
     remaining_scheduled_minor: summary?.remaining_scheduled_minor ?? null,
     combined_remaining_minor: summary?.combined_remaining_minor ?? null,
+    confirmed_total_minor: summary?.confirmed_total_minor ?? null,
+    total_unpaid_minor: summary?.total_unpaid_minor ?? null,
+    cash_confirmed_minor: summary?.cash_confirmed_minor ?? null,
+    visa_confirmed_minor: summary?.visa_confirmed_minor ?? null,
+    visa_overdue_unconfirmed_minor: summary?.visa_overdue_unconfirmed_minor ?? null,
+    payment_source: summary?.payment_source ?? null,
+    reconciliation_state: summary?.reconciliation_state ?? null,
     authoritative_payment_status: summary?.authoritative_payment_status ?? null,
   };
 }
@@ -325,11 +333,12 @@ async function fetchTripPageFallback(input: TripPageInput): Promise<TripPageResu
   for (const trip of items.filter((item) => item.status !== 'cancelled' && item.status !== 'archived')) {
     const currency = trip.currency || 'ILS';
     const financials = calculateTripFinancials(trip);
+    const payment = getCanonicalTripPayment(trip);
     const current = summaries.get(currency) || { currency, trip_count: 0, revenue: 0, profit: 0, amount_due: 0 };
     current.trip_count += 1;
     current.revenue += financials.salePrice;
     current.profit += financials.profit;
-    current.amount_due += financials.amountDue;
+    current.amount_due += fromPaymentMinor(payment.totalUnpaidMinor);
     summaries.set(currency, current);
   }
 

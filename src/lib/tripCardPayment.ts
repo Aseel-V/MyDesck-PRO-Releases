@@ -1,24 +1,38 @@
 import type { Trip, TripPaymentPlanSummary } from '../types/trip';
-import { getEffectivePaymentStatus } from './tripStatus';
+import { getCanonicalTripPayment } from './tripPaymentSummary';
 
 export interface TripCardPaymentState {
   method: 'card' | 'cash' | 'mixed' | 'legacy';
   hasVisaSchedule: boolean;
   visaProgress: number;
+  visaCollectionProgress: number;
+  collectionProgress: number;
+  visaInstallmentProgress: number;
   cashProgress: number;
   processedInstallments: number;
   installmentCount: number;
+  partialInstallments: number;
   scheduledMinor: number;
+  visaScheduleTotalMinor: number;
   remainingVisaMinor: number;
   confirmedCashMinor: number;
+  confirmedVisaMinor: number;
+  confirmedTotalMinor: number;
+  overdueVisaMinor: number;
+  currentlyDueUnconfirmedMinor: number;
   remainingCashMinor: number;
   combinedRemainingMinor: number;
   nextInstallmentMinor: number | null;
   nextInstallmentDate: string | null;
   finalInstallmentDate: string | null;
+  lastConfirmedVisaAt: string | null;
+  lastConfirmedVisaMinor: number | null;
   authoritativePaymentStatus: Trip['payment_status'];
+  isFullyPaid: boolean;
+  hasReconciliationIssue: boolean;
   statusChip: { key: string; values?: Record<string, number> } | null;
   attention: { key: string; values?: Record<string, number | string> } | null;
+  messageKey: 'reconciliationRequired' | 'fullyPaid' | 'cashReceivedVisaScheduled' | 'visaDueUnconfirmed' | 'visaScheduleOnTrack' | null;
 }
 
 function differenceInDays(from: string, to: string): number {
@@ -31,48 +45,88 @@ function clampPercent(value: number): number {
 
 export function getTripCardPaymentState(trip: Pick<Trip,
   'payment_method' | 'payment_status' | 'sale_price' | 'amount_paid' | 'amount_due' | 'start_date' | 'end_date' |
-  'status' | 'service_type' | 'hotel_name' | 'payment_plan_summary'
+  'status' | 'service_type' | 'hotel_name' | 'payment_plan_summary' | 'cash_paid_amount' | 'card_paid_amount' | 'currency'
 >, today: string): TripCardPaymentState {
   const summary: TripPaymentPlanSummary | null = trip.payment_plan_summary ?? null;
+  const canonical = getCanonicalTripPayment(trip);
   const hasVisaSchedule = Boolean(summary && summary.source === 'native' && summary.card_total_minor > 0 && summary.installment_count > 0);
-  const method = summary?.payment_method ?? trip.payment_method ?? 'legacy';
-  const processedInstallments = hasVisaSchedule ? Math.min(summary!.processed_installments, summary!.installment_count) : 0;
-  const installmentCount = hasVisaSchedule ? summary!.installment_count : 0;
-  const remainingVisaMinor = hasVisaSchedule ? Math.max(0, summary!.remaining_scheduled_minor) : 0;
-  const confirmedCashMinor = summary?.cash_paid_minor ?? Math.round((trip.payment_method === 'cash' || trip.payment_method === 'mixed' ? trip.amount_paid : 0) * 100);
-  const cashTotalMinor = summary?.cash_total_minor ?? Math.round((trip.payment_method === 'cash' || trip.payment_method === 'mixed' ? trip.sale_price : 0) * 100);
-  const remainingCashMinor = Math.max(0, cashTotalMinor - confirmedCashMinor);
-  const authoritativePaymentStatus = summary?.authoritative_payment_status ?? getEffectivePaymentStatus(trip);
-  const visaProgress = hasVisaSchedule ? clampPercent(processedInstallments / installmentCount * 100) : 0;
+  const method = canonical.method;
+  const processedInstallments = canonical.confirmedInstallments;
+  const installmentCount = canonical.installmentCount;
+  const partialInstallments = canonical.partialInstallments;
+  const remainingVisaMinor = canonical.visaFutureScheduledMinor;
+  const confirmedCashMinor = canonical.cashConfirmedMinor;
+  const cashTotalMinor = canonical.cashTotalMinor;
+  const remainingCashMinor = canonical.cashRemainingMinor;
+  const authoritativePaymentStatus = canonical.status;
+  const hasReconciliationIssue = ['allocation_mismatch', 'ledger_mismatch', 'legacy_mismatch'].includes(canonical.reconciliationState);
+  const isFullyPaid = !hasReconciliationIssue
+    && canonical.totalUnpaidMinor === 0
+    && canonical.confirmedTotalMinor >= canonical.saleTotalMinor;
+  const visaProgress = canonical.visaScheduleTotalMinor > 0
+    ? clampPercent(canonical.visaScheduledThroughTodayMinor / canonical.visaScheduleTotalMinor * 100)
+    : 0;
+  const visaCollectionProgress = canonical.visaScheduleTotalMinor > 0
+    ? clampPercent(canonical.visaConfirmedMinor / canonical.visaScheduleTotalMinor * 100)
+    : 0;
+  const collectionProgress = canonical.saleTotalMinor > 0
+    ? clampPercent(canonical.confirmedTotalMinor / canonical.saleTotalMinor * 100)
+    : 0;
+  const visaInstallmentProgress = installmentCount > 0
+    ? clampPercent(processedInstallments / installmentCount * 100)
+    : 0;
   const cashProgress = cashTotalMinor > 0 ? clampPercent(confirmedCashMinor / cashTotalMinor * 100) : 0;
   const remainingInstallments = Math.max(0, installmentCount - processedInstallments);
-  const nextDays = summary?.next_installment_date ? differenceInDays(today, summary.next_installment_date) : null;
-  const continuesAfterTrip = Boolean(hasVisaSchedule && summary?.final_installment_date && summary.final_installment_date > trip.end_date && remainingInstallments > 0);
+  const nextDays = canonical.nextInstallmentDueDate ? differenceInDays(today, canonical.nextInstallmentDueDate) : null;
+  const continuesAfterTrip = Boolean(hasVisaSchedule && canonical.finalInstallmentDate && canonical.finalInstallmentDate > trip.end_date && remainingInstallments > 0);
   const tripStartsIn = differenceInDays(today, trip.start_date);
 
   let statusChip: TripCardPaymentState['statusChip'] = null;
-  if (hasVisaSchedule && remainingInstallments === 0) statusChip = { key: 'visaComplete' };
+  if (hasVisaSchedule && canonical.visaFutureScheduledMinor === 0) statusChip = { key: 'allInstallmentDatesElapsed' };
   else if (nextDays === 0) statusChip = { key: 'scheduledToday' };
   else if (nextDays === 1) statusChip = { key: 'paymentTomorrow' };
   else if (nextDays !== null && nextDays > 1 && nextDays <= 7) statusChip = { key: 'paymentInDays', values: { count: nextDays } };
   else if (hasVisaSchedule && remainingInstallments > 0) statusChip = { key: 'installmentsRemaining', values: { count: remainingInstallments } };
   else if (remainingCashMinor > 0) statusChip = { key: 'cashOutstanding' };
 
+  const messageKey: TripCardPaymentState['messageKey'] = hasReconciliationIssue
+    ? 'reconciliationRequired'
+    : isFullyPaid
+      ? 'fullyPaid'
+      : canonical.visaOverdueUnconfirmedMinor > 0
+        ? 'visaDueUnconfirmed'
+        : canonical.cashConfirmedMinor > 0 && canonical.visaFutureScheduledMinor > 0
+          ? 'cashReceivedVisaScheduled'
+          : hasVisaSchedule
+            ? 'visaScheduleOnTrack'
+            : null;
+
   let attention: TripCardPaymentState['attention'] = null;
   if (tripStartsIn >= 0 && tripStartsIn <= 7 && remainingCashMinor > 0) attention = { key: 'cashBeforeTravel' };
-  else if (continuesAfterTrip) attention = { key: 'visaAfterTrip', values: { count: remainingInstallments, date: summary!.final_installment_date! } };
+  else if (continuesAfterTrip) attention = { key: 'visaAfterTrip', values: { count: remainingInstallments, date: canonical.finalInstallmentDate! } };
   else if (trip.service_type !== 'ticket' && !trip.hotel_name?.trim()) attention = { key: 'missingHotel' };
 
   return {
-    method, hasVisaSchedule, visaProgress, cashProgress, processedInstallments, installmentCount,
-    scheduledMinor: summary?.scheduled_minor_to_date ?? 0,
+    method, hasVisaSchedule, visaProgress, visaCollectionProgress, collectionProgress, visaInstallmentProgress,
+    cashProgress, processedInstallments, installmentCount, partialInstallments,
+    scheduledMinor: canonical.visaScheduledThroughTodayMinor,
+    visaScheduleTotalMinor: canonical.visaScheduleTotalMinor,
     remainingVisaMinor, confirmedCashMinor, remainingCashMinor,
-    combinedRemainingMinor: summary?.combined_remaining_minor
-      ?? (hasVisaSchedule || summary ? remainingVisaMinor + remainingCashMinor : Math.round(Math.max(0, trip.amount_due) * 100)),
-    nextInstallmentMinor: summary?.next_installment_minor ?? null,
-    nextInstallmentDate: summary?.next_installment_date ?? null,
-    finalInstallmentDate: summary?.final_installment_date ?? null,
+    confirmedVisaMinor: canonical.visaConfirmedMinor,
+    confirmedTotalMinor: canonical.confirmedTotalMinor,
+    overdueVisaMinor: canonical.visaOverdueUnconfirmedMinor,
+    currentlyDueUnconfirmedMinor: canonical.currentlyDueUnconfirmedMinor,
+    combinedRemainingMinor: canonical.totalUnpaidMinor,
+    nextInstallmentMinor: canonical.nextInstallmentExpectedMinor === null
+      ? null
+      : Math.max(0, canonical.nextInstallmentExpectedMinor - (canonical.nextInstallmentConfirmedMinor ?? 0)),
+    nextInstallmentDate: canonical.nextInstallmentDueDate,
+    finalInstallmentDate: canonical.finalInstallmentDate,
+    lastConfirmedVisaAt: canonical.lastConfirmedVisaAt,
+    lastConfirmedVisaMinor: canonical.lastConfirmedVisaMinor,
     authoritativePaymentStatus,
-    statusChip, attention,
+    isFullyPaid,
+    hasReconciliationIssue,
+    statusChip, attention, messageKey,
   };
 }

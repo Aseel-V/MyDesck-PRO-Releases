@@ -410,6 +410,7 @@ ALTER TABLE public.restaurant_daily_reports ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Managers and Owners can view daily reports" ON public.restaurant_daily_reports
     FOR SELECT
+    TO authenticated
     USING (
         auth.uid() = business_id -- Owner
         OR
@@ -431,6 +432,7 @@ ALTER TABLE public.staff_shifts ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Managers see all shifts, Staff see own" ON public.staff_shifts
     FOR SELECT
+    TO authenticated
     USING (
         -- Linked Report's Business Owner
         EXISTS (

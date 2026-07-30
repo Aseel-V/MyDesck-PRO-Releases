@@ -2,6 +2,7 @@ import type { Trip } from '../types/trip';
 import { escapeCsvCell } from './tripExport';
 import JSZip from 'jszip';
 import { supabase } from './supabase';
+import { fromPaymentMinor, getCanonicalTripPayment } from './tripPaymentSummary';
 
 export interface CurrencyReport {
   currency: string; sales: number; cost: number; profit: number; paid: number; outstanding: number; tripCount: number;
@@ -26,9 +27,12 @@ export async function fetchTravelReports(input: { startDate: string; endDate: st
 export function aggregateSalesByCurrency(trips: Trip[]): CurrencyReport[] {
   const grouped = new Map<string, CurrencyReport>();
   trips.filter((trip) => trip.status !== 'cancelled' && trip.status !== 'archived').forEach((trip) => {
+    const payment = getCanonicalTripPayment(trip);
     const current = grouped.get(trip.currency) || { currency: trip.currency, sales: 0, cost: 0, profit: 0, paid: 0, outstanding: 0, tripCount: 0 };
     current.sales += trip.sale_price; current.cost += trip.wholesale_cost; current.profit += trip.profit;
-    current.paid += trip.amount_paid; current.outstanding += trip.amount_due; current.tripCount += 1;
+    current.paid += fromPaymentMinor(payment.confirmedTotalMinor);
+    current.outstanding += fromPaymentMinor(payment.totalUnpaidMinor);
+    current.tripCount += 1;
     grouped.set(trip.currency, current);
   });
   return [...grouped.values()].sort((a, b) => a.currency.localeCompare(b.currency));
@@ -51,7 +55,7 @@ export function createReportCsv(rows: Array<Record<string, unknown>>, headers: A
 
 function xml(value: unknown): string {
   let text = String(value ?? '');
-  if (/^[=+\-@]/.test(text)) text = `'${text}`;
+  if (/^[=+\-@\t\r]/.test(text)) text = `'${text}`;
   return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 

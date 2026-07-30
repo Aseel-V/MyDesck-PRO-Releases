@@ -8,15 +8,19 @@ const forbiddenPatterns = [
   { pattern: /StagingPass123/i, description: 'Disclosed staging sample password' },
   { pattern: /-----BEGIN\s+(?:RSA\s+)?PRIVATE\s+KEY-----/, description: 'Private RSA/ECC key' },
   { pattern: /postgres(?:ql)?:\/\/[^:]+:[^@]+@/, description: 'Postgres connection string with embedded password' },
+  { pattern: /VITE_WHATSAPP_(?:ACCESS_TOKEN|APP_SECRET|VERIFY_TOKEN|PHONE_NUMBER_ID|BUSINESS_ACCOUNT_ID)/, description: 'WhatsApp server secret exposed through Vite' },
+  { pattern: /EA[A-Za-z0-9]{80,}/, description: 'Possible hardcoded Meta access token' },
 ];
 
 const ignoredDirs = new Set(['node_modules', '.git', 'dist', 'release', '.next', 'build']);
+const ignoredPaths = new Set(['supabase/.temp']);
 
 function scanDirectory(dir) {
   const entries = readdirSync(dir);
   for (const entry of entries) {
     if (ignoredDirs.has(entry)) continue;
     const fullPath = join(dir, entry);
+    if (ignoredPaths.has(fullPath.replaceAll('\\', '/'))) continue;
     const stat = statSync(fullPath);
 
     if (stat.isDirectory()) {

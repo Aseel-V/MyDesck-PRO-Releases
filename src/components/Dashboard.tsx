@@ -337,13 +337,18 @@ export default function Dashboard() {
                 <Analytics
                   trips={trips}
                   onSelectTrip={handleSelectTrip}
-                  onOpenTripsWithFilter={(opts: { month?: string; pendingOnly?: boolean }) => {
+                  onOpenTripsWithFilter={(opts: { month?: string; pendingOnly?: boolean; destination?: string; tripStatus?: string; year?: string; paymentStatus?: string }) => {
                     if (opts) {
                       setTripFilters(prev => ({
                         ...prev,
-                        month: opts.month || prev.month,
-                        paymentStatus: opts.pendingOnly ? 'partial' : prev.paymentStatus
+                        month: opts.month ?? prev.month,
+                        destination: opts.destination ?? prev.destination,
+                        tripStatus: opts.tripStatus ?? prev.tripStatus,
+                        paymentStatus: opts.pendingOnly ? 'partial' : (opts.paymentStatus ?? prev.paymentStatus),
                       }));
+                      if (opts.year) {
+                        setYearFilter(opts.year);
+                      }
                     }
                     setCurrentPage("trips");
                   }}

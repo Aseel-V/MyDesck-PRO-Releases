@@ -1,90 +1,115 @@
-import { useMemo, useState, useEffect, useCallback, Suspense } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { MeasuredChart } from '../travel-ui/MeasuredChart';
-import { Users, UserPlus, Shield, AlertTriangle, FileBarChart, type LucideIcon } from 'lucide-react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
+import {
+  AlertTriangle,
+  FileBarChart,
+  RefreshCw,
+  Lock,
+  DollarSign,
+  Plane,
+  CalendarDays,
+} from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
 import { Trip } from '../../types/trip';
-import { supabase } from '../../lib/supabase';
+import { useTravelAnalyticsSummary } from '../../lib/analyticsQueries';
+import { AnalyticsFilters } from './AnalyticsEngine';
 
 import RestaurantAnalytics from './RestaurantAnalytics';
 import SalesAnalytics from '../market/SalesAnalytics';
-
-// Import Pure Logic
-import {
-  AnalyticsFilters,
-  filterTrips,
-  getPreviousPeriodFilters,
-  calculateStats,
-  getTripDateObj,
-  generateBusinessInsights,
-  calculateDestinationStats,
-  getAttentionRequiredTrips,
-} from './AnalyticsEngine';
 
 // Import Sub-components
 import DashboardFilters from './components/DashboardFilters';
 import KpiCards from './components/KpiCards';
 import PaymentHealth from './components/PaymentHealth';
-import BusinessInsights from './components/BusinessInsights';
 import TrendChart from './components/TrendChart';
 import DestinationPerformance from './components/DestinationPerformance';
-import BreakdownBlocks from './components/BreakdownBlocks';
 import AttentionTable from './components/AttentionTable';
 import YearOverYearComparison from './components/YearOverYearComparison';
+import OutstandingAgingBlock from './components/OutstandingAgingBlock';
 import { TravelReportsPanel } from './TravelReportsPanel';
 import { Button } from '../travel-ui/Button';
 
-interface UserProfile {
-  user_id: string;
-  email: string | null;
-  full_name: string | null;
-  phone_number: string | null;
-  role: 'user' | 'admin';
-  created_at: string;
-  business_name?: string | null;
-  business_type?: string | null;
-  subscription_status?: 'trial' | 'active' | 'expired' | 'suspended' | 'past_due';
-  trial_start_date?: string;
-  is_suspended?: boolean;
-}
-
-interface AdminStats {
-  totalUsers: number;
-  totalAdmins: number;
-  totalRegularUsers: number;
-  newUsersThisMonth: number;
-  averageUsersPerMonth: number;
-}
-
 interface AnalyticsProps {
-  trips: Trip[];
+  trips?: Trip[];
   onSelectTrip?: (trip: Trip) => void;
-  onOpenTripsWithFilter?: (options: { month?: string; pendingOnly?: boolean }) => void;
+  onOpenTripsWithFilter?: (options: {
+    month?: string;
+    pendingOnly?: boolean;
+    destination?: string;
+    tripStatus?: string;
+    year?: string;
+    paymentStatus?: string;
+  }) => void;
 }
 
+type DomainTab = 'financial' | 'travel' | 'payments';
 
-function AnalyticsContent({ trips, onSelectTrip, onOpenTripsWithFilter }: AnalyticsProps) {
+interface DomainFilterState {
+  financial: AnalyticsFilters;
+  travel: AnalyticsFilters;
+  payments: AnalyticsFilters;
+}
+
+function AnalyticsContent({ trips = [], onSelectTrip, onOpenTripsWithFilter }: AnalyticsProps) {
   const { t, language, direction } = useLanguage();
   const { isAdmin } = useAuth();
-  const { convert, currency, rates, isLoading: ratesLoading, isStale } = useCurrency();
-
-  const [userProfiles, setUserProfiles] = useState<UserProfile[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { currency, isLoading: ratesLoading } = useCurrency();
   const [showTravelReports, setShowTravelReports] = useState(false);
+  const [activeTab, setActiveTab] = useState<DomainTab>('financial');
   const currentYear = new Date().getFullYear().toString();
+  const formatStoredCurrency = useCallback((value: number | null | undefined, storedCurrency: string) => (
+    new Intl.NumberFormat(language === 'en' ? 'en-IL' : `${language}-IL-u-nu-latn`, {
+      style: 'currency',
+      currency: storedCurrency,
+      maximumFractionDigits: 2,
+    }).format(value ?? 0)
+  ), [language]);
 
-  const [filters, setFilters] = useState<AnalyticsFilters>({
-    year: currentYear,
-    month: '',
-    tripStatus: '',
-    paymentStatus: '',
-    destination: '',
+  // Domain-isolated persistent filter state
+  const [domainFilters, setDomainFilters] = useState<DomainFilterState>(() => {
+    const defaultFilters = { year: currentYear, month: '', tripStatus: '', paymentStatus: '', destination: '' };
+    try {
+      const saved = sessionStorage.getItem('analytics_domain_filters_v3');
+      if (saved) return JSON.parse(saved);
+    } catch {
+      // fallback
+    }
+    return { financial: defaultFilters, travel: defaultFilters, payments: defaultFilters };
   });
 
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('analytics_domain_filters_v3', JSON.stringify(domainFilters));
+    } catch {
+      // ignore
+    }
+  }, [domainFilters]);
+
+  const activeFilters = domainFilters[activeTab];
+
+  const updateFilter = useCallback(
+    (key: keyof AnalyticsFilters, value: string) => {
+      setDomainFilters((prev) => ({
+        ...prev,
+        [activeTab]: { ...prev[activeTab], [key]: value },
+      }));
+    },
+    [activeTab]
+  );
+
+  const resetFilters = useCallback(() => {
+    const defaultFilters = { year: currentYear, month: '', tripStatus: '', paymentStatus: '', destination: '' };
+    setDomainFilters((prev) => ({
+      ...prev,
+      [activeTab]: defaultFilters,
+    }));
+  }, [activeTab, currentYear]);
+
+  // Server-side RPC summary query for current active domain filters
+  const summaryQuery = useTravelAnalyticsSummary(activeFilters);
+
   const locale = language === 'he' ? 'he-IL-u-nu-latn' : language === 'ar' ? 'ar-IL-u-nu-latn' : 'en-US';
-  const isRtl = direction === 'rtl';
 
   const formatNumber = useCallback(
     (value: number) =>
@@ -105,215 +130,24 @@ function AnalyticsContent({ trips, onSelectTrip, onOpenTripsWithFilter }: Analyt
     [currency, locale]
   );
 
-  // Years derived from any trip containing a valid date
-  const availableYears = useMemo(() => {
-    const years = new Set<string>([currentYear]);
-    trips.forEach((trip) => {
-      const date = getTripDateObj(trip);
-      if (date) years.add(date.getFullYear().toString());
-    });
-    return Array.from(years).sort((a, b) => b.localeCompare(a));
-  }, [trips, currentYear]);
+  const data = summaryQuery.data;
+  const isLoading = summaryQuery.isLoading;
+  const isError = summaryQuery.isError;
+  const canViewFinancials = data?.can_view_financials ?? true;
 
-  useEffect(() => {
-    if (!availableYears.includes(filters.year)) {
-      setFilters((prev) => ({ ...prev, year: availableYears[0] || currentYear }));
-    }
-  }, [availableYears, currentYear, filters.year]);
-
-  // Destinations derived from all trips
-  const availableDestinations = useMemo(() => {
-    const destinations = new Set<string>();
-    trips.forEach((trip) => {
-      if (trip.destination?.trim()) destinations.add(trip.destination.trim());
-    });
-    return Array.from(destinations).sort((a, b) => a.localeCompare(b, language));
-  }, [trips, language]);
-
-  // Filter current period dataset
-  const filteredTrips = useMemo(() => {
-    return filterTrips(trips, filters, currentYear);
-  }, [trips, filters, currentYear]);
-
-  // Filter previous comparison period dataset
-  const prevFilteredTrips = useMemo(() => {
-    const prevFilters = getPreviousPeriodFilters(filters);
-    return filterTrips(trips, prevFilters, currentYear);
-  }, [trips, filters, currentYear]);
-
-  // Calculate stats for current and previous period
-  const currentStats = useMemo(() => {
-    return calculateStats(filteredTrips, currency, rates, convert);
-  }, [filteredTrips, currency, rates, convert]);
-
-  const prevStats = useMemo(() => {
-    return calculateStats(prevFilteredTrips, currency, rates, convert);
-  }, [prevFilteredTrips, currency, rates, convert]);
-
-  // Fetch profiles for platform admin view
-  useEffect(() => {
-    const loadData = async () => {
-      if (!isAdmin) return;
-      setLoading(true);
-      try {
-        const [usersResponse, businessResponse] = await Promise.all([
-          supabase.from('user_profiles').select('*'),
-          supabase
-            .from('business_profiles')
-            .select('user_id, business_name, business_type, subscription_status, trial_start_date, is_suspended'),
-        ]);
-
-        if (usersResponse.error) throw usersResponse.error;
-        if (businessResponse.error) throw businessResponse.error;
-
-        const users = usersResponse.data || [];
-        const businesses = businessResponse.data || [];
-        const businessMap = new Map(businesses.map((business) => [business.user_id, business]));
-
-        setUserProfiles(
-          users.map((user) => {
-            const business = businessMap.get(user.user_id);
-            return {
-              user_id: user.user_id,
-              email: user.email,
-              full_name: user.full_name,
-              phone_number: user.phone_number,
-              role: user.role,
-              created_at: user.created_at,
-              business_name: business?.business_name || null,
-              business_type: business?.business_type || null,
-              subscription_status: business?.subscription_status || 'trial',
-              trial_start_date: business?.trial_start_date || undefined,
-              is_suspended: business?.is_suspended ?? user.is_suspended,
-            };
-          })
-        );
-      } catch (error) {
-        console.error('Error fetching user profiles:', error);
-      } finally {
-        setLoading(false);
+  const handleSelectTripId = useCallback(
+    (tripId: string) => {
+      const found = trips.find((t) => t.id === tripId);
+      if (found && onSelectTrip) {
+        onSelectTrip(found);
+      } else if (onOpenTripsWithFilter) {
+        onOpenTripsWithFilter({});
       }
-    };
-
-    loadData();
-  }, [isAdmin]);
-
-  const getMonthsSinceFirstUser = (profiles: UserProfile[]) => {
-    if (profiles.length === 0) return 1;
-    const firstUser = [...profiles].sort((a, b) => a.created_at.localeCompare(b.created_at))[0];
-    const firstDate = new Date(firstUser.created_at);
-    const now = new Date();
-    const months =
-      (now.getFullYear() - firstDate.getFullYear()) * 12 + (now.getMonth() - firstDate.getMonth());
-    return Math.max(1, months + 1);
-  };
-
-  const adminStats = useMemo<AdminStats>(() => {
-    const totalUsers = userProfiles.length;
-    const totalAdmins = userProfiles.filter((profile) => profile.role === 'admin').length;
-    const totalRegularUsers = userProfiles.filter((profile) => profile.role === 'user').length;
-    const now = new Date();
-    const newUsersThisMonth = userProfiles.filter((profile) => {
-      const createdDate = new Date(profile.created_at);
-      return createdDate.getMonth() === now.getMonth() && createdDate.getFullYear() === now.getFullYear();
-    }).length;
-
-    return {
-      totalUsers,
-      totalAdmins,
-      totalRegularUsers,
-      newUsersThisMonth,
-      averageUsersPerMonth: totalUsers > 0 ? totalUsers / getMonthsSinceFirstUser(userProfiles) : 0,
-    };
-  }, [userProfiles]);
-
-  const adminMonthlyData = useMemo(() => {
-    if (!isAdmin) return [];
-    const monthMap = new Map<string, { month: string; users: number; admins: number; regularUsers: number }>();
-    userProfiles.forEach((profile) => {
-      const date = new Date(profile.created_at);
-      if (Number.isNaN(date.getTime())) return;
-      const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      const existing = monthMap.get(month) || { month, users: 0, admins: 0, regularUsers: 0 };
-      monthMap.set(month, {
-        month,
-        users: existing.users + 1,
-        admins: existing.admins + (profile.role === 'admin' ? 1 : 0),
-        regularUsers: existing.regularUsers + (profile.role === 'user' ? 1 : 0),
-      });
-    });
-    return Array.from(monthMap.values()).sort((a, b) => a.month.localeCompare(b.month));
-  }, [userProfiles, isAdmin]);
-
-  const currencyUnavailable = useMemo(() => {
-    const needsConversion = filteredTrips.some((trip) => (trip.currency || currency) !== currency);
-    return needsConversion && !rates && !ratesLoading;
-  }, [filteredTrips, currency, rates, ratesLoading]);
-
-  const yearComparisonCurrencyUnavailable = useMemo(() => {
-    const needsConversion = [...filteredTrips, ...prevFilteredTrips]
-      .some((trip) => (trip.currency || currency) !== currency);
-    return needsConversion && !rates;
-  }, [currency, filteredTrips, prevFilteredTrips, rates]);
-
-  const updateFilter = (key: keyof AnalyticsFilters, value: string) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const resetFilters = () => {
-    setFilters({
-      year: currentYear,
-      month: '',
-      tripStatus: '',
-      paymentStatus: '',
-      destination: '',
-    });
-  };
-
-  // Compile insights dynamically using pure engine calculations
-  const businessInsights = useMemo(() => {
-    const destStats = calculateDestinationStats(filteredTrips, currency, rates, convert);
-    const attentionItems = getAttentionRequiredTrips(filteredTrips, currency, rates, convert);
-    const upcomingCount = filteredTrips.filter((t) => {
-      const start = getTripDateObj(t);
-      return start && start >= new Date();
-    }).length;
-
-    return generateBusinessInsights(currentStats, prevStats, destStats, attentionItems, upcomingCount);
-  }, [filteredTrips, currentStats, prevStats, currency, rates, convert]);
-
-  const StatCard = ({
-    icon: Icon,
-    label,
-    value,
-    description,
-    accent = 'text-sky-550',
-  }: {
-    icon: LucideIcon;
-    label: string;
-    value: string | number;
-    description: string;
-    accent?: string;
-  }) => (
-    <div className="flex min-h-[140px] flex-col justify-between rounded-2xl border border-slate-100 bg-white p-5 shadow-sm transition hover:shadow-md dark:border-slate-800/40 dark:bg-slate-900/50">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="break-words text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            {label}
-          </p>
-          <p className="mt-3.5 break-words text-2xl font-black leading-tight text-slate-850 dark:text-slate-100 sm:text-3xl">
-            {value}
-          </p>
-        </div>
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-950">
-          <Icon className={`h-5 w-5 ${accent}`} />
-        </div>
-      </div>
-      <p className="mt-4 break-words text-xs text-slate-400 dark:text-slate-550">{description}</p>
-    </div>
+    },
+    [trips, onSelectTrip, onOpenTripsWithFilter]
   );
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex min-h-[420px] items-center justify-center">
         <div className="text-center">
@@ -324,9 +158,27 @@ function AnalyticsContent({ trips, onSelectTrip, onOpenTripsWithFilter }: Analyt
     );
   }
 
+  if (isError) {
+    return (
+      <div className="mx-auto flex min-h-[300px] max-w-md flex-col items-center justify-center text-center p-6 rounded-2xl border border-rose-200 bg-rose-50 dark:border-rose-900/50 dark:bg-rose-950/20">
+        <AlertTriangle className="h-10 w-10 text-rose-500" />
+        <h3 className="mt-3 text-base font-bold text-rose-900 dark:text-rose-200">{t('analytics.travelReports.error')}</h3>
+        <p className="mt-1 text-xs text-rose-700 dark:text-rose-300">{t('analytics.travelReports.error')}</p>
+        <button
+          type="button"
+          onClick={() => void summaryQuery.refetch()}
+          className="mt-4 inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-rose-700"
+        >
+          <RefreshCw className="h-4 w-4" />
+          {t('trips.retry')}
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto w-full max-w-[1600px] space-y-8 animate-fadeIn" dir={direction}>
-      {/* SECTION A: Header & Toolbar */}
+      {/* SECTION A: Header Toolbar & Segmented Domain Controls */}
       <div className="flex flex-col gap-5 border-b border-slate-200 pb-6 dark:border-slate-800">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
@@ -343,147 +195,250 @@ function AnalyticsContent({ trips, onSelectTrip, onOpenTripsWithFilter }: Analyt
 
           {!isAdmin && (
             <div className="flex flex-wrap items-center gap-2 text-xs">
-              <Button variant="secondary" onClick={() => setShowTravelReports(true)}><FileBarChart className="h-4 w-4"/>{t('analytics.travelReports.title')}</Button>
+              <Button variant="secondary" onClick={() => setShowTravelReports(true)}>
+                <FileBarChart className="h-4 w-4" />
+                {t('analytics.travelReports.title')}
+              </Button>
+              <button
+                type="button"
+                onClick={() => void summaryQuery.refetch()}
+                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+                title={t('analytics.refresh')}
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${summaryQuery.isFetching ? 'animate-spin' : ''}`} />
+                <span>{t('analytics.refresh')}</span>
+              </button>
               <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 font-semibold text-sky-800 dark:border-sky-900 dark:bg-sky-950/30 dark:text-sky-200">
                 {t('analytics.convertedTo', { currency })}
                 {ratesLoading && <span className="ms-1 animate-pulse">...</span>}
               </span>
-              {isStale && (
-                <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 font-semibold text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
-                  {t('analytics.staleRatesWarning')}
-                </span>
-              )}
             </div>
           )}
         </div>
 
-        {/* Filters Toolbar */}
+        {/* Three Explicit Domain Tabs */}
+        {!isAdmin && (
+          <div className="flex flex-wrap items-center gap-2 rounded-2xl bg-slate-100 p-1.5 dark:bg-slate-900">
+            <button
+              type="button"
+              onClick={() => setActiveTab('financial')}
+              className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
+                activeTab === 'financial'
+                  ? 'bg-white text-sky-700 shadow-sm dark:bg-slate-800 dark:text-sky-300'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
+              }`}
+            >
+              <DollarSign className="h-4 w-4 text-emerald-500" />
+              <span>{t('dashboard.financialSnapshot')}</span>
+              <span className="text-[10px] font-normal text-slate-400">({t('dashboard.subtitles.paymentDate')})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('travel')}
+              className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
+                activeTab === 'travel'
+                  ? 'bg-white text-sky-700 shadow-sm dark:bg-slate-800 dark:text-sky-300'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
+              }`}
+            >
+              <Plane className="h-4 w-4 text-sky-500" />
+              <span>{t('dashboard.travelOperations')}</span>
+              <span className="text-[10px] font-normal text-slate-400">({t('dashboard.subtitles.startDate')})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('payments')}
+              className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
+                activeTab === 'payments'
+                  ? 'bg-white text-sky-700 shadow-sm dark:bg-slate-800 dark:text-sky-300'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
+              }`}
+            >
+              <CalendarDays className="h-4 w-4 text-violet-500" />
+              <span>{t('dashboard.paymentAttention')}</span>
+              <span className="text-[10px] font-normal text-slate-400">({t('dashboard.subtitles.dueDate')})</span>
+            </button>
+          </div>
+        )}
+
+        {/* Financial Visibility Restricted Notice */}
+        {!canViewFinancials && (
+          <div className="flex items-center gap-3 rounded-xl border border-violet-200 bg-violet-50 p-3.5 text-xs font-semibold text-violet-800 dark:border-violet-900 dark:bg-violet-950/30 dark:text-violet-200">
+            <Lock className="h-4 w-4 shrink-0 text-violet-600" />
+            <span>
+              {t('analytics.financialAccessRestricted')}
+            </span>
+          </div>
+        )}
+
+        {/* Domain-specific Filters Toolbar */}
         {!isAdmin && (
           <DashboardFilters
-            filters={filters}
+            filters={activeFilters}
             onFilterChange={updateFilter}
             onReset={resetFilters}
-            availableYears={availableYears}
-            availableDestinations={availableDestinations}
+            availableYears={data?.available_years || [currentYear]}
+            availableDestinations={data?.available_destinations || []}
             currentYear={currentYear}
           />
         )}
       </div>
 
-      {/* Warning on unavailable rates */}
-      {!isAdmin && currencyUnavailable && (
-        <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
-          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
-          <div>
-            <p className="font-bold text-sm">{t('analytics.currencyUnavailableTitle')}</p>
-            <p className="text-xs mt-1 leading-relaxed">{t('analytics.currencyUnavailableDescription', { currency })}</p>
-          </div>
-        </div>
+      {showTravelReports && (
+        <TravelReportsPanel
+          year={activeFilters.year}
+          destination={activeFilters.destination || undefined}
+          currency={currency || undefined}
+          onClose={() => setShowTravelReports(false)}
+        />
       )}
-      {showTravelReports && <TravelReportsPanel year={filters.year} destination={filters.destination || undefined} currency={currency || undefined} onClose={() => setShowTravelReports(false)} />}
 
-      {/* Platform Admin view OR Tourism business view */}
-      {isAdmin ? (
+      {data && (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard icon={Users} label={t('analytics.totalUsers')} value={formatNumber(adminStats.totalUsers)} description={t('analytics.allRegisteredUsers')} />
-            <StatCard icon={UserPlus} label={t('analytics.newUsers')} value={formatNumber(adminStats.newUsersThisMonth)} description={t('analytics.thisMonth')} accent="text-emerald-500" />
-            <StatCard icon={Shield} label={t('analytics.admins')} value={formatNumber(adminStats.totalAdmins)} description={t('analytics.administrators')} accent="text-violet-500" />
-            <StatCard icon={Users} label={t('analytics.regularUsers')} value={formatNumber(adminStats.totalRegularUsers)} description={t('analytics.standardAccounts')} accent="text-amber-500" />
-          </div>
-
-          <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm dark:border-slate-800/40 dark:bg-slate-900/50">
-            <h3 className="mb-4 text-lg font-bold text-slate-850 dark:text-slate-100">
-              {t('analytics.userGrowthOverTime')}
-            </h3>
-            {adminMonthlyData.length === 0 ? (
-              <div className="flex h-[320px] items-center justify-center text-center text-slate-400">
-                <p>{t('analytics.noUserRegistrations')}</p>
+          {data.financial_currency_mode === 'grouped_only' && activeTab !== 'travel' && (
+            <section className="border-s-4 border-amber-500 bg-amber-50 p-4 dark:bg-amber-950/20" aria-live="polite">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-700 dark:text-amber-300" />
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-sm font-bold text-amber-950 dark:text-amber-100">{t('analytics.groupedCurrencyTitle')}</h2>
+                  <p className="mt-1 text-xs leading-5 text-amber-800 dark:text-amber-200">{t('analytics.groupedCurrencyNotice')}</p>
+                </div>
               </div>
-            ) : (
-              <MeasuredChart className="h-[320px] min-h-[320px]">
-                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1} initialDimension={{ width: 1, height: 1 }}>
-                  <BarChart data={adminMonthlyData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" className="dark:stroke-slate-800/40" />
-                    <XAxis dataKey="month" stroke="#64748b" tick={{ fill: '#64748b', fontSize: 10 }} reversed={isRtl} />
-                    <YAxis stroke="#64748b" tick={{ fill: '#64748b', fontSize: 10 }} orientation={isRtl ? 'right' : 'left'} />
-                    <Tooltip cursor={{ fill: 'rgba(14,165,233,0.04)' }} />
-                    <Legend wrapperStyle={{ fontSize: 10 }} />
-                    <Bar dataKey="users" fill="#0ea5e9" name={t('analytics.totalUsers')} radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </MeasuredChart>
-            )}
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {/* SECTION B: 8 Main KPI Cards */}
-          <KpiCards
-            currentStats={currentStats}
-            prevStats={prevStats}
-            currency={currency}
-            formatCurrency={formatCurrencyValue}
-            formatNumber={formatNumber}
-          />
+              <div className="mt-4 grid gap-3 lg:grid-cols-2">
+                {data.currency_totals.map((item) => (
+                  <article key={item.currency} className="border border-amber-200 bg-white p-3 dark:border-amber-800 dark:bg-slate-950">
+                    <header className="mb-3 flex items-center justify-between gap-3">
+                      <strong dir="ltr" className="text-sm text-slate-950 dark:text-white">{item.currency}</strong>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">{t('analytics.currencyTripCount', { count: item.trip_count })}</span>
+                    </header>
+                    <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-xs sm:grid-cols-3">
+                      {[
+                        ['salesValue', item.sales],
+                        ['confirmedCash', item.confirmed_cash],
+                        ['confirmedVisa', item.confirmed_visa],
+                        ['confirmedReceived', item.paid],
+                        ['overdueUnconfirmedVisa', item.overdue_unconfirmed_visa],
+                        ['futureScheduledVisa', item.future_scheduled_visa],
+                        ['totalUnpaid', item.outstanding],
+                      ].map(([key, value]) => (
+                        <div key={String(key)}>
+                          <dt className="text-slate-500 dark:text-slate-400">{t(`analytics.${key}`)}</dt>
+                          <dd dir="ltr" className="mt-1 font-bold tabular-nums text-slate-900 dark:text-slate-100">
+                            {formatStoredCurrency(value as number | null | undefined, item.currency)}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
 
-          <YearOverYearComparison
-            selectedYear={filters.year}
-            month={filters.month}
-            currentStats={currentStats}
-            previousStats={prevStats}
-            previousTripCount={prevFilteredTrips.length}
-            conversionUnavailable={yearComparisonCurrencyUnavailable}
-            formatCurrency={formatCurrencyValue}
-          />
+          {/* DOMAIN 1: FINANCIAL PERFORMANCE */}
+          {activeTab === 'financial' && data.financial_currency_mode === 'single' && (
+            <>
+              {/* Financial KPI Cards */}
+              <KpiCards
+                currentStats={data.financial?.current_stats || data.current_stats}
+                prevStats={data.financial?.previous_stats || data.previous_stats}
+                currency={currency}
+                canViewFinancials={canViewFinancials}
+                formatCurrency={formatCurrencyValue}
+                formatNumber={formatNumber}
+                onOpenTripsWithFilter={onOpenTripsWithFilter}
+              />
 
-          {/* SECTION C: Main Revenue & Profit Trend Chart */}
-          <TrendChart
-            filteredTrips={filteredTrips}
-            year={filters.year}
-            month={filters.month}
-            currency={currency}
-            formatCurrency={formatCurrencyValue}
-            rates={rates}
-            convert={convert}
-          />
+              {/* Financial YoY Comparison (by coalesce(payment_date, start_date)) */}
+              <YearOverYearComparison
+                selectedYear={activeFilters.year}
+                month={activeFilters.month}
+                currentStats={data.financial?.current_stats || data.current_stats}
+                previousStats={data.financial?.previous_stats || data.previous_stats}
+                canViewFinancials={canViewFinancials}
+                formatCurrency={formatCurrencyValue}
+              />
 
-          {/* SECTION D: Operational Insights & Payment Health (Side-by-side) */}
-          <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
-            <PaymentHealth
-              filteredTrips={filteredTrips}
-              currentStats={currentStats}
-              currency={currency}
-              formatCurrency={formatCurrencyValue}
-              rates={rates}
-              convert={convert}
-              onOpenTripsWithFilter={onOpenTripsWithFilter}
-            />
+              {/* Financial Revenue & Profit Trend Chart */}
+              <TrendChart
+                trendData={data.financial?.trend || data.monthly_trend || []}
+                year={activeFilters.year}
+                month={activeFilters.month}
+                currency={currency}
+                canViewFinancials={canViewFinancials}
+                formatCurrency={formatCurrencyValue}
+                onOpenTripsWithFilter={onOpenTripsWithFilter}
+              />
 
-            <BusinessInsights insights={businessInsights} />
-          </div>
+              {/* Sales by Destination */}
+              <DestinationPerformance
+                destinationStats={data.financial?.destination_sales || data.destination_stats || []}
+                canViewFinancials={canViewFinancials}
+                currency={currency}
+                formatCurrency={formatCurrencyValue}
+                formatNumber={formatNumber}
+                onOpenTripsWithFilter={onOpenTripsWithFilter}
+              />
+            </>
+          )}
 
-          {/* SECTION E: Destination Performance ranked table & Horizontal Bar Chart */}
-          <DestinationPerformance
-            filteredTrips={filteredTrips}
-            currency={currency}
-            formatCurrency={formatCurrencyValue}
-            formatNumber={formatNumber}
-            rates={rates}
-            convert={convert}
-          />
+          {/* DOMAIN 2: TRAVEL OPERATIONS */}
+          {activeTab === 'travel' && (
+            <>
+              {/* Operational Travel Trend Chart (by start_date) */}
+              <TrendChart
+                trendData={data.travel?.trend || []}
+                year={activeFilters.year}
+                month={activeFilters.month}
+                currency={currency}
+                canViewFinancials={false}
+                formatCurrency={formatCurrencyValue}
+                onOpenTripsWithFilter={onOpenTripsWithFilter}
+              />
 
-          {/* SECTION F: Breakdown Blocks & Actionable Attention required Table */}
-          <BreakdownBlocks filteredTrips={filteredTrips} />
+              {/* Destination Travel Volume (by start_date) */}
+              <DestinationPerformance
+                destinationStats={data.travel?.destination_volume || []}
+                canViewFinancials={false}
+                currency={currency}
+                formatCurrency={formatCurrencyValue}
+                formatNumber={formatNumber}
+                onOpenTripsWithFilter={onOpenTripsWithFilter}
+              />
 
-          <AttentionTable
-            filteredTrips={filteredTrips}
-            currency={currency}
-            formatCurrency={formatCurrencyValue}
-            rates={rates}
-            convert={convert}
-            onSelectTrip={onSelectTrip}
-          />
+              {/* Attention Table */}
+              <AttentionTable
+                attentionItems={data.travel?.attention_items || data.attention_items || []}
+                canViewFinancials={canViewFinancials}
+                currency={currency}
+                formatCurrency={formatCurrencyValue}
+                onSelectTrip={handleSelectTripId}
+              />
+            </>
+          )}
+
+          {/* DOMAIN 3: PAYMENT SCHEDULE & AGING */}
+          {activeTab === 'payments' && data.financial_currency_mode === 'single' && (
+            <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+              <PaymentHealth
+                paymentHealth={data.payments?.summary || data.payment_health || {}}
+                currentStats={data.current_stats}
+                canViewFinancials={canViewFinancials}
+                currency={currency}
+                formatCurrency={formatCurrencyValue}
+                onOpenTripsWithFilter={onOpenTripsWithFilter}
+              />
+
+              <OutstandingAgingBlock
+                aging={data.payments?.aging || data.aging_buckets || { current: 0, overdue_1_30: 0, overdue_31_60: 0, overdue_61_plus: 0, future_scheduled: 0, unscheduled_outstanding: 0 }}
+                canViewFinancials={canViewFinancials}
+                formatCurrency={formatCurrencyValue}
+                onOpenTripsWithFilter={onOpenTripsWithFilter}
+              />
+            </div>
+          )}
         </div>
       )}
     </div>

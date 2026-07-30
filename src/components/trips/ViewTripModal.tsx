@@ -32,7 +32,6 @@ import { ConfirmationModal } from '../ui/ConfirmationModal';
 import { StatusBadge } from '../travel-ui/StatusBadge';
 import { Surface } from '../travel-ui/Surface';
 import {
-  getEffectivePaymentStatus,
   getPaymentStatusDescription,
   getPaymentStatusLabel,
   getTripStatusDescription,
@@ -40,6 +39,7 @@ import {
 } from '../../lib/tripStatus';
 import { getTripDuration } from '../../lib/tripDates';
 import { calculateTripFinancials } from '../../lib/tripFinancials';
+import { fromPaymentMinor, getCanonicalTripPayment } from '../../lib/tripPaymentSummary';
 import { getSafeErrorCode } from '../../lib/safeError';
 import { TripHistoryPanel } from './TripHistoryPanel';
 import { DuplicateTripDialog } from './DuplicateTripDialog';
@@ -98,13 +98,14 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
   };
 
   const financials = calculateTripFinancials(trip);
+  const canonicalPayment = getCanonicalTripPayment(trip);
   const wholesale = financials.wholesaleCost;
   const sale = financials.salePrice;
-  const paid = financials.amountPaid;
+  const paid = fromPaymentMinor(canonicalPayment.confirmedTotalMinor);
   const profitValue = financials.profit;
-  const amountDue = financials.amountDue;
+  const amountDue = fromPaymentMinor(canonicalPayment.totalUnpaidMinor);
   const statusLabel = getTripStatusLabel(trip.status, t);
-  const effectivePaymentStatus = getEffectivePaymentStatus(trip);
+  const effectivePaymentStatus = canonicalPayment.status;
   const paymentStatusLabel = getPaymentStatusLabel(effectivePaymentStatus, t);
   const tripDuration = getTripDuration(trip.start_date, trip.end_date);
   const serviceType = trip.service_type || 'both';
@@ -237,8 +238,12 @@ export default function ViewTripModal({ trip: initialTrip, onClose, onUpdate }: 
                 <div><dt className="text-xs text-slate-500">{t('trips.paymentStatus')}</dt><dd className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{paymentStatusLabel}</dd></div>
                 <div><dt className="text-xs text-slate-500">{t('trips.paymentMethod')}</dt><dd className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{trip.payment_method ? t(`trips.paymentMethods.${trip.payment_method}`) : t('trips.notSpecified')}</dd></div>
                 <div><dt className="text-xs text-slate-500">{t('trips.paymentDate')}</dt><dd className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{trip.payment_date ? formatDate(trip.payment_date) : t('trips.notSpecified')}</dd></div>
-                <div><dt className="text-xs text-slate-500">{t('trips.amountPaid')}</dt><dd className="mt-1 font-semibold text-emerald-600 dark:text-emerald-400" dir="ltr">{format(paid, trip.currency)}</dd></div>
-                <div><dt className="text-xs text-slate-500">{t('trips.amountDue')}</dt><dd className="mt-1 font-semibold text-rose-600 dark:text-rose-400" dir="ltr">{format(amountDue, trip.currency)}</dd></div>
+                <div><dt className="text-xs text-slate-500">{t('trips.card.cashConfirmed')}</dt><dd className="mt-1 font-semibold text-emerald-600 dark:text-emerald-400" dir="ltr">{format(fromPaymentMinor(canonicalPayment.cashConfirmedMinor), trip.currency)}</dd></div>
+                <div><dt className="text-xs text-slate-500">{t('trips.card.confirmedVisaPayments')}</dt><dd className="mt-1 font-semibold text-emerald-600 dark:text-emerald-400" dir="ltr">{format(fromPaymentMinor(canonicalPayment.visaConfirmedMinor), trip.currency)}</dd></div>
+                <div><dt className="text-xs text-slate-500">{t('trips.card.confirmedReceived')}</dt><dd className="mt-1 font-semibold text-emerald-600 dark:text-emerald-400" dir="ltr">{format(paid, trip.currency)}</dd></div>
+                <div><dt className="text-xs text-slate-500">{t('trips.card.overdueUnconfirmed')}</dt><dd className="mt-1 font-semibold text-amber-600 dark:text-amber-400" dir="ltr">{format(fromPaymentMinor(canonicalPayment.visaOverdueUnconfirmedMinor), trip.currency)}</dd></div>
+                <div><dt className="text-xs text-slate-500">{t('trips.card.futureScheduledVisa')}</dt><dd className="mt-1 font-semibold text-slate-900 dark:text-slate-100" dir="ltr">{format(fromPaymentMinor(canonicalPayment.visaFutureScheduledMinor), trip.currency)}</dd></div>
+                <div><dt className="text-xs text-slate-500">{t('trips.card.totalUnpaid')}</dt><dd className="mt-1 font-semibold text-rose-600 dark:text-rose-400" dir="ltr">{format(amountDue, trip.currency)}</dd></div>
               </dl>
               <p className="mt-4 border-t border-slate-200 pt-3 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">{getPaymentStatusDescription(effectivePaymentStatus, t)}</p>
             </div>

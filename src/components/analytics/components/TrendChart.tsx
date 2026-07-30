@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import {
   ComposedChart,
   Bar,
@@ -13,50 +13,27 @@ import {
 import { Calendar } from 'lucide-react';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { MeasuredChart } from '../../travel-ui/MeasuredChart';
-import { Trip } from '../../../types/trip';
-import {
-  getTripDateObj,
-  normalizeMoney,
-  getTripRevenue,
-  getTripCollected,
-  getTripProfit,
-} from '../AnalyticsEngine';
+import { TrendBucket } from '../../../lib/analyticsQueries';
 
 interface TrendChartProps {
-  filteredTrips: Trip[];
+  trendData: TrendBucket[];
   year: string;
   month: string;
   currency: string;
+  canViewFinancials?: boolean;
   formatCurrency: (value: number) => string;
-  rates: Record<string, number> | null;
-  convert: (amt: number, from: string, to: string) => number;
+  onOpenTripsWithFilter?: (options: { month?: string }) => void;
 }
 
 export default function TrendChart({
-  filteredTrips,
-  year,
+  trendData,
   month,
-  currency,
+  canViewFinancials = true,
   formatCurrency,
-  rates,
-  convert,
+  onOpenTripsWithFilter,
 }: TrendChartProps) {
   const { t, direction } = useLanguage();
   const isRtl = direction === 'rtl';
-
-  // Toggle view state:
-  // For year (no month filter): 'monthly' | 'quarterly'
-  // For month: 'daily' | 'monthly'
-  const [viewType, setViewType] = useState<'daily' | 'monthly' | 'quarterly'>('monthly');
-
-  // Reset or adjust viewType if the month filter changes
-  React.useEffect(() => {
-    if (month) {
-      setViewType('daily');
-    } else {
-      setViewType('monthly');
-    }
-  }, [month]);
 
   const monthLabel = React.useCallback((monthIndex: number) => {
     const months = [
@@ -67,100 +44,16 @@ export default function TrendChart({
   }, [t]);
 
   const chartData = useMemo(() => {
-    // 1. Daily View (only if month filter is active)
-    if (month && viewType === 'daily') {
-      const yearNum = Number(year);
-      const monthIndex = Number(month) - 1;
-      const daysInMonth = new Date(yearNum, monthIndex + 1, 0).getDate();
-
-      return Array.from({ length: daysInMonth }).map((_, index) => {
-        const day = index + 1;
-        const dayTrips = filteredTrips.filter((trip) => {
-          const date = getTripDateObj(trip);
-          return date && date.getDate() === day;
-        });
-
-        const revenue = dayTrips.reduce(
-          (sum, trip) => sum + normalizeMoney(getTripRevenue(trip), trip.currency, currency, rates, convert),
-          0
-        );
-        const collected = dayTrips.reduce(
-          (sum, trip) => sum + normalizeMoney(getTripCollected(trip), trip.currency, currency, rates, convert),
-          0
-        );
-        const profit = dayTrips.reduce((sum, trip) => {
-          const p = getTripProfit(trip);
-          return sum + (p !== null ? normalizeMoney(p, trip.currency, currency, rates, convert) : 0);
-        }, 0);
-
-        return {
-          name: String(day),
-          revenue,
-          collected,
-          profit,
-        };
-      });
-    }
-
-    // 2. Quarterly View (only if no month filter and 'quarterly' is selected)
-    if (!month && viewType === 'quarterly') {
-      return Array.from({ length: 4 }).map((_, qIdx) => {
-        const quarterMonths = [qIdx * 3, qIdx * 3 + 1, qIdx * 3 + 2];
-        const quarterTrips = filteredTrips.filter((trip) => {
-          const date = getTripDateObj(trip);
-          return date && quarterMonths.includes(date.getMonth());
-        });
-
-        const revenue = quarterTrips.reduce(
-          (sum, trip) => sum + normalizeMoney(getTripRevenue(trip), trip.currency, currency, rates, convert),
-          0
-        );
-        const collected = quarterTrips.reduce(
-          (sum, trip) => sum + normalizeMoney(getTripCollected(trip), trip.currency, currency, rates, convert),
-          0
-        );
-        const profit = quarterTrips.reduce((sum, trip) => {
-          const p = getTripProfit(trip);
-          return sum + (p !== null ? normalizeMoney(p, trip.currency, currency, rates, convert) : 0);
-        }, 0);
-
-        return {
-          name: `Q${qIdx + 1}`,
-          revenue,
-          collected,
-          profit,
-        };
-      });
-    }
-
-    // 3. Monthly View (default for full year, or optional for month filter)
-    return Array.from({ length: 12 }).map((_, mIdx) => {
-      const monthTrips = filteredTrips.filter((trip) => {
-        const date = getTripDateObj(trip);
-        return date && date.getMonth() === mIdx;
-      });
-
-      const revenue = monthTrips.reduce(
-        (sum, trip) => sum + normalizeMoney(getTripRevenue(trip), trip.currency, currency, rates, convert),
-        0
-      );
-      const collected = monthTrips.reduce(
-        (sum, trip) => sum + normalizeMoney(getTripCollected(trip), trip.currency, currency, rates, convert),
-        0
-      );
-      const profit = monthTrips.reduce((sum, trip) => {
-        const p = getTripProfit(trip);
-        return sum + (p !== null ? normalizeMoney(p, trip.currency, currency, rates, convert) : 0);
-      }, 0);
-
+    if (!trendData || trendData.length === 0) return [];
+    return trendData.map((item) => {
+      const idx = item.month_index !== undefined ? item.month_index : (Number(item.name) - 1);
+      const nameLabel = !month && Number.isFinite(idx) && idx >= 0 && idx < 12 ? monthLabel(idx) : item.name;
       return {
-        name: monthLabel(mIdx),
-        revenue,
-        collected,
-        profit,
+        ...item,
+        displayName: nameLabel,
       };
     });
-  }, [filteredTrips, viewType, year, month, currency, rates, convert, monthLabel]);
+  }, [trendData, month, monthLabel]);
 
   interface TooltipEntry {
     value: number;
@@ -194,7 +87,7 @@ export default function TrendChart({
                     : 'text-slate-950 dark:text-white'
               }`}
             >
-              {formatCurrency(entry.value)}
+              {entry.dataKey === 'trips' ? entry.value : formatCurrency(entry.value)}
             </span>
           </div>
         ))}
@@ -214,59 +107,13 @@ export default function TrendChart({
           </h3>
         </div>
 
-        {/* View toggles */}
         <div className="flex rounded-lg bg-slate-50 p-1 dark:bg-slate-950/50 text-[11px] font-bold">
-          {month ? (
-            <>
-              <button
-                type="button"
-                onClick={() => setViewType('daily')}
-                className={`rounded-md px-3 py-1.5 transition-colors ${
-                  viewType === 'daily'
-                    ? 'bg-white text-slate-850 shadow dark:bg-slate-900 dark:text-slate-100'
-                    : 'text-slate-450 hover:text-slate-850 dark:hover:text-slate-200'
-                }`}
-              >
-                {t('analytics.daily')}
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewType('monthly')}
-                className={`rounded-md px-3 py-1.5 transition-colors ${
-                  viewType === 'monthly'
-                    ? 'bg-white text-slate-850 shadow dark:bg-slate-900 dark:text-slate-100'
-                    : 'text-slate-450 hover:text-slate-850 dark:hover:text-slate-200'
-                }`}
-              >
-                {t('analytics.monthly')}
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={() => setViewType('monthly')}
-                className={`rounded-md px-3 py-1.5 transition-colors ${
-                  viewType === 'monthly'
-                    ? 'bg-white text-slate-850 shadow dark:bg-slate-900 dark:text-slate-100'
-                    : 'text-slate-450 hover:text-slate-850 dark:hover:text-slate-200'
-                }`}
-              >
-                {t('analytics.monthly')}
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewType('quarterly')}
-                className={`rounded-md px-3 py-1.5 transition-colors ${
-                  viewType === 'quarterly'
-                    ? 'bg-white text-slate-850 shadow dark:bg-slate-900 dark:text-slate-100'
-                    : 'text-slate-450 hover:text-slate-850 dark:hover:text-slate-200'
-                }`}
-              >
-                {t('analytics.quarterly')}
-              </button>
-            </>
-          )}
+          <button
+            type="button"
+            className="rounded-md bg-white px-3 py-1.5 text-slate-850 shadow dark:bg-slate-900 dark:text-slate-100"
+          >
+            {month ? t('analytics.daily') : t('analytics.monthly')}
+          </button>
         </div>
       </div>
 
@@ -279,6 +126,16 @@ export default function TrendChart({
           <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1} initialDimension={{ width: 1, height: 1 }}>
             <ComposedChart
               data={chartData}
+              onClick={(e) => {
+                const event = e as unknown as { activePayload?: Array<{ payload: TrendBucket }> };
+                if (event.activePayload?.[0]) {
+                  const payload = event.activePayload[0].payload;
+                  if (!month && payload.month_index !== undefined) {
+                    const monthStr = String(payload.month_index + 1).padStart(2, '0');
+                    onOpenTripsWithFilter?.({ month: monthStr });
+                  }
+                }
+              }}
               margin={{
                 top: 10,
                 right: isRtl ? 10 : 20,
@@ -288,7 +145,7 @@ export default function TrendChart({
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" className="dark:stroke-slate-800/40" />
               <XAxis
-                dataKey="name"
+                dataKey="displayName"
                 stroke="#64748b"
                 tick={{ fill: '#64748b', fontSize: 10 }}
                 reversed={isRtl}
@@ -300,30 +157,42 @@ export default function TrendChart({
               />
               <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(14,165,233,0.04)' }} />
               <Legend wrapperStyle={{ fontSize: 10 }} />
-              <Bar
-                dataKey="revenue"
-                fill="#0EA5E9"
-                name={t('analytics.revenue')}
-                barSize={20}
-                radius={[4, 4, 0, 0]}
-              />
-              <Line
-                type="monotone"
-                dataKey="profit"
-                stroke="#16A34A"
-                strokeWidth={2.5}
-                dot={{ r: 3.5, strokeWidth: 1.5, fill: '#fff' }}
-                name={t('analytics.profit')}
-              />
-              <Line
-                type="monotone"
-                dataKey="collected"
-                stroke="#0891B2"
-                strokeWidth={2}
-                strokeDasharray="5 5"
-                dot={{ r: 2.5, strokeWidth: 1.5, fill: '#fff' }}
-                name={t('analytics.collected')}
-              />
+              {canViewFinancials ? (
+                <>
+                  <Bar
+                    dataKey="revenue"
+                    fill="#0EA5E9"
+                    name={t('analytics.revenue')}
+                    barSize={20}
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="profit"
+                    stroke="#16A34A"
+                    strokeWidth={2.5}
+                    dot={{ r: 3.5, strokeWidth: 1.5, fill: '#fff' }}
+                    name={t('analytics.profit')}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="collected"
+                    stroke="#0891B2"
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                    dot={{ r: 2.5, strokeWidth: 1.5, fill: '#fff' }}
+                    name={t('analytics.collected')}
+                  />
+                </>
+              ) : (
+                <Bar
+                  dataKey="trips"
+                  fill="#0EA5E9"
+                  name={t('dashboard.trips')}
+                  barSize={20}
+                  radius={[4, 4, 0, 0]}
+                />
+              )}
             </ComposedChart>
           </ResponsiveContainer>
         </MeasuredChart>

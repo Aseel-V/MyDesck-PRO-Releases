@@ -18,6 +18,13 @@ export function paymentMethodIncludesInstallments(method: 'card' | 'cash' | 'mix
   return method === 'card' || method === 'mixed';
 }
 
+export function requiresVisaInstallmentSchedule(
+  method: 'card' | 'cash' | 'mixed' | null | undefined,
+  visaAllocationMinor: number,
+): boolean {
+  return (method === 'card' || method === 'mixed') && visaAllocationMinor > 0;
+}
+
 function parseIsoDate(value: string): { year: number; month: number; day: number } {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
   if (!match) throw new Error('INVALID_DATE');
