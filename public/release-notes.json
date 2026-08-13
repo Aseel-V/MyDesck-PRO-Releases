@@ -1,32 +1,32 @@
 {
-  "version": "0.0.60",
-  "releasedAt": "2026-07-30T12:00:00.000Z",
+  "version": "0.0.61",
+  "releasedAt": "2026-08-13T12:00:00.000Z",
   "title": {
-    "en": "Travel Payment Reliability and Cleaner Trip Warnings",
-    "he": "אמינות תשלומי טיולים והתראות נקיות יותר",
-    "ar": "موثوقية مدفوعات الرحلات وتنبيهات أوضح"
+    "en": "Automatic Visa Collection by Installment Date",
+    "he": "גביית ויזה אוטומטית לפי תאריכי התשלומים",
+    "ar": "تحصيل Visa تلقائياً حسب تواريخ الدفعات"
   },
   "changes": {
     "en": [
-      "Fixed Visa and Mixed payment saving",
-      "Fixed stale or incorrect payment information on trip cards",
-      "Corrected paid Cash trip progress and remaining balance",
-      "Removed optional missing-flight and empty-itinerary warnings",
-      "Improved payment card refresh after saving"
+      "Visa installments now count as collected automatically when their due date arrives",
+      "Mixed payments combine confirmed Cash with Visa collected according to schedule",
+      "Trip cards, details, Dashboard, Analysis, reports, CSV, XLSX, PDF, invoices, and manual WhatsApp summaries now use the same totals",
+      "New post-release Visa transitions show a one-time animated card highlight",
+      "Historical installments are included in totals without creating a notification flood"
     ],
     "he": [
-      "תוקנה שמירת תשלומי ויזה ותשלום משולב",
-      "תוקן מידע מיושן או שגוי על תשלומים בכרטיסי הטיול",
-      "תוקנו התקדמות התשלום והיתרה בטיולי מזומן ששולמו במלואם",
-      "הוסרו התראות אופציונליות על פרטי טיסה חסרים ומסלול ריק",
-      "שופר רענון כרטיס התשלום לאחר שמירה"
+      "תשלומי ויזה נחשבים כמשולמים אוטומטית כאשר תאריך היעד שלהם מגיע",
+      "בתשלום משולב, המזומן שאושר מתחבר לוויזה ששולמה לפי לוח הזמנים",
+      "כרטיסי נסיעה, פרטים, לוח הבקרה, ניתוח, דוחות, CSV, XLSX, PDF, חשבוניות והודעות WhatsApp ידניות משתמשים כעת באותם סכומים",
+      "התקדמות ויזה חדשה לאחר העדכון מוצגת פעם אחת עם אנימציה והדגשה בכרטיס",
+      "תשלומים היסטוריים נכללים בסכומים בלי ליצור הצפה של התראות"
     ],
     "ar": [
-      "تم إصلاح حفظ دفعات فيزا والدفع المختلط",
-      "تم إصلاح معلومات الدفع القديمة أو غير الصحيحة في بطاقات الرحلات",
-      "تم تصحيح تقدم الدفع والرصيد المتبقي لرحلات النقد المدفوعة بالكامل",
-      "تمت إزالة تنبيهات معلومات الرحلة الجوية المفقودة وبرنامج الرحلة الفارغ الاختيارية",
-      "تم تحسين تحديث بطاقة الدفع بعد الحفظ"
+      "تُعتبر دفعات Visa محصلة تلقائياً عند حلول تاريخ استحقاقها",
+      "يجمع الدفع المختلط بين النقد المؤكد وVisa المحصلة حسب الجدول",
+      "تستخدم بطاقات الرحلات والتفاصيل ولوحة التحكم والتحليلات والتقارير وCSV وXLSX وPDF والفواتير ورسائل WhatsApp اليدوية المبالغ نفسها",
+      "يظهر تقدم Visa الجديد بعد التحديث مرة واحدة مع حركة وإضاءة للبطاقة",
+      "تدخل الدفعات التاريخية في الإجماليات من دون إغراق المستخدم بالتنبيهات"
     ]
   }
 }

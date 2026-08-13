@@ -10,7 +10,7 @@ const labels: TripExportLabels = {
   destination: 'Destination', client: 'Client', clientPhone: 'Phone', start: 'Start', end: 'End',
   status: 'Status', paymentStatus: 'Payment status', currency: 'Currency', salesValue: 'Sales value',
   salePrice: 'Sales value', confirmedCash: 'Confirmed Cash', confirmedVisa: 'Confirmed Visa',
-  confirmedReceived: 'Confirmed received', overdueVisa: 'Overdue Visa', futureVisa: 'Future Visa', totalUnpaid: 'Total unpaid',
+  visaInstallments: 'Visa installments', confirmedReceived: 'Confirmed received', futureVisa: 'Future Visa', totalUnpaid: 'Total unpaid',
 } as TripExportLabels;
 
 function trip(summary: Partial<TripPaymentPlanSummary>, overrides: Partial<Trip> = {}): Trip {
@@ -68,29 +68,31 @@ const cashPartial = trip({ cash_confirmed_minor: 200000, cash_remaining_minor: 3
   total_unpaid_minor: 300000, derived_payment_status: 'partial' });
 expectTotals(cashPartial, 200000, 300000, 'partial');
 
-// C: Visa schedule with no confirmed receipt. Due dates never become received money.
+// C: Visa schedule automatically collects two elapsed installments without receipt writes.
 const visaNone = trip({ payment_method: 'card', cash_total_minor: 0, cash_remaining_minor: 0,
   visa_schedule_total_minor: 500000, card_total_minor: 500000, visa_scheduled_through_today_minor: 200000,
-  visa_overdue_unconfirmed_minor: 200000, currently_due_unconfirmed_minor: 200000,
+  effective_visa_paid_minor: 200000, visa_confirmed_minor: 200000, effective_paid_installment_count: 2,
+  confirmed_total_minor: 200000, total_unpaid_minor: 300000, derived_payment_status: 'partial',
+  visa_overdue_unconfirmed_minor: 0, currently_due_unconfirmed_minor: 0,
   visa_future_scheduled_minor: 300000, installment_count: 5 }, { payment_method: 'card' });
-expectTotals(visaNone, 0, 500000, 'unpaid');
+expectTotals(visaNone, 200000, 300000, 'partial');
 assert.equal(getCanonicalTripPayment(visaNone).visaScheduledThroughTodayMinor, 200000);
 
-// D: Visa only with one explicitly confirmed receipt.
+// D: Visa only with one elapsed date.
 const visaPartial = trip({ payment_method: 'card', cash_total_minor: 0, cash_remaining_minor: 0,
-  visa_schedule_total_minor: 500000, card_total_minor: 500000, visa_confirmed_minor: 100000,
+  visa_schedule_total_minor: 500000, card_total_minor: 500000, effective_visa_paid_minor: 100000,
   confirmed_total_minor: 100000, total_unpaid_minor: 400000, derived_payment_status: 'partial' }, { payment_method: 'card' });
 expectTotals(visaPartial, 100000, 400000, 'partial');
 
-// E: Mixed, confirmed Cash only.
+// E: Mixed before the first Visa date: confirmed Cash only.
 const mixedCash = trip({ payment_method: 'mixed', cash_total_minor: 300000, cash_confirmed_minor: 300000,
   cash_remaining_minor: 0, visa_schedule_total_minor: 200000, card_total_minor: 200000,
   visa_scheduled_through_today_minor: 100000, visa_future_scheduled_minor: 100000,
   confirmed_total_minor: 300000, total_unpaid_minor: 200000, derived_payment_status: 'partial' }, { payment_method: 'mixed' });
 expectTotals(mixedCash, 300000, 200000, 'partial');
 
-// F: Mixed with one confirmed Visa receipt.
-const mixedReceipt = trip({ ...mixedCash.payment_plan_summary!, visa_confirmed_minor: 100000,
+// F: Mixed when one Visa due date has elapsed.
+const mixedReceipt = trip({ ...mixedCash.payment_plan_summary!, effective_visa_paid_minor: 100000, visa_confirmed_minor: 100000,
   visa_future_scheduled_minor: 100000, confirmed_total_minor: 400000, total_unpaid_minor: 100000 }, { payment_method: 'mixed' });
 expectTotals(mixedReceipt, 400000, 100000, 'partial');
 

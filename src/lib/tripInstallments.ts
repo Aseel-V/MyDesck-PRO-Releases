@@ -1,5 +1,5 @@
 export type InstallmentStoredStatus = 'scheduled' | 'paid' | 'partially_paid' | 'cancelled';
-export type InstallmentDisplayStatus = InstallmentStoredStatus | 'due_soon' | 'due_today' | 'overdue';
+export type InstallmentDisplayStatus = InstallmentStoredStatus | 'due_soon' | 'due_today' | 'collected_by_schedule';
 
 export interface InstallmentDraft {
   installmentNumber: number;
@@ -71,9 +71,8 @@ export function validatePaymentSplit(totalMinor: number, cardMinor: number, cash
 }
 
 export function getInstallmentDisplayStatus(item: InstallmentLike, today: string, dueSoonDays = 7): InstallmentDisplayStatus {
-  if (item.status === 'cancelled' || item.status === 'paid' || item.status === 'partially_paid') return item.status;
-  if (item.due_date < today) return 'overdue';
-  if (item.due_date === today) return 'due_today';
+  if (item.status === 'cancelled') return item.status;
+  if (item.due_date <= today) return 'collected_by_schedule';
   const due = Date.parse(`${item.due_date}T12:00:00Z`);
   const current = Date.parse(`${today}T12:00:00Z`);
   return due - current <= dueSoonDays * 86_400_000 ? 'due_soon' : 'scheduled';
@@ -82,18 +81,18 @@ export function getInstallmentDisplayStatus(item: InstallmentLike, today: string
 export function summarizeInstallments(items: InstallmentLike[], today: string) {
   const active = items.filter((item) => item.status !== 'cancelled');
   const expectedMinor = active.reduce((sum, item) => sum + item.expected_amount_minor, 0);
-  const paidMinor = active.reduce((sum, item) => sum + item.paid_amount_minor, 0);
+  const paidMinor = active.filter((item) => item.due_date <= today).reduce((sum, item) => sum + item.expected_amount_minor, 0);
+  const manualReceivedMinor = active.reduce((sum, item) => sum + item.paid_amount_minor, 0);
   const next = active
-    .filter((item) => item.paid_amount_minor < item.expected_amount_minor)
+    .filter((item) => item.due_date > today)
     .sort((a, b) => a.due_date.localeCompare(b.due_date))[0] ?? null;
   return {
     expectedMinor,
     paidMinor,
+    manualReceivedMinor,
     remainingMinor: expectedMinor - paidMinor,
-    overdueMinor: active
-      .filter((item) => getInstallmentDisplayStatus(item, today) === 'overdue')
-      .reduce((sum, item) => sum + item.expected_amount_minor - item.paid_amount_minor, 0),
-    completed: active.filter((item) => item.status === 'paid').length,
+    overdueMinor: 0,
+    completed: active.filter((item) => item.due_date <= today).length,
     total: active.length,
     next,
   };

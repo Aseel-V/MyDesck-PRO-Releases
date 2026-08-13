@@ -8,14 +8,14 @@ const summary = (overrides: Partial<TripPaymentPlanSummary>): TripPaymentPlanSum
   plan_id: '11111111-1111-4111-8111-111111111111', source: 'native', payment_source: 'native', reconciliation_state: 'aligned',
   payment_method: 'card', currency: 'ILS', sale_total_minor: 500000, card_total_minor: 500000, cash_total_minor: 0,
   cash_paid_minor: 0, cash_confirmed_minor: 0, cash_remaining_minor: 0, visa_schedule_total_minor: 500000,
-  visa_confirmed_minor: 0, visa_scheduled_through_today_minor: 200000, visa_overdue_unconfirmed_minor: 200000,
-  visa_future_scheduled_minor: 300000, confirmed_total_minor: 0, total_unpaid_minor: 500000,
-  currently_due_unconfirmed_minor: 200000, installment_count: 5, confirmed_installments: 0, partial_installments: 0,
-  processed_installments: 0, scheduled_minor_to_date: 200000, remaining_scheduled_minor: 300000,
+  effective_visa_paid_minor: 200000, visa_confirmed_minor: 200000, visa_scheduled_through_today_minor: 200000, visa_overdue_unconfirmed_minor: 0,
+  visa_future_scheduled_minor: 300000, confirmed_total_minor: 200000, total_unpaid_minor: 300000,
+  currently_due_unconfirmed_minor: 0, installment_count: 5, effective_paid_installment_count: 2, confirmed_installments: 2, partial_installments: 0,
+  processed_installments: 2, scheduled_minor_to_date: 200000, remaining_scheduled_minor: 300000,
   next_installment_due_date: '2026-02-01', next_installment_expected_minor: 100000, next_installment_confirmed_minor: 0,
   next_installment_minor: 100000, next_installment_date: '2026-02-01', final_installment_date: '2026-05-01',
-  derived_payment_status: 'unpaid', authoritative_payment_status: 'unpaid', authoritative_paid_minor: 0,
-  authoritative_remaining_minor: 500000, combined_remaining_minor: 500000,
+  derived_payment_status: 'partial', authoritative_payment_status: 'partial', authoritative_paid_minor: 200000,
+  authoritative_remaining_minor: 300000, combined_remaining_minor: 300000,
   ...overrides,
 });
 
@@ -40,27 +40,27 @@ assert.equal(cash.collectionProgress, 100);
 assert.equal(cash.messageKey, 'fullyPaid');
 
 const visaNone = getTripCardPaymentState(trip(summary({})), '2026-02-15');
-assert.equal(visaNone.confirmedVisaMinor, 0);
-assert.equal(visaNone.processedInstallments, 0, 'elapsed due dates are not confirmed receipts');
-assert.equal(visaNone.visaInstallmentProgress, 0);
-assert.equal(visaNone.messageKey, 'visaDueUnconfirmed');
+assert.equal(visaNone.effectiveVisaPaidMinor, 200000);
+assert.equal(visaNone.processedInstallments, 2, 'elapsed due dates are automatically collected');
+assert.equal(visaNone.visaInstallmentProgress, 40);
+assert.equal(visaNone.messageKey, 'visaCollectedBySchedule');
 
 const visaPartial = getTripCardPaymentState(trip(summary({ confirmed_installments: 2, processed_installments: 2,
-  partial_installments: 1, visa_confirmed_minor: 250000, confirmed_total_minor: 250000, total_unpaid_minor: 250000,
+  effective_paid_installment_count: 2, partial_installments: 0, effective_visa_paid_minor: 200000, visa_confirmed_minor: 200000, confirmed_total_minor: 200000, total_unpaid_minor: 300000,
   combined_remaining_minor: 250000, derived_payment_status: 'partial', authoritative_payment_status: 'partial' })), '2026-02-15');
 assert.equal(visaPartial.processedInstallments, 2);
-assert.equal(visaPartial.partialInstallments, 1);
+assert.equal(visaPartial.partialInstallments, 0);
 assert.equal(visaPartial.visaInstallmentProgress, 40);
-assert.equal(visaPartial.confirmedVisaMinor, 250000, 'amount progress includes actual partial receipts');
+assert.equal(visaPartial.effectiveVisaPaidMinor, 200000, 'amount progress follows elapsed schedule dates');
 
 const mixed = getTripCardPaymentState(trip(summary({ payment_method: 'mixed', card_total_minor: 200000,
   cash_total_minor: 300000, cash_paid_minor: 300000, cash_confirmed_minor: 300000, visa_schedule_total_minor: 200000,
-  visa_confirmed_minor: 100000, confirmed_total_minor: 400000, total_unpaid_minor: 100000,
-  combined_remaining_minor: 100000, confirmed_installments: 1, processed_installments: 1,
+  effective_visa_paid_minor: 100000, visa_confirmed_minor: 100000, confirmed_total_minor: 400000, total_unpaid_minor: 100000,
+  combined_remaining_minor: 100000, effective_paid_installment_count: 1, confirmed_installments: 1, processed_installments: 1,
   visa_scheduled_through_today_minor: 100000, visa_overdue_unconfirmed_minor: 0, visa_future_scheduled_minor: 100000 }),
   { payment_method: 'mixed', amount_paid: 4000, amount_due: 1000 }), '2026-02-15');
 assert.equal(mixed.confirmedCashMinor, 300000);
-assert.equal(mixed.confirmedVisaMinor, 100000);
+assert.equal(mixed.effectiveVisaPaidMinor, 100000);
 assert.equal(mixed.collectionProgress, 80);
 assert.equal(mixed.messageKey, 'cashReceivedVisaScheduled');
 
@@ -79,18 +79,17 @@ assert.equal(arrival?.amountMinor, 100000);
 const cardSource = readFileSync('src/components/trips/TripCard.tsx', 'utf8');
 const tripsSource = readFileSync('src/components/trips/Trips.tsx', 'utf8');
 const animationSource = readFileSync('src/hooks/useAnimatedInteger.ts', 'utf8');
-const migration = readFileSync('supabase/migrations/20260729130000_trip_card_payment_clarity.sql', 'utf8');
+const migration = readFileSync('supabase/migrations/20260813120000_automatic_visa_schedule_collection.sql', 'utf8');
 for (const contract of ['h-full min-w-0', 'items-stretch', '2xl:grid-cols-3', 'mt-auto', 'min-h-11']) {
   assert.ok(cardSource.includes(contract) || tripsSource.includes(contract), `card layout must retain ${contract}`);
 }
 for (const contract of ['IntersectionObserver', 'intersectionRatio >= 0.5', "document.visibilityState !== 'visible'", '2500', 'onVisaArrivalSeen']) assert.ok(cardSource.includes(contract));
 for (const contract of ['prefers-reduced-motion: reduce', 'requestAnimationFrame', 'duration = 650']) assert.ok(animationSource.includes(contract));
 for (const contract of [
-  "paid_amount_minor = i.expected_amount_minor", "paid_amount_minor < i.expected_amount_minor", "paid_at IS NOT NULL",
-  'v_receipt_delta := new_row.paid_amount_minor - old_row.paid_amount_minor', 'v_receipt_delta > 0',
-  "'visa-receipt:' || v_event_id::text",
-  'ON CONFLICT (user_id, dedupe_key) DO NOTHING', "SELECT 3",
+  "i.due_date <= b.today", "AT TIME ZONE 'Asia/Jerusalem'", 'effective_visa_paid_minor',
+  "'visa-schedule:' || i.trip_id || ':' || i.id || ':' || i.due_date",
+  'ON CONFLICT (user_id, dedupe_key) DO NOTHING', "SELECT 4",
 ]) assert.ok(migration.includes(contract), `migration must retain ${contract}`);
-assert.ok(!migration.match(/INSERT\s+INTO\s+public\.trip_notifications[\s\S]*SELECT[\s\S]*FROM\s+public\.trip_installments/i), 'historical receipts must not be backfilled');
+assert.ok(migration.includes("(i.due_date::timestamp AT TIME ZONE 'Asia/Jerusalem') > rollout_at"), 'historical installments must be suppressed by rollout baseline');
 
 console.log('Trip card payment clarity, layout, and Visa arrival contracts passed.');

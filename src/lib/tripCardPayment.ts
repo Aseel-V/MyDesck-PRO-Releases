@@ -16,10 +16,8 @@ export interface TripCardPaymentState {
   visaScheduleTotalMinor: number;
   remainingVisaMinor: number;
   confirmedCashMinor: number;
-  confirmedVisaMinor: number;
+  effectiveVisaPaidMinor: number;
   confirmedTotalMinor: number;
-  overdueVisaMinor: number;
-  currentlyDueUnconfirmedMinor: number;
   remainingCashMinor: number;
   combinedRemainingMinor: number;
   nextInstallmentMinor: number | null;
@@ -32,7 +30,7 @@ export interface TripCardPaymentState {
   hasReconciliationIssue: boolean;
   statusChip: { key: string; values?: Record<string, number> } | null;
   attention: { key: string; values?: Record<string, number | string> } | null;
-  messageKey: 'reconciliationRequired' | 'fullyPaid' | 'cashReceivedVisaScheduled' | 'visaDueUnconfirmed' | 'visaScheduleOnTrack' | null;
+  messageKey: 'reconciliationRequired' | 'fullyPaid' | 'cashReceivedVisaScheduled' | 'visaCollectedBySchedule' | 'visaScheduleOnTrack' | null;
 }
 
 function differenceInDays(from: string, to: string): number {
@@ -51,7 +49,7 @@ export function getTripCardPaymentState(trip: Pick<Trip,
   const canonical = getCanonicalTripPayment(trip);
   const hasVisaSchedule = Boolean(summary && summary.source === 'native' && summary.card_total_minor > 0 && summary.installment_count > 0);
   const method = canonical.method;
-  const processedInstallments = canonical.confirmedInstallments;
+  const processedInstallments = canonical.effectivePaidInstallmentCount;
   const installmentCount = canonical.installmentCount;
   const partialInstallments = canonical.partialInstallments;
   const remainingVisaMinor = canonical.visaFutureScheduledMinor;
@@ -59,7 +57,7 @@ export function getTripCardPaymentState(trip: Pick<Trip,
   const cashTotalMinor = canonical.cashTotalMinor;
   const remainingCashMinor = canonical.cashRemainingMinor;
   const authoritativePaymentStatus = canonical.status;
-  const hasReconciliationIssue = ['allocation_mismatch', 'ledger_mismatch', 'legacy_mismatch'].includes(canonical.reconciliationState);
+  const hasReconciliationIssue = ['allocation_mismatch', 'ledger_mismatch', 'legacy_mismatch', 'schedule_mismatch'].includes(canonical.reconciliationState);
   const isFullyPaid = !hasReconciliationIssue
     && canonical.totalUnpaidMinor === 0
     && canonical.confirmedTotalMinor >= canonical.saleTotalMinor;
@@ -67,7 +65,7 @@ export function getTripCardPaymentState(trip: Pick<Trip,
     ? clampPercent(canonical.visaScheduledThroughTodayMinor / canonical.visaScheduleTotalMinor * 100)
     : 0;
   const visaCollectionProgress = canonical.visaScheduleTotalMinor > 0
-    ? clampPercent(canonical.visaConfirmedMinor / canonical.visaScheduleTotalMinor * 100)
+    ? clampPercent(canonical.effectiveVisaPaidMinor / canonical.visaScheduleTotalMinor * 100)
     : 0;
   const collectionProgress = canonical.saleTotalMinor > 0
     ? clampPercent(canonical.confirmedTotalMinor / canonical.saleTotalMinor * 100)
@@ -93,12 +91,10 @@ export function getTripCardPaymentState(trip: Pick<Trip,
     ? 'reconciliationRequired'
     : isFullyPaid
       ? 'fullyPaid'
-      : canonical.visaOverdueUnconfirmedMinor > 0
-        ? 'visaDueUnconfirmed'
-        : canonical.cashConfirmedMinor > 0 && canonical.visaFutureScheduledMinor > 0
+      : canonical.cashConfirmedMinor > 0 && canonical.visaFutureScheduledMinor > 0
           ? 'cashReceivedVisaScheduled'
           : hasVisaSchedule
-            ? 'visaScheduleOnTrack'
+            ? (canonical.effectiveVisaPaidMinor > 0 ? 'visaCollectedBySchedule' : 'visaScheduleOnTrack')
             : null;
 
   let attention: TripCardPaymentState['attention'] = null;
@@ -112,10 +108,8 @@ export function getTripCardPaymentState(trip: Pick<Trip,
     scheduledMinor: canonical.visaScheduledThroughTodayMinor,
     visaScheduleTotalMinor: canonical.visaScheduleTotalMinor,
     remainingVisaMinor, confirmedCashMinor, remainingCashMinor,
-    confirmedVisaMinor: canonical.visaConfirmedMinor,
+    effectiveVisaPaidMinor: canonical.effectiveVisaPaidMinor,
     confirmedTotalMinor: canonical.confirmedTotalMinor,
-    overdueVisaMinor: canonical.visaOverdueUnconfirmedMinor,
-    currentlyDueUnconfirmedMinor: canonical.currentlyDueUnconfirmedMinor,
     combinedRemainingMinor: canonical.totalUnpaidMinor,
     nextInstallmentMinor: canonical.nextInstallmentExpectedMinor === null
       ? null

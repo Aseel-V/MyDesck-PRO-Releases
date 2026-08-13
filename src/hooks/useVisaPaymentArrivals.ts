@@ -29,7 +29,7 @@ export function useVisaPaymentArrivals(enabled: boolean) {
     for (const arrival of query.data || []) {
       if (announced.current.has(arrival.id)) continue;
       announced.current.add(arrival.id);
-      toast.success(t('notifications.travel.visaPaymentBody', {
+      toast.success(t('notifications.travel.visaScheduleProgressBody', {
         amount: format(arrival.amountMinor / 100, arrival.currency),
         destination: arrival.destination,
         confirmed: arrival.confirmedInstallments,

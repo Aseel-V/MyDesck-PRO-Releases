@@ -12,15 +12,20 @@ export interface CanonicalTripPayment {
   cashConfirmedMinor: number;
   cashRemainingMinor: number;
   visaScheduleTotalMinor: number;
+  effectiveVisaPaidMinor: number;
+  /** Compatibility alias. Native plans use schedule-derived Visa collection. */
   visaConfirmedMinor: number;
   visaScheduledThroughTodayMinor: number;
+  /** Contract-v3 compatibility field. Native v4 plans return zero. */
   visaOverdueUnconfirmedMinor: number;
   visaFutureScheduledMinor: number;
   confirmedTotalMinor: number;
   totalUnpaidMinor: number;
+  /** Contract-v3 compatibility field. Native v4 plans return zero. */
   currentlyDueUnconfirmedMinor: number;
   installmentCount: number;
   confirmedInstallments: number;
+  effectivePaidInstallmentCount: number;
   partialInstallments: number;
   nextInstallmentDueDate: string | null;
   nextInstallmentExpectedMinor: number | null;
@@ -62,7 +67,7 @@ export function getCanonicalTripPayment(trip: Pick<Trip,
       ? Number(trip.cash_paid_amount ?? trip.amount_paid ?? 0) * 100
       : 0
   ));
-  const visaConfirmedMinor = finiteMinor(summary?.visa_confirmed_minor ?? (
+  const visaConfirmedMinor = finiteMinor(summary?.effective_visa_paid_minor ?? summary?.visa_confirmed_minor ?? (
     source === 'legacy_fallback' && (trip.payment_method === 'card' || trip.payment_method === 'mixed')
       ? (trip.payment_method === 'card'
           ? Number(trip.amount_paid || 0)
@@ -71,7 +76,7 @@ export function getCanonicalTripPayment(trip: Pick<Trip,
   ));
   const confirmedTotalMinor = Math.min(
     saleTotalMinor,
-    finiteMinor(summary?.confirmed_total_minor ?? summary?.authoritative_paid_minor ?? cashConfirmedMinor + visaConfirmedMinor),
+    finiteMinor(summary?.effective_confirmed_total_minor ?? summary?.confirmed_total_minor ?? summary?.authoritative_paid_minor ?? cashConfirmedMinor + visaConfirmedMinor),
   );
   const totalUnpaidMinor = finiteMinor(
     summary?.total_unpaid_minor ?? summary?.authoritative_remaining_minor ?? saleTotalMinor - confirmedTotalMinor,
@@ -90,6 +95,7 @@ export function getCanonicalTripPayment(trip: Pick<Trip,
     cashConfirmedMinor: Math.min(cashTotalMinor, cashConfirmedMinor),
     cashRemainingMinor: finiteMinor(summary?.cash_remaining_minor ?? cashTotalMinor - cashConfirmedMinor),
     visaScheduleTotalMinor,
+    effectiveVisaPaidMinor: Math.min(visaScheduleTotalMinor, visaConfirmedMinor),
     visaConfirmedMinor: Math.min(visaScheduleTotalMinor, visaConfirmedMinor),
     visaScheduledThroughTodayMinor: finiteMinor(summary?.visa_scheduled_through_today_minor ?? summary?.scheduled_minor_to_date),
     visaOverdueUnconfirmedMinor: finiteMinor(summary?.visa_overdue_unconfirmed_minor),
@@ -98,7 +104,8 @@ export function getCanonicalTripPayment(trip: Pick<Trip,
     totalUnpaidMinor,
     currentlyDueUnconfirmedMinor: finiteMinor(summary?.currently_due_unconfirmed_minor),
     installmentCount: finiteMinor(summary?.installment_count),
-    confirmedInstallments: finiteMinor(summary?.confirmed_installments ?? summary?.processed_installments),
+    confirmedInstallments: finiteMinor(summary?.effective_paid_installment_count ?? summary?.confirmed_installments ?? summary?.processed_installments),
+    effectivePaidInstallmentCount: finiteMinor(summary?.effective_paid_installment_count ?? summary?.confirmed_installments ?? summary?.processed_installments),
     partialInstallments: finiteMinor(summary?.partial_installments),
     nextInstallmentDueDate: summary?.next_installment_due_date ?? summary?.next_installment_date ?? null,
     nextInstallmentExpectedMinor: summary?.next_installment_expected_minor ?? summary?.next_installment_minor ?? null,

@@ -322,9 +322,9 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
         status: t('trips.status'), paymentStatus: t('trips.paymentStatus'), currency: t('trips.mainTripCurrency'),
         salePrice: t('trips.card.salesValue'),
         confirmedCash: t('trips.card.cashConfirmed'),
-        confirmedVisa: t('trips.card.confirmedVisaPayments'),
+        confirmedVisa: t('trips.card.visaPaidBySchedule'),
+        visaInstallments: t('trips.card.visaInstallments'),
         confirmedReceived: t('trips.card.confirmedReceived'),
-        overdueVisa: t('trips.card.overdueUnconfirmed'),
         futureVisa: t('trips.card.futureScheduledVisa'),
         totalUnpaid: t('trips.card.totalUnpaid'),
       };

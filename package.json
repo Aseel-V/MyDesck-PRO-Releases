@@ -1,7 +1,7 @@
 {
   "name": "my-desck-pro",
   "private": true,
-  "version": "0.0.60",
+  "version": "0.0.61",
   "description": "Professional Travel Agency Dashboard",
   "repository": "https://github.com/Aseel-V/MyDesck-PRO-Releases",
   "type": "module",
@@ -69,6 +69,7 @@
     "test:travel": "node scripts/check-travel-mode.mjs",
     "test:phone-whatsapp": "node scripts/run-typescript-source-test.mjs scripts/test-phone-whatsapp.ts",
     "test:payment-canonical": "node scripts/run-typescript-source-test.mjs scripts/test-canonical-trip-payments.ts",
+    "test:visa-date-progression": "node scripts/run-typescript-source-test.mjs scripts/test-visa-date-progression.ts",
     "test:trip-card-experience": "node scripts/run-typescript-source-test.mjs scripts/test-trip-card-experience.ts",
     "test:payment-canonical:db": "node scripts/run-canonical-payment-db-test.mjs",
     "test:analytics": "node scripts/run-typescript-source-test.mjs scripts/test-analytics-suite.mjs",

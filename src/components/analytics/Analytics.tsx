@@ -319,7 +319,6 @@ function AnalyticsContent({ trips = [], onSelectTrip, onOpenTripsWithFilter }: A
                         ['confirmedCash', item.confirmed_cash],
                         ['confirmedVisa', item.confirmed_visa],
                         ['confirmedReceived', item.paid],
-                        ['overdueUnconfirmedVisa', item.overdue_unconfirmed_visa],
                         ['futureScheduledVisa', item.future_scheduled_visa],
                         ['totalUnpaid', item.outstanding],
                       ].map(([key, value]) => (

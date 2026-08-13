@@ -99,9 +99,9 @@ assert.deepEqual(sixInstallments.map((item) => item.dueDate), ['2026-01-31', '20
 assert.equal(sixInstallments.reduce((sum, item) => sum + item.expectedAmountMinor, 0), 100001);
 assert.equal(sixInstallments[5].expectedAmountMinor, 16671, 'the final installment receives the rounding remainder');
 const installmentRows = schedule.map((item) => ({ due_date: item.dueDate, expected_amount_minor: item.expectedAmountMinor, paid_amount_minor: 0, status: 'scheduled' as const }));
-assert.equal(getInstallmentDisplayStatus(installmentRows[0], '2024-02-01'), 'overdue');
-assert.equal(getInstallmentDisplayStatus(installmentRows[1], '2024-02-29'), 'due_today');
-assert.equal(summarizeInstallments(installmentRows, '2024-02-01').overdueMinor, 33333);
+assert.equal(getInstallmentDisplayStatus(installmentRows[0], '2024-02-01'), 'collected_by_schedule');
+assert.equal(getInstallmentDisplayStatus(installmentRows[1], '2024-02-29'), 'collected_by_schedule');
+assert.equal(summarizeInstallments(installmentRows, '2024-02-01').paidMinor, 33333);
 
 let active = 0;
 let peak = 0;
@@ -127,7 +127,7 @@ assert.equal(shouldRetryQuery(3, { status: 503 }), false);
 
 assert.equal(escapeCsvCell('=HYPERLINK("bad")'), '"\'=HYPERLINK(""bad"")"');
 assert.equal(escapeCsvCell('+1'), '"\'+1"');
-const exportLabels = { destination: 'Destination', client: 'Client', clientPhone: 'Phone', start: 'Start', end: 'End', status: 'Status', paymentStatus: 'Payment', currency: 'Currency', salePrice: 'Sale', confirmedCash: 'Confirmed cash', confirmedVisa: 'Confirmed Visa', confirmedReceived: 'Confirmed received', overdueVisa: 'Overdue Visa', futureVisa: 'Future Visa', totalUnpaid: 'Total unpaid' };
+const exportLabels = { destination: 'Destination', client: 'Client', clientPhone: 'Phone', start: 'Start', end: 'End', status: 'Status', paymentStatus: 'Payment', currency: 'Currency', salePrice: 'Sale', confirmedCash: 'Confirmed cash', confirmedVisa: 'Visa by schedule', visaInstallments: 'Visa installments', confirmedReceived: 'Confirmed received', futureVisa: 'Future Visa', totalUnpaid: 'Total unpaid' };
 const completeTrip: Trip = {
   ...sampleForm, id: '11111111-1111-4111-8111-111111111111', user_id: 'user', destination: '=Danger', client_name: 'Client',
   profit: 20, profit_percentage: 20, amount_due: 60, export_to_pdf: false, created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z',
@@ -142,10 +142,10 @@ const scheduledTrip: Trip = {
   payment_plan_summary: {
     plan_id: '33333333-3333-4333-8333-333333333333', source: 'native', payment_source: 'native', reconciliation_state: 'aligned', payment_method: 'mixed', currency: 'EUR',
     sale_total_minor: 100000, card_total_minor: 60000, visa_schedule_total_minor: 60000, cash_total_minor: 40000,
-    cash_paid_minor: 10000, cash_confirmed_minor: 10000, cash_remaining_minor: 30000, visa_confirmed_minor: 20000,
+    cash_paid_minor: 10000, cash_confirmed_minor: 10000, cash_remaining_minor: 30000, effective_visa_paid_minor: 20000, visa_confirmed_minor: 20000,
     visa_scheduled_through_today_minor: 20000, visa_overdue_unconfirmed_minor: 0, visa_future_scheduled_minor: 40000,
     currently_due_unconfirmed_minor: 0, confirmed_total_minor: 30000, total_unpaid_minor: 70000,
-    installment_count: 6, confirmed_installments: 2, processed_installments: 2, scheduled_minor_to_date: 20000, remaining_scheduled_minor: 40000,
+    installment_count: 6, effective_paid_installment_count: 2, confirmed_installments: 2, processed_installments: 2, scheduled_minor_to_date: 20000, remaining_scheduled_minor: 40000,
     next_installment_minor: 10000, next_installment_date: '2025-03-15', final_installment_date: '2025-06-15',
     next_installment_due_date: '2025-03-15', next_installment_expected_minor: 10000, next_installment_confirmed_minor: 0,
     derived_payment_status: 'partial', authoritative_paid_minor: 30000, authoritative_remaining_minor: 70000,
@@ -234,7 +234,7 @@ assert.deepEqual(runtimeCashPlan && {
   confirmedCashMinor: runtimeCashPlan.confirmedCashMinor,
   installmentCount: runtimeCashPlan.installmentCount,
 }, { method: 'cash', cardTotalMinor: 0, cashTotalMinor: 1750000, confirmedCashMinor: 1750000, installmentCount: 0 });
-await requireCanonicalPaymentWriteContract(async () => ({ data: 2, error: null }));
+await requireCanonicalPaymentWriteContract(async () => ({ data: 4, error: null }));
 await assert.rejects(
   requireCanonicalPaymentWriteContract(async () => ({ data: null, error: { code: 'PGRST202', message: 'function missing' } })),
   (error: unknown) => error instanceof PaymentContractCompatibilityError && error.code === 'CANONICAL_PAYMENT_CONTRACT_REQUIRED',
@@ -474,7 +474,7 @@ for (const cardContract of ['payment_plan_summary', 'LEFT JOIN LATERAL', 'trip_p
 assert.ok(!cardSummaryMigration.match(/UPDATE\s+public\.trips\s+(?:AS\s+\w+\s+)?SET/i), 'card summary migration must not rewrite trip rows');
 assert.ok(!cardSummaryMigration.match(/DELETE\s+FROM\s+public\.trips/i), 'card summary migration must not delete trip rows');
 for (const contract of ['Change number', 'window.open(url', "'noopener,noreferrer'", 'phone_suffix', 'confirmBeforeOpen']) assert.ok(whatsappDialogSource.includes(contract) || whatsappDialogSource.includes(contract.replace('Change number', 'changeNumber')), `WhatsApp composer must include ${contract}`);
-assert.ok(whatsappDialogSource.includes('window.open(url') && whatsappDialogSource.includes('sendOfficialWhatsappMessage'), 'Travel WhatsApp composer must preserve manual sending and expose the authenticated official-send path');
+assert.ok(whatsappDialogSource.includes('window.open(url') && !whatsappDialogSource.includes('sendOfficialWhatsappMessage'), 'Travel WhatsApp composer must preserve manual sending while official automatic WhatsApp remains excluded');
 assert.ok(!whatsappDialogSource.includes('p_metadata: { body') && !whatsappDialogSource.includes('p_metadata: { message'), 'activity metadata must not store message bodies');
 assert.ok(whatsappMigration.includes("to_regclass('public.trip_whatsapp_templates')") && whatsappMigration.includes("NOTIFY pgrst, 'reload schema'"));
 assert.ok(newTripFormSource.includes("fetchTripPaymentPlan(editTrip!.id)") && newTripFormSource.includes("setValue('payment_plan'"), 'edit mode must hydrate the existing payment plan');

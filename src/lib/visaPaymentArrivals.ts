@@ -48,12 +48,15 @@ export function mapVisaPaymentArrival(row: { id: string; trip_id: string | null;
 }
 
 export async function fetchUnseenVisaPaymentArrivals(): Promise<VisaPaymentArrival[]> {
+  const { error: materializeError } = await supabase.rpc('materialize_due_visa_progress_events');
+  if (materializeError) throw materializeError;
   const { data, error } = await supabase
     .from('trip_notifications')
-    .select('id,trip_id,params,created_at')
-    .eq('notification_type', 'visa_payment_confirmed')
+    .select('id,trip_id,params,created_at,scheduled_for')
+    .eq('notification_type', 'visa_schedule_collected')
     .is('read_at', null)
     .is('dismissed_at', null)
+    .order('scheduled_for', { ascending: false })
     .order('created_at', { ascending: false })
     .limit(100);
   if (error) throw error;

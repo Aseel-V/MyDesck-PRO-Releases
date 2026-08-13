@@ -2,7 +2,7 @@ import { supabase } from './supabase';
 import { isMissingRpcError } from './queryRetryPolicy';
 import { getSafeDatabaseErrorDiagnostic } from './safeError';
 
-export const REQUIRED_PAYMENT_WRITE_CONTRACT_VERSION = 2;
+export const REQUIRED_PAYMENT_WRITE_CONTRACT_VERSION = 4;
 
 type ContractProbeResult = { data: number | null; error: unknown };
 type ContractProbe = () => Promise<ContractProbeResult>;

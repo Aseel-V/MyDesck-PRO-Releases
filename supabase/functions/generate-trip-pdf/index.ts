@@ -6,12 +6,8 @@ type Trip = {
   id: string; destination: string; client_name: string; start_date: string; end_date: string;
   currency: string; sale_price: number; amount_paid: number; amount_due: number; payment_status: string;
   payment_plan_summary?: {
-    cash_confirmed_minor?: number;
-    visa_confirmed_minor?: number;
-    visa_overdue_unconfirmed_minor?: number;
-    visa_future_scheduled_minor?: number;
-    confirmed_total_minor?: number;
-    total_unpaid_minor?: number;
+    cash_confirmed_minor?: number; effective_visa_paid_minor?: number; visa_confirmed_minor?: number;
+    visa_future_scheduled_minor?: number; confirmed_total_minor?: number; total_unpaid_minor?: number;
     derived_payment_status?: string;
   } | null;
 };
@@ -40,17 +36,13 @@ Deno.serve(async (request) => {
   const { data, error } = await client.rpc('get_trip_details', { p_trip_id: body.tripId });
   if (error || !data) return json({ error: error?.code === 'PGRST116' ? 'NOT_FOUND' : 'TRIP_ACCESS_DENIED' }, error ? 403 : 404);
   const trip = data as Trip;
-  const confirmedReceived = trip.payment_plan_summary?.confirmed_total_minor != null
-    ? trip.payment_plan_summary.confirmed_total_minor / 100
-    : trip.amount_paid;
-  const totalUnpaid = trip.payment_plan_summary?.total_unpaid_minor != null
-    ? trip.payment_plan_summary.total_unpaid_minor / 100
-    : trip.amount_due;
-  const paymentStatus = trip.payment_plan_summary?.derived_payment_status || trip.payment_status;
-  const confirmedCash = (trip.payment_plan_summary?.cash_confirmed_minor || 0) / 100;
-  const confirmedVisa = (trip.payment_plan_summary?.visa_confirmed_minor || 0) / 100;
-  const overdueUnconfirmedVisa = (trip.payment_plan_summary?.visa_overdue_unconfirmed_minor || 0) / 100;
-  const futureScheduledVisa = (trip.payment_plan_summary?.visa_future_scheduled_minor || 0) / 100;
+  const summary = trip.payment_plan_summary;
+  const totalPaid = summary?.confirmed_total_minor != null ? summary.confirmed_total_minor / 100 : trip.amount_paid;
+  const remaining = summary?.total_unpaid_minor != null ? summary.total_unpaid_minor / 100 : trip.amount_due;
+  const paymentStatus = summary?.derived_payment_status || trip.payment_status;
+  const cashPaid = (summary?.cash_confirmed_minor || 0) / 100;
+  const visaPaid = (summary?.effective_visa_paid_minor ?? summary?.visa_confirmed_minor ?? 0) / 100;
+  const futureVisa = (summary?.visa_future_scheduled_minor || 0) / 100;
 
   const pdf = await PDFDocument.create();
   pdf.registerFontkit(fontkit);
@@ -70,11 +62,16 @@ Deno.serve(async (request) => {
   const page = pdf.addPage([595, 842]);
   const rtl = language !== 'en';
   const labels = language === 'he'
-    ? ['סיכום הזמנה', 'יעד', 'לקוח', 'תאריכים', 'שווי מכירות', 'מזומן שהתקבל', 'תשלומי ויזה שאושרו', 'התקבל בפועל', 'ויזה באיחור וטרם אושרה', 'תשלומי ויזה עתידיים מתוכננים', 'יתרה כוללת שלא שולמה', 'מטבע', 'סטטוס תשלום']
+    ? ['סיכום הזמנה', 'יעד', 'לקוח', 'תאריכים', 'שווי מכירות', 'מזומן שהתקבל', 'ויזה ששולמה לפי לוח הזמנים', 'סך הכל שולם', 'ויזה עתידית מתוכננת', 'יתרה לתשלום', 'מטבע', 'סטטוס תשלום']
     : language === 'ar'
-      ? ['ملخص الحجز', 'الوجهة', 'العميل', 'التواريخ', 'قيمة المبيعات', 'النقد المستلم', 'دفعات فيزا المؤكدة', 'المبلغ المحصل فعلياً', 'فيزا متأخرة وغير مؤكدة', 'دفعات فيزا مستقبلية مجدولة', 'إجمالي المبلغ غير المدفوع', 'العملة', 'حالة الدفع']
-      : ['Booking summary', 'Destination', 'Client', 'Dates', 'Sales value', 'Confirmed Cash', 'Confirmed Visa payments', 'Confirmed received', 'Overdue and unconfirmed Visa', 'Future scheduled Visa', 'Total unpaid', 'Currency', 'Payment status'];
-  const entries = [[labels[1], trip.destination], [labels[2], trip.client_name], [labels[3], `${trip.start_date} - ${trip.end_date}`], [labels[4], String(trip.sale_price)], [labels[5], String(confirmedCash)], [labels[6], String(confirmedVisa)], [labels[7], String(confirmedReceived)], [labels[8], String(overdueUnconfirmedVisa)], [labels[9], String(futureScheduledVisa)], [labels[10], String(totalUnpaid)], [labels[11], trip.currency], [labels[12], paymentStatus]];
+      ? ['ملخص الحجز', 'الوجهة', 'العميل', 'التواريخ', 'قيمة المبيعات', 'النقد المستلم', 'Visa المدفوعة حسب الجدول', 'إجمالي المدفوع', 'Visa المستقبلية المجدولة', 'المتبقي للدفع', 'العملة', 'حالة الدفع']
+      : ['Booking summary', 'Destination', 'Client', 'Dates', 'Sales value', 'Confirmed Cash', 'Visa collected according to schedule', 'Total paid', 'Future scheduled Visa', 'Remaining balance', 'Currency', 'Payment status'];
+  const entries = [
+    [labels[1], trip.destination], [labels[2], trip.client_name], [labels[3], `${trip.start_date} - ${trip.end_date}`],
+    [labels[4], String(trip.sale_price)], [labels[5], String(cashPaid)], [labels[6], String(visaPaid)],
+    [labels[7], String(totalPaid)], [labels[8], String(futureVisa)], [labels[9], String(remaining)],
+    [labels[10], trip.currency], [labels[11], paymentStatus],
+  ];
   const draw = (text: string, y: number, size = 12) => {
     const safe = text.slice(0, 160);
     const width = font.widthOfTextAtSize(safe, size);
@@ -82,7 +79,7 @@ Deno.serve(async (request) => {
   };
   draw(labels[0], 780, 22);
   entries.forEach(([label, value], index) => draw(`${label}: ${value}`, 730 - index * 32, 10));
-  draw(new Date().toISOString().slice(0, 10), 45, 9);
+  draw(new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jerusalem' }).format(new Date()), 45, 9);
   const bytes = await pdf.save({ useObjectStreams: true });
   if (bytes.byteLength > 2_000_000) return json({ error: 'PDF_TOO_LARGE' }, 413);
   return new Response(bytes, { status: 200, headers: { 'content-type': 'application/pdf', 'content-disposition': `attachment; filename="trip-${trip.id.slice(0, 8)}.pdf"`, 'cache-control': 'no-store' } });

@@ -15,6 +15,7 @@ import { StatusBadge } from '../travel-ui/StatusBadge';
 import { cn } from '../../lib/utils';
 import type { VisaPaymentArrival } from '../../lib/visaPaymentArrivals';
 import { useAnimatedInteger } from '../../hooks/useAnimatedInteger';
+import { getTravelBusinessDate } from '../../lib/businessDate';
 
 interface TripCardProps {
   trip: Trip;
@@ -44,13 +45,13 @@ export default function TripCard({ trip, onEdit, onDelete, onOpenPdfPreview, onV
   const [arrivalVisible, setArrivalVisible] = useState(false);
   const financials = calculateTripFinancials(trip);
   const duration = getTripDuration(trip.start_date, trip.end_date);
-  const payment = getTripCardPaymentState(trip, new Date().toISOString().slice(0, 10));
+  const payment = getTripCardPaymentState(trip, getTravelBusinessDate());
   const isRtl = direction === 'rtl';
   const locale = language === 'he' ? 'he-IL-u-nu-latn' : language === 'ar' ? 'ar-IL-u-nu-latn' : 'en-US';
   const money = (minor: number) => format(minor / 100, trip.currency || 'ILS');
   const date = (value: string) => new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(`${value.slice(0, 10)}T12:00:00Z`));
   const stop = (event: MouseEvent) => event.stopPropagation();
-  const animatedVisaConfirmed = useAnimatedInteger(payment.confirmedVisaMinor, visaArrival?.previousVisaConfirmedMinor ?? payment.confirmedVisaMinor, arrivalVisible);
+  const animatedVisaPaid = useAnimatedInteger(payment.effectiveVisaPaidMinor, visaArrival?.previousVisaConfirmedMinor ?? payment.effectiveVisaPaidMinor, arrivalVisible);
   const animatedConfirmedTotal = useAnimatedInteger(payment.confirmedTotalMinor, visaArrival?.previousConfirmedTotalMinor ?? payment.confirmedTotalMinor, arrivalVisible);
   const animatedUnpaid = useAnimatedInteger(payment.combinedRemainingMinor, visaArrival?.previousUnpaidMinor ?? payment.combinedRemainingMinor, arrivalVisible);
   const animatedConfirmedInstallments = useAnimatedInteger(payment.processedInstallments, visaArrival?.previousConfirmedInstallments ?? payment.processedInstallments, arrivalVisible);
@@ -129,7 +130,7 @@ export default function TripCard({ trip, onEdit, onDelete, onOpenPdfPreview, onV
 
   return <article ref={cardRef} className={cn('relative flex h-full min-w-0 flex-col overflow-hidden rounded-lg border bg-slate-950 text-slate-100 shadow-sm transition-[border-color,background-color,box-shadow] duration-300 hover:shadow-lg', arrivalVisible ? 'border-sky-400 bg-sky-950/35 shadow-[0_0_24px_rgba(56,189,248,0.24)]' : 'border-slate-800')} dir={direction} aria-labelledby={`${detailsId}-title`}>
     <div className="flex flex-1 flex-col p-4 sm:p-5">
-      {arrivalVisible && <div aria-hidden="true" className="mb-3 inline-flex w-fit items-center gap-1.5 rounded-full border border-sky-400/40 bg-sky-400/15 px-2.5 py-1 text-xs font-semibold text-sky-200"><CreditCard className="h-3.5 w-3.5"/>{t('trips.card.newVisaPayment')}</div>}
+      {arrivalVisible && <div aria-hidden="true" className="mb-3 inline-flex w-fit items-center gap-1.5 rounded-full border border-sky-400/40 bg-sky-400/15 px-2.5 py-1 text-xs font-semibold text-sky-200"><CreditCard className="h-3.5 w-3.5"/>{t('trips.card.newVisaInstallment')}</div>}
       <header className="flex min-w-0 items-start gap-3">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-700 bg-slate-900 text-lg font-bold text-sky-400" aria-hidden="true">{trip.destination.trim().charAt(0).toUpperCase()}</div>
         <div className="min-w-0 flex-1">
@@ -171,15 +172,12 @@ export default function TripCard({ trip, onEdit, onDelete, onOpenPdfPreview, onV
         </div>
         <div className="mt-3 space-y-1.5"><div className="flex justify-between text-xs"><span>{t('trips.card.collectionProgress')}</span><strong className="tabular-nums">{Math.round(payment.collectionProgress)}%</strong></div>{progress(payment.collectionProgress, t('trips.card.collectionProgress'), payment.isFullyPaid ? 'bg-emerald-400' : 'bg-sky-400')}</div>
         {payment.hasVisaSchedule ? <div className="mt-3 space-y-2.5 border-t border-slate-800 pt-3">
-          <div className="flex items-end justify-between gap-3"><div><strong className="block text-xs">{t('trips.card.visaConfirmedCounter', { confirmed: animatedConfirmedInstallments, total: payment.installmentCount })}</strong>{payment.partialInstallments > 0 && <span className="block text-[11px] text-amber-300">{t('trips.card.visaPartialCounter', { count: payment.partialInstallments })}</span>}</div><strong className="tabular-nums text-cyan-300">{Math.round(payment.visaInstallmentProgress)}%</strong></div>
+          <div className="flex items-end justify-between gap-3"><div><strong className="block text-xs">{t('trips.card.visaInstallmentCounter', { paid: animatedConfirmedInstallments, total: payment.installmentCount })}</strong><span className="block text-[11px] text-slate-400">{t('trips.card.visaCollectedAccordingToSchedule')}</span></div><strong className="tabular-nums text-cyan-300">{Math.round(payment.visaInstallmentProgress)}%</strong></div>
           {progress(payment.visaInstallmentProgress, t('trips.card.visaInstallmentProgress'), 'bg-cyan-400')}
           <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
-            <div><span className="block text-slate-500">{t('trips.card.confirmedVisaPayments')}</span><strong className="tabular-nums text-emerald-300">{money(animatedVisaConfirmed)}</strong></div>
-            <div className="text-end"><span className="block text-slate-500">{t('trips.card.scheduledUntilToday')}</span><strong className="tabular-nums">{money(payment.scheduledMinor)}</strong></div>
-            <div><span className="block text-slate-500">{t('trips.card.overdueUnconfirmed')}</span><strong className={cn('tabular-nums', payment.overdueVisaMinor > 0 && 'text-amber-300')}>{money(payment.overdueVisaMinor)}</strong></div>
+            <div><span className="block text-slate-500">{t('trips.card.visaPaidBySchedule')}</span><strong className="tabular-nums text-emerald-300">{money(animatedVisaPaid)}</strong></div>
             <div className="text-end"><span className="block text-slate-500">{t('trips.card.futureScheduledVisa')}</span><strong className="tabular-nums">{money(payment.remainingVisaMinor)}</strong></div>
           </div>
-          {payment.lastConfirmedVisaAt && payment.lastConfirmedVisaMinor !== null && <div className="border-t border-slate-800 pt-2 text-xs"><span className="block text-slate-500">{t('trips.card.lastConfirmedVisa')}</span><strong>{money(payment.lastConfirmedVisaMinor)} · {date(payment.lastConfirmedVisaAt)}</strong></div>}
           {(payment.nextInstallmentDate || payment.finalInstallmentDate) && <div className="flex flex-wrap items-end justify-between gap-2 border-t border-slate-800 pt-2 text-xs">{payment.nextInstallmentDate && payment.nextInstallmentMinor !== null && <div><span className="block text-slate-500">{t('trips.card.nextInstallment')}</span><strong className="text-sm text-white">{money(payment.nextInstallmentMinor)} · {date(payment.nextInstallmentDate)}</strong></div>}{payment.finalInstallmentDate && <div className="text-end"><span className="block text-slate-500">{t('trips.card.finalInstallment')}</span><strong>{date(payment.finalInstallmentDate)}</strong></div>}</div>}
         </div> : <div className="mt-3 space-y-2"><div className="flex flex-wrap justify-between gap-2 text-xs"><span>{t('trips.card.cashConfirmed')}: {money(payment.confirmedCashMinor)}</span><span>{t(`trips.paymentStatuses.${payment.authoritativePaymentStatus}`)} · {Math.round(payment.cashProgress)}%</span></div>{progress(payment.cashProgress, t('trips.card.cashProgressLabel'), payment.combinedRemainingMinor > 0 ? 'bg-amber-400' : 'bg-emerald-400')}</div>}
         {payment.method === 'mixed' && <div className="mt-3 border-t border-slate-800 pt-2"><div className="mb-1 flex justify-between text-xs"><span>{t('trips.card.cashConfirmed')}: {money(payment.confirmedCashMinor)}</span><span>{t('trips.card.cashRemaining')}: {money(payment.remainingCashMinor)}</span></div>{progress(payment.cashProgress, t('trips.card.cashProgressLabel'), 'bg-emerald-400')}</div>}

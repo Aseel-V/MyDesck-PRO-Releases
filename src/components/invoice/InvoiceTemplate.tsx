@@ -38,8 +38,7 @@ const LABELS: Record<Language, Record<string, string>> = {
     paidAmount: 'Confirmed received',
     amountDue: 'Total unpaid',
     confirmedCash: 'Confirmed Cash',
-    confirmedVisa: 'Confirmed Visa payments',
-    overdueUnconfirmedVisa: 'Overdue and unconfirmed Visa',
+    confirmedVisa: 'Visa collected according to schedule',
     futureScheduledVisa: 'Future scheduled Visa',
     paymentStatus: 'Payment Status',
     notes: 'Notes',
@@ -69,8 +68,7 @@ const LABELS: Record<Language, Record<string, string>> = {
     paidAmount: 'התקבל בפועל',
     amountDue: 'יתרה כוללת שלא שולמה',
     confirmedCash: 'מזומן שהתקבל',
-    confirmedVisa: 'תשלומי ויזה שאושרו',
-    overdueUnconfirmedVisa: 'ויזה באיחור וטרם אושרה',
+    confirmedVisa: 'ויזה ששולמה לפי לוח הזמנים',
     futureScheduledVisa: 'תשלומי ויזה עתידיים מתוכננים',
     paymentStatus: 'סטטוס תשלום',
     notes: 'הערות',
@@ -100,8 +98,7 @@ const LABELS: Record<Language, Record<string, string>> = {
     paidAmount: 'المبلغ المحصل فعلياً',
     amountDue: 'إجمالي المبلغ غير المدفوع',
     confirmedCash: 'النقد المستلم',
-    confirmedVisa: 'دفعات فيزا المؤكدة',
-    overdueUnconfirmedVisa: 'فيزا متأخرة وغير مؤكدة',
+    confirmedVisa: 'Visa المدفوعة حسب الجدول',
     futureScheduledVisa: 'دفعات فيزا مستقبلية مجدولة',
     paymentStatus: 'حالة الدفع',
     notes: 'ملاحظات',
@@ -170,9 +167,8 @@ function TripDetailGrid({
       <MetricCard label={labels.boardBasis} value={trip.board_basis || labels.notSpecified} />
       <MetricCard label={labels.salePrice} value={formatCurrency(trip.sale_price || 0, trip.currency || 'USD', language)} />
       <MetricCard label={labels.confirmedCash} value={formatCurrency(fromPaymentMinor(payment.cashConfirmedMinor), trip.currency || 'USD', language)} />
-      <MetricCard label={labels.confirmedVisa} value={formatCurrency(fromPaymentMinor(payment.visaConfirmedMinor), trip.currency || 'USD', language)} />
+      <MetricCard label={labels.confirmedVisa} value={formatCurrency(fromPaymentMinor(payment.effectiveVisaPaidMinor), trip.currency || 'USD', language)} />
       <MetricCard label={labels.paidAmount} value={formatCurrency(fromPaymentMinor(payment.confirmedTotalMinor), trip.currency || 'USD', language)} />
-      <MetricCard label={labels.overdueUnconfirmedVisa} value={formatCurrency(fromPaymentMinor(payment.visaOverdueUnconfirmedMinor), trip.currency || 'USD', language)} />
       <MetricCard label={labels.futureScheduledVisa} value={formatCurrency(fromPaymentMinor(payment.visaFutureScheduledMinor), trip.currency || 'USD', language)} />
       <MetricCard label={labels.amountDue} value={formatCurrency(fromPaymentMinor(payment.totalUnpaidMinor), trip.currency || 'USD', language)} />
       <MetricCard label={labels.paymentStatus} value={getPaymentStatusLabel(payment.status, labels)} />
@@ -302,7 +298,6 @@ function SummaryLayout({
               <th className="border-b border-slate-200 px-4 py-3 text-start font-semibold text-slate-600">{labels.confirmedCash}</th>
               <th className="border-b border-slate-200 px-4 py-3 text-start font-semibold text-slate-600">{labels.confirmedVisa}</th>
               <th className="border-b border-slate-200 px-4 py-3 text-start font-semibold text-slate-600">{labels.paidAmount}</th>
-              <th className="border-b border-slate-200 px-4 py-3 text-start font-semibold text-slate-600">{labels.overdueUnconfirmedVisa}</th>
               <th className="border-b border-slate-200 px-4 py-3 text-start font-semibold text-slate-600">{labels.futureScheduledVisa}</th>
               <th className="border-b border-slate-200 px-4 py-3 text-start font-semibold text-slate-600">{labels.amountDue}</th>
               <th className="border-b border-slate-200 px-4 py-3 text-start font-semibold text-slate-600">{labels.paymentStatus}</th>
@@ -321,7 +316,6 @@ function SummaryLayout({
                 <td className="border-b border-slate-100 px-4 py-3">{formatCurrency(fromPaymentMinor(payment.cashConfirmedMinor), trip.currency || fallbackCurrency, language)}</td>
                 <td className="border-b border-slate-100 px-4 py-3">{formatCurrency(fromPaymentMinor(payment.visaConfirmedMinor), trip.currency || fallbackCurrency, language)}</td>
                 <td className="border-b border-slate-100 px-4 py-3">{formatCurrency(fromPaymentMinor(payment.confirmedTotalMinor), trip.currency || fallbackCurrency, language)}</td>
-                <td className="border-b border-slate-100 px-4 py-3">{formatCurrency(fromPaymentMinor(payment.visaOverdueUnconfirmedMinor), trip.currency || fallbackCurrency, language)}</td>
                 <td className="border-b border-slate-100 px-4 py-3">{formatCurrency(fromPaymentMinor(payment.visaFutureScheduledMinor), trip.currency || fallbackCurrency, language)}</td>
                 <td className="border-b border-slate-100 px-4 py-3">{formatCurrency(fromPaymentMinor(payment.totalUnpaidMinor), trip.currency || fallbackCurrency, language)}</td>
                 <td className="border-b border-slate-100 px-4 py-3">{getPaymentStatusLabel(payment.status, labels)}</td>

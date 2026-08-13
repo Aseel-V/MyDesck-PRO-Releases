@@ -18,7 +18,7 @@ const columns: Record<ReportKey, string[]> = {
   monthly: ['month','currency','trip_count','sales','cost','profit','average_markup','paid','outstanding'],
   destinations: ['destination','currency','trip_count','sales','profit','average_markup','repeat_clients','outstanding'],
   repeat_clients: ['client_name','client_phone','currency','trip_count','last_trip_date','sales','outstanding','common_destination','average_trip_value'],
-  unpaid: ['client_name','destination','start_date','currency','sale_price','confirmed_cash','confirmed_visa','confirmed_received','overdue_unconfirmed_visa','future_scheduled_visa','total_unpaid','payment_method','payment_status'],
+  unpaid: ['client_name','destination','start_date','currency','sale_price','confirmed_cash','confirmed_visa','confirmed_received','future_scheduled_visa','total_unpaid','payment_method','payment_status'],
   currencies: ['currency','sales','cost','profit','paid','outstanding','trip_count'],
   markups: ['dimension','label','currency','average_markup','minimum_markup','maximum_markup','trip_count'],
 };

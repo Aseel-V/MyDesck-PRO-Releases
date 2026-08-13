@@ -4,6 +4,7 @@ import { fromMinorUnits } from './tripInstallments';
 import type { Trip } from '../types/trip';
 import type { TripInstallment, TripPaymentPlan } from './tripPayments';
 import { getCanonicalTripPayment } from './tripPaymentSummary';
+import { getTravelBusinessDate } from './businessDate';
 import {
   formatIsraeliPhoneForDisplay,
   getWhatsAppPhoneNumber,
@@ -119,18 +120,21 @@ export function buildWhatsappVariables(
   const duration = getTripDuration(trip.start_date, trip.end_date);
   const canonical = getCanonicalTripPayment(trip);
   const active = payment.installments.filter((item) => item.status !== 'cancelled');
-  const next = active.find((item) => item.paid_amount_minor < item.expected_amount_minor) ?? null;
-  const processed = active.filter((item) => item.status === 'paid').length;
+  const today = getTravelBusinessDate();
+  const next = active.find((item) => item.due_date > today) ?? null;
+  const processed = active.filter((item) => item.due_date <= today).length;
   const plan = payment.plan;
-  const visaConfirmedMinor = plan ? active.reduce((sum, item) => sum + item.paid_amount_minor, 0) : canonical.visaConfirmedMinor;
-  const cardRemainingMinor = plan ? Math.max(0, plan.card_total_minor - visaConfirmedMinor) : canonical.visaScheduleTotalMinor - canonical.visaConfirmedMinor;
+  const visaPaidMinor = plan ? active.filter((item) => item.due_date <= today).reduce((sum, item) => sum + item.expected_amount_minor, 0) : canonical.effectiveVisaPaidMinor;
+  const cardRemainingMinor = plan ? active.filter((item) => item.due_date > today).reduce((sum, item) => sum + item.expected_amount_minor, 0) : canonical.visaFutureScheduledMinor;
   const cashConfirmedMinor = plan?.cash_paid_minor ?? canonical.cashConfirmedMinor;
   const cashRemainingMinor = plan ? Math.max(0, plan.cash_total_minor - plan.cash_paid_minor) : canonical.cashRemainingMinor;
-  const today = new Date().toISOString().slice(0, 10);
   const scheduledThroughTodayMinor = plan
     ? active.filter((item) => item.due_date <= today).reduce((sum, item) => sum + item.expected_amount_minor, 0)
     : canonical.visaScheduledThroughTodayMinor;
-  const nextMinor = next ? Math.max(0, next.expected_amount_minor - next.paid_amount_minor) : trip.payment_plan_summary?.next_installment_minor ?? 0;
+  const nextMinor = next ? next.expected_amount_minor : trip.payment_plan_summary?.next_installment_minor ?? 0;
+  const combinedRemainingMinor = plan
+    ? Math.max(0, Math.round(trip.sale_price * 100) - cashConfirmedMinor - visaPaidMinor)
+    : canonical.totalUnpaidMinor;
   const currency = plan?.currency || trip.currency;
   return {
     client_name: trip.client_name || '', destination: trip.destination || '',
@@ -143,7 +147,7 @@ export function buildWhatsappVariables(
     cash_confirmed: cashConfirmedMinor > 0 ? formatMoney(fromMinorUnits(cashConfirmedMinor), currency, language) : '',
     cash_remaining: cashRemainingMinor > 0 ? formatMoney(fromMinorUnits(cashRemainingMinor), currency, language) : '',
     scheduled_through_today: scheduledThroughTodayMinor > 0 ? formatMoney(fromMinorUnits(scheduledThroughTodayMinor), currency, language) : '',
-    combined_remaining: canonical.totalUnpaidMinor > 0 ? formatMoney(fromMinorUnits(canonical.totalUnpaidMinor), currency, language) : '',
+    combined_remaining: combinedRemainingMinor > 0 ? formatMoney(fromMinorUnits(combinedRemainingMinor), currency, language) : '',
     installment_number: next ? String(next.installment_number) : trip.payment_plan_summary?.next_installment_date ? String((trip.payment_plan_summary.processed_installments || 0) + 1) : '',
     installment_count: String(plan?.installment_count || trip.payment_plan_summary?.installment_count || active.length || ''),
     next_installment_amount: nextMinor > 0 ? formatMoney(fromMinorUnits(nextMinor), currency, language) : '',

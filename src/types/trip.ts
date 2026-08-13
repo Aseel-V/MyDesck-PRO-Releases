@@ -31,7 +31,9 @@ export interface TripPaymentPlanSummary {
   plan_id: string | null;
   source: 'native' | 'legacy';
   payment_source?: 'native' | 'legacy_fallback';
-  reconciliation_state?: 'aligned' | 'legacy_fallback' | 'legacy_mismatch' | 'ledger_mismatch' | 'allocation_mismatch';
+  reconciliation_state?: 'aligned' | 'legacy_fallback' | 'legacy_mismatch' | 'ledger_mismatch' | 'allocation_mismatch' | 'schedule_mismatch';
+  visa_collection_basis?: 'schedule_date' | 'legacy_receipts';
+  business_timezone?: string;
   payment_method: 'card' | 'cash' | 'mixed';
   currency: string;
   sale_total_minor?: number;
@@ -39,19 +41,31 @@ export interface TripPaymentPlanSummary {
   cash_remaining_minor?: number;
   visa_schedule_total_minor?: number;
   visa_confirmed_minor?: number;
+  effective_visa_paid_minor?: number;
   visa_scheduled_through_today_minor?: number;
+  /** Contract-v3 compatibility field. Always zero for native schedule-date plans. */
   visa_overdue_unconfirmed_minor?: number;
   visa_future_scheduled_minor?: number;
   confirmed_total_minor?: number;
+  effective_confirmed_total_minor?: number;
   total_unpaid_minor?: number;
+  /** Contract-v3 compatibility field. Always zero for native schedule-date plans. */
   currently_due_unconfirmed_minor?: number;
   confirmed_installments?: number;
+  effective_paid_installment_count?: number;
   partial_installments?: number;
   next_installment_due_date?: string | null;
   next_installment_expected_minor?: number | null;
   next_installment_confirmed_minor?: number | null;
   last_confirmed_visa_at?: string | null;
   last_confirmed_visa_minor?: number | null;
+  last_scheduled_visa_date?: string | null;
+  last_scheduled_visa_minor?: number | null;
+  manual_visa_received_minor?: number;
+  manual_confirmed_installments?: number;
+  manual_partial_installments?: number;
+  last_manual_visa_received_at?: string | null;
+  last_manual_visa_received_minor?: number | null;
   derived_payment_status?: 'paid' | 'partial' | 'unpaid';
   card_total_minor: number;
   cash_total_minor: number;

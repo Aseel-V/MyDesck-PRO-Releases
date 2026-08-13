@@ -7,6 +7,7 @@ import type { Trip } from '../../types/trip';
 import { Button } from '../travel-ui/Button';
 import { StatusBadge } from '../travel-ui/StatusBadge';
 import { MeasuredChart } from '../travel-ui/MeasuredChart';
+import { getTravelBusinessDate } from '../../lib/businessDate';
 
 type Translate = (key: string, params?: Record<string, string | number>) => string;
 
@@ -86,7 +87,7 @@ export function TravelOperationsDashboard({
               const payment = getCanonicalTripPayment(trip);
               const scheduleDate = payment.nextInstallmentDueDate;
               const daysUntil = scheduleDate
-                ? Math.ceil((Date.parse(`${scheduleDate}T12:00:00Z`) - Date.parse(`${new Date().toISOString().slice(0, 10)}T12:00:00Z`)) / 86400000)
+                ? Math.ceil((Date.parse(`${scheduleDate}T12:00:00Z`) - Date.parse(`${getTravelBusinessDate()}T12:00:00Z`)) / 86400000)
                 : null;
               const status = payment.status;
               return (
@@ -97,7 +98,7 @@ export function TravelOperationsDashboard({
                       <button onClick={() => onSelectTrip(trip)} className="block truncate text-start text-sm font-semibold text-slate-900 hover:text-sky-700 dark:text-slate-100 dark:hover:text-sky-300">{trip.destination}</button>
                       <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">{trip.client_name} <span aria-hidden="true">·</span> {scheduleDate ? <span dir="ltr">{formatDate(scheduleDate)}</span> : <span>{t('dashboard.outstandingCash')}</span>}</p>
                       <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs sm:grid-cols-4">
-                        <div><dt className="text-slate-500">{t('dashboard.overdueInstallments')}</dt><dd dir="ltr" className="font-semibold tabular-nums">{formatCurrency(fromPaymentMinor(payment.visaOverdueUnconfirmedMinor))}</dd></div>
+                        <div><dt className="text-slate-500">{t('dashboard.visaPaidBySchedule')}</dt><dd dir="ltr" className="font-semibold tabular-nums">{formatCurrency(fromPaymentMinor(payment.effectiveVisaPaidMinor))}</dd></div>
                         <div><dt className="text-slate-500">{t('dashboard.futureScheduledVisa')}</dt><dd dir="ltr" className="font-semibold tabular-nums">{formatCurrency(fromPaymentMinor(payment.visaFutureScheduledMinor))}</dd></div>
                         <div><dt className="text-slate-500">{t('dashboard.outstandingCash')}</dt><dd dir="ltr" className="font-semibold tabular-nums">{formatCurrency(fromPaymentMinor(payment.cashRemainingMinor))}</dd></div>
                         <div><dt className="text-slate-500">{t('analytics.totalOutstanding')}</dt><dd dir="ltr" className="font-semibold tabular-nums">{formatCurrency(fromPaymentMinor(payment.totalUnpaidMinor))}</dd></div>

@@ -82,17 +82,18 @@ for (const functionName of ['get_owned_trip_payment_summary', 'get_travel_paymen
   }), true, `${functionName} must grant EXECUTE to authenticated`);
 }
 
-const canonicalMigration = migrations.find(({ name }) => name === '20260729110000_canonical_trip_payment_contract.sql');
-assert.ok(canonicalMigration, 'canonical payment migration must exist');
+const canonicalMigration = migrations.find(({ name }) => name === '20260813120000_automatic_visa_schedule_collection.sql');
+assert.ok(canonicalMigration, 'automatic Visa schedule collection migration must exist');
 for (const field of ['cash_confirmed_minor', 'visa_confirmed_minor', 'visa_scheduled_through_today_minor',
   'visa_overdue_unconfirmed_minor', 'visa_future_scheduled_minor', 'confirmed_total_minor', 'total_unpaid_minor',
   'currently_due_unconfirmed_minor', 'payment_source', 'reconciliation_state']) {
   assert.ok(canonicalMigration.sql.includes(`'${field}'`), `canonical payment summary must expose ${field}`);
 }
-assert.match(canonicalMigration.sql, /sum\(i\.paid_amount_minor\)/, 'confirmed Visa must derive from recorded installment receipt amounts');
-assert.doesNotMatch(canonicalMigration.sql, /sum\([^)]*expected_amount_minor[^)]*\)[^,;]*AS visa_confirmed_minor/is, 'scheduled amounts must not derive confirmed Visa');
-assert.match(canonicalMigration.sql, /amount_paid\s*=\s*coalesce\(\(p_trip_data->>'amount_paid'\)::numeric, amount_paid\)/, 'trip UPDATE must persist amount_paid before canonical synchronization');
-assert.match(canonicalMigration.sql, /nullif\(p_trip_data->>'payment_date', ''\)::date/, 'save RPC must persist payment_date');
-assert.match(canonicalMigration.sql, /PAYMENT_PLAN_CONFIRMED_SCHEDULE_CONFLICT/, 'trip edits must not redistribute or cancel confirmed Visa receipt history');
+assert.match(canonicalMigration.sql, /sum\(i\.expected_amount_minor\)[\s\S]*i\.due_date <= b\.today/, 'effective Visa must derive from elapsed date-only schedule amounts');
+assert.match(canonicalMigration.sql, /manual_visa_received_minor/, 'manual receipt amounts must remain available for audit');
+assert.match(canonicalMigration.sql, /visa_overdue_unconfirmed_minor', 0/, 'normal native Visa schedules must not expose overdue-unconfirmed amounts');
+assert.match(canonicalMigration.sql, /AT TIME ZONE 'Asia\/Jerusalem'/, 'Visa date boundaries must use the Travel business timezone');
+assert.match(canonicalMigration.sql, /ON CONFLICT \(user_id,dedupe_key\) DO NOTHING|ON CONFLICT \(user_id, dedupe_key\) DO NOTHING/, 'Visa progression events must be idempotent');
+assert.match(canonicalMigration.sql, /> rollout_at/, 'historical due dates must be suppressed by the rollout baseline');
 
 console.log('[database-rpc-contracts] Effective signature, manifest parity, stale-name rejection, return type, and grant tests passed.');

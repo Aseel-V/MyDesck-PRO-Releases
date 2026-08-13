@@ -2070,6 +2070,10 @@ export interface Database {
         Args: Record<PropertyKey, never>;
         Returns: number;
       };
+      materialize_due_visa_progress_events: {
+        Args: Record<PropertyKey, never>;
+        Returns: number;
+      };
       save_trip_transaction: {
         Args: {
           p_trip_data: Json;

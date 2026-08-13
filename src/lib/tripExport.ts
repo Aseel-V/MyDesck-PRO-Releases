@@ -5,11 +5,11 @@ import { normalizeIsraeliPhoneNumber } from './phoneNumbers';
 import { fromPaymentMinor, getCanonicalTripPayment } from './tripPaymentSummary';
 
 export type TripExportColumn = 'destination' | 'client' | 'clientPhone' | 'start' | 'end' | 'status' | 'paymentStatus' | 'currency' |
-  'salePrice' | 'confirmedCash' | 'confirmedVisa' | 'confirmedReceived' | 'overdueVisa' | 'futureVisa' | 'totalUnpaid';
+  'salePrice' | 'confirmedCash' | 'confirmedVisa' | 'visaInstallments' | 'confirmedReceived' | 'futureVisa' | 'totalUnpaid';
 export type TripExportLabels = Record<TripExportColumn, string>;
 
 const columns: TripExportColumn[] = ['destination', 'client', 'clientPhone', 'start', 'end', 'status', 'paymentStatus', 'currency',
-  'salePrice', 'confirmedCash', 'confirmedVisa', 'confirmedReceived', 'overdueVisa', 'futureVisa', 'totalUnpaid'];
+  'salePrice', 'confirmedCash', 'confirmedVisa', 'visaInstallments', 'confirmedReceived', 'futureVisa', 'totalUnpaid'];
 
 function cellValue(trip: Trip, column: TripExportColumn): string | number {
   const payment = getCanonicalTripPayment(trip);
@@ -25,8 +25,8 @@ function cellValue(trip: Trip, column: TripExportColumn): string | number {
     salePrice: trip.sale_price,
     confirmedCash: fromPaymentMinor(payment.cashConfirmedMinor),
     confirmedVisa: fromPaymentMinor(payment.visaConfirmedMinor),
+    visaInstallments: `${payment.effectivePaidInstallmentCount}/${payment.installmentCount}`,
     confirmedReceived: fromPaymentMinor(payment.confirmedTotalMinor),
-    overdueVisa: fromPaymentMinor(payment.visaOverdueUnconfirmedMinor),
     futureVisa: fromPaymentMinor(payment.visaFutureScheduledMinor),
     totalUnpaid: fromPaymentMinor(payment.totalUnpaidMinor),
   };

@@ -29,8 +29,7 @@ function getPdfTripFinancials(trip: Trip) {
   return {
     ...financials,
     confirmedCash: fromPaymentMinor(payment.cashConfirmedMinor),
-    confirmedVisa: fromPaymentMinor(payment.visaConfirmedMinor),
-    overdueUnconfirmedVisa: fromPaymentMinor(payment.visaOverdueUnconfirmedMinor),
+    confirmedVisa: fromPaymentMinor(payment.effectiveVisaPaidMinor),
     futureScheduledVisa: fromPaymentMinor(payment.visaFutureScheduledMinor),
     amountPaid: fromPaymentMinor(payment.confirmedTotalMinor),
     amountDue: fromPaymentMinor(payment.totalUnpaidMinor),
@@ -80,8 +79,7 @@ const LABELS: Record<Language, Record<string, string>> = {
     paidAmount: 'Confirmed received',
     amountDue: 'Total unpaid',
     confirmedCash: 'Confirmed Cash',
-    confirmedVisa: 'Confirmed Visa payments',
-    overdueUnconfirmedVisa: 'Overdue and unconfirmed Visa',
+    confirmedVisa: 'Visa collected according to schedule',
     futureScheduledVisa: 'Future scheduled Visa',
     paymentStatus: 'Payment Status',
     notes: 'Notes',
@@ -108,8 +106,7 @@ const LABELS: Record<Language, Record<string, string>> = {
     paidAmount: 'התקבל בפועל',
     amountDue: 'יתרה כוללת שלא שולמה',
     confirmedCash: 'מזומן שהתקבל',
-    confirmedVisa: 'תשלומי ויזה שאושרו',
-    overdueUnconfirmedVisa: 'ויזה באיחור וטרם אושרה',
+    confirmedVisa: 'ויזה ששולמה לפי לוח הזמנים',
     futureScheduledVisa: 'תשלומי ויזה עתידיים מתוכננים',
     paymentStatus: 'סטטוס תשלום',
     notes: 'הערות',
@@ -136,8 +133,7 @@ const LABELS: Record<Language, Record<string, string>> = {
     paidAmount: 'المبلغ المحصل فعلياً',
     amountDue: 'إجمالي المبلغ غير المدفوع',
     confirmedCash: 'النقد المستلم',
-    confirmedVisa: 'دفعات فيزا المؤكدة',
-    overdueUnconfirmedVisa: 'فيزا متأخرة وغير مؤكدة',
+    confirmedVisa: 'Visa المدفوعة حسب الجدول',
     futureScheduledVisa: 'دفعات فيزا مستقبلية مجدولة',
     paymentStatus: 'حالة الدفع',
     notes: 'ملاحظات',
@@ -275,7 +271,6 @@ function renderInvoiceHtml(options: PDFOptions, logoUrl: string | null, signatur
         ${renderMetric(labels.confirmedCash, formatCurrency(financials.confirmedCash, trip.currency || 'USD', language))}
         ${renderMetric(labels.confirmedVisa, formatCurrency(financials.confirmedVisa, trip.currency || 'USD', language))}
         ${renderMetric(labels.paidAmount, formatCurrency(financials.amountPaid, trip.currency || 'USD', language))}
-        ${renderMetric(labels.overdueUnconfirmedVisa, formatCurrency(financials.overdueUnconfirmedVisa, trip.currency || 'USD', language))}
         ${renderMetric(labels.futureScheduledVisa, formatCurrency(financials.futureScheduledVisa, trip.currency || 'USD', language))}
         ${renderMetric(labels.amountDue, formatCurrency(financials.amountDue, trip.currency || 'USD', language), true)}
         ${renderMetric(labels.paymentStatus, paidStatus)}
@@ -314,7 +309,6 @@ function renderSummaryHtml(options: PDFOptions, logoUrl: string | null, signatur
       <td>${escapeHtml(formatCurrency(value.confirmedCash, trip.currency || summaryCurrency, language))}</td>
       <td>${escapeHtml(formatCurrency(value.confirmedVisa, trip.currency || summaryCurrency, language))}</td>
       <td>${escapeHtml(formatCurrency(value.amountPaid, trip.currency || summaryCurrency, language))}</td>
-      <td>${escapeHtml(formatCurrency(value.overdueUnconfirmedVisa, trip.currency || summaryCurrency, language))}</td>
       <td>${escapeHtml(formatCurrency(value.futureScheduledVisa, trip.currency || summaryCurrency, language))}</td>
       <td>${escapeHtml(formatCurrency(value.amountDue, trip.currency || summaryCurrency, language))}</td>
       <td>${escapeHtml(getPaymentStatusLabel(value.paymentStatus, language))}</td>
@@ -354,7 +348,6 @@ function renderSummaryHtml(options: PDFOptions, logoUrl: string | null, signatur
             <th>${escapeHtml(labels.confirmedCash)}</th>
             <th>${escapeHtml(labels.confirmedVisa)}</th>
             <th>${escapeHtml(labels.paidAmount)}</th>
-            <th>${escapeHtml(labels.overdueUnconfirmedVisa)}</th>
             <th>${escapeHtml(labels.futureScheduledVisa)}</th>
             <th>${escapeHtml(labels.amountDue)}</th>
             <th>${escapeHtml(labels.paymentStatus)}</th>
@@ -458,7 +451,6 @@ async function generateTripFallbackPDF(mode: 'invoice' | 'summary', options: PDF
       [labels.confirmedCash, formatCurrency(financials.confirmedCash, trip.currency || 'USD', language)],
       [labels.confirmedVisa, formatCurrency(financials.confirmedVisa, trip.currency || 'USD', language)],
       [labels.paidAmount, formatCurrency(financials.amountPaid, trip.currency || 'USD', language)],
-      [labels.overdueUnconfirmedVisa, formatCurrency(financials.overdueUnconfirmedVisa, trip.currency || 'USD', language)],
       [labels.futureScheduledVisa, formatCurrency(financials.futureScheduledVisa, trip.currency || 'USD', language)],
       [labels.amountDue, formatCurrency(financials.amountDue, trip.currency || 'USD', language)],
       [labels.paymentStatus, getPaymentStatusLabel(financials.paymentStatus, language)],
@@ -501,7 +493,6 @@ async function generateTripFallbackPDF(mode: 'invoice' | 'summary', options: PDF
       formatCurrency(value.confirmedCash, trip.currency || summaryCurrency, language),
       formatCurrency(value.confirmedVisa, trip.currency || summaryCurrency, language),
       formatCurrency(value.amountPaid, trip.currency || summaryCurrency, language),
-      formatCurrency(value.overdueUnconfirmedVisa, trip.currency || summaryCurrency, language),
       formatCurrency(value.futureScheduledVisa, trip.currency || summaryCurrency, language),
       formatCurrency(value.amountDue, trip.currency || summaryCurrency, language),
       getPaymentStatusLabel(value.paymentStatus, language),
@@ -512,7 +503,7 @@ async function generateTripFallbackPDF(mode: 'invoice' | 'summary', options: PDF
       startY: 72,
       styles: { fontSize: 9, halign: isRtl ? 'right' : 'left' },
       headStyles: { fillColor: [51, 65, 85] },
-      head: [[labels.client, labels.destination, labels.dates, labels.salePrice, labels.confirmedCash, labels.confirmedVisa, labels.paidAmount, labels.overdueUnconfirmedVisa, labels.futureScheduledVisa, labels.amountDue, labels.paymentStatus]],
+      head: [[labels.client, labels.destination, labels.dates, labels.salePrice, labels.confirmedCash, labels.confirmedVisa, labels.paidAmount, labels.futureScheduledVisa, labels.amountDue, labels.paymentStatus]],
       body: detailRows,
     });
   }

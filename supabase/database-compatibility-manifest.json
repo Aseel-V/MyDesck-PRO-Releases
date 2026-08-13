@@ -1,10 +1,16 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "version": "1.0.0",
-  "expected_migration_version": "20260729130000",
+  "expected_migration_version": "20260813120000",
   "rpcs": [
     {
       "name": "get_travel_payment_contract_version",
+      "arguments": [],
+      "return_type": "integer",
+      "grants": ["authenticated"]
+    },
+    {
+      "name": "materialize_due_visa_progress_events",
       "arguments": [],
       "return_type": "integer",
       "grants": ["authenticated"]

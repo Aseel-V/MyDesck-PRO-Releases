@@ -102,9 +102,7 @@ export default function PaymentHealth({
           {[
             ['confirmedCash', paymentHealth.confirmed_cash],
             ['confirmedVisa', paymentHealth.confirmed_visa],
-            ['overdueUnconfirmedVisa', paymentHealth.overdue_unconfirmed_visa],
             ['futureScheduledVisa', paymentHealth.future_scheduled_visa],
-            ['currentlyDueUnconfirmed', paymentHealth.currently_due_unconfirmed],
             ['totalUnpaid', paymentHealth.total_unpaid],
           ].map(([key, value]) => (
             <div key={String(key)}>
