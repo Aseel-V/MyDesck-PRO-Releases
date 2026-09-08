@@ -70,32 +70,15 @@ Storage buckets are provisioned by migrations:
 
 ## Production parity inspection instructions
 
-When read-only database credentials (`DATABASE_URL`) for production are available, export the production catalog using the exact queries used in `scripts/test-security-postgres.mjs`:
-
-```bash
-# Export production catalog to JSON
-node -e "
-import pg from 'pg';
-import { writeFileSync } from 'node:fs';
-const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
-await client.connect();
-const catalog = {};
-for (const [name, sql] of Object.entries({
-  tables: \"SELECT schemaname,tablename,rowsecurity FROM pg_tables WHERE schemaname IN ('public','private','private_security','storage') ORDER BY 1,2\",
-  columns: \"SELECT table_schema,table_name,column_name,data_type,is_nullable,column_default FROM information_schema.columns WHERE table_schema IN ('public','private','private_security','storage') ORDER BY 1,2,ordinal_position\",
-  indexes: \"SELECT schemaname,tablename,indexname,indexdef FROM pg_indexes WHERE schemaname IN ('public','storage') ORDER BY 1,2,3\",
-  constraints: \"SELECT n.nspname AS schema,c.relname AS table_name,k.conname,pg_get_constraintdef(k.oid) AS definition FROM pg_constraint k JOIN pg_class c ON c.oid=k.conrelid JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname IN ('public','storage') ORDER BY 1,2,3\",
-  triggers: \"SELECT n.nspname AS schema,c.relname AS table_name,t.tgname,pg_get_triggerdef(t.oid) AS definition FROM pg_trigger t JOIN pg_class c ON c.oid=t.tgrelid JOIN pg_namespace n ON n.oid=c.relnamespace WHERE NOT t.tgisinternal AND n.nspname IN ('public','auth','storage') ORDER BY 1,2,3\",
-  policies: \"SELECT * FROM pg_policies WHERE schemaname IN ('public','storage') ORDER BY schemaname,tablename,policyname\",
-  functions: \"SELECT n.nspname AS schema,p.proname AS name,pg_get_function_identity_arguments(p.oid) AS arguments,p.prosecdef AS security_definer,p.proconfig,p.proacl,pg_get_functiondef(p.oid) AS definition FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname IN ('public','private','private_security') AND p.prokind='f' ORDER BY 1,2,3\"
-})) catalog[name] = (await client.query(sql)).rows;
-await client.end();
-writeFileSync('results/production-schema-catalog.json', JSON.stringify(catalog, null, 2));
-console.log('Production catalog exported successfully.');
-"
-```
-
-Then diff `results/production-schema-catalog.json` against `results/rebuilt-schema-catalog.json`.
+After generating the rebuilt catalog with `npm run test:migrations:zero`, set
+`PRODUCTION_DATABASE_URL` to a read-only connection and run
+`npm run test:production-parity`. The verifier begins a `READ ONLY`
+transaction and confirms `transaction_read_only=on` before querying metadata.
+It compares application tables, columns, indexes, constraints, triggers, RLS and
+FORCE RLS state, policies, function signatures/returns/security/search paths/
+grants/body hashes, views, and application storage buckets. Output contains
+only metadata digests and classifications; credentials and function bodies are
+never written or printed.
 
 ## Release decision
 
@@ -104,4 +87,3 @@ Then diff `results/production-schema-catalog.json` against `results/rebuilt-sche
 - **Full local Supabase HTTP integration**: **BLOCKED** by Docker service unavailability in the local host environment.
 - **Production live parity certification**: **BLOCKED** by lack of direct read-only PostgreSQL connection string for production.
 - **Phase 2 Gate Decision**: **NO-GO** until live production parity verification and the real Supabase integration test suite pass with real evidence.
-

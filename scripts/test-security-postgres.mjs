@@ -30,13 +30,15 @@ try {
   console.log(`Empty PostgreSQL rebuild: ${report.migrations.length} migrations applied.`);
   const catalog = {};
   for (const [name, sql] of Object.entries({
-    tables: "SELECT schemaname,tablename,rowsecurity FROM pg_tables WHERE schemaname IN ('public','private','private_security','storage') ORDER BY 1,2",
+    tables: "SELECT n.nspname AS schemaname,c.relname AS tablename,c.relrowsecurity AS rowsecurity,c.relforcerowsecurity AS force_row_security FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE c.relkind='r' AND n.nspname IN ('public','private','private_security','storage') ORDER BY 1,2",
     columns: "SELECT table_schema,table_name,column_name,data_type,is_nullable,column_default FROM information_schema.columns WHERE table_schema IN ('public','private','private_security','storage') ORDER BY 1,2,ordinal_position",
     indexes: "SELECT schemaname,tablename,indexname,indexdef FROM pg_indexes WHERE schemaname IN ('public','storage') ORDER BY 1,2,3",
     constraints: "SELECT n.nspname AS schema,c.relname AS table_name,k.conname,pg_get_constraintdef(k.oid) AS definition FROM pg_constraint k JOIN pg_class c ON c.oid=k.conrelid JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname IN ('public','storage') ORDER BY 1,2,3",
     triggers: "SELECT n.nspname AS schema,c.relname AS table_name,t.tgname,pg_get_triggerdef(t.oid) AS definition FROM pg_trigger t JOIN pg_class c ON c.oid=t.tgrelid JOIN pg_namespace n ON n.oid=c.relnamespace WHERE NOT t.tgisinternal AND n.nspname IN ('public','auth','storage') ORDER BY 1,2,3",
     policies: "SELECT * FROM pg_policies WHERE schemaname IN ('public','storage') ORDER BY schemaname,tablename,policyname",
-    functions: "SELECT n.nspname AS schema,p.proname AS name,pg_get_function_identity_arguments(p.oid) AS arguments,p.prosecdef AS security_definer,p.proconfig,p.proacl,pg_get_functiondef(p.oid) AS definition FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname IN ('public','private','private_security') AND p.prokind='f' ORDER BY 1,2,3",
+    functions: "SELECT n.nspname AS schema,p.proname AS name,pg_get_function_identity_arguments(p.oid) AS arguments,pg_get_function_result(p.oid) AS return_type,p.prosecdef AS security_definer,p.proconfig AS configuration,p.proacl AS grants,md5(regexp_replace(pg_get_functiondef(p.oid),'[[:space:]]+',' ','g')) AS definition_hash FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname IN ('public','private','private_security') AND p.prokind='f' ORDER BY 1,2,3",
+    views: "SELECT schemaname,viewname,md5(regexp_replace(definition,'[[:space:]]+',' ','g')) AS definition_hash FROM pg_views WHERE schemaname IN ('public','private','private_security') ORDER BY 1,2",
+    storage_buckets: "SELECT id,name,public,file_size_limit,allowed_mime_types FROM storage.buckets WHERE id IN ('logos','business-logos','business-signatures','trip-attachments','restaurant-assets') ORDER BY id",
   })) catalog[name]=(await client.query(sql)).rows;
   mkdirSync('results',{recursive:true});
   writeFileSync('results/rebuilt-schema-catalog.json',JSON.stringify(catalog,null,2));
