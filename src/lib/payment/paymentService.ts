@@ -171,11 +171,11 @@ export class CardPaymentHandler extends PaymentHandler {
     return this.unavailable(request.method);
   }
 
-  async refund(_request: RefundRequest): Promise<PaymentResult> {
+  async refund(): Promise<PaymentResult> {
     return this.unavailable();
   }
 
-  async void(_transactionId: string): Promise<PaymentResult> {
+  async void(): Promise<PaymentResult> {
     return this.unavailable();
   }
 }

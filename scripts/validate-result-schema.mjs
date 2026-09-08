@@ -1,4 +1,5 @@
 import { readFileSync, existsSync } from 'node:fs';
+import { assertedResults, categoryResults } from './staging-evidence.mjs';
 
 /**
  * Shared Result Schema Validator
@@ -143,7 +144,13 @@ export function validateResultFile(filePath, expectedTest, expectedSha, expected
       console.error(`❌ FAIL CLOSED: staging_url in ${filePath} must be a valid HTTPS URL`);
       process.exit(1);
     }
-    ['cash_status', 'visa_status', 'mixed_status', 'currency_status', 'validation_status', 'sorting_status', 'analytics_status', 'rls_status']
+    const report = { status: 'passed', tests: data.tests };
+    const counts = assertedResults(report);
+    categoryResults(report);
+    if (counts.passed_tests !== data.passed_tests || counts.assertions !== data.assertions) {
+      throw new Error('Browser evidence counts do not match executed assertions');
+    }
+    ['cash_status', 'visa_status', 'mixed_status', 'currency_status', 'validation_status', 'sorting_status', 'analytics_status']
       .forEach(field => assertAllowed(field, ['STAGING PASS']));
     assertInteger('passed_tests', value => value > 0, 'a positive integer');
     assertInteger('failed_tests', value => value === 0, 'zero');

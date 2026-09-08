@@ -5,7 +5,8 @@ if (!container || !/^[a-zA-Z0-9_-]+$/.test(container)) {
   console.error('NOT RUN: set SECURITY_DB_CONTAINER to the ephemeral Supabase database container.');
   process.exit(2);
 }
-const sql = readFileSync(new URL('./security/tenant-isolation.sql', import.meta.url), 'utf8');
+const sql = ['tenant-isolation.sql','restaurant-isolation.sql','storage-isolation.sql','travel-isolation.sql'].map(file =>
+  readFileSync(new URL(`./security/${file}`, import.meta.url), 'utf8')).join('\n');
 const result = spawnSync('docker', ['exec', '-i', container, 'psql', '-X', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1'], { input: sql, encoding: 'utf8', timeout: 120000 });
 if (result.status !== 0 || !result.stdout?.includes('SECURITY_ASSERTIONS_COMPLETED')) {
   console.error(result.stderr || result.error?.message || 'Security assertions did not complete.');

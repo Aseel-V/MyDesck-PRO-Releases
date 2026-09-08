@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { assertedResults } from './staging-evidence.mjs';
+import { assertedResults, categoryResults } from './staging-evidence.mjs';
 mkdirSync('results', { recursive: true });
 const output = 'results/playwright-result.json';
 const report = resolve('results/playwright-assertions.json');
@@ -18,7 +18,7 @@ try {
   const evidence = JSON.parse(readFileSync(report, 'utf8'));
   const counts = assertedResults(evidence);
   writeFileSync(output, JSON.stringify({
-    test: 'playwright', status: 'STAGING PASS', ...counts,
+    test: 'playwright', status: 'STAGING PASS', ...counts, ...categoryResults(evidence),
     commit_sha: process.env.COMMIT_SHA || process.env.GITHUB_SHA || 'local',
     workflow_run_id: String(process.env.RUN_ID || process.env.GITHUB_RUN_ID || 'local'),
     timestamp: new Date().toISOString(), staging_url: process.env.STAGING_APP_URL,

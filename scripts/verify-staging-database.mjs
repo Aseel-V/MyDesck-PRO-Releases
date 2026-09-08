@@ -85,26 +85,30 @@ assert.ok(invalidPlanCall.error, 'Invalid payment plan RPC call must fail');
 
 // Confirm no partial trip was saved
 const checkTrip = await supabase.from('trips').select('id').eq('destination', 'Rollback Test');
-assert.equal(checkTrip.data?.length || 0, 0, 'No partial trip must remain after failed transaction');
+assert.equal(checkTrip.error, null, 'Rollback verification SELECT must succeed');
+assert.equal(checkTrip.data?.length, 0, 'No partial trip must remain after failed transaction');
 console.log('✓ Transaction rollback verified: No partial trip saved on failure');
 
 mkdirSync('results', { recursive: true });
 const result = {
   test: 'staging-database',
-  status: 'STAGING PASS',
+  status: 'PARTIAL - NOT RELEASE EVIDENCE',
   commit_sha: process.env.COMMIT_SHA || process.env.GITHUB_SHA || 'local',
   workflow_run_id: String(process.env.RUN_ID || process.env.GITHUB_RUN_ID || 'local'),
   timestamp: new Date().toISOString(),
-  migration_status: 'STAGING PASS',
-  rpc_resolution_status: 'STAGING PASS',
-  cash_status: 'STAGING PASS',
-  visa_status: 'STAGING PASS',
-  mixed_status: 'STAGING PASS',
-  rls_status: 'STAGING PASS',
-  rollback_status: 'STAGING PASS',
+  migration_status: 'PARTIAL - NOT RELEASE EVIDENCE',
+  rpc_resolution_status: 'PARTIAL - NOT RELEASE EVIDENCE',
+  cash_status: 'PARTIAL - NOT RELEASE EVIDENCE',
+  visa_status: 'PARTIAL - NOT RELEASE EVIDENCE',
+  mixed_status: 'PARTIAL - NOT RELEASE EVIDENCE',
+  rls_status: 'PARTIAL - NOT RELEASE EVIDENCE',
+  rollback_status: 'PARTIAL - NOT RELEASE EVIDENCE',
   staging_database_host: targetHost,
   details: 'Live RPC resolution, parameters, and transaction rollback verified on Supabase Staging.'
 };
 writeFileSync('results/staging-database-result.json', JSON.stringify(result, null, 2), 'utf8');
 
 console.log('✓ Live Supabase Staging Database Contract Verification PASSED.');
+
+console.error('Staging security is NOT VERIFIED: this legacy service-role probe does not test JWT tenant isolation or migration parity.');
+process.exit(2);

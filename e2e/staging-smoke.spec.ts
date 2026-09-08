@@ -107,7 +107,7 @@ test.describe('Staging Real Application Smoke Suite', () => {
     await expect(page.getByText(/Rooms/i)).not.toBeVisible();
   });
 
-  test('Multi-Tenant RLS Security Isolation', async ({ page }) => {
+  test('User switch hides another users trip in the UI', async ({ page }) => {
     // User A creates trip
     await page.goto(STAGING_URL);
     await page.click('text=New Trip');

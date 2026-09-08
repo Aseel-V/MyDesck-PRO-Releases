@@ -23,6 +23,9 @@ permissions:
   contents: read
 
 jobs:
+  phase1-security:
+    uses: ./.github/workflows/phase1-security.yml
+
   manual-desktop-dry-run:
     name: Build Desktop Artifacts Without Publishing
     if: github.event_name == 'workflow_dispatch'
@@ -38,6 +41,7 @@ jobs:
       - run: npm run dist:win
 
   tag-release-validation:
+    needs: phase1-security
     name: Validate Tag Release Contract
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
@@ -224,6 +228,7 @@ jobs:
             --notes-file release-notes.md
 
   verify-staging-run:
+    needs: phase1-security
     name: 1. Query GitHub API & Verify Tamper-Resistant Staging Evidence
     if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest

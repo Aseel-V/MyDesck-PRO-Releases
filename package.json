@@ -88,7 +88,7 @@
     "test:trip-smoke": "node scripts/run-typescript-source-test.mjs scripts/test-trip-smoke-suite.mjs",
     "test:currency-regression": "node scripts/run-typescript-source-test.mjs scripts/test-currency-regression.mjs",
     "test:validation-ux": "node scripts/run-typescript-source-test.mjs scripts/test-validation-ux-gate.mjs",
-    "test:rls-security": "node scripts/run-typescript-source-test.mjs scripts/test-rls-security.mjs",
+    "test:rls-security": "node scripts/test-security-postgres.mjs",
     "test:desktop-assets": "node scripts/verify-desktop-release-assets.mjs",
     "test:upgrade-path": "node scripts/verify-upgrade-path.mjs",
     "test:pwa-contract": "node scripts/check-pwa-cache-contract.mjs",
@@ -114,7 +114,10 @@
     "release": "npm run build && dotenv -- electron-builder --win --publish always",
     "release:ci:win": "npm run build && npm run test:auth-bundle && electron-builder --win --publish always",
     "release:patch": "npm version patch && npm run release",
-    "release:minor": "npm version minor && npm run release"
+    "release:minor": "npm version minor && npm run release",
+    "test:security:unit": "node scripts/test-staging-evidence.mjs && node scripts/run-typescript-source-test.mjs scripts/test-card-processing-disabled.ts && node scripts/run-typescript-source-test.mjs scripts/test-whatsapp-disabled.ts && node scripts/run-typescript-source-test.mjs scripts/test-business-images.ts",
+    "test:migrations:zero": "node scripts/test-security-postgres.mjs --migrations-only",
+    "test:security:http": "node scripts/test-security-http.mjs"
   },
   "dependencies": {
     "@fontsource/cairo": "^5.2.7",
@@ -159,6 +162,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
+    "@playwright/test": "1.63.0",
     "@types/react": "^18.3.27",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^4.7.0",

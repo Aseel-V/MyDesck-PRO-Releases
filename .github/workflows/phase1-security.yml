@@ -1,0 +1,74 @@
+name: Phase 1 security floor
+on:
+  push:
+    branches: [main, 'codex/phase1-security-*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  code-and-postgres:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run build
+      - run: npm run test:security:unit
+      - run: npm run test:rls-security
+      - run: npm run test:payment-canonical
+      - run: npm run test:trip-smoke
+      - run: npm run test:phone-whatsapp
+      - run: npm audit --audit-level=high
+      - run: npm run test:secret-leaks
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase1-postgres-evidence
+          path: |
+            results/security-postgres.json
+            results/rebuilt-schema-catalog.json
+  supabase-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.117.0
+      - name: Build empty Supabase and apply every migration
+        run: |
+          supabase start
+          supabase db reset --local --no-seed
+      - name: Execute SQL with real Supabase roles and policies
+        env:
+          SECURITY_DB_CONTAINER: supabase_db_mydesck-security
+        run: node scripts/test-rls-security.mjs
+      - name: Start Edge Runtime and test JWT, storage and endpoint boundaries
+        run: |
+          supabase functions serve > /tmp/mydesck-edge.log 2>&1 &
+          supabase status -o env > /tmp/mydesck-security.env
+          set -a
+          source /tmp/mydesck-security.env
+          set +a
+          node scripts/test-security-http.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase1-supabase-evidence
+          path: results/security-http.json
+      - if: always()
+        run: supabase stop --no-backup
