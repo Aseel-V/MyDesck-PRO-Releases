@@ -129,13 +129,15 @@ test.describe('Staging Real Application Smoke Suite', () => {
     await page.goto(STAGING_URL);
     // Verify sort selector exists and supports required sort keys
     const sortSelect = page.locator('select[name="sort_by"]');
-    if (await sortSelect.isVisible()) {
+    await expect(sortSelect).toBeVisible();
+    {
       await sortSelect.selectOption('newest');
       await sortSelect.selectOption('oldest');
       await sortSelect.selectOption('alphabetical');
       await sortSelect.selectOption('date');
       await sortSelect.selectOption('price');
       await sortSelect.selectOption('profit');
+      await expect(sortSelect).toHaveValue('profit');
     }
   });
 
