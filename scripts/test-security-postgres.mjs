@@ -1,9 +1,15 @@
+// Sanitize environment variables for Windows to prevent UTF-8 encoding failure during PostgreSQL initdb
+for (const [k, v] of Object.entries(process.env)) {
+  if (/[^\x00-\x7F]/.test(k) || /[^\x00-\x7F]/.test(v)) {
+    delete process.env[k];
+  }
+}
+if (process.platform === 'win32') process.env.PATH += `;${process.env.SystemRoot}\\System32`;
 const { default: EmbeddedPostgres } = await import(process.env.SECURITY_PG_RUNTIME || 'embedded-postgres');
 import { mkdtempSync, readFileSync, readdirSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { randomBytes } from 'node:crypto';
-if (process.platform === 'win32') process.env.PATH += `;${process.env.SystemRoot}\\System32`;
 
 const directory = mkdtempSync(join(tmpdir(), 'mydesck-security-pg-'));
 const pg = new EmbeddedPostgres({ databaseDir: join(directory,'data'), user: 'postgres', password: randomBytes(24).toString('hex'),
@@ -43,7 +49,26 @@ try {
     await client.query(readFileSync('scripts/verify-canonical-trip-payments.sql','utf8'));
     report.tests.push('verify-canonical-trip-payments.sql');
     console.log('Canonical travel payment database assertions completed.');
-    // Negative control: deliberately reopen self-promotion inside a rollback.
+
+    // Reconciled RPC assertions: verify existence and caller security
+    await client.query(`
+      SELECT public.get_server_time();
+      DO $$
+      BEGIN
+        BEGIN
+          PERFORM public.delete_menu_item_secure('00000000-0000-0000-0000-000000000000'::uuid);
+          RAISE EXCEPTION 'delete_menu_item_secure should have rejected unauthenticated caller';
+        EXCEPTION WHEN OTHERS THEN
+          IF SQLERRM NOT LIKE '%Not authenticated%' AND SQLERRM NOT LIKE '%Access denied%' THEN
+            RAISE EXCEPTION 'Unexpected error: %', SQLERRM;
+          END IF;
+        END;
+      END $$;
+    `);
+    report.tests.push('reconciled-application-rpcs');
+    console.log('Reconciled application RPC assertions completed.');
+
+    // Negative control 1: deliberately reopen self-promotion inside a rollback.
     await client.query('BEGIN; ALTER TABLE public.user_profiles DISABLE TRIGGER guard_platform_profile_fields');
     let mutationDetected=false;
     try { await client.query(readFileSync('scripts/security/tenant-isolation.sql','utf8')); }
@@ -51,7 +76,27 @@ try {
     await client.query('ROLLBACK');
     if (!mutationDetected) throw new Error('Security suite failed to detect intentionally reopened self-promotion');
     report.tests.push('negative control: disabled role guard detected');
-    console.log('Negative control passed: reopened self-promotion makes the security test fail.');
+    console.log('Negative control 1 passed: reopened self-promotion makes the security test fail.');
+
+    // Negative control 2: deliberately weaken trips RLS inside a rollback.
+    await client.query('BEGIN; CREATE POLICY "deliberate_leak_control" ON public.trips FOR SELECT TO authenticated USING (true)');
+    let tripLeakDetected=false;
+    try { await client.query(readFileSync('scripts/security/travel-isolation.sql','utf8')); }
+    catch (error) { tripLeakDetected=error.message.includes('Cross-tenant trip SELECT'); }
+    await client.query('ROLLBACK');
+    if (!tripLeakDetected) throw new Error('Security suite failed to detect intentionally weakened trip isolation');
+    report.tests.push('negative control: permissive trip policy detected');
+    console.log('Negative control 2 passed: weakened trip isolation makes the travel test fail.');
+
+    // Negative control 3: deliberately make signature bucket public inside a rollback.
+    await client.query('BEGIN; UPDATE storage.buckets SET public=true WHERE id=\'business-signatures\'');
+    let bucketLeakDetected=false;
+    try { await client.query(readFileSync('scripts/security/storage-isolation.sql','utf8')); }
+    catch (error) { bucketLeakDetected=error.message.includes('Signature bucket is public'); }
+    await client.query('ROLLBACK');
+    if (!bucketLeakDetected) throw new Error('Security suite failed to detect intentionally public signature bucket');
+    report.tests.push('negative control: public signature bucket detected');
+    console.log('Negative control 3 passed: public signature bucket makes the storage test fail.');
   }
   report.status='PASS';
 } catch (error) {

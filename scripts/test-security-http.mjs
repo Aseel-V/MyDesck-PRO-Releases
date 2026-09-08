@@ -44,7 +44,15 @@ try {
   assert.ok((await a.client.from('trips').insert({user_id:b.id,destination:'injected',client_name:'X',start_date:'2026-12-01',end_date:'2026-12-02'})).error);
   assert.equal(requireOk(await a.client.rpc('get_trip_details',{p_trip_id:trip.id})),null);
   assert.equal(requireOk(await service.from('trips').select('client_name').eq('id',trip.id).single()).client_name,'B');
-  checked('REST SELECT/INSERT/UPDATE/DELETE and detail RPC cannot access B trip');
+
+  // Reconciled RPC HTTP assertions
+  const serverTime = requireOk(await a.client.rpc('get_server_time'));
+  assert.ok(serverTime, 'get_server_time must return timestamp');
+  const crossLog = await a.client.rpc('log_business_activity_v2', { p_activity_type: 'TEST', p_details: {}, p_business_id: b.id });
+  assert.ok(crossLog.error, 'Cross-tenant log_business_activity_v2 must be rejected');
+  const ownLog = await a.client.rpc('log_business_activity_v2', { p_activity_type: 'TEST', p_details: {}, p_business_id: a.id });
+  assert.equal(ownLog.error, null, 'Own log_business_activity_v2 must succeed');
+  checked('REST SELECT/INSERT/UPDATE/DELETE and detail/reconciled RPCs enforce tenant boundary');
 
   const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a9L8AAAAASUVORK5CYII=','base64');
   for (const [bucket,path,client] of [

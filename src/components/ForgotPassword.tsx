@@ -21,24 +21,6 @@ export default function ForgotPassword({ onBack }: ForgotPasswordProps) {
     setError(null);
 
     try {
-      // Securely check if email exists using the RPC function
-      // Note: You must run the SQL from supabase_functions.sql for this to work!
-      const { data: exists, error: checkError } = await supabase
-        .rpc('check_email_exists', { email_input: email });
-
-      if (checkError) {
-        console.error('RPC Error:', checkError);
-        // Fallback: If RPC is missing/fails, we could either throw or proceed blindly.
-        // For now, let's treat it as a technical error or throw "Email not found" if we want to be strict.
-        // But if the user hasn't run the SQL, this will fail.
-        // Let's assume the user will run the SQL.
-        throw new Error('System configuration error: Verification function missing.');
-      }
-
-      if (!exists) {
-        throw new Error(t('forgotPassword.emailNotFound'));
-      }
-
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         // Crucial for HashRouter: Must include the /#/ in the redirect URL
         redirectTo: window.location.origin + '/#/reset-password',
