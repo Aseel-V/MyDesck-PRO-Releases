@@ -410,6 +410,9 @@ export function useMarketFiscal() {
     reason: string,
     paymentMethod: PaymentMethod
   ): Promise<SaleResult> => {
+    if (paymentMethod === 'credit_card' || paymentMethod === 'debit_card') {
+      return { success: false, error: 'Card refunds are unavailable. No refund or credit note was created.' };
+    }
     if (!fiscalService) {
       return { success: false, error: 'Fiscal service not initialized' };
     }
@@ -451,6 +454,8 @@ export function useMarketFiscal() {
         amount: originalDoc.totalAmount,
         reason,
       }, paymentMethod);
+
+      if (!refundResult.success) throw new Error(refundResult.error || 'Refund failed');
 
       // Record in shift
       await recordShiftTransaction(state.currentShift.id, {

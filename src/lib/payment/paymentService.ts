@@ -3,7 +3,7 @@
  * 
  * Abstract payment handling for Israeli POS with support for:
  * - Cash payments (with drawer integration)
- * - Card payments (EMV terminal stub)
+ * - Card processing (unavailable until a provider is integrated)
  * - Multi-tender (split payments)
  * - Refunds and voids
  * 
@@ -11,7 +11,7 @@
  */
 
 import type { PaymentMethod } from '../../types/fiscal';
-import { toNIS } from '../../types/fiscal';
+
 
 // ============================================================================
 // TYPES
@@ -154,80 +154,31 @@ export class CashPaymentHandler extends PaymentHandler {
 
 export class CardPaymentHandler extends PaymentHandler {
   readonly method: PaymentMethod = 'credit_card';
-  private terminalId: string;
 
-  constructor(terminalId: string = 'DEFAULT') {
-    super();
-    this.terminalId = terminalId;
+  private unavailable(method: PaymentMethod = 'credit_card'): PaymentResult {
+    return {
+      success: false,
+      transactionId: '',
+      method,
+      amount: 0,
+      error: 'Card processing is unavailable. No payment, refund or void was performed.',
+      errorCode: 'CARD_PROCESSING_UNAVAILABLE',
+      timestamp: new Date().toISOString(),
+    };
   }
 
   async process(request: CardPaymentRequest): Promise<PaymentResult> {
-    const transactionId = this.generateTransactionId();
-
-    // TODO: Implement actual EMV terminal communication
-    // This is a stub that should be replaced with real terminal integration
-    console.log(`[CardPayment] Processing ${toNIS(request.amount)} NIS on terminal ${this.terminalId}`);
-
-    // Simulate terminal interaction
-    // In production, this would:
-    // 1. Send transaction to terminal via serial/TCP
-    // 2. Wait for customer to insert/tap card
-    // 3. Process PIN if required
-    // 4. Receive authorization response
-
-    // For now, return mock success
-    return {
-      success: true,
-      transactionId,
-      method: request.method,
-      amount: request.amount,
-      authCode: this.generateAuthCode(),
-      cardLastFour: '****',
-      cardType: 'credit',
-      cardBrand: 'Unknown',
-      terminalTransactionId: `TRM-${Date.now()}`,
-      timestamp: new Date().toISOString(),
-    };
+    return this.unavailable(request.method);
   }
 
-  async refund(request: RefundRequest): Promise<PaymentResult> {
-    const transactionId = this.generateTransactionId();
-
-    // TODO: Implement terminal refund
-    console.log(`[CardPayment] Refunding ${toNIS(request.amount)} NIS`);
-
-    return {
-      success: true,
-      transactionId,
-      method: 'credit_card',
-      amount: -request.amount,
-      authCode: this.generateAuthCode(),
-      timestamp: new Date().toISOString(),
-    };
+  async refund(_request: RefundRequest): Promise<PaymentResult> {
+    return this.unavailable();
   }
 
-  async void(transactionId: string): Promise<PaymentResult> {
-    // TODO: Implement terminal void
-    console.log(`[CardPayment] Voiding transaction ${transactionId}`);
-
-    return {
-      success: true,
-      transactionId: this.generateTransactionId(),
-      method: 'credit_card',
-      amount: 0,
-      timestamp: new Date().toISOString(),
-    };
-  }
-
-  private generateTransactionId(): string {
-    return `CARD-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-  }
-
-  private generateAuthCode(): string {
-    return Math.random().toString(36).substring(2, 8).toUpperCase();
+  async void(_transactionId: string): Promise<PaymentResult> {
+    return this.unavailable();
   }
 }
-
 // ============================================================================
 // PAYMENT SERVICE (ORCHESTRATOR)
 // ============================================================================
