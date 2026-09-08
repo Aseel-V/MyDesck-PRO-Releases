@@ -5,6 +5,9 @@ INSERT INTO auth.users(id,email) VALUES
 INSERT INTO public.restaurant_orders(id,business_id,status) VALUES
  ('21000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','draft'),
  ('21000000-0000-4000-8000-000000000002','20000000-0000-4000-8000-000000000002','draft');
+INSERT INTO public.restaurant_order_items(id,order_id,price_at_time,status) VALUES
+ ('22000000-0000-4000-8000-000000000001','21000000-0000-4000-8000-000000000001',10,'pending'),
+ ('22000000-0000-4000-8000-000000000002','21000000-0000-4000-8000-000000000002',20,'pending');
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000001',true);
 SELECT set_config('request.jwt.claims','{"sub":"20000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
@@ -24,10 +27,29 @@ BEGIN
  EXCEPTION WHEN insufficient_privilege THEN rejected:=true;
  END;
  IF NOT rejected THEN RAISE EXCEPTION 'Cross-tenant order INSERT'; END IF;
+ IF EXISTS(SELECT 1 FROM public.restaurant_order_items WHERE id='22000000-0000-4000-8000-000000000002') THEN RAISE EXCEPTION 'Cross-tenant item SELECT'; END IF;
+ UPDATE public.restaurant_order_items SET notes='attacker' WHERE id='22000000-0000-4000-8000-000000000002';
+ GET DIAGNOSTICS n=ROW_COUNT;
+ IF n<>0 THEN RAISE EXCEPTION 'Cross-tenant item UPDATE'; END IF;
+ DELETE FROM public.restaurant_order_items WHERE id='22000000-0000-4000-8000-000000000002';
+ GET DIAGNOSTICS n=ROW_COUNT;
+ IF n<>0 THEN RAISE EXCEPTION 'Cross-tenant pending item DELETE'; END IF;
+ rejected:=false;
+ BEGIN
+ INSERT INTO public.restaurant_order_items(order_id,price_at_time,status) VALUES ('21000000-0000-4000-8000-000000000002',20,'pending');
+ EXCEPTION WHEN insufficient_privilege THEN rejected:=true;
+ END;
+ IF NOT rejected THEN RAISE EXCEPTION 'Cross-tenant item INSERT'; END IF;
  DELETE FROM public.restaurant_orders WHERE id='21000000-0000-4000-8000-000000000001';
  GET DIAGNOSTICS n=ROW_COUNT;
  IF n<>1 THEN RAISE EXCEPTION 'Own draft DELETE regressed'; END IF;
 END $$;
 RESET ROLE;
+DO $$ BEGIN
+ IF (SELECT count(*) FROM public.restaurant_orders WHERE id='21000000-0000-4000-8000-000000000002')<>1
+ OR (SELECT count(*) FROM public.restaurant_order_items WHERE id='22000000-0000-4000-8000-000000000002')<>1 THEN
+  RAISE EXCEPTION 'Tenant B records were modified';
+ END IF;
+END $$;
 ROLLBACK;
 SELECT 'RESTAURANT_ASSERTIONS_COMPLETED';

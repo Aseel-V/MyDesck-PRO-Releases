@@ -168,6 +168,7 @@
     "dotenv-cli": "^11.0.0",
     "electron": "^33.0.0",
     "electron-builder": "^26.0.12",
+    "embedded-postgres": "17.10.0-beta.17",
     "eslint": "^9.9.1",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.11",

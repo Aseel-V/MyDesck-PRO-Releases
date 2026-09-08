@@ -26,7 +26,7 @@ BEGIN
     END IF;
   ELSIF NEW.role IS DISTINCT FROM OLD.role OR NEW.user_id IS DISTINCT FROM OLD.user_id
      OR NEW.business_id IS DISTINCT FROM OLD.business_id
-     OR (to_jsonb(NEW)->'is_suspended') IS DISTINCT FROM (to_jsonb(OLD)->'is_suspended') THEN
+     OR ((to_jsonb(NEW)->'is_suspended') IS DISTINCT FROM (to_jsonb(OLD)->'is_suspended') AND NOT public.is_platform_admin()) THEN
     RAISE EXCEPTION 'Profile privileges are server managed' USING ERRCODE='42501';
   END IF;
   RETURN NEW;
