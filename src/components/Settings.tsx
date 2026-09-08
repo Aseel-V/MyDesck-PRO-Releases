@@ -394,7 +394,7 @@ export default function Settings() {
       return;
     }
 
-    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'];
+    const allowedTypes = ['image/png', 'image/jpeg'];
     if (!allowedTypes.includes(file.type)) {
       showNotice('error', t('settings.messages.unsupportedLogoType'));
       return;
@@ -405,12 +405,12 @@ export default function Settings() {
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `business-logos/${fileName}`;
+      const filePath = `${user.id}/${fileName}`;
 
       const resizedBlob = await resizeImage(file, 500, 500);
       const resizedFile = new File([resizedBlob], fileName, { type: file.type });
 
-      const { error: uploadError } = await supabase.storage.from('logos').upload(filePath, resizedFile, {
+      const { error: uploadError } = await supabase.storage.from('business-logos').upload(filePath, resizedFile, {
         upsert: true,
         cacheControl: '3600',
         contentType: file.type || 'image/*',
@@ -421,7 +421,7 @@ export default function Settings() {
         throw uploadError;
       }
 
-      const { data: publicUrlData } = supabase.storage.from('logos').getPublicUrl(filePath);
+      const { data: publicUrlData } = supabase.storage.from('business-logos').getPublicUrl(filePath);
       const newLogoUrl = publicUrlData?.publicUrl;
 
       if (!newLogoUrl) throw new Error('Could not get public URL for the uploaded logo.');
@@ -465,9 +465,9 @@ export default function Settings() {
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `sig-${user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `business-signatures/${fileName}`;
+      const filePath = `${user.id}/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage.from('logos').upload(filePath, file, {
+      const { error: uploadError } = await supabase.storage.from('business-signatures').upload(filePath, file, {
         upsert: true,
         cacheControl: '3600',
         contentType: file.type,
@@ -475,8 +475,8 @@ export default function Settings() {
 
       if (uploadError) throw uploadError;
 
-      const { data: publicUrlData } = supabase.storage.from('logos').getPublicUrl(filePath);
-      const newSigUrl = publicUrlData?.publicUrl;
+      const { data: publicUrlData } = supabase.storage.from('business-signatures').getPublicUrl(filePath);
+      const newSigUrl = publicUrlData?.publicUrl?.replace('/object/public/', '/object/authenticated/');
       if (!newSigUrl) throw new Error('Could not get public URL');
 
       setSignatureUrl(newSigUrl);

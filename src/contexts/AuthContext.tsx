@@ -5,6 +5,7 @@ import type { Database } from '../types/supabase';
 import { RestaurantStaff } from '../types/restaurant';
 import { safeImageSrc } from '../lib/safeUrl';
 import { getFriendlyAuthError } from '../lib/authNetwork';
+import { canonicalBusinessImage, resolveBusinessImage } from '../lib/businessImages';
 
 const CACHE_KEY_BUSINESS_PROFILE = 'app_business_profile';
 const CACHE_KEY_USER_PROFILE = 'app_user_profile';
@@ -53,10 +54,10 @@ const sanitizeBusinessProfileUpdates = (
 ): Partial<BusinessProfile> => ({
   ...updates,
   ...(Object.prototype.hasOwnProperty.call(updates, 'logo_url')
-    ? { logo_url: safeImageSrc(updates.logo_url) }
+    ? { logo_url: canonicalBusinessImage(safeImageSrc(updates.logo_url)) }
     : {}),
   ...(Object.prototype.hasOwnProperty.call(updates, 'signature_url')
-    ? { signature_url: safeImageSrc(updates.signature_url) }
+    ? { signature_url: canonicalBusinessImage(safeImageSrc(updates.signature_url)) }
     : {}),
 });
 
@@ -107,7 +108,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('user_id', userId)
         .maybeSingle();
       if (error) throw error;
-      return sanitizeBusinessProfile(data as BusinessProfile | null);
+      if (!data) return null;
+      const [logo_url, signature_url] = await Promise.all([
+        resolveBusinessImage(data.logo_url), resolveBusinessImage(data.signature_url),
+      ]);
+      return sanitizeBusinessProfile({ ...data, logo_url, signature_url } as BusinessProfile);
     } catch (e) {
       console.error('Error fetching profile:', e);
       return null;
@@ -175,6 +180,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshInFlightRef.current = { userId, promise: refreshPromise };
     return refreshPromise;
   }, [fetchProfile, fetchUserProfile]);
+
+  useEffect(() => {
+    if (!user) return;
+    const timer = window.setInterval(() => { void refreshUserData(user.id); }, 300000);
+    return () => window.clearInterval(timer);
+  }, [user, refreshUserData]);
 
   useEffect(() => {
     let mounted = true;

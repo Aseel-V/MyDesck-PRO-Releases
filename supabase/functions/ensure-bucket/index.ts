@@ -69,9 +69,9 @@ Deno.serve(async (req) => {
     // Create bucket if missing
     if (!exists) {
       const { error: createError } = await supabaseAdmin.storage.createBucket("logos", {
-        public: true,
+        public: false,
         fileSizeLimit: 2 * 1024 * 1024, // 2MB
-        allowedMimeTypes: ["image/png", "image/jpeg", "image/jpg", "image/svg+xml"],
+        allowedMimeTypes: ["image/png", "image/jpeg", "image/jpg"],
       });
       if (createError) throw createError;
     }
