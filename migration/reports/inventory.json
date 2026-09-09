@@ -1,0 +1,1968 @@
+{
+  "generatedAt": "2026-09-09T07:35:25.415Z",
+  "note": "Read-only static inventory of the repository. No database or network access.",
+  "source": {
+    "migrationCount": 93,
+    "migrationSqlLines": 15825,
+    "srcFileCount": 244
+  },
+  "client": {
+    "auth": {
+      "total": 11,
+      "methods": {
+        "signOut": 3,
+        "getSession": 2,
+        "updateUser": 2,
+        "onAuthStateChange": 1,
+        "resetPasswordForEmail": 1,
+        "signInWithPassword": 1,
+        "signUp": 1
+      },
+      "sites": [
+        {
+          "file": "src/components/auth/ResetPassword.tsx",
+          "line": 34,
+          "match": "updateUser"
+        },
+        {
+          "file": "src/components/ForgotPassword.tsx",
+          "line": 24,
+          "match": "resetPasswordForEmail"
+        },
+        {
+          "file": "src/components/restaurant/ReservationsBoard.tsx",
+          "line": 393,
+          "match": "getSession"
+        },
+        {
+          "file": "src/components/Settings.tsx",
+          "line": 274,
+          "match": "updateUser"
+        },
+        {
+          "file": "src/contexts/AuthContext.tsx",
+          "line": 170,
+          "match": "signOut"
+        },
+        {
+          "file": "src/contexts/AuthContext.tsx",
+          "line": 199,
+          "match": "getSession"
+        },
+        {
+          "file": "src/contexts/AuthContext.tsx",
+          "line": 236,
+          "match": "signOut"
+        },
+        {
+          "file": "src/contexts/AuthContext.tsx",
+          "line": 269,
+          "match": "onAuthStateChange"
+        },
+        {
+          "file": "src/contexts/AuthContext.tsx",
+          "line": 308,
+          "match": "signUp"
+        },
+        {
+          "file": "src/contexts/AuthContext.tsx",
+          "line": 331,
+          "match": "signInWithPassword"
+        },
+        {
+          "file": "src/contexts/AuthContext.tsx",
+          "line": 379,
+          "match": "signOut"
+        }
+      ]
+    },
+    "tables": {
+      "distinct": 44,
+      "totalCallSites": 224,
+      "access": {
+        "restaurant_orders": {
+          "reads": 5,
+          "writes": 12,
+          "files": [
+            "src/components/analytics/EditRestaurantOrderModal.tsx",
+            "src/components/analytics/RestaurantAnalytics.tsx",
+            "src/components/restaurant/CloseDayWizard.tsx",
+            "src/components/restaurant/OrderHistoryModal.tsx",
+            "src/components/restaurant/OrderModal.tsx",
+            "src/hooks/useRestaurant.ts",
+            "src/modules/market/hooks/useMarketLogic.ts"
+          ]
+        },
+        "trips": {
+          "reads": 8,
+          "writes": 7,
+          "files": [
+            "src/components/CommandPalette.tsx",
+            "src/components/Settings.tsx",
+            "src/components/trips/NewTripForm.tsx",
+            "src/components/trips/TripSmartToolsDialog.tsx",
+            "src/components/trips/TripWhatsappDialog.tsx",
+            "src/hooks/useTripMutations.ts",
+            "src/lib/tripQueries.ts",
+            "src/lib/tripTrashQueries.ts"
+          ]
+        },
+        "restaurant_menu_items": {
+          "reads": 7,
+          "writes": 6,
+          "files": [
+            "src/components/analytics/EditRestaurantOrderModal.tsx",
+            "src/components/dashboards/SupermarketDashboard.tsx",
+            "src/components/market/AddProductModal.tsx",
+            "src/components/repair/RepairOrderModal.tsx",
+            "src/hooks/useRestaurant.ts",
+            "src/lib/demandForecasting.ts",
+            "src/modules/market/hooks/useMarketLogic.ts"
+          ]
+        },
+        "restaurant_staff": {
+          "reads": 3,
+          "writes": 7,
+          "files": [
+            "src/components/restaurant/RestaurantModeRouter.tsx",
+            "src/components/restaurant/StaffShiftScreen.tsx",
+            "src/contexts/RestaurantRoleContext.tsx",
+            "src/hooks/useRestaurant.ts"
+          ]
+        },
+        "restaurant_kitchen_tickets": {
+          "reads": 3,
+          "writes": 6,
+          "files": [
+            "src/hooks/useKitchenDisplay.ts",
+            "src/hooks/useRestaurant.ts"
+          ]
+        },
+        "restaurant_order_items": {
+          "reads": 0,
+          "writes": 8,
+          "files": [
+            "src/components/analytics/EditRestaurantOrderModal.tsx",
+            "src/components/analytics/RestaurantAnalytics.tsx",
+            "src/components/restaurant/OrderModal.tsx",
+            "src/hooks/useRestaurant.ts"
+          ]
+        },
+        "fiscal_documents": {
+          "reads": 5,
+          "writes": 3,
+          "files": [
+            "src/lib/fiscal/bkmvExporter.ts",
+            "src/lib/fiscal/documentNumbering.ts",
+            "src/lib/fiscal/fiscalDocumentService.ts",
+            "src/lib/fiscal/hashChain.ts",
+            "src/lib/fiscal/israelInvoicesApi.ts"
+          ]
+        },
+        "user_profiles": {
+          "reads": 3,
+          "writes": 4,
+          "files": [
+            "src/components/Settings.tsx",
+            "src/components/admin/AdminDashboard.tsx",
+            "src/components/admin/EditUserModal.tsx",
+            "src/contexts/AuthContext.tsx"
+          ]
+        },
+        "business_profiles": {
+          "reads": 3,
+          "writes": 4,
+          "files": [
+            "src/components/Settings.tsx",
+            "src/components/admin/EditUserModal.tsx",
+            "src/components/analytics/RestaurantOrderModal.tsx",
+            "src/contexts/AuthContext.tsx",
+            "src/lib/fiscal/bkmvExporter.ts"
+          ]
+        },
+        "restaurant_tables": {
+          "reads": 1,
+          "writes": 6,
+          "files": [
+            "src/hooks/useRestaurant.ts"
+          ]
+        },
+        "restaurant_guest_profiles": {
+          "reads": 4,
+          "writes": 3,
+          "files": [
+            "src/hooks/useRestaurant.ts"
+          ]
+        },
+        "customer_vehicles": {
+          "reads": 3,
+          "writes": 3,
+          "files": [
+            "src/components/cars/NewCarForm.tsx",
+            "src/components/dashboards/AutoRepairDashboard.tsx",
+            "src/components/repair/RepairOrderModal.tsx"
+          ]
+        },
+        "restaurant_menu_categories": {
+          "reads": 2,
+          "writes": 4,
+          "files": [
+            "src/components/market/AddProductModal.tsx",
+            "src/hooks/useRestaurant.ts"
+          ]
+        },
+        "restaurant_reservations": {
+          "reads": 2,
+          "writes": 4,
+          "files": [
+            "src/hooks/useRestaurant.ts"
+          ]
+        },
+        "z_reports": {
+          "reads": 6,
+          "writes": 0,
+          "files": [
+            "src/lib/fiscal/bkmvExporter.ts",
+            "src/lib/fiscal/hashChain.ts",
+            "src/lib/reports/zReportService.ts"
+          ]
+        },
+        "allocation_numbers_log": {
+          "reads": 1,
+          "writes": 5,
+          "files": [
+            "src/lib/fiscal/israelInvoicesApi.ts"
+          ]
+        },
+        "car_parts": {
+          "reads": 2,
+          "writes": 3,
+          "files": [
+            "src/components/cars/AddServiceModal.tsx",
+            "src/components/parts/CarPartsInventory.tsx"
+          ]
+        },
+        "restaurant_table_sessions": {
+          "reads": 4,
+          "writes": 1,
+          "files": [
+            "src/components/restaurant/OrderEntry.tsx",
+            "src/hooks/useRestaurant.ts"
+          ]
+        },
+        "cash_shifts": {
+          "reads": 5,
+          "writes": 0,
+          "files": [
+            "src/lib/reports/zReportService.ts"
+          ]
+        },
+        "trip_notifications": {
+          "reads": 2,
+          "writes": 3,
+          "files": [
+            "src/lib/tripNotifications.ts",
+            "src/lib/visaPaymentArrivals.ts"
+          ]
+        },
+        "trip_templates": {
+          "reads": 2,
+          "writes": 3,
+          "files": [
+            "src/lib/tripTemplates.ts"
+          ]
+        },
+        "restaurant_waitlist": {
+          "reads": 1,
+          "writes": 3,
+          "files": [
+            "src/hooks/useRestaurant.ts"
+          ]
+        },
+        "trip_whatsapp_templates": {
+          "reads": 1,
+          "writes": 3,
+          "files": [
+            "src/lib/tripWhatsapp.ts"
+          ]
+        },
+        "repair_orders": {
+          "reads": 1,
+          "writes": 2,
+          "files": [
+            "src/components/cars/Cars.tsx",
+            "src/components/repair/RepairOrderModal.tsx"
+          ]
+        },
+        "restaurant_ticket_items": {
+          "reads": 0,
+          "writes": 3,
+          "files": [
+            "src/hooks/useKitchenDisplay.ts",
+            "src/hooks/useRestaurant.ts"
+          ]
+        },
+        "business_settings": {
+          "reads": 1,
+          "writes": 2,
+          "files": [
+            "src/hooks/useRestaurant.ts"
+          ]
+        },
+        "restaurant_modifier_groups": {
+          "reads": 1,
+          "writes": 1,
+          "files": [
+            "src/hooks/useRestaurant.ts"
+          ]
+        },
+        "restaurant_daily_reports": {
+          "reads": 1,
+          "writes": 1,
+          "files": [
+            "src/hooks/useRestaurant.ts"
+          ]
+        },
+        "restaurant_payments": {
+          "reads": 0,
+          "writes": 2,
+          "files": [
+            "src/hooks/useRestaurant.ts"
+          ]
+        },
+        "restaurant_historical_data": {
+          "reads": 1,
+          "writes": 1,
+          "files": [
+            "src/lib/demandForecasting.ts"
+          ]
+        },
+        "fiscal_counters": {
+          "reads": 2,
+          "writes": 0,
+          "files": [
+            "src/lib/fiscal/documentNumbering.ts"
+          ]
+        },
+        "trip_notification_settings": {
+          "reads": 1,
+          "writes": 1,
+          "files": [
+            "src/lib/tripNotifications.ts"
+          ]
+        },
+        "customers_ledger": {
+          "reads": 1,
+          "writes": 0,
+          "files": [
+            "src/components/dashboards/AutoRepairDashboard.tsx"
+          ]
+        },
+        "repair_order_items": {
+          "reads": 0,
+          "writes": 1,
+          "files": [
+            "src/components/repair/RepairOrderModal.tsx"
+          ]
+        },
+        "trip_packing_lists": {
+          "reads": 0,
+          "writes": 1,
+          "files": [
+            "src/components/trips/TripSmartToolsDialog.tsx"
+          ]
+        },
+        "trip_attachment_cleanup_queue": {
+          "reads": 1,
+          "writes": 0,
+          "files": [
+            "src/components/trips/TripTrash.tsx"
+          ]
+        },
+        "restaurant_modifiers": {
+          "reads": 0,
+          "writes": 1,
+          "files": [
+            "src/hooks/useRestaurant.ts"
+          ]
+        },
+        "restaurant_order_item_modifiers": {
+          "reads": 0,
+          "writes": 1,
+          "files": [
+            "src/hooks/useRestaurant.ts"
+          ]
+        },
+        "restaurant_demand_forecasts": {
+          "reads": 0,
+          "writes": 1,
+          "files": [
+            "src/lib/demandForecasting.ts"
+          ]
+        },
+        "fiscal_document_items": {
+          "reads": 0,
+          "writes": 1,
+          "files": [
+            "src/lib/fiscal/fiscalDocumentService.ts"
+          ]
+        },
+        "shift_transactions": {
+          "reads": 0,
+          "writes": 1,
+          "files": [
+            "src/lib/reports/zReportService.ts"
+          ]
+        },
+        "trip_payment_plans": {
+          "reads": 1,
+          "writes": 0,
+          "files": [
+            "src/lib/tripPayments.ts"
+          ]
+        },
+        "trip_installments": {
+          "reads": 1,
+          "writes": 0,
+          "files": [
+            "src/lib/tripPayments.ts"
+          ]
+        },
+        "trip_installment_events": {
+          "reads": 1,
+          "writes": 0,
+          "files": [
+            "src/lib/tripPayments.ts"
+          ]
+        }
+      }
+    },
+    "rpc": {
+      "distinct": 41,
+      "totalCallSites": 47,
+      "names": [
+        "add_repair_service_transaction",
+        "apply_discount_secure",
+        "authenticate_staff",
+        "authorize_staff_action",
+        "cancel_fiscal_document",
+        "close_business_day_secure",
+        "close_shift_with_z_report",
+        "create_kitchen_ticket",
+        "create_trip_event_notification",
+        "create_trip_payment_plan",
+        "delete_menu_item_secure",
+        "delete_staff_secure",
+        "get_deleted_trips_page",
+        "get_next_document_number",
+        "get_previous_document_hash",
+        "get_previous_z_hash",
+        "get_server_time",
+        "get_travel_analytics_summary",
+        "get_travel_payment_analytics",
+        "get_travel_payment_contract_version",
+        "get_travel_reports",
+        "get_trip_activity_page",
+        "get_trip_dashboard_items",
+        "get_trip_details",
+        "get_trip_financial_audit_page",
+        "get_trip_years",
+        "get_trips_page",
+        "log_trip_activity",
+        "mark_all_trip_notifications_read",
+        "materialize_due_visa_progress_events",
+        "open_cash_shift",
+        "permanently_delete_trips",
+        "recalculate_future_trip_installments",
+        "record_trip_cash_payment",
+        "record_trip_installment_payment",
+        "reschedule_trip_installment",
+        "restore_deleted_trips",
+        "retry_trip_attachment_cleanup",
+        "save_trip_transaction",
+        "use_trip_template",
+        "void_order_item_secure"
+      ],
+      "sites": [
+        {
+          "file": "src/components/cars/AddServiceModal.tsx",
+          "line": 107,
+          "match": "add_repair_service_transaction"
+        },
+        {
+          "file": "src/components/Dashboard.tsx",
+          "line": 188,
+          "match": "get_trip_years"
+        },
+        {
+          "file": "src/components/restaurant/ReservationsBoard.tsx",
+          "line": 381,
+          "match": "get_server_time"
+        },
+        {
+          "file": "src/components/trips/DuplicateTripDialog.tsx",
+          "line": 23,
+          "match": "log_trip_activity"
+        },
+        {
+          "file": "src/components/trips/Trips.tsx",
+          "line": 228,
+          "match": "get_trip_years"
+        },
+        {
+          "file": "src/components/trips/TripWhatsappDialog.tsx",
+          "line": 123,
+          "match": "log_trip_activity"
+        },
+        {
+          "file": "src/contexts/AuthContext.tsx",
+          "line": 346,
+          "match": "authenticate_staff"
+        },
+        {
+          "file": "src/hooks/useRestaurant.ts",
+          "line": 449,
+          "match": "delete_menu_item_secure"
+        },
+        {
+          "file": "src/hooks/useRestaurant.ts",
+          "line": 567,
+          "match": "delete_staff_secure"
+        },
+        {
+          "file": "src/hooks/useRestaurant.ts",
+          "line": 842,
+          "match": "authorize_staff_action"
+        },
+        {
+          "file": "src/hooks/useRestaurant.ts",
+          "line": 908,
+          "match": "close_business_day_secure"
+        },
+        {
+          "file": "src/hooks/useRestaurant.ts",
+          "line": 925,
+          "match": "void_order_item_secure"
+        },
+        {
+          "file": "src/hooks/useRestaurant.ts",
+          "line": 946,
+          "match": "create_kitchen_ticket"
+        },
+        {
+          "file": "src/hooks/useRestaurant.ts",
+          "line": 1061,
+          "match": "apply_discount_secure"
+        },
+        {
+          "file": "src/hooks/useTripMutations.ts",
+          "line": 48,
+          "match": "save_trip_transaction"
+        },
+        {
+          "file": "src/lib/analyticsQueries.ts",
+          "line": 423,
+          "match": "get_travel_analytics_summary"
+        },
+        {
+          "file": "src/lib/analyticsQueries.ts",
+          "line": 424,
+          "match": "get_travel_payment_analytics"
+        },
+        {
+          "file": "src/lib/fiscal/documentNumbering.ts",
+          "line": 55,
+          "match": "get_next_document_number"
+        },
+        {
+          "file": "src/lib/fiscal/fiscalDocumentService.ts",
+          "line": 277,
+          "match": "cancel_fiscal_document"
+        },
+        {
+          "file": "src/lib/fiscal/hashChain.ts",
+          "line": 120,
+          "match": "get_previous_document_hash"
+        },
+        {
+          "file": "src/lib/fiscal/hashChain.ts",
+          "line": 201,
+          "match": "get_previous_z_hash"
+        },
+        {
+          "file": "src/lib/paymentContractCompatibility.ts",
+          "line": 20,
+          "match": "get_travel_payment_contract_version"
+        },
+        {
+          "file": "src/lib/pdfGenerator.ts",
+          "line": 562,
+          "match": "log_trip_activity"
+        },
+        {
+          "file": "src/lib/pdfGenerator.ts",
+          "line": 563,
+          "match": "create_trip_event_notification"
+        },
+        {
+          "file": "src/lib/reports/zReportService.ts",
+          "line": 81,
+          "match": "open_cash_shift"
+        },
+        {
+          "file": "src/lib/reports/zReportService.ts",
+          "line": 185,
+          "match": "close_shift_with_z_report"
+        },
+        {
+          "file": "src/lib/travelReports.ts",
+          "line": 21,
+          "match": "get_travel_reports"
+        },
+        {
+          "file": "src/lib/tripAuditQueries.ts",
+          "line": 34,
+          "match": "get_trip_activity_page"
+        },
+        {
+          "file": "src/lib/tripAuditQueries.ts",
+          "line": 42,
+          "match": "get_trip_financial_audit_page"
+        },
+        {
+          "file": "src/lib/tripNotifications.ts",
+          "line": 21,
+          "match": "mark_all_trip_notifications_read"
+        },
+        {
+          "file": "src/lib/tripPayments.ts",
+          "line": 33,
+          "match": "create_trip_payment_plan"
+        },
+        {
+          "file": "src/lib/tripPayments.ts",
+          "line": 71,
+          "match": "record_trip_installment_payment"
+        },
+        {
+          "file": "src/lib/tripPayments.ts",
+          "line": 78,
+          "match": "reschedule_trip_installment"
+        },
+        {
+          "file": "src/lib/tripPayments.ts",
+          "line": 83,
+          "match": "record_trip_cash_payment"
+        },
+        {
+          "file": "src/lib/tripPayments.ts",
+          "line": 88,
+          "match": "recalculate_future_trip_installments"
+        },
+        {
+          "file": "src/lib/tripQueries.ts",
+          "line": 70,
+          "match": "get_trip_details"
+        },
+        {
+          "file": "src/lib/tripQueries.ts",
+          "line": 71,
+          "match": "get_trips_page"
+        },
+        {
+          "file": "src/lib/tripQueries.ts",
+          "line": 72,
+          "match": "get_trip_dashboard_items"
+        },
+        {
+          "file": "src/lib/tripQueries.ts",
+          "line": 185,
+          "match": "get_trip_dashboard_items"
+        },
+        {
+          "file": "src/lib/tripQueries.ts",
+          "line": 211,
+          "match": "get_trips_page"
+        },
+        {
+          "file": "src/lib/tripQueries.ts",
+          "line": 356,
+          "match": "get_trip_details"
+        },
+        {
+          "file": "src/lib/tripTemplates.ts",
+          "line": 63,
+          "match": "use_trip_template"
+        },
+        {
+          "file": "src/lib/tripTrashQueries.ts",
+          "line": 20,
+          "match": "get_deleted_trips_page"
+        },
+        {
+          "file": "src/lib/tripTrashQueries.ts",
+          "line": 61,
+          "match": "restore_deleted_trips"
+        },
+        {
+          "file": "src/lib/tripTrashQueries.ts",
+          "line": 67,
+          "match": "permanently_delete_trips"
+        },
+        {
+          "file": "src/lib/tripTrashQueries.ts",
+          "line": 73,
+          "match": "retry_trip_attachment_cleanup"
+        },
+        {
+          "file": "src/lib/visaPaymentArrivals.ts",
+          "line": 51,
+          "match": "materialize_due_visa_progress_events"
+        }
+      ]
+    },
+    "storage": {
+      "buckets": [
+        "business-logos",
+        "business-signatures"
+      ],
+      "totalCallSites": 4,
+      "sites": [
+        {
+          "file": "src/components/Settings.tsx",
+          "line": 413,
+          "match": "business-logos"
+        },
+        {
+          "file": "src/components/Settings.tsx",
+          "line": 424,
+          "match": "business-logos"
+        },
+        {
+          "file": "src/components/Settings.tsx",
+          "line": 470,
+          "match": "business-signatures"
+        },
+        {
+          "file": "src/components/Settings.tsx",
+          "line": 478,
+          "match": "business-signatures"
+        }
+      ]
+    },
+    "edgeInvocations": {
+      "functions": [
+        "create-user",
+        "generate-trip-pdf",
+        "get-guide-analytics",
+        "send-whatsapp"
+      ],
+      "sites": [
+        {
+          "file": "src/components/admin/CreateUserForm.tsx",
+          "line": 70,
+          "match": "create-user"
+        },
+        {
+          "file": "src/lib/repairWhatsApp.ts",
+          "line": 29,
+          "match": "send-whatsapp"
+        },
+        {
+          "file": "src/lib/tripPdfClient.ts",
+          "line": 7,
+          "match": "generate-trip-pdf"
+        },
+        {
+          "file": "src/pages/GuideWallet.tsx",
+          "line": 22,
+          "match": "get-guide-analytics"
+        },
+        {
+          "file": "src/pages/GuideWallet.tsx",
+          "line": 27,
+          "match": "get-guide-analytics"
+        }
+      ]
+    },
+    "realtime": {
+      "totalCallSites": 2,
+      "sites": [
+        {
+          "file": "src/hooks/useKitchenDisplay.ts",
+          "line": 306,
+          "match": "channelName"
+        },
+        {
+          "file": "src/hooks/useRestaurant.ts",
+          "line": 58,
+          "match": "`${table}_changes`"
+        }
+      ]
+    }
+  },
+  "database": {
+    "tables": {
+      "count": 75,
+      "tiers": {
+        "1": [
+          "business_profiles",
+          "business_settings",
+          "cash_shifts",
+          "customer_vehicles",
+          "customers_ledger",
+          "fiscal_counters",
+          "fiscal_documents",
+          "payouts",
+          "restaurant_daily_reports",
+          "restaurant_demand_forecasts",
+          "restaurant_floor_plans",
+          "restaurant_historical_data",
+          "restaurant_ingredients",
+          "restaurant_menu_categories",
+          "restaurant_modifier_groups",
+          "restaurant_notifications",
+          "restaurant_settings",
+          "restaurant_staff",
+          "restaurant_tables",
+          "restaurant_whatsapp_settings",
+          "stock_takes",
+          "travel_payment_feature_rollouts",
+          "trip_activity_log",
+          "trip_attachment_cleanup_queue",
+          "trip_financial_audit",
+          "trip_notification_settings",
+          "trip_notifications",
+          "trip_pdf_rate_limits",
+          "trip_pricing_preferences",
+          "trip_templates",
+          "trip_whatsapp_templates",
+          "trips",
+          "user_profiles",
+          "wallets",
+          "z_report_counters"
+        ],
+        "2": [
+          "allocation_numbers_log",
+          "audit_logs",
+          "car_parts",
+          "fiscal_document_items",
+          "restaurant_audit_logs",
+          "restaurant_cash_drawers",
+          "restaurant_guest_profiles",
+          "restaurant_menu_items",
+          "restaurant_modifiers",
+          "restaurant_orders",
+          "restaurant_table_sessions",
+          "restaurant_waitlist",
+          "shift_transactions",
+          "staff_shifts",
+          "transactions",
+          "trip_packing_lists",
+          "trip_payment_plans",
+          "trip_write_requests",
+          "x_reports",
+          "z_reports"
+        ],
+        "3": [
+          "inventory_batches",
+          "market_transactions",
+          "repair_orders",
+          "restaurant_cash_transactions",
+          "restaurant_item_modifier_groups",
+          "restaurant_kitchen_tickets",
+          "restaurant_order_items",
+          "restaurant_payments",
+          "restaurant_recipes",
+          "restaurant_reservations",
+          "restaurant_whatsapp_messages",
+          "stock_take_items",
+          "trip_installments",
+          "trip_payment_events"
+        ],
+        "4": [
+          "repair_order_items",
+          "restaurant_order_item_modifiers",
+          "restaurant_ticket_items",
+          "restaurant_void_logs",
+          "shrinkage_records",
+          "trip_installment_events"
+        ]
+      },
+      "references": {
+        "business_profiles": [
+          "auth.users"
+        ],
+        "trips": [
+          "auth.users"
+        ],
+        "user_profiles": [
+          "auth.users"
+        ],
+        "wallets": [
+          "auth.users"
+        ],
+        "transactions": [
+          "auth.users",
+          "trips",
+          "wallets"
+        ],
+        "payouts": [
+          "auth.users"
+        ],
+        "restaurant_tables": [
+          "auth.users"
+        ],
+        "restaurant_menu_categories": [
+          "auth.users"
+        ],
+        "restaurant_menu_items": [
+          "restaurant_menu_categories"
+        ],
+        "restaurant_staff": [
+          "auth.users"
+        ],
+        "restaurant_orders": [
+          "auth.users",
+          "restaurant_tables"
+        ],
+        "restaurant_order_items": [
+          "restaurant_menu_items",
+          "restaurant_orders"
+        ],
+        "restaurant_daily_reports": [
+          "auth.users"
+        ],
+        "staff_shifts": [
+          "restaurant_daily_reports",
+          "restaurant_staff"
+        ],
+        "restaurant_guest_profiles": [
+          "auth.users",
+          "restaurant_staff"
+        ],
+        "restaurant_reservations": [
+          "auth.users",
+          "restaurant_guest_profiles",
+          "restaurant_staff"
+        ],
+        "restaurant_waitlist": [
+          "auth.users",
+          "restaurant_tables"
+        ],
+        "restaurant_payments": [
+          "auth.users",
+          "restaurant_orders",
+          "restaurant_staff"
+        ],
+        "restaurant_cash_drawers": [
+          "auth.users",
+          "restaurant_staff"
+        ],
+        "restaurant_cash_transactions": [
+          "restaurant_cash_drawers",
+          "restaurant_staff"
+        ],
+        "restaurant_void_logs": [
+          "auth.users",
+          "restaurant_order_items",
+          "restaurant_orders",
+          "restaurant_staff"
+        ],
+        "restaurant_whatsapp_settings": [
+          "auth.users"
+        ],
+        "restaurant_whatsapp_messages": [
+          "auth.users",
+          "restaurant_guest_profiles"
+        ],
+        "restaurant_demand_forecasts": [
+          "auth.users"
+        ],
+        "restaurant_historical_data": [
+          "auth.users"
+        ],
+        "restaurant_floor_plans": [
+          "auth.users"
+        ],
+        "restaurant_settings": [
+          "auth.users"
+        ],
+        "restaurant_modifier_groups": [
+          "auth.users"
+        ],
+        "restaurant_modifiers": [
+          "restaurant_modifier_groups"
+        ],
+        "restaurant_item_modifier_groups": [
+          "restaurant_menu_items",
+          "restaurant_modifier_groups"
+        ],
+        "restaurant_order_item_modifiers": [
+          "restaurant_modifiers",
+          "restaurant_order_items"
+        ],
+        "restaurant_kitchen_tickets": [
+          "auth.users",
+          "restaurant_orders"
+        ],
+        "restaurant_ticket_items": [
+          "restaurant_kitchen_tickets",
+          "restaurant_order_items"
+        ],
+        "restaurant_table_sessions": [
+          "auth.users",
+          "restaurant_staff",
+          "restaurant_tables"
+        ],
+        "audit_logs": [
+          "business_profiles"
+        ],
+        "restaurant_audit_logs": [
+          "auth.users",
+          "restaurant_staff"
+        ],
+        "restaurant_ingredients": [
+          "auth.users"
+        ],
+        "restaurant_recipes": [
+          "restaurant_ingredients",
+          "restaurant_menu_items"
+        ],
+        "restaurant_notifications": [
+          "auth.users"
+        ],
+        "business_settings": [
+          "auth.users"
+        ],
+        "fiscal_counters": [
+          "auth.users"
+        ],
+        "fiscal_documents": [
+          "auth.users"
+        ],
+        "fiscal_document_items": [
+          "fiscal_documents"
+        ],
+        "allocation_numbers_log": [
+          "auth.users",
+          "fiscal_documents"
+        ],
+        "cash_shifts": [
+          "auth.users"
+        ],
+        "z_reports": [
+          "auth.users",
+          "cash_shifts"
+        ],
+        "x_reports": [
+          "auth.users",
+          "cash_shifts"
+        ],
+        "shift_transactions": [
+          "auth.users",
+          "cash_shifts",
+          "fiscal_documents"
+        ],
+        "z_report_counters": [
+          "auth.users"
+        ],
+        "inventory_batches": [
+          "auth.users",
+          "restaurant_ingredients",
+          "restaurant_menu_items"
+        ],
+        "shrinkage_records": [
+          "auth.users",
+          "inventory_batches",
+          "restaurant_ingredients",
+          "restaurant_menu_items"
+        ],
+        "stock_takes": [
+          "auth.users"
+        ],
+        "stock_take_items": [
+          "auth.users",
+          "restaurant_ingredients",
+          "restaurant_menu_items",
+          "stock_takes"
+        ],
+        "market_transactions": [
+          "auth.users",
+          "restaurant_orders"
+        ],
+        "car_parts": [
+          "business_profiles"
+        ],
+        "customer_vehicles": [
+          "auth.users"
+        ],
+        "customers_ledger": [
+          "auth.users"
+        ],
+        "repair_orders": [
+          "auth.users",
+          "customer_vehicles",
+          "restaurant_guest_profiles"
+        ],
+        "repair_order_items": [
+          "auth.users",
+          "repair_orders",
+          "restaurant_menu_items"
+        ],
+        "trip_financial_audit": [
+          "auth.users"
+        ],
+        "trip_attachment_cleanup_queue": [
+          "auth.users"
+        ],
+        "trip_activity_log": [
+          "auth.users"
+        ],
+        "trip_templates": [
+          "auth.users"
+        ],
+        "trip_notification_settings": [
+          "auth.users"
+        ],
+        "trip_notifications": [
+          "auth.users"
+        ],
+        "trip_whatsapp_templates": [
+          "auth.users"
+        ],
+        "trip_pdf_rate_limits": [
+          "auth.users"
+        ],
+        "trip_payment_plans": [
+          "auth.users",
+          "trips"
+        ],
+        "trip_installments": [
+          "auth.users",
+          "trip_payment_plans",
+          "trips"
+        ],
+        "trip_installment_events": [
+          "auth.users",
+          "trip_installments",
+          "trips"
+        ],
+        "trip_payment_events": [
+          "auth.users",
+          "trip_payment_plans",
+          "trips"
+        ],
+        "trip_packing_lists": [
+          "auth.users",
+          "trips"
+        ],
+        "trip_pricing_preferences": [
+          "auth.users"
+        ],
+        "trip_write_requests": [
+          "auth.users",
+          "trips"
+        ],
+        "travel_payment_feature_rollouts": []
+      }
+    },
+    "authUsersFkCount": 97,
+    "authUidCallSites": 353,
+    "authRoleCallSites": 5,
+    "policyCount": 163,
+    "triggerCount": 33,
+    "functionDefinitions": 169,
+    "distinctFunctions": 98,
+    "securityDefinerFunctions": 74,
+    "securityDefinerWithoutSearchPath": [
+      "add_repair_service_transaction",
+      "calculate_document_hash",
+      "cancel_fiscal_document",
+      "close_shift_with_z_report",
+      "create_default_restaurant_staff",
+      "deduct_from_batch_fefo",
+      "get_expiring_items",
+      "get_fefo_batch",
+      "get_next_document_number",
+      "get_next_z_number",
+      "get_previous_document_hash",
+      "get_previous_z_hash",
+      "is_restaurant_manager",
+      "open_cash_shift",
+      "prevent_unauthorized_order_item_updates",
+      "trg_repair_item_inventory_sync",
+      "trg_update_vehicle_on_completion",
+      "update_shift_totals",
+      "validate_staff_pin"
+    ],
+    "rlsEnabledTables": 76,
+    "forceRlsTables": [],
+    "generatedColumns": {
+      "restaurant_guest_profiles": [
+        "full_name"
+      ],
+      "fiscal_documents": [
+        "full_document_number",
+        "requires_allocation"
+      ],
+      "fiscal_document_items": [
+        "total_cost"
+      ]
+    },
+    "identityColumns": {
+      "trip_financial_audit": [
+        "id"
+      ],
+      "trip_attachment_cleanup_queue": [
+        "id"
+      ],
+      "trip_activity_log": [
+        "id"
+      ],
+      "trip_pdf_rate_limits": [
+        "id"
+      ],
+      "trip_installment_events": [
+        "id"
+      ],
+      "trip_payment_events": [
+        "id"
+      ]
+    },
+    "serialColumns": {
+      "restaurant_daily_reports": [
+        "z_report_number"
+      ],
+      "x_reports": [
+        "report_number"
+      ],
+      "stock_takes": [
+        "stock_take_number"
+      ]
+    },
+    "extensions": [
+      "pg_trgm",
+      "pgcrypto",
+      "uuid-ossp"
+    ],
+    "supabaseRoleReferences": {
+      "authenticated": 216,
+      "anon": 80,
+      "service_role": 17,
+      "supabase_admin": 2
+    },
+    "storageObjectPolicyReferences": 32,
+    "storageBucketsDeclared": [
+      "business-logos",
+      "business-signatures",
+      "logos",
+      "restaurant-assets",
+      "trip-attachments"
+    ],
+    "functions": {
+      "get_user_stats": {
+        "definedIn": "20260908095000_close_legacy_analytics_rpc_leaks.sql",
+        "securityDefiner": false,
+        "searchPath": "pg_catalog,public",
+        "usesAuthUid": false
+      },
+      "get_monthly_stats": {
+        "definedIn": "20260908095000_close_legacy_analytics_rpc_leaks.sql",
+        "securityDefiner": false,
+        "searchPath": "pg_catalog,public",
+        "usesAuthUid": false
+      },
+      "get_yearly_stats": {
+        "definedIn": "20260908095000_close_legacy_analytics_rpc_leaks.sql",
+        "securityDefiner": false,
+        "searchPath": "pg_catalog,public",
+        "usesAuthUid": false
+      },
+      "get_top_destinations": {
+        "definedIn": "20260908095000_close_legacy_analytics_rpc_leaks.sql",
+        "securityDefiner": false,
+        "searchPath": "pg_catalog,public",
+        "usesAuthUid": false
+      },
+      "get_status_breakdown": {
+        "definedIn": "20260908095000_close_legacy_analytics_rpc_leaks.sql",
+        "securityDefiner": false,
+        "searchPath": "pg_catalog,public",
+        "usesAuthUid": false
+      },
+      "get_payment_status_breakdown": {
+        "definedIn": "20260908095000_close_legacy_analytics_rpc_leaks.sql",
+        "securityDefiner": false,
+        "searchPath": "pg_catalog,public",
+        "usesAuthUid": false
+      },
+      "release_escrow_funds": {
+        "definedIn": "20251130123500_payment_system.sql",
+        "securityDefiner": false,
+        "searchPath": null,
+        "usesAuthUid": false
+      },
+      "update_updated_at_column": {
+        "definedIn": "20251130123500_payment_system.sql",
+        "securityDefiner": false,
+        "searchPath": null,
+        "usesAuthUid": false
+      },
+      "get_trips_by_year": {
+        "definedIn": "20260718120000_refresh_trips_by_year_contract.sql",
+        "securityDefiner": true,
+        "searchPath": "public",
+        "usesAuthUid": true
+      },
+      "get_trip_years": {
+        "definedIn": "20260719130000_refresh_travel_rpc_contracts.sql",
+        "securityDefiner": true,
+        "searchPath": "pg_catalog, public",
+        "usesAuthUid": true
+      },
+      "get_yearly_stats_overview": {
+        "definedIn": "20251223123000_get_yearly_stats_overview.sql",
+        "securityDefiner": false,
+        "searchPath": null,
+        "usesAuthUid": true
+      },
+      "close_business_day": {
+        "definedIn": "20260111000020_restaurant_production_baseline.sql",
+        "securityDefiner": true,
+        "searchPath": "public",
+        "usesAuthUid": true
+      },
+      "create_kitchen_ticket": {
+        "definedIn": "20260124000030_fix_kds_ticket_creation.sql",
+        "securityDefiner": true,
+        "searchPath": "public",
+        "usesAuthUid": true
+      },
+      "authorize_staff_action": {
+        "definedIn": "20260116000020_secure_pin_hashing.sql",
+        "securityDefiner": true,
+        "searchPath": "public",
+        "usesAuthUid": true
+      },
+      "is_restaurant_manager": {
+        "definedIn": "20260112000040_restaurant_security.sql",
+        "securityDefiner": true,
+        "searchPath": null,
+        "usesAuthUid": true
+      },
+      "log_void_action": {
+        "definedIn": "20260112000040_restaurant_security.sql",
+        "securityDefiner": false,
+        "searchPath": null,
+        "usesAuthUid": false
+      },
+      "validate_staff_pin": {
+        "definedIn": "20260112000040_restaurant_security.sql",
+        "securityDefiner": true,
+        "searchPath": null,
+        "usesAuthUid": false
+      },
+      "void_order_item_secure": {
+        "definedIn": "20260115000000_restaurant_security_hardening_baseline.sql",
+        "securityDefiner": true,
+        "searchPath": "public",
+        "usesAuthUid": true
+      },
+      "apply_discount_secure": {
+        "definedIn": "20260115000000_restaurant_security_hardening_baseline.sql",
+        "securityDefiner": true,
+        "searchPath": "public",
+        "usesAuthUid": true
+      },
+      "prevent_unauthorized_order_item_updates": {
+        "definedIn": "20260115000000_restaurant_security_hardening_baseline.sql",
+        "securityDefiner": true,
+        "searchPath": null,
+        "usesAuthUid": true
+      },
+      "close_business_day_secure": {
+        "definedIn": "20260115000000_restaurant_security_hardening_baseline.sql",
+        "securityDefiner": true,
+        "searchPath": "public",
+        "usesAuthUid": true
+      },
+      "validate_reservation_datetime": {
+        "definedIn": "20260116000010_reservation_validation.sql",
+        "securityDefiner": false,
+        "searchPath": null,
+        "usesAuthUid": false
+      },
+      "create_reservation_safe": {
+        "definedIn": "20260116000010_reservation_validation.sql",
+        "securityDefiner": true,
+        "searchPath": "public",
+        "usesAuthUid": false
+      },
+      "verify_staff_pin_secure": {
+        "definedIn": "20260116000020_secure_pin_hashing.sql",
+        "securityDefiner": true,
+        "searchPath": "public",
+        "usesAuthUid": false
+      },
+      "set_staff_pin_secure": {
+        "definedIn": "20260116000020_secure_pin_hashing.sql",
+        "securityDefiner": true,
+        "searchPath": "public",
+        "usesAuthUid": false
+      },
+      "deduct_ingredients_on_order": {
+        "definedIn": "20260117000010_restaurant_inventory.sql",
+        "securityDefiner": false,
+        "searchPath": null,
+        "usesAuthUid": false
+      },
+      "update_business_settings_updated_at": {
+        "definedIn": "20260117200000_market_mode_settings.sql",
+        "securityDefiner": false,
+        "searchPath": null,
+        "usesAuthUid": false
+      },
+      "update_fiscal_updated_at": {
+        "definedIn": "20260119000050_z_reports.sql",
+        "securityDefiner": false,
+        "searchPath": null,
+        "usesAuthUid": true
+      },
+      "get_next_document_number": {
+        "definedIn": "20260119000030_fiscal_documents.sql",
+        "securityDefiner": true,
+        "searchPath": null,
+        "usesAuthUid": false
+      },
+      "calculate_document_hash": {
+        "definedIn": "20260119000030_fiscal_documents.sql",
+        "securityDefiner": true,
+        "searchPath": null,
+        "usesAuthUid": false
+      },
+      "get_previous_document_hash": {
+        "definedIn": "20260119000030_fiscal_documents.sql",
+        "securityDefiner": true,
+        "searchPath": null,
+        "usesAuthUid": false
+      },
+      "cancel_fiscal_document": {
+        "definedIn": "20260119000030_fiscal_documents.sql",
+        "securityDefiner": true,
+        "searchPath": null,
+        "usesAuthUid": true
+      },
+      "get_next_z_number": {
+        "definedIn": "20260119000050_z_reports.sql",
+        "securityDefiner": true,
+        "searchPath": null,
+        "usesAuthUid": false
+      },
+      "get_previous_z_hash": {
+        "definedIn": "20260119000050_z_reports.sql",
+        "securityDefiner": true,
+        "searchPath": null,
+        "usesAuthUid": false
+      },
+      "open_cash_shift": {
+        "definedIn": "20260119000050_z_reports.sql",
+        "securityDefiner": true,
+        "searchPath": null,
+        "usesAuthUid": false
+      },
+      "update_shift_totals": {
+        "definedIn": "20260119000050_z_reports.sql",
+        "securityDefiner": true,
+        "searchPath": null,
+        "usesAuthUid": false
+      },
+      "close_shift_with_z_report": {
+        "definedIn": "20260119000050_z_reports.sql",
+        "securityDefiner": true,
+        "searchPath": null,
+        "usesAuthUid": false
+      },
+      "trigger_update_shift_totals": {
+        "definedIn": "20260119000050_z_reports.sql",
+        "securityDefiner": false,
+        "searchPath": null,
+        "usesAuthUid": false
+      },
+      "get_fefo_batch": {
+        "definedIn": "20260119000040_inventory_extensions.sql",
+        "securityDefiner": true,
+        "searchPath": null,
+        "usesAuthUid": false
+      },
+      "get_expiring_items": {
+        "definedIn": "20260119000040_inventory_extensions.sql",
+        "securityDefiner": true,
+        "searchPath": null,
+        "usesAuthUid": false
+      },
+      "deduct_from_batch_fefo": {
+        "definedIn": "20260119000040_inventory_extensions.sql",
+        "securityDefiner": true,
+        "searchPath": null,
+        "usesAuthUid": false
+      },
+      "auto_expire_batches": {
+        "definedIn": "20260119000040_inventory_extensions.sql",
+        "securityDefiner": false,
+        "searchPath": null,
+        "usesAuthUid": false
+      },
+      "authenticate_staff": {
+        "definedIn": "20260124000010_add_staff_auth.sql",
+        "securityDefiner": true,
+        "searchPath": "public -- Secure search path",
+        "usesAuthUid": false
+      },
+      "create_default_restaurant_staff": {
+        "definedIn": "20260201000020_fix_default_staff_trigger.sql",
+        "securityDefiner": true,
+        "searchPath": null,
+        "usesAuthUid": false
+      },
+      "update_car_parts_updated_at": {
+        "definedIn": "20260131000010_car_parts.sql",
+        "securityDefiner": false,
+        "searchPath": null,
+        "usesAuthUid": false
+      },
+      "trg_repair_item_inventory_sync": {
+        "definedIn": "20260201000010_auto_repair_complete.sql",
+        "securityDefiner": true,
+        "searchPath": null,
+        "usesAuthUid": false
+      },
+      "trg_update_vehicle_on_completion": {
+        "definedIn": "20260201000010_auto_repair_complete.sql",
+        "securityDefiner": true,
+        "searchPath": null,
+        "usesAuthUid": false
+      },
+      "trg_auto_ledger_debt": {
+        "definedIn": "20260201000010_auto_repair_complete.sql",
+        "securityDefiner": false,
+        "searchPath": null,
+        "usesAuthUid": false
+      },
+      "add_repair_service_transaction": {
+        "definedIn": "20260203000010_add_repair_service_rpc.sql",
+        "securityDefiner": true,
+        "searchPath": null,
+        "usesAuthUid": true
+      },
+      "trip_encrypt_travelers": {
+        "definedIn": "20260720200000_fix_trip_encrypt_travelers_contract.sql",
+        "securityDefiner": true,
+        "searchPath": "''",
+        "usesAuthUid": false
+      },
+      "trip_decrypt_travelers": {
+        "definedIn": "20260719150000_fix_trip_detail_and_write_runtime.sql",
+        "securityDefiner": true,
+        "searchPath": "pg_catalog, public, private, extensions",
+        "usesAuthUid": false
+      },
+      "encrypt_trip_travelers_before_write": {
+        "definedIn": "20260720200000_fix_trip_encrypt_travelers_contract.sql",
+        "securityDefiner": true,
+        "searchPath": "''",
+        "usesAuthUid": false
+      },
+      "trip_traveler_names": {
+        "definedIn": "20260719090000_travel_mode_production_hardening.sql",
+        "securityDefiner": false,
+        "searchPath": "pg_catalog",
+        "usesAuthUid": false
+      },
+      "audit_trip_financial_changes": {
+        "definedIn": "20260719140000_travel_mode_product_features.sql",
+        "securityDefiner": true,
+        "searchPath": "pg_catalog, public",
+        "usesAuthUid": true
+      },
+      "get_trip_details": {
+        "definedIn": "20260723110000_sync_trip_payment_summaries.sql",
+        "securityDefiner": true,
+        "searchPath": "''",
+        "usesAuthUid": true
+      },
+      "get_trips_page": {
+        "definedIn": "20260729110000_canonical_trip_payment_contract.sql",
+        "securityDefiner": true,
+        "searchPath": "''",
+        "usesAuthUid": true
+      },
+      "get_trip_dashboard_items": {
+        "definedIn": "20260723110000_sync_trip_payment_summaries.sql",
+        "securityDefiner": true,
+        "searchPath": "''",
+        "usesAuthUid": true
+      },
+      "purge_deleted_trips": {
+        "definedIn": "20260719090000_travel_mode_production_hardening.sql",
+        "securityDefiner": true,
+        "searchPath": "pg_catalog, public",
+        "usesAuthUid": false
+      },
+      "claim_trip_attachment_cleanup": {
+        "definedIn": "20260719140000_travel_mode_product_features.sql",
+        "securityDefiner": true,
+        "searchPath": "pg_catalog, public",
+        "usesAuthUid": false
+      },
+      "retry_trip_attachment_cleanup": {
+        "definedIn": "20260719140000_travel_mode_product_features.sql",
+        "securityDefiner": true,
+        "searchPath": "pg_catalog, public",
+        "usesAuthUid": true
+      },
+      "record_trip_activity_trigger": {
+        "definedIn": "20260719140000_travel_mode_product_features.sql",
+        "securityDefiner": true,
+        "searchPath": "pg_catalog, public",
+        "usesAuthUid": true
+      },
+      "log_trip_activity": {
+        "definedIn": "20260719140000_travel_mode_product_features.sql",
+        "securityDefiner": true,
+        "searchPath": "pg_catalog, public",
+        "usesAuthUid": true
+      },
+      "get_trip_activity_page": {
+        "definedIn": "20260719140000_travel_mode_product_features.sql",
+        "securityDefiner": true,
+        "searchPath": "pg_catalog, public AS $$",
+        "usesAuthUid": true
+      },
+      "get_trip_financial_audit_page": {
+        "definedIn": "20260719140000_travel_mode_product_features.sql",
+        "securityDefiner": true,
+        "searchPath": "pg_catalog, public AS $$",
+        "usesAuthUid": true
+      },
+      "get_deleted_trips_page": {
+        "definedIn": "20260719140000_travel_mode_product_features.sql",
+        "securityDefiner": true,
+        "searchPath": "pg_catalog, public AS $$",
+        "usesAuthUid": true
+      },
+      "restore_deleted_trips": {
+        "definedIn": "20260719140000_travel_mode_product_features.sql",
+        "securityDefiner": true,
+        "searchPath": "pg_catalog, public AS $$",
+        "usesAuthUid": true
+      },
+      "permanently_delete_trips": {
+        "definedIn": "20260719140000_travel_mode_product_features.sql",
+        "securityDefiner": true,
+        "searchPath": "pg_catalog, public AS $$",
+        "usesAuthUid": true
+      },
+      "trip_template_payload_is_safe": {
+        "definedIn": "20260719140000_travel_mode_product_features.sql",
+        "securityDefiner": false,
+        "searchPath": "pg_catalog AS $$",
+        "usesAuthUid": false
+      },
+      "generate_trip_notifications": {
+        "definedIn": "20260813120000_automatic_visa_schedule_collection.sql",
+        "securityDefiner": true,
+        "searchPath": "pg_catalog, public",
+        "usesAuthUid": false
+      },
+      "create_trip_event_notification": {
+        "definedIn": "20260719140000_travel_mode_product_features.sql",
+        "securityDefiner": true,
+        "searchPath": "pg_catalog, public",
+        "usesAuthUid": true
+      },
+      "claim_trip_pdf_generation": {
+        "definedIn": "20260719140000_travel_mode_product_features.sql",
+        "securityDefiner": true,
+        "searchPath": "pg_catalog, public AS $$",
+        "usesAuthUid": true
+      },
+      "use_trip_template": {
+        "definedIn": "20260719160000_travel_mode_smart_workflows.sql",
+        "securityDefiner": true,
+        "searchPath": "pg_catalog, public",
+        "usesAuthUid": true
+      },
+      "create_trip_payment_plan": {
+        "definedIn": "20260719160000_travel_mode_smart_workflows.sql",
+        "securityDefiner": true,
+        "searchPath": "pg_catalog, public",
+        "usesAuthUid": true
+      },
+      "record_trip_installment_payment": {
+        "definedIn": "20260813120000_automatic_visa_schedule_collection.sql",
+        "securityDefiner": true,
+        "searchPath": "''",
+        "usesAuthUid": true
+      },
+      "reschedule_trip_installment": {
+        "definedIn": "20260813120000_automatic_visa_schedule_collection.sql",
+        "securityDefiner": true,
+        "searchPath": "pg_catalog, public",
+        "usesAuthUid": true
+      },
+      "record_trip_cash_payment": {
+        "definedIn": "20260719160000_travel_mode_smart_workflows.sql",
+        "securityDefiner": true,
+        "searchPath": "pg_catalog, public",
+        "usesAuthUid": true
+      },
+      "recalculate_future_trip_installments": {
+        "definedIn": "20260813120000_automatic_visa_schedule_collection.sql",
+        "securityDefiner": true,
+        "searchPath": "pg_catalog, public",
+        "usesAuthUid": true
+      },
+      "trip_reminder_days_are_safe": {
+        "definedIn": "20260719160000_travel_mode_smart_workflows.sql",
+        "securityDefiner": false,
+        "searchPath": "pg_catalog AS $$",
+        "usesAuthUid": false
+      },
+      "mark_all_trip_notifications_read": {
+        "definedIn": "20260719160000_travel_mode_smart_workflows.sql",
+        "securityDefiner": true,
+        "searchPath": "pg_catalog, public AS $$",
+        "usesAuthUid": true
+      },
+      "get_travel_reports": {
+        "definedIn": "20260729110000_canonical_trip_payment_contract.sql",
+        "securityDefiner": true,
+        "searchPath": "''",
+        "usesAuthUid": true
+      },
+      "private.trip_encrypt_travelers": {
+        "definedIn": "20260720200000_fix_trip_encrypt_travelers_contract.sql",
+        "securityDefiner": true,
+        "searchPath": "''",
+        "usesAuthUid": false
+      },
+      "save_trip_transaction": {
+        "definedIn": "20260729110000_canonical_trip_payment_contract.sql",
+        "securityDefiner": true,
+        "searchPath": "''",
+        "usesAuthUid": true
+      },
+      "get_owned_trip_payment_summary": {
+        "definedIn": "20260813120000_automatic_visa_schedule_collection.sql",
+        "securityDefiner": true,
+        "searchPath": "''",
+        "usesAuthUid": true
+      },
+      "prevent_user_profile_self_escalation": {
+        "definedIn": "20260723140000_travel_analytics_rpc.sql",
+        "securityDefiner": true,
+        "searchPath": "pg_catalog, public",
+        "usesAuthUid": true
+      },
+      "get_travel_analytics_summary": {
+        "definedIn": "20260723140000_travel_analytics_rpc.sql",
+        "securityDefiner": true,
+        "searchPath": "''",
+        "usesAuthUid": true
+      },
+      "sync_trip_payment_compatibility_from_native": {
+        "definedIn": "20260729110000_canonical_trip_payment_contract.sql",
+        "securityDefiner": true,
+        "searchPath": "''",
+        "usesAuthUid": false
+      },
+      "sync_trip_payment_plan_compatibility_trigger": {
+        "definedIn": "20260729110000_canonical_trip_payment_contract.sql",
+        "securityDefiner": true,
+        "searchPath": "''",
+        "usesAuthUid": false
+      },
+      "sync_trip_installment_compatibility_trigger": {
+        "definedIn": "20260729110000_canonical_trip_payment_contract.sql",
+        "securityDefiner": true,
+        "searchPath": "''",
+        "usesAuthUid": false
+      },
+      "get_travel_payment_analytics": {
+        "definedIn": "20260729110000_canonical_trip_payment_contract.sql",
+        "securityDefiner": true,
+        "searchPath": "''",
+        "usesAuthUid": true
+      },
+      "enforce_cash_payment_plan_row": {
+        "definedIn": "20260729120000_fix_cash_payment_plan_compatibility.sql",
+        "securityDefiner": false,
+        "searchPath": "''",
+        "usesAuthUid": false
+      },
+      "get_travel_payment_contract_version": {
+        "definedIn": "20260813120000_automatic_visa_schedule_collection.sql",
+        "securityDefiner": true,
+        "searchPath": "'' AS $$ SELECT 4; $$;",
+        "usesAuthUid": false
+      },
+      "materialize_due_visa_progress_events": {
+        "definedIn": "20260813120000_automatic_visa_schedule_collection.sql",
+        "securityDefiner": true,
+        "searchPath": "''",
+        "usesAuthUid": true
+      },
+      "is_platform_admin": {
+        "definedIn": "20260908090000_protect_platform_privileges.sql",
+        "securityDefiner": true,
+        "searchPath": "pg_catalog, public",
+        "usesAuthUid": true
+      },
+      "guard_platform_profile_fields": {
+        "definedIn": "20260908090000_protect_platform_privileges.sql",
+        "securityDefiner": false,
+        "searchPath": "pg_catalog, public",
+        "usesAuthUid": true
+      },
+      "guard_business_account_fields": {
+        "definedIn": "20260908094000_reconcile_account_status_contract.sql",
+        "securityDefiner": false,
+        "searchPath": "pg_catalog,public AS $$",
+        "usesAuthUid": true
+      },
+      "get_server_time": {
+        "definedIn": "20260908120000_reconcile_application_rpcs.sql",
+        "securityDefiner": true,
+        "searchPath": "''",
+        "usesAuthUid": false
+      },
+      "delete_menu_item_secure": {
+        "definedIn": "20260908120000_reconcile_application_rpcs.sql",
+        "securityDefiner": true,
+        "searchPath": "''",
+        "usesAuthUid": true
+      },
+      "delete_staff_secure": {
+        "definedIn": "20260908120000_reconcile_application_rpcs.sql",
+        "securityDefiner": true,
+        "searchPath": "''",
+        "usesAuthUid": true
+      }
+    }
+  },
+  "edgeFunctions": [
+    {
+      "name": "_shared",
+      "files": 0,
+      "empty": true,
+      "verifiesCaller": false,
+      "usesServiceRole": false,
+      "verifyJwtConfigured": false
+    },
+    {
+      "name": "cleanup-trip-attachments",
+      "files": 1,
+      "empty": false,
+      "verifiesCaller": false,
+      "usesServiceRole": true,
+      "verifyJwtConfigured": false
+    },
+    {
+      "name": "create-user",
+      "files": 1,
+      "empty": false,
+      "verifiesCaller": true,
+      "usesServiceRole": true,
+      "verifyJwtConfigured": true
+    },
+    {
+      "name": "ensure-bucket",
+      "files": 1,
+      "empty": false,
+      "verifiesCaller": true,
+      "usesServiceRole": true,
+      "verifyJwtConfigured": false
+    },
+    {
+      "name": "fetch-car-price",
+      "files": 1,
+      "empty": false,
+      "verifiesCaller": false,
+      "usesServiceRole": false,
+      "verifyJwtConfigured": false
+    },
+    {
+      "name": "generate-trip-pdf",
+      "files": 1,
+      "empty": false,
+      "verifiesCaller": true,
+      "usesServiceRole": false,
+      "verifyJwtConfigured": false
+    },
+    {
+      "name": "get-guide-analytics",
+      "files": 1,
+      "empty": false,
+      "verifiesCaller": true,
+      "usesServiceRole": false,
+      "verifyJwtConfigured": false
+    },
+    {
+      "name": "get-users",
+      "files": 1,
+      "empty": false,
+      "verifiesCaller": true,
+      "usesServiceRole": true,
+      "verifyJwtConfigured": true
+    },
+    {
+      "name": "process-payment-split",
+      "files": 1,
+      "empty": false,
+      "verifiesCaller": false,
+      "usesServiceRole": false,
+      "verifyJwtConfigured": false
+    },
+    {
+      "name": "process-whatsapp-reminders",
+      "files": 0,
+      "empty": true,
+      "verifiesCaller": false,
+      "usesServiceRole": false,
+      "verifyJwtConfigured": false
+    },
+    {
+      "name": "send-whatsapp",
+      "files": 2,
+      "empty": false,
+      "verifiesCaller": false,
+      "usesServiceRole": false,
+      "verifyJwtConfigured": true
+    },
+    {
+      "name": "send-whatsapp-message",
+      "files": 0,
+      "empty": true,
+      "verifiesCaller": false,
+      "usesServiceRole": false,
+      "verifyJwtConfigured": false
+    },
+    {
+      "name": "validate-order",
+      "files": 1,
+      "empty": false,
+      "verifiesCaller": false,
+      "usesServiceRole": false,
+      "verifyJwtConfigured": false
+    },
+    {
+      "name": "whatsapp-status-webhook",
+      "files": 0,
+      "empty": true,
+      "verifiesCaller": false,
+      "usesServiceRole": false,
+      "verifyJwtConfigured": false
+    }
+  ]
+}

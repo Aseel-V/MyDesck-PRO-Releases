@@ -1,0 +1,1570 @@
+{
+  "generatedAt": "2026-09-09T07:36:28.858Z",
+  "note": "Static analysis only. A PORTABLE classification is a hypothesis until the migration actually runs against PostgreSQL 17; see migration/tools/verify-portability.mjs.",
+  "totalMigrations": 93,
+  "summary": {
+    "PORTABLE": 26,
+    "PORTABLE_WITH_SHIM": 56,
+    "SUPABASE_SPECIFIC": 4,
+    "BLOCKED": 7
+  },
+  "markers": {
+    "auth_uid": {
+      "class": "PORTABLE_WITH_SHIM",
+      "files": 60,
+      "occurrences": 346,
+      "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+    },
+    "supabase_roles": {
+      "class": "PORTABLE_WITH_SHIM",
+      "files": 47,
+      "occurrences": 241,
+      "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+    },
+    "auth_users_fk": {
+      "class": "PORTABLE_WITH_SHIM",
+      "files": 25,
+      "occurrences": 97,
+      "why": "FK to the Supabase-owned auth.users table. Requires the application-owned auth.users shim to exist first (migration/sql/001)."
+    },
+    "storage_objects": {
+      "class": "BLOCKED",
+      "files": 5,
+      "occurrences": 45,
+      "why": "Supabase models object storage as Postgres tables with RLS. Cloud Storage has no equivalent; these policies must be re-expressed as Security Rules or backend-signed access."
+    },
+    "supabase_realtime": {
+      "class": "BLOCKED",
+      "files": 2,
+      "occurrences": 14,
+      "why": "Supabase Realtime publication. No Cloud SQL analogue."
+    },
+    "auth_role": {
+      "class": "PORTABLE_WITH_SHIM",
+      "files": 2,
+      "occurrences": 5,
+      "why": "Requires the auth.role() compatibility function (migration/sql/001)."
+    },
+    "extensions_schema": {
+      "class": "SUPABASE_SPECIFIC",
+      "files": 2,
+      "occurrences": 3,
+      "why": "Supabase installs extensions into a dedicated \"extensions\" schema. Cloud SQL installs into public (or a schema you create)."
+    },
+    "supabase_admin_role": {
+      "class": "SUPABASE_SPECIFIC",
+      "files": 2,
+      "occurrences": 2,
+      "why": "References the Supabase superuser role by name. Cloud SQL has no supabase_admin; the Phase 1 trigger guards test current_user against it."
+    },
+    "auth_users_read": {
+      "class": "PORTABLE_WITH_SHIM",
+      "files": 1,
+      "occurrences": 1,
+      "why": "Reads auth.users directly. Satisfied by the shim table, but the columns it selects must exist there."
+    }
+  },
+  "migrations": [
+    {
+      "file": "20240101000010_analytics.sql",
+      "classification": "PORTABLE",
+      "lines": 137,
+      "markers": []
+    },
+    {
+      "file": "20251118170905_create_business_profiles_and_settings.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 68,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 5,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 4,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        },
+        {
+          "id": "auth_users_fk",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "FK to the Supabase-owned auth.users table. Requires the application-owned auth.users shim to exist first (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20251118171613_create_trips_table.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 88,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 5,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 4,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        },
+        {
+          "id": "auth_users_fk",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "FK to the Supabase-owned auth.users table. Requires the application-owned auth.users shim to exist first (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20251118173508_create_user_profiles.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 52,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 4,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 3,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        },
+        {
+          "id": "auth_users_fk",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "FK to the Supabase-owned auth.users table. Requires the application-owned auth.users shim to exist first (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20251118175038_create_business_profiles_and_settings.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 73,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 5,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 4,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        },
+        {
+          "id": "auth_users_fk",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "FK to the Supabase-owned auth.users table. Requires the application-owned auth.users shim to exist first (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20251118175044_create_trips_table.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 93,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 5,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 4,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        },
+        {
+          "id": "auth_users_fk",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "FK to the Supabase-owned auth.users table. Requires the application-owned auth.users shim to exist first (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20251118175050_create_user_profiles.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 86,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 4,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 3,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        },
+        {
+          "id": "auth_users_fk",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "FK to the Supabase-owned auth.users table. Requires the application-owned auth.users shim to exist first (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20251118175056_add_admin_policies.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 49,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 3,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 3,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        }
+      ]
+    },
+    {
+      "file": "20251130123500_payment_system.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 103,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 4,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "auth_users_fk",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 3,
+          "why": "FK to the Supabase-owned auth.users table. Requires the application-owned auth.users shim to exist first (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20251221123500_add_currency_to_trips.sql",
+      "classification": "PORTABLE",
+      "lines": 8,
+      "markers": []
+    },
+    {
+      "file": "20251221130000_add_attachments_to_trips.sql",
+      "classification": "PORTABLE",
+      "lines": 3,
+      "markers": []
+    },
+    {
+      "file": "20251221131000_add_payment_date.sql",
+      "classification": "PORTABLE",
+      "lines": 3,
+      "markers": []
+    },
+    {
+      "file": "20251221140000_fix_historical_rates.sql",
+      "classification": "PORTABLE",
+      "lines": 29,
+      "markers": []
+    },
+    {
+      "file": "20251222111000_add_business_registration.sql",
+      "classification": "PORTABLE",
+      "lines": 7,
+      "markers": []
+    },
+    {
+      "file": "20251222112000_add_signature_url.sql",
+      "classification": "PORTABLE",
+      "lines": 7,
+      "markers": []
+    },
+    {
+      "file": "20251222122600_add_room_type_and_board_basis.sql",
+      "classification": "PORTABLE",
+      "lines": 9,
+      "markers": []
+    },
+    {
+      "file": "20251222133800_create_logos_bucket.sql",
+      "classification": "BLOCKED",
+      "lines": 41,
+      "markers": [
+        {
+          "id": "storage_objects",
+          "class": "BLOCKED",
+          "count": 5,
+          "why": "Supabase models object storage as Postgres tables with RLS. Cloud Storage has no equivalent; these policies must be re-expressed as Security Rules or backend-signed access."
+        },
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 3,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 3,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        }
+      ]
+    },
+    {
+      "file": "20251223100000_get_trips_by_year.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 44,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20251223103000_get_trip_years.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 15,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20251223110000_fix_trips_schema_and_rpc.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 107,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 2,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 2,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        }
+      ]
+    },
+    {
+      "file": "20251223123000_get_yearly_stats_overview.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 63,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20260110000010_add_business_id_to_user_profiles.sql",
+      "classification": "PORTABLE",
+      "lines": 17,
+      "markers": []
+    },
+    {
+      "file": "20260110000020_add_trip_original_currency.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 93,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        }
+      ]
+    },
+    {
+      "file": "20260111000000_restaurant_schema_baseline.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 261,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 9,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "auth_users_fk",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 5,
+          "why": "FK to the Supabase-owned auth.users table. Requires the application-owned auth.users shim to exist first (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20260111000010_restaurant_v2_baseline.sql",
+      "classification": "BLOCKED",
+      "lines": 869,
+      "markers": [
+        {
+          "id": "supabase_realtime",
+          "class": "BLOCKED",
+          "count": 8,
+          "why": "Supabase Realtime publication. No Cloud SQL analogue."
+        },
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 25,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "auth_users_fk",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 13,
+          "why": "FK to the Supabase-owned auth.users table. Requires the application-owned auth.users shim to exist first (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20260111000020_restaurant_production_baseline.sql",
+      "classification": "BLOCKED",
+      "lines": 492,
+      "markers": [
+        {
+          "id": "supabase_realtime",
+          "class": "BLOCKED",
+          "count": 6,
+          "why": "Supabase Realtime publication. No Cloud SQL analogue."
+        },
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 17,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "auth_users_fk",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 3,
+          "why": "FK to the Supabase-owned auth.users table. Requires the application-owned auth.users shim to exist first (migration/sql/001)."
+        },
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 2,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        }
+      ]
+    },
+    {
+      "file": "20260112000010_fix_authorize_action.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 61,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20260112000020_fix_staff_active.sql",
+      "classification": "PORTABLE",
+      "lines": 17,
+      "markers": []
+    },
+    {
+      "file": "20260112000030_restaurant_currency.sql",
+      "classification": "PORTABLE",
+      "lines": 13,
+      "markers": []
+    },
+    {
+      "file": "20260112000040_restaurant_security.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 192,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 3,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20260112000050_restaurant_storage.sql",
+      "classification": "BLOCKED",
+      "lines": 36,
+      "markers": [
+        {
+          "id": "storage_objects",
+          "class": "BLOCKED",
+          "count": 4,
+          "why": "Supabase models object storage as Postgres tables with RLS. Cloud Storage has no equivalent; these policies must be re-expressed as Security Rules or backend-signed access."
+        },
+        {
+          "id": "auth_role",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 2,
+          "why": "Requires the auth.role() compatibility function (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20260115000000_restaurant_security_hardening_baseline.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 460,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 17,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "auth_users_fk",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 2,
+          "why": "FK to the Supabase-owned auth.users table. Requires the application-owned auth.users shim to exist first (migration/sql/001)."
+        },
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 2,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        }
+      ]
+    },
+    {
+      "file": "20260116000010_reservation_validation.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 199,
+      "markers": [
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        }
+      ]
+    },
+    {
+      "file": "20260116000020_secure_pin_hashing.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 248,
+      "markers": [
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 2,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        },
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "auth_users_read",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "Reads auth.users directly. Satisfied by the shim table, but the columns it selects must exist there."
+        }
+      ]
+    },
+    {
+      "file": "20260117000010_restaurant_inventory.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 158,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 3,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "auth_users_fk",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 2,
+          "why": "FK to the Supabase-owned auth.users table. Requires the application-owned auth.users shim to exist first (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20260117180000_room_type_to_jsonb.sql",
+      "classification": "PORTABLE",
+      "lines": 43,
+      "markers": []
+    },
+    {
+      "file": "20260117200000_market_mode_settings.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 72,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 5,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 4,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        },
+        {
+          "id": "auth_users_fk",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "FK to the Supabase-owned auth.users table. Requires the application-owned auth.users shim to exist first (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20260117201000_add_barcode_to_menu_items.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 35,
+      "markers": [
+        {
+          "id": "auth_users_fk",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "FK to the Supabase-owned auth.users table. Requires the application-owned auth.users shim to exist first (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20260119000010_add_cost_tracking.sql",
+      "classification": "PORTABLE",
+      "lines": 28,
+      "markers": []
+    },
+    {
+      "file": "20260119000020_complete_fiscal_migration.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 869,
+      "markers": [
+        {
+          "id": "auth_users_fk",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 14,
+          "why": "FK to the Supabase-owned auth.users table. Requires the application-owned auth.users shim to exist first (migration/sql/001)."
+        },
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 13,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20260119000030_fiscal_documents.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 453,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 7,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "auth_users_fk",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 5,
+          "why": "FK to the Supabase-owned auth.users table. Requires the application-owned auth.users shim to exist first (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20260119000040_inventory_extensions.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 427,
+      "markers": [
+        {
+          "id": "auth_users_fk",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 8,
+          "why": "FK to the Supabase-owned auth.users table. Requires the application-owned auth.users shim to exist first (migration/sql/001)."
+        },
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 4,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20260119000050_z_reports.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 599,
+      "markers": [
+        {
+          "id": "auth_users_fk",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 9,
+          "why": "FK to the Supabase-owned auth.users table. Requires the application-owned auth.users shim to exist first (migration/sql/001)."
+        },
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 6,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20260122000010_fix_menu_items.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 40,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 4,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "auth_users_fk",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "FK to the Supabase-owned auth.users table. Requires the application-owned auth.users shim to exist first (migration/sql/001)."
+        },
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        }
+      ]
+    },
+    {
+      "file": "20260122000020_market_products.sql",
+      "classification": "PORTABLE",
+      "lines": 22,
+      "markers": []
+    },
+    {
+      "file": "20260122000030_market_transactions.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 47,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 2,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 2,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        },
+        {
+          "id": "auth_users_fk",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "FK to the Supabase-owned auth.users table. Requires the application-owned auth.users shim to exist first (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20260123000010_fix_market_permissions.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 45,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 8,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20260124000010_add_staff_auth.sql",
+      "classification": "PORTABLE",
+      "lines": 160,
+      "markers": []
+    },
+    {
+      "file": "20260124000020_add_ticket_item_timestamps.sql",
+      "classification": "PORTABLE",
+      "lines": 10,
+      "markers": []
+    },
+    {
+      "file": "20260124000030_fix_kds_ticket_creation.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 91,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        }
+      ]
+    },
+    {
+      "file": "20260124000040_fix_storage_policies.sql",
+      "classification": "BLOCKED",
+      "lines": 47,
+      "markers": [
+        {
+          "id": "storage_objects",
+          "class": "BLOCKED",
+          "count": 9,
+          "why": "Supabase models object storage as Postgres tables with RLS. Cloud Storage has no equivalent; these policies must be re-expressed as Security Rules or backend-signed access."
+        },
+        {
+          "id": "auth_role",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 3,
+          "why": "Requires the auth.role() compatibility function (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20260125000010_add_cost_price_to_menu_items.sql",
+      "classification": "PORTABLE",
+      "lines": 14,
+      "markers": []
+    },
+    {
+      "file": "20260131000010_car_parts.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 63,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 4,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20260201000010_auto_repair_complete.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 258,
+      "markers": [
+        {
+          "id": "auth_users_fk",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 5,
+          "why": "FK to the Supabase-owned auth.users table. Requires the application-owned auth.users shim to exist first (migration/sql/001)."
+        },
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 4,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20260201000020_fix_default_staff_trigger.sql",
+      "classification": "PORTABLE",
+      "lines": 91,
+      "markers": []
+    },
+    {
+      "file": "20260201000030_update_business_type_enum.sql",
+      "classification": "PORTABLE",
+      "lines": 33,
+      "markers": []
+    },
+    {
+      "file": "20260203000010_add_repair_service_rpc.sql",
+      "classification": "PORTABLE",
+      "lines": 118,
+      "markers": []
+    },
+    {
+      "file": "20260203000020_drop_legacy_inventory_trigger.sql",
+      "classification": "PORTABLE",
+      "lines": 8,
+      "markers": []
+    },
+    {
+      "file": "20260203000030_fix_repair_items_fk.sql",
+      "classification": "PORTABLE",
+      "lines": 14,
+      "markers": []
+    },
+    {
+      "file": "20260203000040_fix_repair_items_policy.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 32,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 2,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20260429120000_trip_security_and_contract_fixes.sql",
+      "classification": "BLOCKED",
+      "lines": 235,
+      "markers": [
+        {
+          "id": "storage_objects",
+          "class": "BLOCKED",
+          "count": 14,
+          "why": "Supabase models object storage as Postgres tables with RLS. Cloud Storage has no equivalent; these policies must be re-expressed as Security Rules or backend-signed access."
+        },
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 7,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 6,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        }
+      ]
+    },
+    {
+      "file": "20260716000010_add_trip_payment_method_fields.sql",
+      "classification": "PORTABLE",
+      "lines": 5,
+      "markers": []
+    },
+    {
+      "file": "20260716000020_add_trip_service_type_and_hotel_name.sql",
+      "classification": "PORTABLE",
+      "lines": 5,
+      "markers": []
+    },
+    {
+      "file": "20260716000030_add_trip_ticket_fields.sql",
+      "classification": "PORTABLE",
+      "lines": 18,
+      "markers": []
+    },
+    {
+      "file": "20260718120000_refresh_trips_by_year_contract.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 23,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        }
+      ]
+    },
+    {
+      "file": "20260719090000_travel_mode_production_hardening.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 492,
+      "markers": [
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 23,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        },
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 7,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "auth_users_fk",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 3,
+          "why": "FK to the Supabase-owned auth.users table. Requires the application-owned auth.users shim to exist first (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20260719130000_refresh_travel_rpc_contracts.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 165,
+      "markers": [
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 8,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        },
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 5,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20260719140000_travel_mode_product_features.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 486,
+      "markers": [
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 36,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        },
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 30,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "auth_users_fk",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 8,
+          "why": "FK to the Supabase-owned auth.users table. Requires the application-owned auth.users shim to exist first (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20260719150000_fix_trip_detail_and_write_runtime.sql",
+      "classification": "SUPABASE_SPECIFIC",
+      "lines": 135,
+      "markers": [
+        {
+          "id": "extensions_schema",
+          "class": "SUPABASE_SPECIFIC",
+          "count": 1,
+          "why": "Supabase installs extensions into a dedicated \"extensions\" schema. Cloud SQL installs into public (or a schema you create)."
+        },
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 4,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        },
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 2,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20260719160000_travel_mode_smart_workflows.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 586,
+      "markers": [
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 38,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        },
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 29,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "auth_users_fk",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 6,
+          "why": "FK to the Supabase-owned auth.users table. Requires the application-owned auth.users shim to exist first (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20260719170000_trip_card_payment_summary.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 121,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 3,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 2,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        }
+      ]
+    },
+    {
+      "file": "20260719180000_travel_whatsapp_composer.sql",
+      "classification": "PORTABLE",
+      "lines": 26,
+      "markers": []
+    },
+    {
+      "file": "20260720200000_fix_trip_encrypt_travelers_contract.sql",
+      "classification": "SUPABASE_SPECIFIC",
+      "lines": 441,
+      "markers": [
+        {
+          "id": "extensions_schema",
+          "class": "SUPABASE_SPECIFIC",
+          "count": 2,
+          "why": "Supabase installs extensions into a dedicated \"extensions\" schema. Cloud SQL installs into public (or a schema you create)."
+        },
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 5,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        },
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 3,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "auth_users_fk",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "FK to the Supabase-owned auth.users table. Requires the application-owned auth.users shim to exist first (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20260720210000_fix_save_trip_generated_columns.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 353,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        }
+      ]
+    },
+    {
+      "file": "20260721090000_fix_save_trip_conflict_constraint.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 394,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        }
+      ]
+    },
+    {
+      "file": "20260721100000_fix_trip_payment_plan_source_check.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 369,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        }
+      ]
+    },
+    {
+      "file": "20260721110000_fix_save_trip_currency_contract.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 379,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        }
+      ]
+    },
+    {
+      "file": "20260721120000_add_trip_sorting_support.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 111,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 3,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        }
+      ]
+    },
+    {
+      "file": "20260723090000_reconcile_restaurant_security_baseline.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 185,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 11,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 2,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        }
+      ]
+    },
+    {
+      "file": "20260723100000_fix_trip_payment_save_contract.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 422,
+      "markers": [
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 2,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        },
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20260723110000_sync_trip_payment_summaries.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 245,
+      "markers": [
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 7,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        },
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 5,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20260723140000_travel_analytics_rpc.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 654,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 2,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 2,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        }
+      ]
+    },
+    {
+      "file": "20260729110000_canonical_trip_payment_contract.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 1013,
+      "markers": [
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 11,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        },
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 7,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20260729120000_fix_cash_payment_plan_compatibility.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 64,
+      "markers": [
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 3,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        }
+      ]
+    },
+    {
+      "file": "20260729130000_trip_card_payment_clarity.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 224,
+      "markers": [
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 6,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        },
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 5,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20260813120000_automatic_visa_schedule_collection.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 422,
+      "markers": [
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 16,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        },
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 11,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20260908090000_protect_platform_privileges.sql",
+      "classification": "SUPABASE_SPECIFIC",
+      "lines": 49,
+      "markers": [
+        {
+          "id": "supabase_admin_role",
+          "class": "SUPABASE_SPECIFIC",
+          "count": 1,
+          "why": "References the Supabase superuser role by name. Cloud SQL has no supabase_admin; the Phase 1 trigger guards test current_user against it."
+        },
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 4,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        },
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 3,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20260908091000_quarantine_whatsapp_credentials.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 18,
+      "markers": [
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 2,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        }
+      ]
+    },
+    {
+      "file": "20260908092000_private_business_signatures.sql",
+      "classification": "BLOCKED",
+      "lines": 31,
+      "markers": [
+        {
+          "id": "storage_objects",
+          "class": "BLOCKED",
+          "count": 13,
+          "why": "Supabase models object storage as Postgres tables with RLS. Cloud Storage has no equivalent; these policies must be re-expressed as Security Rules or backend-signed access."
+        },
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 12,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 2,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        }
+      ]
+    },
+    {
+      "file": "20260908093000_contain_restaurant_order_access.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 21,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 6,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 2,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        }
+      ]
+    },
+    {
+      "file": "20260908094000_reconcile_account_status_contract.sql",
+      "classification": "SUPABASE_SPECIFIC",
+      "lines": 36,
+      "markers": [
+        {
+          "id": "supabase_admin_role",
+          "class": "SUPABASE_SPECIFIC",
+          "count": 1,
+          "why": "References the Supabase superuser role by name. Cloud SQL has no supabase_admin; the Phase 1 trigger guards test current_user against it."
+        },
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 2,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        },
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 1,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        }
+      ]
+    },
+    {
+      "file": "20260908095000_close_legacy_analytics_rpc_leaks.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 146,
+      "markers": [
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 2,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        }
+      ]
+    },
+    {
+      "file": "20260908120000_reconcile_application_rpcs.sql",
+      "classification": "PORTABLE_WITH_SHIM",
+      "lines": 131,
+      "markers": [
+        {
+          "id": "auth_uid",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 8,
+          "why": "Requires the auth.uid() compatibility function backed by transaction-local state (migration/sql/001)."
+        },
+        {
+          "id": "supabase_roles",
+          "class": "PORTABLE_WITH_SHIM",
+          "count": 4,
+          "why": "Grants to Supabase role names. Portable once roles of the same name are created in Cloud SQL — required, because Phase 1 guards compare current_user against them."
+        }
+      ]
+    }
+  ]
+}
