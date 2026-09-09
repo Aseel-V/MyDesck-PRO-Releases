@@ -1,0 +1,37 @@
+{
+  "generatedAt": "2026-09-09T08:31:36.304Z",
+  "tables": {
+    "static": 75,
+    "live": 75,
+    "match": true,
+    "missingFromLive": [],
+    "extraInLive": []
+  },
+  "foreignKeysToAuthUsers": {
+    "staticDeclarations": 97,
+    "distinctDeclaredColumns": 75,
+    "duplicateDeclarations": 17,
+    "liveConstraints": 79,
+    "declaredButNotLive": [],
+    "liveButNotDeclared": [
+      "restaurant_menu_items.business_id",
+      "restaurant_staff.user_id",
+      "trip_financial_audit.actor_user_id",
+      "trips.deleted_by"
+    ],
+    "explained": true
+  },
+  "rlsPolicies": {
+    "staticCreateStatements": 163,
+    "distinctStaticPolicyNames": 129,
+    "redefinitions": 34,
+    "livePublicSchema": 113,
+    "liveStorageSchema": 11,
+    "liveTotal": 124
+  },
+  "rls": {
+    "tablesWithRls": 75,
+    "tablesWithForceRls": 0,
+    "totalTables": 75
+  }
+}

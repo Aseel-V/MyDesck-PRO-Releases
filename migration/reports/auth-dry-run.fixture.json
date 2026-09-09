@@ -1,0 +1,142 @@
+{
+  "generatedAt": "2026-09-09T08:28:26.012Z",
+  "mode": "dry-run",
+  "sourceKind": "fixture",
+  "totals": {
+    "sourceAccounts": 7,
+    "importableRecords": 4,
+    "blockers": 3,
+    "buildFailures": 0,
+    "accountedFor": 7,
+    "conservationOk": true
+  },
+  "classification": {
+    "total": 7,
+    "transparent": 2,
+    "reauth": 1,
+    "reset_required": 1,
+    "manual_review": 3,
+    "blocking": 3
+  },
+  "uidPreservation": {
+    "allPreserved": true,
+    "notPreserved": []
+  },
+  "batching": {
+    "batchSize": 1000,
+    "batchCount": 1
+  },
+  "blockers": [
+    {
+      "supabase_uid": "33333333-3333-3333-3333-333333333333",
+      "email": "orphan@agency.example",
+      "reasons": [
+        "orphan_auth_row_no_profiles"
+      ]
+    },
+    {
+      "supabase_uid": "44444444-4444-4444-4444-444444444444",
+      "email": "DUPE@agency.example",
+      "reasons": [
+        "duplicate_email"
+      ]
+    },
+    {
+      "supabase_uid": "55555555-5555-5555-5555-555555555555",
+      "email": "dupe@agency.example",
+      "reasons": [
+        "duplicate_email",
+        "banned_must_import_disabled"
+      ]
+    }
+  ],
+  "buildFailures": [],
+  "ledgerPreview": [
+    {
+      "supabase_uid": "[REDACTED]",
+      "firebase_uid": "[REDACTED]",
+      "email": "owner@agency.example",
+      "auth_class": "transparent",
+      "import_status": "pending",
+      "verification_status": "pending",
+      "has_password_hash": true,
+      "hash_format_ok": true,
+      "email_confirmed": "[REDACTED]",
+      "has_oauth_identity": false,
+      "has_phone": "[REDACTED]",
+      "is_banned": false,
+      "has_business_profile": true,
+      "has_user_profile": true,
+      "failure_reason": null
+    },
+    {
+      "supabase_uid": "[REDACTED]",
+      "firebase_uid": "[REDACTED]",
+      "email": "second@agency.example",
+      "auth_class": "transparent",
+      "import_status": "pending",
+      "verification_status": "pending",
+      "has_password_hash": true,
+      "hash_format_ok": true,
+      "email_confirmed": "[REDACTED]",
+      "has_oauth_identity": false,
+      "has_phone": "[REDACTED]",
+      "is_banned": false,
+      "has_business_profile": true,
+      "has_user_profile": true,
+      "failure_reason": null
+    },
+    {
+      "supabase_uid": "[REDACTED]",
+      "firebase_uid": "[REDACTED]",
+      "email": "oauthonly@agency.example",
+      "auth_class": "reauth",
+      "import_status": "pending",
+      "verification_status": "pending",
+      "has_password_hash": false,
+      "hash_format_ok": false,
+      "email_confirmed": "[REDACTED]",
+      "has_oauth_identity": true,
+      "has_phone": "[REDACTED]",
+      "is_banned": false,
+      "has_business_profile": true,
+      "has_user_profile": true,
+      "failure_reason": "no_password_hash:missing; has_oauth_identity"
+    },
+    {
+      "supabase_uid": "[REDACTED]",
+      "firebase_uid": "[REDACTED]",
+      "email": "magiclink@agency.example",
+      "auth_class": "reset_required",
+      "import_status": "pending",
+      "verification_status": "pending",
+      "has_password_hash": false,
+      "hash_format_ok": false,
+      "email_confirmed": "[REDACTED]",
+      "has_oauth_identity": false,
+      "has_phone": "[REDACTED]",
+      "is_banned": false,
+      "has_business_profile": true,
+      "has_user_profile": true,
+      "failure_reason": "no_usable_password:missing"
+    },
+    {
+      "supabase_uid": "[REDACTED]",
+      "firebase_uid": "[REDACTED]",
+      "email": "orphan@agency.example",
+      "auth_class": "manual_review",
+      "import_status": "pending",
+      "verification_status": "pending",
+      "has_password_hash": true,
+      "hash_format_ok": true,
+      "email_confirmed": "[REDACTED]",
+      "has_oauth_identity": false,
+      "has_phone": "[REDACTED]",
+      "is_banned": false,
+      "has_business_profile": false,
+      "has_user_profile": false,
+      "failure_reason": "orphan_auth_row_no_profiles"
+    }
+  ],
+  "verdict": "NO_GO: 3 blocking account(s) need a human decision"
+}
