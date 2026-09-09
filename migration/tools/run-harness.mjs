@@ -33,6 +33,7 @@ const STEPS = [
   ['security posture',     'migration/tests/security-posture.test.mjs'],
   ['identity + isolation', 'migration/tests/identity-isolation.test.mjs'],  // destructive: last
   ['auth classify (offline)', 'migration/tests/auth-classify.test.mjs'],
+  ['firebase safety guards', 'migration/tests/firebase-safety.test.mjs'],
   ['restore replayed schema', 'migration/tools/replay-migrations.mjs'],
 ];
 
