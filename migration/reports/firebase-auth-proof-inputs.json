@@ -1,0 +1,19 @@
+{
+  "generatedAt": "2026-09-09T09:33:01.609Z",
+  "status": "BLOCKED",
+  "sourceProject": "pubugnfaqqukelvgckdr",
+  "firebaseProject": "mydesckpro",
+  "inputs": {
+    "SUPABASE_DB_URL": false,
+    "VITE_SUPABASE_URL": true,
+    "VITE_SUPABASE_ANON_KEY": true,
+    "FIREBASE_WEB_API_KEY": true
+  },
+  "sourceDatabaseReadOnlyConnection": "NOT RUN",
+  "customerRowsRead": 0,
+  "customerHashesRead": 0,
+  "usersCreated": 0,
+  "blockers": [
+    "MISSING_SUPABASE_DB_URL"
+  ]
+}

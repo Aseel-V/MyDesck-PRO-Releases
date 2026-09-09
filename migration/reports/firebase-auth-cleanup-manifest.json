@@ -1,0 +1,19 @@
+{
+  "generatedAt": "2026-09-09T09:34:00.491Z",
+  "firebaseProject": "mydesckpro",
+  "supabaseProject": "pubugnfaqqukelvgckdr",
+  "namespace": "migration-test--",
+  "deletionApproved": false,
+  "syntheticFirebaseUsers": 0,
+  "syntheticSupabaseUsers": 0,
+  "count": 0,
+  "identities": [],
+  "entryFields": [
+    "uid",
+    "email",
+    "source",
+    "created_at",
+    "cleanup_status"
+  ],
+  "note": "No identities created: source PostgreSQL credentials are missing. No deletion is authorized."
+}

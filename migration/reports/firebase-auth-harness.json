@@ -1,0 +1,44 @@
+{
+  "generatedAt": "2026-09-09T09:34:00.483Z",
+  "scope": "Local disposable PostgreSQL with fixture identities; no real Firebase-token proof",
+  "serverVersion": "17.10",
+  "serverEncoding": "UTF8",
+  "migrations": 93,
+  "migrationFailures": 0,
+  "suites": [
+    {
+      "name": "security-posture",
+      "passed": 17,
+      "failed": 0
+    },
+    {
+      "name": "identity-isolation",
+      "passed": 20,
+      "failed": 0
+    },
+    {
+      "name": "auth-classify",
+      "passed": 27,
+      "failed": 0
+    },
+    {
+      "name": "firebase-safety",
+      "passed": 34,
+      "failed": 0
+    },
+    {
+      "name": "keyless-admin",
+      "passed": 11,
+      "failed": 0
+    }
+  ],
+  "assertions": 109,
+  "baselineAssertions": 98,
+  "addedAssertions": 11,
+  "harnessExitCode": 0,
+  "stepsPassed": 9,
+  "secureSchemaRestored": true,
+  "rawLogSha256": "c63ef340a5553ecdf30b48b7e23eb4a8127cc09b2a8289809025e73bd2e1cd06",
+  "realGoTrueProof": "NOT RUN",
+  "realFirebaseTokenProof": "NOT RUN"
+}

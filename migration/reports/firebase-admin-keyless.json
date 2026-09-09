@@ -1,0 +1,19 @@
+{
+  "generatedAt": "2026-09-09T09:31:55.395Z",
+  "projectId": "mydesckpro",
+  "initialized": true,
+  "readOnlyProof": "PASS",
+  "existingUsersModified": 0,
+  "staticPrivateKeyUsed": false,
+  "exposedHistoricalKeyUsed": false,
+  "credentials": {
+    "firebaseProject": "mydesckpro",
+    "isProductionProject": true,
+    "adcPresent": true,
+    "credentialType": "impersonated_service_account",
+    "impersonatedServiceAccount": "mydesck-migration@mydesckpro.iam.gserviceaccount.com",
+    "staticPrivateKeyUsed": false
+  },
+  "operation": "getUserByEmail (random migration-test-- email)",
+  "lookupResult": "auth/user-not-found"
+}
