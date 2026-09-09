@@ -1,0 +1,54 @@
+{
+  "generatedAt": "2026-09-09T16:42:51.523Z",
+  "status": "PASS",
+  "sourceSafety": {
+    "start": {
+      "read_only": "on",
+      "isolation": "repeatable read"
+    },
+    "rejectedWriteSqlState": "25006",
+    "successfulWrites": 0,
+    "end": {
+      "read_only": "on",
+      "isolation": "repeatable read"
+    },
+    "transactionOutcome": "ROLLBACK"
+  },
+  "firebase": [
+    {
+      "uid": "b4a1c115-62e0-4cd8-a8cd-5e19ecb73496",
+      "passwordLogin": "PASS",
+      "realTokenVerification": "PASS",
+      "uidPreservation": "MATCH"
+    },
+    {
+      "uid": "49ac680e-c964-4d14-908b-1a760b7e5b35",
+      "passwordLogin": "PASS",
+      "realTokenVerification": "PASS",
+      "uidPreservation": "MATCH"
+    }
+  ],
+  "storage": {
+    "objects": [],
+    "copied": 0,
+    "byteMigration": "UNPROVEN",
+    "privateAccess": "NOT_TESTED_NO_OBJECTS",
+    "tripAttachmentReferences": 0,
+    "profileReferences": [
+      {
+        "id": "0812c5b2-e8e3-45cd-a732-8f380a12e447",
+        "user_id": "b4a1c115-62e0-4cd8-a8cd-5e19ecb73496",
+        "has_logo": false,
+        "has_signature": false
+      },
+      {
+        "id": "ea7b6ef7-415e-4bc3-8f0f-5832602be97c",
+        "user_id": "49ac680e-c964-4d14-908b-1a760b7e5b35",
+        "has_logo": false,
+        "has_signature": false
+      }
+    ],
+    "status": "MANIFEST_ONLY_NO_SYNTHETIC_OBJECTS"
+  },
+  "customerChanges": 0
+}

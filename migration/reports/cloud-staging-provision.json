@@ -1,0 +1,11 @@
+{
+  "generatedAt": "2026-09-09T16:28:56.591Z",
+  "project": "mydesckpro",
+  "instance": "mydesck-migration-staging",
+  "status": "BLOCKED",
+  "steps": [],
+  "blocker": "GOOGLE_API_403",
+  "errorCode": 403,
+  "apiStatus": null,
+  "reason": "invalidBillingAccountState"
+}

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-09T16:07:19.064Z",
+  "generatedAt": "2026-09-09T16:41:43.069Z",
   "status": "INVENTORIED",
   "sourceProject": "pubugnfaqqukelvgckdr",
   "realCustomerRowsExported": 0,
@@ -348,8 +348,12 @@
       "child_table": "allocation_numbers_log",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "allocation_numbers_log_document_id_fkey",
@@ -357,8 +361,12 @@
       "child_table": "allocation_numbers_log",
       "parent_schema": "public",
       "parent_table": "fiscal_documents",
-      "child_columns": "{document_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "document_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "audit_logs_business_id_fkey",
@@ -366,8 +374,12 @@
       "child_table": "audit_logs",
       "parent_schema": "public",
       "parent_table": "business_profiles",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "business_profiles_user_id_fkey",
@@ -375,8 +387,12 @@
       "child_table": "business_profiles",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{user_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "user_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "business_settings_business_id_fkey",
@@ -384,8 +400,12 @@
       "child_table": "business_settings",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "car_parts_business_id_fkey",
@@ -393,8 +413,12 @@
       "child_table": "car_parts",
       "parent_schema": "public",
       "parent_table": "business_profiles",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "cash_shifts_business_id_fkey",
@@ -402,8 +426,12 @@
       "child_table": "cash_shifts",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "cash_shifts_closed_by_fkey",
@@ -411,8 +439,12 @@
       "child_table": "cash_shifts",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{closed_by}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "closed_by"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "cash_shifts_opened_by_fkey",
@@ -420,8 +452,12 @@
       "child_table": "cash_shifts",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{opened_by}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "opened_by"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "customer_vehicles_business_id_fkey",
@@ -429,8 +465,12 @@
       "child_table": "customer_vehicles",
       "parent_schema": "public",
       "parent_table": "business_profiles",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "customers_ledger_business_id_fkey",
@@ -438,8 +478,12 @@
       "child_table": "customers_ledger",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "customers_ledger_created_by_fkey",
@@ -447,8 +491,12 @@
       "child_table": "customers_ledger",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{created_by}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "created_by"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "fiscal_counters_business_id_fkey",
@@ -456,8 +504,12 @@
       "child_table": "fiscal_counters",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "fiscal_document_items_document_id_fkey",
@@ -465,8 +517,12 @@
       "child_table": "fiscal_document_items",
       "parent_schema": "public",
       "parent_table": "fiscal_documents",
-      "child_columns": "{document_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "document_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "fiscal_documents_business_id_fkey",
@@ -474,8 +530,12 @@
       "child_table": "fiscal_documents",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "fiscal_documents_cancelled_by_fkey",
@@ -483,8 +543,12 @@
       "child_table": "fiscal_documents",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{cancelled_by}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "cancelled_by"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "fiscal_documents_created_by_fkey",
@@ -492,8 +556,12 @@
       "child_table": "fiscal_documents",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{created_by}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "created_by"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "fiscal_documents_original_document_id_fkey",
@@ -501,8 +569,12 @@
       "child_table": "fiscal_documents",
       "parent_schema": "public",
       "parent_table": "fiscal_documents",
-      "child_columns": "{original_document_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "original_document_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "inventory_batches_business_id_fkey",
@@ -510,8 +582,12 @@
       "child_table": "inventory_batches",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "inventory_batches_ingredient_id_fkey",
@@ -519,8 +595,12 @@
       "child_table": "inventory_batches",
       "parent_schema": "public",
       "parent_table": "restaurant_ingredients",
-      "child_columns": "{ingredient_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "ingredient_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "inventory_batches_menu_item_id_fkey",
@@ -528,8 +608,12 @@
       "child_table": "inventory_batches",
       "parent_schema": "public",
       "parent_table": "restaurant_menu_items",
-      "child_columns": "{menu_item_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "menu_item_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "market_transactions_business_id_fkey",
@@ -537,8 +621,12 @@
       "child_table": "market_transactions",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "market_transactions_order_id_fkey",
@@ -546,8 +634,12 @@
       "child_table": "market_transactions",
       "parent_schema": "public",
       "parent_table": "restaurant_orders",
-      "child_columns": "{order_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "order_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "repair_order_items_mechanic_id_fkey",
@@ -555,8 +647,12 @@
       "child_table": "repair_order_items",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{mechanic_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "mechanic_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "repair_order_items_order_id_fkey",
@@ -564,8 +660,12 @@
       "child_table": "repair_order_items",
       "parent_schema": "public",
       "parent_table": "repair_orders",
-      "child_columns": "{order_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "order_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "repair_orders_business_id_fkey",
@@ -573,8 +673,12 @@
       "child_table": "repair_orders",
       "parent_schema": "public",
       "parent_table": "business_profiles",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "repair_orders_customer_id_fkey",
@@ -582,8 +686,12 @@
       "child_table": "repair_orders",
       "parent_schema": "public",
       "parent_table": "restaurant_guest_profiles",
-      "child_columns": "{customer_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "customer_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "repair_orders_vehicle_id_fkey",
@@ -591,8 +699,12 @@
       "child_table": "repair_orders",
       "parent_schema": "public",
       "parent_table": "customer_vehicles",
-      "child_columns": "{vehicle_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "vehicle_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_audit_logs_actor_id_fkey",
@@ -600,8 +712,12 @@
       "child_table": "restaurant_audit_logs",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{actor_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "actor_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_audit_logs_business_id_fkey",
@@ -609,8 +725,12 @@
       "child_table": "restaurant_audit_logs",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_audit_logs_staff_id_fkey",
@@ -618,8 +738,12 @@
       "child_table": "restaurant_audit_logs",
       "parent_schema": "public",
       "parent_table": "restaurant_staff",
-      "child_columns": "{staff_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "staff_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_cash_drawers_business_id_fkey",
@@ -627,8 +751,12 @@
       "child_table": "restaurant_cash_drawers",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_cash_drawers_closed_by_fkey",
@@ -636,8 +764,12 @@
       "child_table": "restaurant_cash_drawers",
       "parent_schema": "public",
       "parent_table": "restaurant_staff",
-      "child_columns": "{closed_by}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "closed_by"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_cash_drawers_opened_by_fkey",
@@ -645,8 +777,12 @@
       "child_table": "restaurant_cash_drawers",
       "parent_schema": "public",
       "parent_table": "restaurant_staff",
-      "child_columns": "{opened_by}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "opened_by"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_cash_transactions_drawer_id_fkey",
@@ -654,8 +790,12 @@
       "child_table": "restaurant_cash_transactions",
       "parent_schema": "public",
       "parent_table": "restaurant_cash_drawers",
-      "child_columns": "{drawer_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "drawer_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_cash_transactions_performed_by_fkey",
@@ -663,8 +803,12 @@
       "child_table": "restaurant_cash_transactions",
       "parent_schema": "public",
       "parent_table": "restaurant_staff",
-      "child_columns": "{performed_by}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "performed_by"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_daily_reports_business_id_fkey",
@@ -672,8 +816,12 @@
       "child_table": "restaurant_daily_reports",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_daily_reports_closed_by_fkey",
@@ -681,8 +829,12 @@
       "child_table": "restaurant_daily_reports",
       "parent_schema": "public",
       "parent_table": "restaurant_staff",
-      "child_columns": "{closed_by}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "closed_by"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_demand_forecasts_business_id_fkey",
@@ -690,8 +842,12 @@
       "child_table": "restaurant_demand_forecasts",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_floor_plans_business_id_fkey",
@@ -699,8 +855,12 @@
       "child_table": "restaurant_floor_plans",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_guest_profiles_business_id_fkey",
@@ -708,8 +868,12 @@
       "child_table": "restaurant_guest_profiles",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_guest_profiles_preferred_server_id_fkey",
@@ -717,8 +881,12 @@
       "child_table": "restaurant_guest_profiles",
       "parent_schema": "public",
       "parent_table": "restaurant_staff",
-      "child_columns": "{preferred_server_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "preferred_server_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_historical_data_business_id_fkey",
@@ -726,8 +894,12 @@
       "child_table": "restaurant_historical_data",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_ingredients_business_id_fkey",
@@ -735,8 +907,12 @@
       "child_table": "restaurant_ingredients",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_item_modifier_groups_group_id_fkey",
@@ -744,8 +920,12 @@
       "child_table": "restaurant_item_modifier_groups",
       "parent_schema": "public",
       "parent_table": "restaurant_modifier_groups",
-      "child_columns": "{group_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "group_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_item_modifier_groups_item_id_fkey",
@@ -753,8 +933,12 @@
       "child_table": "restaurant_item_modifier_groups",
       "parent_schema": "public",
       "parent_table": "restaurant_menu_items",
-      "child_columns": "{item_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "item_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_kitchen_tickets_business_id_fkey",
@@ -762,8 +946,12 @@
       "child_table": "restaurant_kitchen_tickets",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_kitchen_tickets_order_id_fkey",
@@ -771,8 +959,12 @@
       "child_table": "restaurant_kitchen_tickets",
       "parent_schema": "public",
       "parent_table": "restaurant_orders",
-      "child_columns": "{order_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "order_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_menu_categories_business_id_fkey",
@@ -780,8 +972,12 @@
       "child_table": "restaurant_menu_categories",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_menu_categories_parent_id_fkey",
@@ -789,8 +985,12 @@
       "child_table": "restaurant_menu_categories",
       "parent_schema": "public",
       "parent_table": "restaurant_menu_categories",
-      "child_columns": "{parent_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "parent_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_menu_items_business_id_fkey",
@@ -798,8 +998,12 @@
       "child_table": "restaurant_menu_items",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_menu_items_category_id_fkey",
@@ -807,8 +1011,12 @@
       "child_table": "restaurant_menu_items",
       "parent_schema": "public",
       "parent_table": "restaurant_menu_categories",
-      "child_columns": "{category_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "category_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_modifier_groups_business_id_fkey",
@@ -816,8 +1024,12 @@
       "child_table": "restaurant_modifier_groups",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_modifiers_group_id_fkey",
@@ -825,8 +1037,12 @@
       "child_table": "restaurant_modifiers",
       "parent_schema": "public",
       "parent_table": "restaurant_modifier_groups",
-      "child_columns": "{group_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "group_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_notifications_business_id_fkey",
@@ -834,8 +1050,12 @@
       "child_table": "restaurant_notifications",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_order_item_modifiers_modifier_id_fkey",
@@ -843,8 +1063,12 @@
       "child_table": "restaurant_order_item_modifiers",
       "parent_schema": "public",
       "parent_table": "restaurant_modifiers",
-      "child_columns": "{modifier_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "modifier_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_order_item_modifiers_order_item_id_fkey",
@@ -852,8 +1076,12 @@
       "child_table": "restaurant_order_item_modifiers",
       "parent_schema": "public",
       "parent_table": "restaurant_order_items",
-      "child_columns": "{order_item_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "order_item_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_order_items_item_id_fkey",
@@ -861,8 +1089,12 @@
       "child_table": "restaurant_order_items",
       "parent_schema": "public",
       "parent_table": "restaurant_menu_items",
-      "child_columns": "{item_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "item_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_order_items_order_id_fkey",
@@ -870,8 +1102,12 @@
       "child_table": "restaurant_order_items",
       "parent_schema": "public",
       "parent_table": "restaurant_orders",
-      "child_columns": "{order_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "order_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_orders_business_id_fkey",
@@ -879,8 +1115,12 @@
       "child_table": "restaurant_orders",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_orders_server_id_fkey",
@@ -888,8 +1128,12 @@
       "child_table": "restaurant_orders",
       "parent_schema": "public",
       "parent_table": "restaurant_staff",
-      "child_columns": "{server_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "server_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_orders_session_id_fkey",
@@ -897,8 +1141,12 @@
       "child_table": "restaurant_orders",
       "parent_schema": "public",
       "parent_table": "restaurant_table_sessions",
-      "child_columns": "{session_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "session_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_orders_table_id_fkey",
@@ -906,8 +1154,12 @@
       "child_table": "restaurant_orders",
       "parent_schema": "public",
       "parent_table": "restaurant_tables",
-      "child_columns": "{table_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "table_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_payments_business_id_fkey",
@@ -915,8 +1167,12 @@
       "child_table": "restaurant_payments",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_payments_order_id_fkey",
@@ -924,8 +1180,12 @@
       "child_table": "restaurant_payments",
       "parent_schema": "public",
       "parent_table": "restaurant_orders",
-      "child_columns": "{order_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "order_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_payments_processed_by_fkey",
@@ -933,8 +1193,12 @@
       "child_table": "restaurant_payments",
       "parent_schema": "public",
       "parent_table": "restaurant_staff",
-      "child_columns": "{processed_by}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "processed_by"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_recipes_ingredient_id_fkey",
@@ -942,8 +1206,12 @@
       "child_table": "restaurant_recipes",
       "parent_schema": "public",
       "parent_table": "restaurant_ingredients",
-      "child_columns": "{ingredient_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "ingredient_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_recipes_menu_item_id_fkey",
@@ -951,8 +1219,12 @@
       "child_table": "restaurant_recipes",
       "parent_schema": "public",
       "parent_table": "restaurant_menu_items",
-      "child_columns": "{menu_item_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "menu_item_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_reservations_business_id_fkey",
@@ -960,8 +1232,12 @@
       "child_table": "restaurant_reservations",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_reservations_created_by_fkey",
@@ -969,8 +1245,12 @@
       "child_table": "restaurant_reservations",
       "parent_schema": "public",
       "parent_table": "restaurant_staff",
-      "child_columns": "{created_by}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "created_by"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_reservations_guest_id_fkey",
@@ -978,8 +1258,12 @@
       "child_table": "restaurant_reservations",
       "parent_schema": "public",
       "parent_table": "restaurant_guest_profiles",
-      "child_columns": "{guest_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "guest_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_settings_business_id_fkey",
@@ -987,8 +1271,12 @@
       "child_table": "restaurant_settings",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_staff_business_id_fkey",
@@ -996,8 +1284,12 @@
       "child_table": "restaurant_staff",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_staff_user_id_fkey",
@@ -1005,8 +1297,12 @@
       "child_table": "restaurant_staff",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{user_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "user_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_table_sessions_business_id_fkey",
@@ -1014,8 +1310,12 @@
       "child_table": "restaurant_table_sessions",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_table_sessions_server_id_fkey",
@@ -1023,8 +1323,12 @@
       "child_table": "restaurant_table_sessions",
       "parent_schema": "public",
       "parent_table": "restaurant_staff",
-      "child_columns": "{server_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "server_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_table_sessions_table_id_fkey",
@@ -1032,8 +1336,12 @@
       "child_table": "restaurant_table_sessions",
       "parent_schema": "public",
       "parent_table": "restaurant_tables",
-      "child_columns": "{table_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "table_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_tables_business_id_fkey",
@@ -1041,8 +1349,12 @@
       "child_table": "restaurant_tables",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_ticket_items_order_item_id_fkey",
@@ -1050,8 +1362,12 @@
       "child_table": "restaurant_ticket_items",
       "parent_schema": "public",
       "parent_table": "restaurant_order_items",
-      "child_columns": "{order_item_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "order_item_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_ticket_items_ticket_id_fkey",
@@ -1059,8 +1375,12 @@
       "child_table": "restaurant_ticket_items",
       "parent_schema": "public",
       "parent_table": "restaurant_kitchen_tickets",
-      "child_columns": "{ticket_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "ticket_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_void_logs_approved_by_fkey",
@@ -1068,8 +1388,12 @@
       "child_table": "restaurant_void_logs",
       "parent_schema": "public",
       "parent_table": "restaurant_staff",
-      "child_columns": "{approved_by}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "approved_by"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_void_logs_business_id_fkey",
@@ -1077,8 +1401,12 @@
       "child_table": "restaurant_void_logs",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_void_logs_order_id_fkey",
@@ -1086,8 +1414,12 @@
       "child_table": "restaurant_void_logs",
       "parent_schema": "public",
       "parent_table": "restaurant_orders",
-      "child_columns": "{order_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "order_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_void_logs_order_item_id_fkey",
@@ -1095,8 +1427,12 @@
       "child_table": "restaurant_void_logs",
       "parent_schema": "public",
       "parent_table": "restaurant_order_items",
-      "child_columns": "{order_item_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "order_item_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_void_logs_performed_by_fkey",
@@ -1104,8 +1440,12 @@
       "child_table": "restaurant_void_logs",
       "parent_schema": "public",
       "parent_table": "restaurant_staff",
-      "child_columns": "{performed_by}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "performed_by"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_waitlist_business_id_fkey",
@@ -1113,8 +1453,12 @@
       "child_table": "restaurant_waitlist",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_waitlist_table_id_fkey",
@@ -1122,8 +1466,12 @@
       "child_table": "restaurant_waitlist",
       "parent_schema": "public",
       "parent_table": "restaurant_tables",
-      "child_columns": "{table_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "table_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_whatsapp_messages_business_id_fkey",
@@ -1131,8 +1479,12 @@
       "child_table": "restaurant_whatsapp_messages",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_whatsapp_messages_guest_id_fkey",
@@ -1140,8 +1492,12 @@
       "child_table": "restaurant_whatsapp_messages",
       "parent_schema": "public",
       "parent_table": "restaurant_guest_profiles",
-      "child_columns": "{guest_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "guest_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "restaurant_whatsapp_settings_business_id_fkey",
@@ -1149,8 +1505,12 @@
       "child_table": "restaurant_whatsapp_settings",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "shift_transactions_fiscal_document_id_fkey",
@@ -1158,8 +1518,12 @@
       "child_table": "shift_transactions",
       "parent_schema": "public",
       "parent_table": "fiscal_documents",
-      "child_columns": "{fiscal_document_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "fiscal_document_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "shift_transactions_performed_by_fkey",
@@ -1167,8 +1531,12 @@
       "child_table": "shift_transactions",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{performed_by}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "performed_by"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "shift_transactions_shift_id_fkey",
@@ -1176,8 +1544,12 @@
       "child_table": "shift_transactions",
       "parent_schema": "public",
       "parent_table": "cash_shifts",
-      "child_columns": "{shift_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "shift_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "shrinkage_records_approved_by_fkey",
@@ -1185,8 +1557,12 @@
       "child_table": "shrinkage_records",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{approved_by}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "approved_by"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "shrinkage_records_batch_id_fkey",
@@ -1194,8 +1570,12 @@
       "child_table": "shrinkage_records",
       "parent_schema": "public",
       "parent_table": "inventory_batches",
-      "child_columns": "{batch_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "batch_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "shrinkage_records_business_id_fkey",
@@ -1203,8 +1583,12 @@
       "child_table": "shrinkage_records",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "shrinkage_records_ingredient_id_fkey",
@@ -1212,8 +1596,12 @@
       "child_table": "shrinkage_records",
       "parent_schema": "public",
       "parent_table": "restaurant_ingredients",
-      "child_columns": "{ingredient_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "ingredient_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "shrinkage_records_menu_item_id_fkey",
@@ -1221,8 +1609,12 @@
       "child_table": "shrinkage_records",
       "parent_schema": "public",
       "parent_table": "restaurant_menu_items",
-      "child_columns": "{menu_item_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "menu_item_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "shrinkage_records_recorded_by_fkey",
@@ -1230,8 +1622,12 @@
       "child_table": "shrinkage_records",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{recorded_by}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "recorded_by"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "staff_shifts_report_id_fkey",
@@ -1239,8 +1635,12 @@
       "child_table": "staff_shifts",
       "parent_schema": "public",
       "parent_table": "restaurant_daily_reports",
-      "child_columns": "{report_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "report_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "staff_shifts_staff_id_fkey",
@@ -1248,8 +1648,12 @@
       "child_table": "staff_shifts",
       "parent_schema": "public",
       "parent_table": "restaurant_staff",
-      "child_columns": "{staff_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "staff_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "stock_take_items_counted_by_fkey",
@@ -1257,8 +1661,12 @@
       "child_table": "stock_take_items",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{counted_by}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "counted_by"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "stock_take_items_ingredient_id_fkey",
@@ -1266,8 +1674,12 @@
       "child_table": "stock_take_items",
       "parent_schema": "public",
       "parent_table": "restaurant_ingredients",
-      "child_columns": "{ingredient_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "ingredient_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "stock_take_items_menu_item_id_fkey",
@@ -1275,8 +1687,12 @@
       "child_table": "stock_take_items",
       "parent_schema": "public",
       "parent_table": "restaurant_menu_items",
-      "child_columns": "{menu_item_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "menu_item_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "stock_take_items_stock_take_id_fkey",
@@ -1284,8 +1700,12 @@
       "child_table": "stock_take_items",
       "parent_schema": "public",
       "parent_table": "stock_takes",
-      "child_columns": "{stock_take_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "stock_take_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "stock_takes_business_id_fkey",
@@ -1293,8 +1713,12 @@
       "child_table": "stock_takes",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "stock_takes_completed_by_fkey",
@@ -1302,8 +1726,12 @@
       "child_table": "stock_takes",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{completed_by}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "completed_by"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "stock_takes_created_by_fkey",
@@ -1311,8 +1739,12 @@
       "child_table": "stock_takes",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{created_by}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "created_by"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "trip_activity_log_actor_user_id_fkey",
@@ -1320,8 +1752,12 @@
       "child_table": "trip_activity_log",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{actor_user_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "actor_user_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "trip_activity_log_user_id_fkey",
@@ -1329,8 +1765,12 @@
       "child_table": "trip_activity_log",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{user_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "user_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "trip_attachment_cleanup_queue_user_id_fkey",
@@ -1338,8 +1778,12 @@
       "child_table": "trip_attachment_cleanup_queue",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{user_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "user_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "trip_financial_audit_actor_user_id_fkey",
@@ -1347,8 +1791,12 @@
       "child_table": "trip_financial_audit",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{actor_user_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "actor_user_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "trip_financial_audit_trip_id_fkey",
@@ -1356,8 +1804,12 @@
       "child_table": "trip_financial_audit",
       "parent_schema": "public",
       "parent_table": "trips",
-      "child_columns": "{trip_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "trip_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "trip_financial_audit_user_id_fkey",
@@ -1365,8 +1817,12 @@
       "child_table": "trip_financial_audit",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{user_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "user_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "trip_installment_events_installment_id_fkey",
@@ -1374,8 +1830,12 @@
       "child_table": "trip_installment_events",
       "parent_schema": "public",
       "parent_table": "trip_installments",
-      "child_columns": "{installment_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "installment_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "trip_installment_events_trip_id_fkey",
@@ -1383,8 +1843,12 @@
       "child_table": "trip_installment_events",
       "parent_schema": "public",
       "parent_table": "trips",
-      "child_columns": "{trip_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "trip_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "trip_installment_events_user_id_fkey",
@@ -1392,8 +1856,12 @@
       "child_table": "trip_installment_events",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{user_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "user_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "trip_installments_payment_plan_id_fkey",
@@ -1401,8 +1869,12 @@
       "child_table": "trip_installments",
       "parent_schema": "public",
       "parent_table": "trip_payment_plans",
-      "child_columns": "{payment_plan_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "payment_plan_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "trip_installments_trip_id_fkey",
@@ -1410,8 +1882,12 @@
       "child_table": "trip_installments",
       "parent_schema": "public",
       "parent_table": "trips",
-      "child_columns": "{trip_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "trip_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "trip_installments_user_id_fkey",
@@ -1419,8 +1895,12 @@
       "child_table": "trip_installments",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{user_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "user_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "trip_notification_settings_user_id_fkey",
@@ -1428,8 +1908,12 @@
       "child_table": "trip_notification_settings",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{user_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "user_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "trip_notifications_user_id_fkey",
@@ -1437,8 +1921,12 @@
       "child_table": "trip_notifications",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{user_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "user_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "trip_packing_lists_trip_id_fkey",
@@ -1446,8 +1934,12 @@
       "child_table": "trip_packing_lists",
       "parent_schema": "public",
       "parent_table": "trips",
-      "child_columns": "{trip_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "trip_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "trip_packing_lists_user_id_fkey",
@@ -1455,8 +1947,12 @@
       "child_table": "trip_packing_lists",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{user_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "user_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "trip_payment_events_payment_plan_id_fkey",
@@ -1464,8 +1960,12 @@
       "child_table": "trip_payment_events",
       "parent_schema": "public",
       "parent_table": "trip_payment_plans",
-      "child_columns": "{payment_plan_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "payment_plan_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "trip_payment_events_trip_id_fkey",
@@ -1473,8 +1973,12 @@
       "child_table": "trip_payment_events",
       "parent_schema": "public",
       "parent_table": "trips",
-      "child_columns": "{trip_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "trip_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "trip_payment_events_user_id_fkey",
@@ -1482,8 +1986,12 @@
       "child_table": "trip_payment_events",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{user_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "user_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "trip_payment_plans_trip_id_fkey",
@@ -1491,8 +1999,12 @@
       "child_table": "trip_payment_plans",
       "parent_schema": "public",
       "parent_table": "trips",
-      "child_columns": "{trip_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "trip_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "trip_payment_plans_user_id_fkey",
@@ -1500,8 +2012,12 @@
       "child_table": "trip_payment_plans",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{user_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "user_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "trip_pdf_rate_limits_user_id_fkey",
@@ -1509,8 +2025,12 @@
       "child_table": "trip_pdf_rate_limits",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{user_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "user_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "trip_pricing_preferences_user_id_fkey",
@@ -1518,8 +2038,12 @@
       "child_table": "trip_pricing_preferences",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{user_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "user_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "trip_templates_user_id_fkey",
@@ -1527,8 +2051,12 @@
       "child_table": "trip_templates",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{user_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "user_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "trip_whatsapp_templates_user_id_fkey",
@@ -1536,8 +2064,12 @@
       "child_table": "trip_whatsapp_templates",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{user_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "user_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "trip_write_requests_trip_id_fkey",
@@ -1545,8 +2077,12 @@
       "child_table": "trip_write_requests",
       "parent_schema": "public",
       "parent_table": "trips",
-      "child_columns": "{trip_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "trip_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "trip_write_requests_user_id_fkey",
@@ -1554,8 +2090,12 @@
       "child_table": "trip_write_requests",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{user_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "user_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "trips_deleted_by_fkey",
@@ -1563,8 +2103,12 @@
       "child_table": "trips",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{deleted_by}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "deleted_by"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "trips_user_id_fkey",
@@ -1572,8 +2116,12 @@
       "child_table": "trips",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{user_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "user_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "user_profiles_business_id_fkey",
@@ -1581,8 +2129,12 @@
       "child_table": "user_profiles",
       "parent_schema": "public",
       "parent_table": "business_profiles",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "user_profiles_user_id_fkey",
@@ -1590,8 +2142,12 @@
       "child_table": "user_profiles",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{user_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "user_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "whatsapp_contact_consents_user_id_fkey",
@@ -1599,8 +2155,12 @@
       "child_table": "whatsapp_contact_consents",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{user_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "user_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "whatsapp_message_log_reminder_id_fkey",
@@ -1608,8 +2168,12 @@
       "child_table": "whatsapp_message_log",
       "parent_schema": "public",
       "parent_table": "whatsapp_reminders",
-      "child_columns": "{reminder_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "reminder_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "whatsapp_message_log_trip_id_fkey",
@@ -1617,8 +2181,12 @@
       "child_table": "whatsapp_message_log",
       "parent_schema": "public",
       "parent_table": "trips",
-      "child_columns": "{trip_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "trip_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "whatsapp_message_log_user_id_fkey",
@@ -1626,8 +2194,12 @@
       "child_table": "whatsapp_message_log",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{user_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "user_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "whatsapp_reminders_trip_id_fkey",
@@ -1635,8 +2207,12 @@
       "child_table": "whatsapp_reminders",
       "parent_schema": "public",
       "parent_table": "trips",
-      "child_columns": "{trip_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "trip_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "whatsapp_reminders_user_id_fkey",
@@ -1644,8 +2220,12 @@
       "child_table": "whatsapp_reminders",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{user_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "user_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "x_reports_business_id_fkey",
@@ -1653,8 +2233,12 @@
       "child_table": "x_reports",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "x_reports_generated_by_fkey",
@@ -1662,8 +2246,12 @@
       "child_table": "x_reports",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{generated_by}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "generated_by"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "x_reports_shift_id_fkey",
@@ -1671,8 +2259,12 @@
       "child_table": "x_reports",
       "parent_schema": "public",
       "parent_table": "cash_shifts",
-      "child_columns": "{shift_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "shift_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "z_report_counters_business_id_fkey",
@@ -1680,8 +2272,12 @@
       "child_table": "z_report_counters",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "z_reports_business_id_fkey",
@@ -1689,8 +2285,12 @@
       "child_table": "z_reports",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{business_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "business_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "z_reports_generated_by_fkey",
@@ -1698,8 +2298,12 @@
       "child_table": "z_reports",
       "parent_schema": "auth",
       "parent_table": "users",
-      "child_columns": "{generated_by}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "generated_by"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     },
     {
       "name": "z_reports_shift_id_fkey",
@@ -1707,10 +2311,458 @@
       "child_table": "z_reports",
       "parent_schema": "public",
       "parent_table": "cash_shifts",
-      "child_columns": "{shift_id}",
-      "parent_columns": "{id}"
+      "child_columns": [
+        "shift_id"
+      ],
+      "parent_columns": [
+        "id"
+      ]
     }
   ],
-  "directSyntheticCounts": [],
+  "directSyntheticCounts": [
+    {
+      "table": "allocation_numbers_log",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id"
+      ]
+    },
+    {
+      "table": "business_profiles",
+      "count": "0",
+      "dependencyColumns": [
+        "user_id"
+      ]
+    },
+    {
+      "table": "business_settings",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id"
+      ]
+    },
+    {
+      "table": "cash_shifts",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id",
+        "closed_by",
+        "opened_by"
+      ]
+    },
+    {
+      "table": "customers_ledger",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id",
+        "created_by"
+      ]
+    },
+    {
+      "table": "fiscal_counters",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id"
+      ]
+    },
+    {
+      "table": "fiscal_documents",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id",
+        "cancelled_by",
+        "created_by"
+      ]
+    },
+    {
+      "table": "inventory_batches",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id"
+      ]
+    },
+    {
+      "table": "market_transactions",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id"
+      ]
+    },
+    {
+      "table": "repair_order_items",
+      "count": "0",
+      "dependencyColumns": [
+        "mechanic_id"
+      ]
+    },
+    {
+      "table": "restaurant_audit_logs",
+      "count": "0",
+      "dependencyColumns": [
+        "actor_id",
+        "business_id"
+      ]
+    },
+    {
+      "table": "restaurant_cash_drawers",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id"
+      ]
+    },
+    {
+      "table": "restaurant_daily_reports",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id"
+      ]
+    },
+    {
+      "table": "restaurant_demand_forecasts",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id"
+      ]
+    },
+    {
+      "table": "restaurant_floor_plans",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id"
+      ]
+    },
+    {
+      "table": "restaurant_guest_profiles",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id"
+      ]
+    },
+    {
+      "table": "restaurant_historical_data",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id"
+      ]
+    },
+    {
+      "table": "restaurant_ingredients",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id"
+      ]
+    },
+    {
+      "table": "restaurant_kitchen_tickets",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id"
+      ]
+    },
+    {
+      "table": "restaurant_menu_categories",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id"
+      ]
+    },
+    {
+      "table": "restaurant_menu_items",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id"
+      ]
+    },
+    {
+      "table": "restaurant_modifier_groups",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id"
+      ]
+    },
+    {
+      "table": "restaurant_notifications",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id"
+      ]
+    },
+    {
+      "table": "restaurant_orders",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id"
+      ]
+    },
+    {
+      "table": "restaurant_payments",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id"
+      ]
+    },
+    {
+      "table": "restaurant_reservations",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id"
+      ]
+    },
+    {
+      "table": "restaurant_settings",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id"
+      ]
+    },
+    {
+      "table": "restaurant_staff",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id",
+        "user_id"
+      ]
+    },
+    {
+      "table": "restaurant_table_sessions",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id"
+      ]
+    },
+    {
+      "table": "restaurant_tables",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id"
+      ]
+    },
+    {
+      "table": "restaurant_void_logs",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id"
+      ]
+    },
+    {
+      "table": "restaurant_waitlist",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id"
+      ]
+    },
+    {
+      "table": "restaurant_whatsapp_messages",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id"
+      ]
+    },
+    {
+      "table": "restaurant_whatsapp_settings",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id"
+      ]
+    },
+    {
+      "table": "shift_transactions",
+      "count": "0",
+      "dependencyColumns": [
+        "performed_by"
+      ]
+    },
+    {
+      "table": "shrinkage_records",
+      "count": "0",
+      "dependencyColumns": [
+        "approved_by",
+        "business_id",
+        "recorded_by"
+      ]
+    },
+    {
+      "table": "stock_take_items",
+      "count": "0",
+      "dependencyColumns": [
+        "counted_by"
+      ]
+    },
+    {
+      "table": "stock_takes",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id",
+        "completed_by",
+        "created_by"
+      ]
+    },
+    {
+      "table": "trip_activity_log",
+      "count": "0",
+      "dependencyColumns": [
+        "actor_user_id",
+        "user_id"
+      ]
+    },
+    {
+      "table": "trip_attachment_cleanup_queue",
+      "count": "0",
+      "dependencyColumns": [
+        "user_id"
+      ]
+    },
+    {
+      "table": "trip_financial_audit",
+      "count": "0",
+      "dependencyColumns": [
+        "actor_user_id",
+        "user_id"
+      ]
+    },
+    {
+      "table": "trip_installment_events",
+      "count": "0",
+      "dependencyColumns": [
+        "user_id"
+      ]
+    },
+    {
+      "table": "trip_installments",
+      "count": "0",
+      "dependencyColumns": [
+        "user_id"
+      ]
+    },
+    {
+      "table": "trip_notification_settings",
+      "count": "0",
+      "dependencyColumns": [
+        "user_id"
+      ]
+    },
+    {
+      "table": "trip_notifications",
+      "count": "0",
+      "dependencyColumns": [
+        "user_id"
+      ]
+    },
+    {
+      "table": "trip_packing_lists",
+      "count": "0",
+      "dependencyColumns": [
+        "user_id"
+      ]
+    },
+    {
+      "table": "trip_payment_events",
+      "count": "0",
+      "dependencyColumns": [
+        "user_id"
+      ]
+    },
+    {
+      "table": "trip_payment_plans",
+      "count": "0",
+      "dependencyColumns": [
+        "user_id"
+      ]
+    },
+    {
+      "table": "trip_pdf_rate_limits",
+      "count": "0",
+      "dependencyColumns": [
+        "user_id"
+      ]
+    },
+    {
+      "table": "trip_pricing_preferences",
+      "count": "0",
+      "dependencyColumns": [
+        "user_id"
+      ]
+    },
+    {
+      "table": "trip_templates",
+      "count": "0",
+      "dependencyColumns": [
+        "user_id"
+      ]
+    },
+    {
+      "table": "trip_whatsapp_templates",
+      "count": "0",
+      "dependencyColumns": [
+        "user_id"
+      ]
+    },
+    {
+      "table": "trip_write_requests",
+      "count": "0",
+      "dependencyColumns": [
+        "user_id"
+      ]
+    },
+    {
+      "table": "trips",
+      "count": "0",
+      "dependencyColumns": [
+        "deleted_by",
+        "user_id"
+      ]
+    },
+    {
+      "table": "user_profiles",
+      "count": "0",
+      "dependencyColumns": [
+        "user_id"
+      ]
+    },
+    {
+      "table": "whatsapp_contact_consents",
+      "count": "0",
+      "dependencyColumns": [
+        "user_id"
+      ]
+    },
+    {
+      "table": "whatsapp_message_log",
+      "count": "0",
+      "dependencyColumns": [
+        "user_id"
+      ]
+    },
+    {
+      "table": "whatsapp_reminders",
+      "count": "0",
+      "dependencyColumns": [
+        "user_id"
+      ]
+    },
+    {
+      "table": "x_reports",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id",
+        "generated_by"
+      ]
+    },
+    {
+      "table": "z_report_counters",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id"
+      ]
+    },
+    {
+      "table": "z_reports",
+      "count": "0",
+      "dependencyColumns": [
+        "business_id",
+        "generated_by"
+      ]
+    }
+  ],
   "syntheticDirectRows": "0"
 }

@@ -1,0 +1,722 @@
+{
+  "generatedAt": "2026-09-09T18:26:25.281Z",
+  "sourceCatalogCapturedAt": "2026-09-09T16:13:05.334Z",
+  "sourceTableCount": 77,
+  "targetTableCount": 75,
+  "tableDifferences": {
+    "sourcePublicTables": 77,
+    "targetPublicTables": 75,
+    "sourceOnly": [
+      "whatsapp_contact_consents",
+      "whatsapp_message_log",
+      "whatsapp_reminders",
+      "whatsapp_server_templates",
+      "whatsapp_webhook_events"
+    ],
+    "targetOnly": [
+      "payouts",
+      "transactions",
+      "wallets"
+    ]
+  },
+  "columnDifferences": [
+    {
+      "table": "business_profiles",
+      "column": "business_type",
+      "gap": "not_null",
+      "source": false,
+      "target": true
+    },
+    {
+      "table": "business_profiles",
+      "column": "subscription_status",
+      "gap": "not_null",
+      "source": false,
+      "target": true
+    },
+    {
+      "table": "business_profiles",
+      "column": "is_suspended",
+      "gap": "not_null",
+      "source": false,
+      "target": true
+    },
+    {
+      "table": "customer_vehicles",
+      "column": "test_expiry",
+      "gap": "SOURCE_ONLY_COLUMN",
+      "source": {
+        "schema": "public",
+        "table_name": "customer_vehicles",
+        "column_name": "test_expiry",
+        "ordinal": 14,
+        "type": "date",
+        "not_null": false,
+        "generated": "",
+        "identity": ""
+      },
+      "target": null
+    },
+    {
+      "table": "customer_vehicles",
+      "column": "trim_level",
+      "gap": "SOURCE_ONLY_COLUMN",
+      "source": {
+        "schema": "public",
+        "table_name": "customer_vehicles",
+        "column_name": "trim_level",
+        "ordinal": 15,
+        "type": "text",
+        "not_null": false,
+        "generated": "",
+        "identity": ""
+      },
+      "target": null
+    },
+    {
+      "table": "customer_vehicles",
+      "column": "ownership",
+      "gap": "SOURCE_ONLY_COLUMN",
+      "source": {
+        "schema": "public",
+        "table_name": "customer_vehicles",
+        "column_name": "ownership",
+        "ordinal": 16,
+        "type": "text",
+        "not_null": false,
+        "generated": "",
+        "identity": ""
+      },
+      "target": null
+    },
+    {
+      "table": "repair_orders",
+      "column": "currency",
+      "gap": "SOURCE_ONLY_COLUMN",
+      "source": {
+        "schema": "public",
+        "table_name": "repair_orders",
+        "column_name": "currency",
+        "ordinal": 20,
+        "type": "text",
+        "not_null": false,
+        "generated": "",
+        "identity": ""
+      },
+      "target": null
+    },
+    {
+      "table": "repair_orders",
+      "column": "notes",
+      "gap": "SOURCE_ONLY_COLUMN",
+      "source": {
+        "schema": "public",
+        "table_name": "repair_orders",
+        "column_name": "notes",
+        "ordinal": 21,
+        "type": "text",
+        "not_null": false,
+        "generated": "",
+        "identity": ""
+      },
+      "target": null
+    },
+    {
+      "table": "trips",
+      "column": "checklist_flight",
+      "gap": "SOURCE_ONLY_COLUMN",
+      "source": {
+        "schema": "public",
+        "table_name": "trips",
+        "column_name": "checklist_flight",
+        "ordinal": 34,
+        "type": "boolean",
+        "not_null": false,
+        "generated": "",
+        "identity": ""
+      },
+      "target": null
+    },
+    {
+      "table": "trips",
+      "column": "checklist_hotel",
+      "gap": "SOURCE_ONLY_COLUMN",
+      "source": {
+        "schema": "public",
+        "table_name": "trips",
+        "column_name": "checklist_hotel",
+        "ordinal": 35,
+        "type": "boolean",
+        "not_null": false,
+        "generated": "",
+        "identity": ""
+      },
+      "target": null
+    },
+    {
+      "table": "trips",
+      "column": "checklist_payment",
+      "gap": "SOURCE_ONLY_COLUMN",
+      "source": {
+        "schema": "public",
+        "table_name": "trips",
+        "column_name": "checklist_payment",
+        "ordinal": 36,
+        "type": "boolean",
+        "not_null": false,
+        "generated": "",
+        "identity": ""
+      },
+      "target": null
+    },
+    {
+      "table": "trip_whatsapp_templates",
+      "column": "category",
+      "gap": "TARGET_ONLY_COLUMN",
+      "source": null,
+      "target": {
+        "table_name": "trip_whatsapp_templates",
+        "column_name": "category",
+        "type": "text",
+        "not_null": true,
+        "generated": "",
+        "identity": ""
+      }
+    },
+    {
+      "table": "trip_whatsapp_templates",
+      "column": "is_favorite",
+      "gap": "TARGET_ONLY_COLUMN",
+      "source": null,
+      "target": {
+        "table_name": "trip_whatsapp_templates",
+        "column_name": "is_favorite",
+        "type": "boolean",
+        "not_null": true,
+        "generated": "",
+        "identity": ""
+      }
+    },
+    {
+      "table": "trip_whatsapp_templates",
+      "column": "is_archived",
+      "gap": "TARGET_ONLY_COLUMN",
+      "source": null,
+      "target": {
+        "table_name": "trip_whatsapp_templates",
+        "column_name": "is_archived",
+        "type": "boolean",
+        "not_null": true,
+        "generated": "",
+        "identity": ""
+      }
+    },
+    {
+      "table": "trip_whatsapp_templates",
+      "column": "usage_count",
+      "gap": "TARGET_ONLY_COLUMN",
+      "source": null,
+      "target": {
+        "table_name": "trip_whatsapp_templates",
+        "column_name": "usage_count",
+        "type": "integer",
+        "not_null": true,
+        "generated": "",
+        "identity": ""
+      }
+    },
+    {
+      "table": "trip_whatsapp_templates",
+      "column": "last_used_at",
+      "gap": "TARGET_ONLY_COLUMN",
+      "source": null,
+      "target": {
+        "table_name": "trip_whatsapp_templates",
+        "column_name": "last_used_at",
+        "type": "timestamp with time zone",
+        "not_null": false,
+        "generated": "",
+        "identity": ""
+      }
+    },
+    {
+      "table": "trips",
+      "column": "source_template_id",
+      "gap": "TARGET_ONLY_COLUMN",
+      "source": null,
+      "target": {
+        "table_name": "trips",
+        "column_name": "source_template_id",
+        "type": "uuid",
+        "not_null": false,
+        "generated": "",
+        "identity": ""
+      }
+    },
+    {
+      "table": "trips",
+      "column": "source_template_name",
+      "gap": "TARGET_ONLY_COLUMN",
+      "source": null,
+      "target": {
+        "table_name": "trips",
+        "column_name": "source_template_name",
+        "type": "text",
+        "not_null": false,
+        "generated": "",
+        "identity": ""
+      }
+    }
+  ],
+  "securityDefinersWithoutPath": [
+    {
+      "proname": "add_repair_service_transaction",
+      "arguments": "p_order_id uuid, p_items jsonb"
+    },
+    {
+      "proname": "calculate_document_hash",
+      "arguments": "p_document_id uuid, p_previous_hash text"
+    },
+    {
+      "proname": "cancel_fiscal_document",
+      "arguments": "p_document_id uuid, p_reason text, p_cancelled_by uuid"
+    },
+    {
+      "proname": "close_shift_with_z_report",
+      "arguments": "p_shift_id uuid, p_actual_cash bigint, p_closed_by uuid, p_closed_by_name text, p_notes text"
+    },
+    {
+      "proname": "create_default_restaurant_staff",
+      "arguments": ""
+    },
+    {
+      "proname": "deduct_from_batch_fefo",
+      "arguments": "p_menu_item_id uuid, p_quantity numeric"
+    },
+    {
+      "proname": "deduct_ingredients_on_order",
+      "arguments": ""
+    },
+    {
+      "proname": "get_expiring_items",
+      "arguments": "p_business_id uuid, p_days_ahead integer"
+    },
+    {
+      "proname": "get_fefo_batch",
+      "arguments": "p_menu_item_id uuid, p_quantity numeric"
+    },
+    {
+      "proname": "get_next_document_number",
+      "arguments": "p_business_id uuid, p_document_type fiscal_document_type"
+    },
+    {
+      "proname": "get_next_z_number",
+      "arguments": "p_business_id uuid"
+    },
+    {
+      "proname": "get_previous_document_hash",
+      "arguments": "p_business_id uuid, p_document_type fiscal_document_type"
+    },
+    {
+      "proname": "get_previous_z_hash",
+      "arguments": "p_business_id uuid"
+    },
+    {
+      "proname": "is_restaurant_manager",
+      "arguments": ""
+    },
+    {
+      "proname": "open_cash_shift",
+      "arguments": "p_business_id uuid, p_opening_cash bigint, p_opened_by uuid, p_opened_by_name text, p_terminal_id text, p_notes text"
+    },
+    {
+      "proname": "trg_auto_ledger_debt",
+      "arguments": ""
+    },
+    {
+      "proname": "trg_update_vehicle_on_completion",
+      "arguments": ""
+    },
+    {
+      "proname": "update_shift_totals",
+      "arguments": "p_shift_id uuid"
+    },
+    {
+      "proname": "validate_staff_pin",
+      "arguments": "p_staff_id uuid, p_pin text, p_business_id uuid"
+    }
+  ],
+  "platformMigrations": [
+    {
+      "file": "20251222133800_create_logos_bucket.sql",
+      "storage": true,
+      "realtime": false
+    },
+    {
+      "file": "20260111000010_restaurant_v2_baseline.sql",
+      "storage": false,
+      "realtime": true
+    },
+    {
+      "file": "20260111000020_restaurant_production_baseline.sql",
+      "storage": false,
+      "realtime": true
+    },
+    {
+      "file": "20260112000050_restaurant_storage.sql",
+      "storage": true,
+      "realtime": false
+    },
+    {
+      "file": "20260124000040_fix_storage_policies.sql",
+      "storage": true,
+      "realtime": false
+    },
+    {
+      "file": "20260429120000_trip_security_and_contract_fixes.sql",
+      "storage": true,
+      "realtime": false
+    },
+    {
+      "file": "20260908092000_private_business_signatures.sql",
+      "storage": true,
+      "realtime": false
+    }
+  ],
+  "sourceTriggers": [
+    {
+      "table_name": "business_profiles",
+      "name": "trigger_create_default_staff",
+      "enabled": "O",
+      "internal": false,
+      "function_name": "create_default_restaurant_staff",
+      "function_schema": "public",
+      "importClassification": "BLOCKED",
+      "reason": "Review function on disposable target before import; no trigger disabled on source"
+    },
+    {
+      "table_name": "business_settings",
+      "name": "trigger_business_settings_updated_at",
+      "enabled": "O",
+      "internal": false,
+      "function_name": "update_business_settings_updated_at",
+      "function_schema": "public",
+      "importClassification": "BLOCKED",
+      "reason": "Review function on disposable target before import; no trigger disabled on source"
+    },
+    {
+      "table_name": "car_parts",
+      "name": "trigger_car_parts_updated_at",
+      "enabled": "O",
+      "internal": false,
+      "function_name": "update_car_parts_updated_at",
+      "function_schema": "public",
+      "importClassification": "BLOCKED",
+      "reason": "Review function on disposable target before import; no trigger disabled on source"
+    },
+    {
+      "table_name": "cash_shifts",
+      "name": "trigger_cash_shifts_updated",
+      "enabled": "O",
+      "internal": false,
+      "function_name": "update_fiscal_updated_at",
+      "function_schema": "public",
+      "importClassification": "BLOCKED",
+      "reason": "Review function on disposable target before import; no trigger disabled on source"
+    },
+    {
+      "table_name": "fiscal_counters",
+      "name": "trigger_fiscal_counters_updated",
+      "enabled": "O",
+      "internal": false,
+      "function_name": "update_fiscal_updated_at",
+      "function_schema": "public",
+      "importClassification": "BLOCKED",
+      "reason": "Review function on disposable target before import; no trigger disabled on source"
+    },
+    {
+      "table_name": "fiscal_documents",
+      "name": "trigger_fiscal_documents_updated",
+      "enabled": "O",
+      "internal": false,
+      "function_name": "update_fiscal_updated_at",
+      "function_schema": "public",
+      "importClassification": "BLOCKED",
+      "reason": "Review function on disposable target before import; no trigger disabled on source"
+    },
+    {
+      "table_name": "inventory_batches",
+      "name": "trigger_batches_updated",
+      "enabled": "O",
+      "internal": false,
+      "function_name": "update_fiscal_updated_at",
+      "function_schema": "public",
+      "importClassification": "BLOCKED",
+      "reason": "Review function on disposable target before import; no trigger disabled on source"
+    },
+    {
+      "table_name": "repair_orders",
+      "name": "trigger_repair_ledger_debt",
+      "enabled": "O",
+      "internal": false,
+      "function_name": "trg_auto_ledger_debt",
+      "function_schema": "public",
+      "importClassification": "BLOCKED",
+      "reason": "Review function on disposable target before import; no trigger disabled on source"
+    },
+    {
+      "table_name": "repair_orders",
+      "name": "trigger_vehicle_update_completion",
+      "enabled": "O",
+      "internal": false,
+      "function_name": "trg_update_vehicle_on_completion",
+      "function_schema": "public",
+      "importClassification": "BLOCKED",
+      "reason": "Review function on disposable target before import; no trigger disabled on source"
+    },
+    {
+      "table_name": "restaurant_order_items",
+      "name": "prevent_unauthorized_order_item_updates_trigger",
+      "enabled": "O",
+      "internal": false,
+      "function_name": "prevent_unauthorized_order_item_updates",
+      "function_schema": "public",
+      "importClassification": "BLOCKED",
+      "reason": "Review function on disposable target before import; no trigger disabled on source"
+    },
+    {
+      "table_name": "restaurant_order_items",
+      "name": "trigger_deduct_ingredients",
+      "enabled": "O",
+      "internal": false,
+      "function_name": "deduct_ingredients_on_order",
+      "function_schema": "public",
+      "importClassification": "BLOCKED",
+      "reason": "Review function on disposable target before import; no trigger disabled on source"
+    },
+    {
+      "table_name": "restaurant_order_items",
+      "name": "trigger_log_void_action",
+      "enabled": "O",
+      "internal": false,
+      "function_name": "log_void_action",
+      "function_schema": "public",
+      "importClassification": "BLOCKED",
+      "reason": "Review function on disposable target before import; no trigger disabled on source"
+    },
+    {
+      "table_name": "restaurant_reservations",
+      "name": "trg_validate_reservation_datetime",
+      "enabled": "O",
+      "internal": false,
+      "function_name": "validate_reservation_datetime",
+      "function_schema": "public",
+      "importClassification": "BLOCKED",
+      "reason": "Review function on disposable target before import; no trigger disabled on source"
+    },
+    {
+      "table_name": "shift_transactions",
+      "name": "trg_update_shift_after_transaction",
+      "enabled": "O",
+      "internal": false,
+      "function_name": "trigger_update_shift_totals",
+      "function_schema": "public",
+      "importClassification": "BLOCKED",
+      "reason": "Review function on disposable target before import; no trigger disabled on source"
+    },
+    {
+      "table_name": "stock_takes",
+      "name": "trigger_stock_takes_updated",
+      "enabled": "O",
+      "internal": false,
+      "function_name": "update_fiscal_updated_at",
+      "function_schema": "public",
+      "importClassification": "BLOCKED",
+      "reason": "Review function on disposable target before import; no trigger disabled on source"
+    },
+    {
+      "table_name": "trip_installments",
+      "name": "trip_installment_compatibility_trigger",
+      "enabled": "O",
+      "internal": false,
+      "function_name": "sync_trip_installment_compatibility_trigger",
+      "function_schema": "public",
+      "importClassification": "BLOCKED",
+      "reason": "Review function on disposable target before import; no trigger disabled on source"
+    },
+    {
+      "table_name": "trip_payment_plans",
+      "name": "enforce_cash_payment_plan_row_trigger",
+      "enabled": "O",
+      "internal": false,
+      "function_name": "enforce_cash_payment_plan_row",
+      "function_schema": "public",
+      "importClassification": "BLOCKED",
+      "reason": "Review function on disposable target before import; no trigger disabled on source"
+    },
+    {
+      "table_name": "trip_payment_plans",
+      "name": "trip_payment_plan_compatibility_trigger",
+      "enabled": "O",
+      "internal": false,
+      "function_name": "sync_trip_payment_plan_compatibility_trigger",
+      "function_schema": "public",
+      "importClassification": "BLOCKED",
+      "reason": "Review function on disposable target before import; no trigger disabled on source"
+    },
+    {
+      "table_name": "trips",
+      "name": "encrypt_trip_travelers_trigger",
+      "enabled": "O",
+      "internal": false,
+      "function_name": "encrypt_trip_travelers_before_write",
+      "function_schema": "public",
+      "importClassification": "BLOCKED",
+      "reason": "Review function on disposable target before import; no trigger disabled on source"
+    },
+    {
+      "table_name": "trips",
+      "name": "normalize_trip_client_phone_trigger",
+      "enabled": "O",
+      "internal": false,
+      "function_name": "normalize_trip_client_phone",
+      "function_schema": "public",
+      "importClassification": "BLOCKED",
+      "reason": "Review function on disposable target before import; no trigger disabled on source"
+    },
+    {
+      "table_name": "trips",
+      "name": "trip_activity_trigger",
+      "enabled": "O",
+      "internal": false,
+      "function_name": "record_trip_activity_trigger",
+      "function_schema": "public",
+      "importClassification": "BLOCKED",
+      "reason": "Review function on disposable target before import; no trigger disabled on source"
+    },
+    {
+      "table_name": "trips",
+      "name": "trip_financial_audit_trigger",
+      "enabled": "O",
+      "internal": false,
+      "function_name": "audit_trip_financial_changes",
+      "function_schema": "public",
+      "importClassification": "BLOCKED",
+      "reason": "Review function on disposable target before import; no trigger disabled on source"
+    },
+    {
+      "table_name": "user_profiles",
+      "name": "trg_prevent_user_profile_self_escalation",
+      "enabled": "O",
+      "internal": false,
+      "function_name": "prevent_user_profile_self_escalation",
+      "function_schema": "public",
+      "importClassification": "BLOCKED",
+      "reason": "Review function on disposable target before import; no trigger disabled on source"
+    }
+  ],
+  "sourceSequences": [
+    {
+      "table_name": "restaurant_daily_reports",
+      "column_name": "z_report_number",
+      "sequence_name": "restaurant_daily_reports_z_report_number_seq",
+      "sequence_schema": "public",
+      "increment": "1",
+      "minimum": "1",
+      "maximum": "2147483647",
+      "cycle": false
+    },
+    {
+      "table_name": "restaurant_orders",
+      "column_name": "order_number",
+      "sequence_name": "restaurant_orders_order_number_seq",
+      "sequence_schema": "public",
+      "increment": "1",
+      "minimum": "1",
+      "maximum": "2147483647",
+      "cycle": false
+    },
+    {
+      "table_name": "stock_takes",
+      "column_name": "stock_take_number",
+      "sequence_name": "stock_takes_stock_take_number_seq",
+      "sequence_schema": "public",
+      "increment": "1",
+      "minimum": "1",
+      "maximum": "2147483647",
+      "cycle": false
+    },
+    {
+      "table_name": "trip_activity_log",
+      "column_name": "id",
+      "sequence_name": "trip_activity_log_id_seq",
+      "sequence_schema": "public",
+      "increment": "1",
+      "minimum": "1",
+      "maximum": "9223372036854775807",
+      "cycle": false
+    },
+    {
+      "table_name": "trip_attachment_cleanup_queue",
+      "column_name": "id",
+      "sequence_name": "trip_attachment_cleanup_queue_id_seq",
+      "sequence_schema": "public",
+      "increment": "1",
+      "minimum": "1",
+      "maximum": "9223372036854775807",
+      "cycle": false
+    },
+    {
+      "table_name": "trip_financial_audit",
+      "column_name": "id",
+      "sequence_name": "trip_financial_audit_id_seq",
+      "sequence_schema": "public",
+      "increment": "1",
+      "minimum": "1",
+      "maximum": "9223372036854775807",
+      "cycle": false
+    },
+    {
+      "table_name": "trip_installment_events",
+      "column_name": "id",
+      "sequence_name": "trip_installment_events_id_seq",
+      "sequence_schema": "public",
+      "increment": "1",
+      "minimum": "1",
+      "maximum": "9223372036854775807",
+      "cycle": false
+    },
+    {
+      "table_name": "trip_payment_events",
+      "column_name": "id",
+      "sequence_name": "trip_payment_events_id_seq",
+      "sequence_schema": "public",
+      "increment": "1",
+      "minimum": "1",
+      "maximum": "9223372036854775807",
+      "cycle": false
+    },
+    {
+      "table_name": "trip_pdf_rate_limits",
+      "column_name": "id",
+      "sequence_name": "trip_pdf_rate_limits_id_seq",
+      "sequence_schema": "public",
+      "increment": "1",
+      "minimum": "1",
+      "maximum": "9223372036854775807",
+      "cycle": false
+    },
+    {
+      "table_name": "x_reports",
+      "column_name": "report_number",
+      "sequence_name": "x_reports_report_number_seq",
+      "sequence_schema": "public",
+      "increment": "1",
+      "minimum": "1",
+      "maximum": "2147483647",
+      "cycle": false
+    }
+  ],
+  "noSourceSchemaWrites": true,
+  "noFakeCloudPlatformObjects": true
+}

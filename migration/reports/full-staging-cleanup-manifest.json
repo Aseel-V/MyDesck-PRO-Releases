@@ -1,0 +1,65 @@
+{
+  "runId": "20260909163214954-a80ff889",
+  "deletionApproved": false,
+  "identities": [
+    {
+      "uid": "b4a1c115-62e0-4cd8-a8cd-5e19ecb73496",
+      "email": "migration-test--travel-20260909163214954-a80ff889-a@example.test",
+      "source": "Supabase",
+      "created_at": "2026-09-09T16:32:23.983561Z",
+      "cleanup_status": "retained_pending_approval"
+    },
+    {
+      "uid": "b4a1c115-62e0-4cd8-a8cd-5e19ecb73496",
+      "email": "migration-test--travel-20260909163214954-a80ff889-a@example.test",
+      "source": "Firebase",
+      "cleanup_status": "retained_pending_approval"
+    },
+    {
+      "uid": "49ac680e-c964-4d14-908b-1a760b7e5b35",
+      "email": "migration-test--travel-20260909163214954-a80ff889-b@example.test",
+      "source": "Supabase",
+      "created_at": "2026-09-09T16:34:36.851734Z",
+      "cleanup_status": "retained_pending_approval"
+    },
+    {
+      "uid": "49ac680e-c964-4d14-908b-1a760b7e5b35",
+      "email": "migration-test--travel-20260909163214954-a80ff889-b@example.test",
+      "source": "Firebase",
+      "cleanup_status": "retained_pending_approval"
+    }
+  ],
+  "businesses": [
+    {
+      "id": "0812c5b2-e8e3-45cd-a732-8f380a12e447",
+      "user_id": "b4a1c115-62e0-4cd8-a8cd-5e19ecb73496"
+    },
+    {
+      "id": "ea7b6ef7-415e-4bc3-8f0f-5832602be97c",
+      "user_id": "49ac680e-c964-4d14-908b-1a760b7e5b35"
+    }
+  ],
+  "trips": [
+    {
+      "id": "e658e5e6-25bd-497b-90ef-74e753a8fc4c",
+      "user_id": "b4a1c115-62e0-4cd8-a8cd-5e19ecb73496",
+      "currency": "ILS"
+    },
+    {
+      "id": "7a2849f6-61ef-402e-91e4-0e0f70c1ad9b",
+      "user_id": "b4a1c115-62e0-4cd8-a8cd-5e19ecb73496",
+      "currency": "EUR"
+    },
+    {
+      "id": "c52e3d34-926f-4806-8b38-adf0f8e634db",
+      "user_id": "49ac680e-c964-4d14-908b-1a760b7e5b35",
+      "currency": "ILS"
+    },
+    {
+      "id": "a277ccb6-9479-4ce3-8fe1-161fe17c6618",
+      "user_id": "49ac680e-c964-4d14-908b-1a760b7e5b35",
+      "currency": "EUR"
+    }
+  ],
+  "cleanupStatus": "retained_pending_approval"
+}

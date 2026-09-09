@@ -42,6 +42,9 @@ export async function withSourceSnapshot(config, work, evidence = {}) {
   try {
     await client.connect();
     await client.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY');
+    await client.query("SET LOCAL TIME ZONE 'UTC'");
+    await client.query("SET LOCAL DateStyle = 'ISO, YMD'");
+    await client.query("SET LOCAL bytea_output = 'hex'");
     const check = async () => {
       const { rows: [row] } = await client.query(`SELECT
         current_setting('transaction_read_only') AS read_only,

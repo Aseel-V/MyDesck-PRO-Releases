@@ -1,0 +1,106 @@
+{
+  "generatedAt": "2026-09-09T16:33:48.915Z",
+  "sourceSafety": {
+    "start": {
+      "read_only": "on",
+      "isolation": "repeatable read"
+    },
+    "rejectedWriteSqlState": "25006",
+    "successfulWrites": 0,
+    "end": {
+      "read_only": "on",
+      "isolation": "repeatable read"
+    },
+    "transactionOutcome": "ROLLBACK"
+  },
+  "constraints": [
+    {
+      "conname": "trip_payment_plans_card_paid_minor_check",
+      "definition": "CHECK ((card_paid_minor >= 0))"
+    },
+    {
+      "conname": "trip_payment_plans_card_total_minor_check",
+      "definition": "CHECK ((card_total_minor >= 0))"
+    },
+    {
+      "conname": "trip_payment_plans_cash_paid_minor_check",
+      "definition": "CHECK ((cash_paid_minor >= 0))"
+    },
+    {
+      "conname": "trip_payment_plans_cash_total_minor_check",
+      "definition": "CHECK ((cash_total_minor >= 0))"
+    },
+    {
+      "conname": "trip_payment_plans_check",
+      "definition": "CHECK ((card_paid_minor <= card_total_minor))"
+    },
+    {
+      "conname": "trip_payment_plans_check1",
+      "definition": "CHECK ((cash_paid_minor <= cash_total_minor))"
+    },
+    {
+      "conname": "trip_payment_plans_check2",
+      "definition": "CHECK (((source = 'legacy'::text) OR ((card_total_minor + cash_total_minor) > 0)))"
+    },
+    {
+      "conname": "trip_payment_plans_check3",
+      "definition": "CHECK (((source = 'legacy'::text) OR ((card_total_minor = 0) AND (installment_count = 0)) OR ((card_total_minor > 0) AND (installment_count >= 1))))"
+    },
+    {
+      "conname": "trip_payment_plans_currency_check",
+      "definition": "CHECK (((char_length(currency) >= 3) AND (char_length(currency) <= 8)))"
+    },
+    {
+      "conname": "trip_payment_plans_installment_count_check",
+      "definition": "CHECK (((installment_count >= 0) AND (installment_count <= 120)))"
+    },
+    {
+      "conname": "trip_payment_plans_payment_method_check",
+      "definition": "CHECK ((payment_method = ANY (ARRAY['card'::text, 'cash'::text, 'mixed'::text])))"
+    },
+    {
+      "conname": "trip_payment_plans_source_check",
+      "definition": "CHECK ((source = ANY (ARRAY['native'::text, 'legacy'::text])))"
+    },
+    {
+      "conname": "trip_payment_plans_status_check",
+      "definition": "CHECK ((status = ANY (ARRAY['active'::text, 'completed'::text, 'cancelled'::text])))"
+    },
+    {
+      "conname": "trips_card_paid_amount_check",
+      "definition": "CHECK ((card_paid_amount >= (0)::numeric))"
+    },
+    {
+      "conname": "trips_cash_paid_amount_check",
+      "definition": "CHECK ((cash_paid_amount >= (0)::numeric))"
+    },
+    {
+      "conname": "trips_currency_check",
+      "definition": "CHECK ((currency = ANY (ARRAY['USD'::text, 'EUR'::text, 'ILS'::text])))"
+    },
+    {
+      "conname": "trips_payment_method_check",
+      "definition": "CHECK ((payment_method = ANY (ARRAY['card'::text, 'cash'::text, 'mixed'::text])))"
+    },
+    {
+      "conname": "trips_payment_status_check",
+      "definition": "CHECK ((payment_status = ANY (ARRAY['paid'::text, 'partial'::text, 'unpaid'::text])))"
+    },
+    {
+      "conname": "trips_service_type_check",
+      "definition": "CHECK ((service_type = ANY (ARRAY['ticket'::text, 'hotel'::text, 'both'::text])))"
+    },
+    {
+      "conname": "trips_status_check",
+      "definition": "CHECK ((status = ANY (ARRAY['active'::text, 'completed'::text, 'cancelled'::text, 'archived'::text])))"
+    },
+    {
+      "conname": "trips_ticket_class_check",
+      "definition": "CHECK ((ticket_class = ANY (ARRAY['economy'::text, 'premium_economy'::text, 'business'::text, 'first'::text])))"
+    },
+    {
+      "conname": "trips_trip_type_check",
+      "definition": "CHECK ((trip_type = ANY (ARRAY['one_way'::text, 'round_trip'::text])))"
+    }
+  ]
+}

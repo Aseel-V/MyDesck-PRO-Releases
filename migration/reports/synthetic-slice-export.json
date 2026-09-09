@@ -1,0 +1,5313 @@
+{
+  "generatedAt": "2026-09-09T16:41:04.621Z",
+  "runId": "20260909163214954-a80ff889",
+  "status": "EXPORTED_SYNTHETIC_ONLY",
+  "sourceSafety": {
+    "start": {
+      "read_only": "on",
+      "isolation": "repeatable read"
+    },
+    "rejectedWriteSqlState": "25006",
+    "successfulWrites": 0,
+    "end": {
+      "read_only": "on",
+      "isolation": "repeatable read"
+    },
+    "transactionOutcome": "ROLLBACK"
+  },
+  "sourceWrites": 0,
+  "realCustomerRows": 0,
+  "selectedUids": [
+    "b4a1c115-62e0-4cd8-a8cd-5e19ecb73496",
+    "49ac680e-c964-4d14-908b-1a760b7e5b35"
+  ],
+  "tables": [
+    {
+      "table": "public.allocation_numbers_log",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "04c455a67ee25696db969668d6d6a7a41972d4cf60a52346292e4214827a8757",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.audit_logs",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "6e74ab502c3f5c2e521c3752383c8db361392ca40c0b1e70b1fa4b4444a5064b",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.business_profiles",
+      "selectedRowCount": 2,
+      "selectedPrimaryKeys": [
+        [
+          "0812c5b2-e8e3-45cd-a732-8f380a12e447"
+        ],
+        [
+          "ea7b6ef7-415e-4bc3-8f0f-5832602be97c"
+        ]
+      ],
+      "dependencyReason": [
+        "dependent via business_profiles_user_id_fkey"
+      ],
+      "digest": {
+        "count": 2,
+        "primaryKeys": [
+          "[\"0812c5b2-e8e3-45cd-a732-8f380a12e447\"]",
+          "[\"ea7b6ef7-415e-4bc3-8f0f-5832602be97c\"]"
+        ],
+        "schemaHash": "0bde4e664b76db13b9aa095b4a48e06d003b3ba6052201d1a9b8c69319eaec92",
+        "contentHash": "17559f1959ddf744559e4db729a063126efdd142239841015af8aded927e7316"
+      }
+    },
+    {
+      "table": "public.business_settings",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "aaaa0b5b933816bc5080809ede4af093be53ffd1f211f13c45dc79e8f12f6f53",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.car_parts",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "6900b28bb17729c0275b45f709bd4c0f6ed8217a0a8caec04c754ae070ce07f6",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.cash_shifts",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "393bc0d2fbfdb6b7bc5388c220c28c3b01914b3138831b97b44030e405fcb23d",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.customer_vehicles",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "bffd0c892e36dc601770a89b998aee397d7c5a679f826d61b69c87bb9e813752",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.customers_ledger",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "ae94b649b5526cbbdc9dfe10739208e83740136a940b9792626078c91399a6ad",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.fiscal_counters",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "b2935f1cac2b2cb1cc2a18859d1bd06467f9ecdf60dd9eee5b4211991aa092cd",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.fiscal_document_items",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "9a0c4d9b27685ee8a63f9f38c7c7541503f0c6667d2c5497ace007801c2d1977",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.fiscal_documents",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "1d5ea589e5f66998140bde764ea2ec2a26b634b1ca811ff3ef77d2b54e8479d8",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.inventory_batches",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "6b919f5ed483a7d38eaa4441971fbe93f2118cf6867db7da8665651f1358674e",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.market_transactions",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "43922df6a5fb26ba9f1b1818a1d16859f5f33e03249b9555e3664b6de162c8e7",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.repair_order_items",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "2109a9724b9f21b4e86bd4a3ce1462cb253ce8f41646d879c9528b71650814d5",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.repair_orders",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "c7c880c181f72c3565215d96a40a7bfd9fe84ed35464c50e280c80c8e9d482fc",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.restaurant_audit_logs",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "28ebbe23e08cf309aa559ae947f9413e68e2c2e7caf0429d44ff6f078babf624",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.restaurant_cash_drawers",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "ba01f48293b2625729f839486d77e44c7b5c506e59677bdc9dccdb29564d2a36",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.restaurant_cash_transactions",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "80331a400a09d5bdde781888f2f20087e37f178af643489c978e98ee21255718",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "37a5959b4d1de053dc1d4e4b5600732ced3abd709cd9af118165cbbeb52583d3",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.restaurant_demand_forecasts",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "1999ab671d4c529ecd6d742d928294a2e22ee82b36a78bee892f1b8e6cb3b18b",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.restaurant_floor_plans",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "2f7fbcdd9305b5dd381cb0952e9074dd8eca16355cf9c1fa40f8e8374d05c547",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.restaurant_guest_profiles",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "e2f6123b61de3801417058290f1df75a40dcd4ff0a4c9783d5a96956e13fca83",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.restaurant_historical_data",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "131f95db171b0abdee5e36bd65e9e833b39822007972bc0c7e4fa81a97570b31",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.restaurant_ingredients",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "2952ce073f669cd977ee1ebaa238d13b04ae2cb7373f651b8b58f638deb69231",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.restaurant_item_modifier_groups",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "3574a78898cb499b0aca4093bee714f581808502fdf82956238ad3b99795e737",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.restaurant_kitchen_tickets",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "d064dc8702d098814dabb2d93bf08589e145aad3f31ffeb4c5218c80250f5e3c",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.restaurant_menu_categories",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "f855c1a8c3e90a4ac0b91580c48cd552564a191f03524414a7d7e9ece32139c6",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.restaurant_menu_items",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "996b5e0a42a40e1d4de3ad8a8c465dc3d4e339133a04c9f8519bd95a3b8ec8f0",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.restaurant_modifier_groups",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "38c647693841322011fe46c616fa12c9dc49d8addbdb9fd864ed356d4b460d77",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.restaurant_modifiers",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "840dff34b440c33d2293f05004023798b0786e57df12d531c7b16f905ccde1d0",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.restaurant_notifications",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "17ccafb37fee9b424df4d93cd0e37db2873ca032f12c02201534e3f3834ea1d4",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.restaurant_order_item_modifiers",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "8a136620f0d9b7d9e4158fda44d49357a300ca71ccbd1383c26233f94dbc8aeb",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.restaurant_order_items",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "05f73f68afba0056b07b2cf26c1c7acb8cde5a55e6f72d266bc92d712799ee3c",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.restaurant_orders",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "507b1aff75bae0c0657350daf1920f7fc0352735aeccb57e694e8f7503f0db77",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.restaurant_payments",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "47901e062cdf72b247d74221293553bc19671f1e5d3c2ff0781a277091bc0f95",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.restaurant_recipes",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "47505a367087cfe9ff1cd36487a00f6cb7663e0eb2d1a24273b8409243358a21",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.restaurant_reservations",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "b11c1f15ce3888ceb11a6500371883cf278ceed5cd46aee34456f6a2928a9d89",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.restaurant_settings",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "881a0d07b586046195de2a8dbcd85b3628343e51862568a67edb4981f38b8ef7",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.restaurant_staff",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "c1551e04cad30399e3796debdf7e0e2cb59275a82cc76a9d1cb9ed494e9701a9",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.restaurant_table_sessions",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "d203c52ba6334faf8ba11799ffee74b8089afde66fecc167f6749a17e9d10b76",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.restaurant_tables",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "c6eafa2a076cdf6fb190bbb3f10ed472b1e1593ede2e6c6746ab77fc8e4f3b93",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.restaurant_ticket_items",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "b17c0eda8585fe73ed5507aed119cf46507bbd786a614c3b487f326ba5c014a6",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.restaurant_void_logs",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "8a7b4406d6bdc06b3b807bef77a9810fd6d1fb844678a979eb89f34ad78e5b80",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.restaurant_waitlist",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "b20f571bb3cb34dfc05c7b101bcadfec99580300087ca9335725330d74aa5502",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.restaurant_whatsapp_messages",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "e8fbe859b50faa2a60120ccec523c587c126868145768cc1005e29fcd6df5ae1",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.restaurant_whatsapp_settings",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "482ba69a87f6ca12a58d96667df252deff37df4e586895a0add9463772c3e4d3",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.shift_transactions",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "3ec5bf1c62d2153b0be35742a3a5f099d38a2ddabe4482a896a06b0147597a32",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.shrinkage_records",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "46abad08370a2f9ed0e0c05f19a9d497feb7275ed5414767359f7b5ffc664a0b",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.staff_shifts",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "a65dd2f4ab5d5014cf5c16a66273d5ac408fec440504c46caa72abeb9896eadc",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.stock_take_items",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "798f0ba65917cfcb5c4b5de2c9a329037b09debbcb6caecd1ec12b7c0a780e2b",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.stock_takes",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "775635f329a8db0c63fc498caf4f73e11ab70429cfd0133b8108839071071b66",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.travel_payment_feature_rollouts",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "b1f48d9e17cf4b2aadccac179ab59b081685924a415aa7bae1419257331d5255",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.trip_activity_log",
+      "selectedRowCount": 36,
+      "selectedPrimaryKeys": [
+        [
+          "613"
+        ],
+        [
+          "614"
+        ],
+        [
+          "615"
+        ],
+        [
+          "616"
+        ],
+        [
+          "617"
+        ],
+        [
+          "618"
+        ],
+        [
+          "619"
+        ],
+        [
+          "620"
+        ],
+        [
+          "621"
+        ],
+        [
+          "622"
+        ],
+        [
+          "623"
+        ],
+        [
+          "624"
+        ],
+        [
+          "625"
+        ],
+        [
+          "626"
+        ],
+        [
+          "627"
+        ],
+        [
+          "628"
+        ],
+        [
+          "629"
+        ],
+        [
+          "630"
+        ],
+        [
+          "631"
+        ],
+        [
+          "632"
+        ],
+        [
+          "633"
+        ],
+        [
+          "634"
+        ],
+        [
+          "635"
+        ],
+        [
+          "636"
+        ],
+        [
+          "637"
+        ],
+        [
+          "638"
+        ],
+        [
+          "639"
+        ],
+        [
+          "640"
+        ],
+        [
+          "641"
+        ],
+        [
+          "642"
+        ],
+        [
+          "643"
+        ],
+        [
+          "644"
+        ],
+        [
+          "645"
+        ],
+        [
+          "646"
+        ],
+        [
+          "647"
+        ],
+        [
+          "648"
+        ]
+      ],
+      "dependencyReason": [
+        "dependent via trip_activity_log_actor_user_id_fkey",
+        "dependent via trip_activity_log_user_id_fkey"
+      ],
+      "digest": {
+        "count": 36,
+        "primaryKeys": [
+          "[\"613\"]",
+          "[\"614\"]",
+          "[\"615\"]",
+          "[\"616\"]",
+          "[\"617\"]",
+          "[\"618\"]",
+          "[\"619\"]",
+          "[\"620\"]",
+          "[\"621\"]",
+          "[\"622\"]",
+          "[\"623\"]",
+          "[\"624\"]",
+          "[\"625\"]",
+          "[\"626\"]",
+          "[\"627\"]",
+          "[\"628\"]",
+          "[\"629\"]",
+          "[\"630\"]",
+          "[\"631\"]",
+          "[\"632\"]",
+          "[\"633\"]",
+          "[\"634\"]",
+          "[\"635\"]",
+          "[\"636\"]",
+          "[\"637\"]",
+          "[\"638\"]",
+          "[\"639\"]",
+          "[\"640\"]",
+          "[\"641\"]",
+          "[\"642\"]",
+          "[\"643\"]",
+          "[\"644\"]",
+          "[\"645\"]",
+          "[\"646\"]",
+          "[\"647\"]",
+          "[\"648\"]"
+        ],
+        "schemaHash": "6db7650108dcb13bbca0be507c9fe965927a7eed0afec4681ec47716e3be9460",
+        "contentHash": "20fb1a936041350d09043999aa2aacdfa750f63938c2589185ea5657fbb58209"
+      }
+    },
+    {
+      "table": "public.trip_attachment_cleanup_queue",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "7496435854056321faff095796b8d34e32094bef09bb7df9eb1b98999b23d972",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.trip_financial_audit",
+      "selectedRowCount": 64,
+      "selectedPrimaryKeys": [
+        [
+          "723"
+        ],
+        [
+          "724"
+        ],
+        [
+          "725"
+        ],
+        [
+          "726"
+        ],
+        [
+          "727"
+        ],
+        [
+          "728"
+        ],
+        [
+          "729"
+        ],
+        [
+          "730"
+        ],
+        [
+          "731"
+        ],
+        [
+          "732"
+        ],
+        [
+          "733"
+        ],
+        [
+          "734"
+        ],
+        [
+          "735"
+        ],
+        [
+          "736"
+        ],
+        [
+          "737"
+        ],
+        [
+          "738"
+        ],
+        [
+          "739"
+        ],
+        [
+          "740"
+        ],
+        [
+          "741"
+        ],
+        [
+          "742"
+        ],
+        [
+          "743"
+        ],
+        [
+          "744"
+        ],
+        [
+          "745"
+        ],
+        [
+          "746"
+        ],
+        [
+          "747"
+        ],
+        [
+          "748"
+        ],
+        [
+          "749"
+        ],
+        [
+          "750"
+        ],
+        [
+          "751"
+        ],
+        [
+          "752"
+        ],
+        [
+          "753"
+        ],
+        [
+          "754"
+        ],
+        [
+          "755"
+        ],
+        [
+          "756"
+        ],
+        [
+          "757"
+        ],
+        [
+          "758"
+        ],
+        [
+          "759"
+        ],
+        [
+          "760"
+        ],
+        [
+          "761"
+        ],
+        [
+          "762"
+        ],
+        [
+          "763"
+        ],
+        [
+          "764"
+        ],
+        [
+          "765"
+        ],
+        [
+          "766"
+        ],
+        [
+          "767"
+        ],
+        [
+          "768"
+        ],
+        [
+          "769"
+        ],
+        [
+          "770"
+        ],
+        [
+          "771"
+        ],
+        [
+          "772"
+        ],
+        [
+          "773"
+        ],
+        [
+          "774"
+        ],
+        [
+          "775"
+        ],
+        [
+          "776"
+        ],
+        [
+          "777"
+        ],
+        [
+          "778"
+        ],
+        [
+          "779"
+        ],
+        [
+          "780"
+        ],
+        [
+          "781"
+        ],
+        [
+          "782"
+        ],
+        [
+          "783"
+        ],
+        [
+          "784"
+        ],
+        [
+          "785"
+        ],
+        [
+          "786"
+        ]
+      ],
+      "dependencyReason": [
+        "dependent via trip_financial_audit_actor_user_id_fkey",
+        "dependent via trip_financial_audit_user_id_fkey",
+        "dependent via trip_financial_audit_trip_id_fkey"
+      ],
+      "digest": {
+        "count": 64,
+        "primaryKeys": [
+          "[\"723\"]",
+          "[\"724\"]",
+          "[\"725\"]",
+          "[\"726\"]",
+          "[\"727\"]",
+          "[\"728\"]",
+          "[\"729\"]",
+          "[\"730\"]",
+          "[\"731\"]",
+          "[\"732\"]",
+          "[\"733\"]",
+          "[\"734\"]",
+          "[\"735\"]",
+          "[\"736\"]",
+          "[\"737\"]",
+          "[\"738\"]",
+          "[\"739\"]",
+          "[\"740\"]",
+          "[\"741\"]",
+          "[\"742\"]",
+          "[\"743\"]",
+          "[\"744\"]",
+          "[\"745\"]",
+          "[\"746\"]",
+          "[\"747\"]",
+          "[\"748\"]",
+          "[\"749\"]",
+          "[\"750\"]",
+          "[\"751\"]",
+          "[\"752\"]",
+          "[\"753\"]",
+          "[\"754\"]",
+          "[\"755\"]",
+          "[\"756\"]",
+          "[\"757\"]",
+          "[\"758\"]",
+          "[\"759\"]",
+          "[\"760\"]",
+          "[\"761\"]",
+          "[\"762\"]",
+          "[\"763\"]",
+          "[\"764\"]",
+          "[\"765\"]",
+          "[\"766\"]",
+          "[\"767\"]",
+          "[\"768\"]",
+          "[\"769\"]",
+          "[\"770\"]",
+          "[\"771\"]",
+          "[\"772\"]",
+          "[\"773\"]",
+          "[\"774\"]",
+          "[\"775\"]",
+          "[\"776\"]",
+          "[\"777\"]",
+          "[\"778\"]",
+          "[\"779\"]",
+          "[\"780\"]",
+          "[\"781\"]",
+          "[\"782\"]",
+          "[\"783\"]",
+          "[\"784\"]",
+          "[\"785\"]",
+          "[\"786\"]"
+        ],
+        "schemaHash": "88b0449166814c5470acc6457016d0cdc29ebaa67b4ed91e9d5b1667666ca06b",
+        "contentHash": "4775215e42afcb3ab562c38dcd6f54768fe5459ce7512b306da5733a4b10b3ec"
+      }
+    },
+    {
+      "table": "public.trip_installment_events",
+      "selectedRowCount": 4,
+      "selectedPrimaryKeys": [
+        [
+          "10"
+        ],
+        [
+          "7"
+        ],
+        [
+          "8"
+        ],
+        [
+          "9"
+        ]
+      ],
+      "dependencyReason": [
+        "dependent via trip_installment_events_user_id_fkey",
+        "dependent via trip_installment_events_installment_id_fkey",
+        "dependent via trip_installment_events_trip_id_fkey"
+      ],
+      "digest": {
+        "count": 4,
+        "primaryKeys": [
+          "[\"10\"]",
+          "[\"7\"]",
+          "[\"8\"]",
+          "[\"9\"]"
+        ],
+        "schemaHash": "d83f7f21fe9a5f92e79be3b364c296df38e95e2097ce95f2ed64bb1aaf58c6b8",
+        "contentHash": "12c0d1602762f982ecab36fafcb80b4175017f1dcde0080b1a96bf07b38313e9"
+      }
+    },
+    {
+      "table": "public.trip_installments",
+      "selectedRowCount": 6,
+      "selectedPrimaryKeys": [
+        [
+          "396d40dc-a5b5-4799-b8bd-377c6e16e469"
+        ],
+        [
+          "5b306a1b-076a-4868-84e5-199450a04f75"
+        ],
+        [
+          "6be4d0ed-c4ce-4d02-89f2-b9a9535a3e2f"
+        ],
+        [
+          "bb2105bd-16f4-4d7f-9374-f9028f2ea90d"
+        ],
+        [
+          "d3daa2c6-759b-4175-aea7-78ed79689425"
+        ],
+        [
+          "d48829bc-bbd8-47e7-b5e6-b5ebb5d12ac2"
+        ]
+      ],
+      "dependencyReason": [
+        "dependent via trip_installments_user_id_fkey",
+        "dependent via trip_installments_payment_plan_id_fkey",
+        "dependent via trip_installments_trip_id_fkey"
+      ],
+      "digest": {
+        "count": 6,
+        "primaryKeys": [
+          "[\"396d40dc-a5b5-4799-b8bd-377c6e16e469\"]",
+          "[\"5b306a1b-076a-4868-84e5-199450a04f75\"]",
+          "[\"6be4d0ed-c4ce-4d02-89f2-b9a9535a3e2f\"]",
+          "[\"bb2105bd-16f4-4d7f-9374-f9028f2ea90d\"]",
+          "[\"d3daa2c6-759b-4175-aea7-78ed79689425\"]",
+          "[\"d48829bc-bbd8-47e7-b5e6-b5ebb5d12ac2\"]"
+        ],
+        "schemaHash": "5ee2cd3fbcc21989e940a13c92c4a7341a1d2a075558d43b6efcd9425f6e343c",
+        "contentHash": "2669fdb7de736bf328ec6f2dcb9807fdea40161c173b0af27e975139988f4a5e"
+      }
+    },
+    {
+      "table": "public.trip_notification_settings",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "64de4e6cea9bdaa5d25999edf58b1dc1547e18f96dc47b9b207e89e033c51394",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.trip_notifications",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "0299dbfac83228b7aa455903e9e06359d542e4a1969557a15c788ff097d10707",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.trip_packing_lists",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "6e966fa500fe0250f0fe2768b54a7386b37787c3db9a4f04b2df9ae700a60e29",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.trip_payment_events",
+      "selectedRowCount": 4,
+      "selectedPrimaryKeys": [
+        [
+          "1"
+        ],
+        [
+          "2"
+        ],
+        [
+          "3"
+        ],
+        [
+          "4"
+        ]
+      ],
+      "dependencyReason": [
+        "dependent via trip_payment_events_user_id_fkey",
+        "dependent via trip_payment_events_payment_plan_id_fkey",
+        "dependent via trip_payment_events_trip_id_fkey"
+      ],
+      "digest": {
+        "count": 4,
+        "primaryKeys": [
+          "[\"1\"]",
+          "[\"2\"]",
+          "[\"3\"]",
+          "[\"4\"]"
+        ],
+        "schemaHash": "662d7fe19114ec07283de18e65524e6f33d37e54d2dec3d95e3185c1042a6212",
+        "contentHash": "418731466d3a7775deaa67f07c509bed5b64ef349acd1193feb705d807d1631b"
+      }
+    },
+    {
+      "table": "public.trip_payment_plans",
+      "selectedRowCount": 4,
+      "selectedPrimaryKeys": [
+        [
+          "038ae175-02aa-44c1-9faa-46851972fcae"
+        ],
+        [
+          "0d13a52f-2b96-4a26-9c7d-1d21349c861f"
+        ],
+        [
+          "c7ed2032-e2cf-41f9-9159-fcc1fde950ae"
+        ],
+        [
+          "d93c77a4-421f-40ed-84d0-ca411c803a45"
+        ]
+      ],
+      "dependencyReason": [
+        "dependent via trip_payment_plans_user_id_fkey",
+        "dependent via trip_payment_plans_trip_id_fkey"
+      ],
+      "digest": {
+        "count": 4,
+        "primaryKeys": [
+          "[\"038ae175-02aa-44c1-9faa-46851972fcae\"]",
+          "[\"0d13a52f-2b96-4a26-9c7d-1d21349c861f\"]",
+          "[\"c7ed2032-e2cf-41f9-9159-fcc1fde950ae\"]",
+          "[\"d93c77a4-421f-40ed-84d0-ca411c803a45\"]"
+        ],
+        "schemaHash": "049db2f2b397b5eda79970ecac338e09cbc265db94d8f71782784aa9a6b46162",
+        "contentHash": "6d3704f62032f5328f794baa81a181ff5f22f0e44715d60af35c6d112840d66d"
+      }
+    },
+    {
+      "table": "public.trip_pdf_rate_limits",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "92251a4860f2dacbf044afae2f75382b7f16ae45c9ba6f6b576fc676ff0b1cee",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.trip_pricing_preferences",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "942e11f1a4d13452068d126224abc5b009eb7e5ec75c0ac6812b58384cb7e7c9",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.trip_templates",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "1b1558b55d1ca5320598f3da97bf1425fef41871d3348f10e16fa22b930dd1d8",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.trip_whatsapp_templates",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "664f01bacc5ad7241c57d9d91fcd737e7be72e2d2a80e697dddfc7813b5c0c57",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.trip_write_requests",
+      "selectedRowCount": 4,
+      "selectedPrimaryKeys": [
+        [
+          "49ac680e-c964-4d14-908b-1a760b7e5b35",
+          "b323430a-9e49-4452-b0e2-0ffca1f548b5"
+        ],
+        [
+          "49ac680e-c964-4d14-908b-1a760b7e5b35",
+          "dc91d030-8318-4014-a15f-99dbf092ca2e"
+        ],
+        [
+          "b4a1c115-62e0-4cd8-a8cd-5e19ecb73496",
+          "7fc714f5-9e31-4f1f-a3c4-1d5071e0afd7"
+        ],
+        [
+          "b4a1c115-62e0-4cd8-a8cd-5e19ecb73496",
+          "fa538c89-8ba7-4a1e-a585-b01262da256b"
+        ]
+      ],
+      "dependencyReason": [
+        "dependent via trip_write_requests_user_id_fkey",
+        "dependent via trip_write_requests_trip_id_fkey"
+      ],
+      "digest": {
+        "count": 4,
+        "primaryKeys": [
+          "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\",\"b323430a-9e49-4452-b0e2-0ffca1f548b5\"]",
+          "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\",\"dc91d030-8318-4014-a15f-99dbf092ca2e\"]",
+          "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\",\"7fc714f5-9e31-4f1f-a3c4-1d5071e0afd7\"]",
+          "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\",\"fa538c89-8ba7-4a1e-a585-b01262da256b\"]"
+        ],
+        "schemaHash": "2f2e8c8b4e4dbd44d6176e9e76035cd209ea1b10818a4491ed6aea7858bbb8af",
+        "contentHash": "9e76224cf05a047fb152badbcffc27184aba33cf2ddf084186b21538f4a1e4ab"
+      }
+    },
+    {
+      "table": "public.trips",
+      "selectedRowCount": 4,
+      "selectedPrimaryKeys": [
+        [
+          "7a2849f6-61ef-402e-91e4-0e0f70c1ad9b"
+        ],
+        [
+          "a277ccb6-9479-4ce3-8fe1-161fe17c6618"
+        ],
+        [
+          "c52e3d34-926f-4806-8b38-adf0f8e634db"
+        ],
+        [
+          "e658e5e6-25bd-497b-90ef-74e753a8fc4c"
+        ]
+      ],
+      "dependencyReason": [
+        "dependent via trips_user_id_fkey"
+      ],
+      "digest": {
+        "count": 4,
+        "primaryKeys": [
+          "[\"7a2849f6-61ef-402e-91e4-0e0f70c1ad9b\"]",
+          "[\"a277ccb6-9479-4ce3-8fe1-161fe17c6618\"]",
+          "[\"c52e3d34-926f-4806-8b38-adf0f8e634db\"]",
+          "[\"e658e5e6-25bd-497b-90ef-74e753a8fc4c\"]"
+        ],
+        "schemaHash": "f421cd7935a5d0b58f395b8f88acb1e7b60808b913ed62a6905ca5601371a0d0",
+        "contentHash": "713e4bc957abb61c4c432fbe459e5dfaeece94162cfc4e9e1971f9ca28b74b6f"
+      }
+    },
+    {
+      "table": "public.user_profiles",
+      "selectedRowCount": 2,
+      "selectedPrimaryKeys": [
+        [
+          "497b3c3d-e2b4-40ad-b63e-5c880bdc2498"
+        ],
+        [
+          "a5714ce5-f003-458e-84d9-9376f3de5d73"
+        ]
+      ],
+      "dependencyReason": [
+        "dependent via user_profiles_user_id_fkey"
+      ],
+      "digest": {
+        "count": 2,
+        "primaryKeys": [
+          "[\"497b3c3d-e2b4-40ad-b63e-5c880bdc2498\"]",
+          "[\"a5714ce5-f003-458e-84d9-9376f3de5d73\"]"
+        ],
+        "schemaHash": "2aecfc0ee02a15b2386c35e61f2a36f31afbd493f82ea85d72b21b5bff9dc453",
+        "contentHash": "1faa36884fe36b91d4a2ca1781eeae59d4246168a807942861785d32332b8aef"
+      }
+    },
+    {
+      "table": "public.whatsapp_contact_consents",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "617eff527d132e391125e468542e765991ecac7f4d44479c08e2cd553abe0ed1",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.whatsapp_message_log",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "8417b3f628f39469fd97e7bcae1685759e315276265832ada3302e570650ce21",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.whatsapp_reminders",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "4df25f5128d5d709607907190c86aeaa0d18138364d42d2125de13f15cdf31ae",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.whatsapp_server_templates",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "6ed5af74dc4caeb772972595dce518e95d8b2eab86f1a8be514b02efa5c7a256",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.whatsapp_webhook_events",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "35d39240a830a243ef44100fcf205bf2d228e33d08d318ee0056ea2a110d2a27",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.x_reports",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "d844621474efbcd8084918c3c028568c3d324dbc59f16e955076eeefd615f5c5",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.z_report_counters",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "9cc813320a439a5d7b775e3831b0632220bc1304f4d8d43ff546d9d9b7ded78c",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "public.z_reports",
+      "selectedRowCount": 0,
+      "selectedPrimaryKeys": [],
+      "dependencyReason": [],
+      "digest": {
+        "count": 0,
+        "primaryKeys": [],
+        "schemaHash": "c53cd7c911d5e5e18e68853d7d2cda0fcb612a229811e08b40ddf43b0113c665",
+        "contentHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "table": "auth.users",
+      "selectedRowCount": 2,
+      "selectedPrimaryKeys": [
+        [
+          "49ac680e-c964-4d14-908b-1a760b7e5b35"
+        ],
+        [
+          "b4a1c115-62e0-4cd8-a8cd-5e19ecb73496"
+        ]
+      ],
+      "dependencyReason": [
+        "exact approved synthetic UID and email"
+      ],
+      "digest": {
+        "count": 2,
+        "primaryKeys": [
+          "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\"]",
+          "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\"]"
+        ],
+        "schemaHash": "83ee21d00a186cfd8771b7699fdd98018917f692b8b19c5b5aec771ff3544299",
+        "contentHash": "c06b4b7ce84b2c819160afad239895058fbccdf3683d709d439feb12b391ef72"
+      }
+    }
+  ],
+  "orphanChecks": [
+    {
+      "constraint": "allocation_numbers_log_business_id_fkey",
+      "child": "public.allocation_numbers_log",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "allocation_numbers_log_document_id_fkey",
+      "child": "public.allocation_numbers_log",
+      "parent": "public.fiscal_documents",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "audit_logs_business_id_fkey",
+      "child": "public.audit_logs",
+      "parent": "public.business_profiles",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "business_profiles_user_id_fkey",
+      "child": "public.business_profiles",
+      "parent": "auth.users",
+      "selectedChildRows": 2,
+      "orphans": 0
+    },
+    {
+      "constraint": "business_settings_business_id_fkey",
+      "child": "public.business_settings",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "car_parts_business_id_fkey",
+      "child": "public.car_parts",
+      "parent": "public.business_profiles",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "cash_shifts_business_id_fkey",
+      "child": "public.cash_shifts",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "cash_shifts_closed_by_fkey",
+      "child": "public.cash_shifts",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "cash_shifts_opened_by_fkey",
+      "child": "public.cash_shifts",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "customer_vehicles_business_id_fkey",
+      "child": "public.customer_vehicles",
+      "parent": "public.business_profiles",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "customers_ledger_business_id_fkey",
+      "child": "public.customers_ledger",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "customers_ledger_created_by_fkey",
+      "child": "public.customers_ledger",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "fiscal_counters_business_id_fkey",
+      "child": "public.fiscal_counters",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "fiscal_document_items_document_id_fkey",
+      "child": "public.fiscal_document_items",
+      "parent": "public.fiscal_documents",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "fiscal_documents_business_id_fkey",
+      "child": "public.fiscal_documents",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "fiscal_documents_cancelled_by_fkey",
+      "child": "public.fiscal_documents",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "fiscal_documents_created_by_fkey",
+      "child": "public.fiscal_documents",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "fiscal_documents_original_document_id_fkey",
+      "child": "public.fiscal_documents",
+      "parent": "public.fiscal_documents",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "inventory_batches_business_id_fkey",
+      "child": "public.inventory_batches",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "inventory_batches_ingredient_id_fkey",
+      "child": "public.inventory_batches",
+      "parent": "public.restaurant_ingredients",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "inventory_batches_menu_item_id_fkey",
+      "child": "public.inventory_batches",
+      "parent": "public.restaurant_menu_items",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "market_transactions_business_id_fkey",
+      "child": "public.market_transactions",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "market_transactions_order_id_fkey",
+      "child": "public.market_transactions",
+      "parent": "public.restaurant_orders",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "repair_order_items_mechanic_id_fkey",
+      "child": "public.repair_order_items",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "repair_order_items_order_id_fkey",
+      "child": "public.repair_order_items",
+      "parent": "public.repair_orders",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "repair_orders_business_id_fkey",
+      "child": "public.repair_orders",
+      "parent": "public.business_profiles",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "repair_orders_customer_id_fkey",
+      "child": "public.repair_orders",
+      "parent": "public.restaurant_guest_profiles",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "repair_orders_vehicle_id_fkey",
+      "child": "public.repair_orders",
+      "parent": "public.customer_vehicles",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_audit_logs_actor_id_fkey",
+      "child": "public.restaurant_audit_logs",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_audit_logs_business_id_fkey",
+      "child": "public.restaurant_audit_logs",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_audit_logs_staff_id_fkey",
+      "child": "public.restaurant_audit_logs",
+      "parent": "public.restaurant_staff",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_cash_drawers_business_id_fkey",
+      "child": "public.restaurant_cash_drawers",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_cash_drawers_closed_by_fkey",
+      "child": "public.restaurant_cash_drawers",
+      "parent": "public.restaurant_staff",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_cash_drawers_opened_by_fkey",
+      "child": "public.restaurant_cash_drawers",
+      "parent": "public.restaurant_staff",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_cash_transactions_drawer_id_fkey",
+      "child": "public.restaurant_cash_transactions",
+      "parent": "public.restaurant_cash_drawers",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_cash_transactions_performed_by_fkey",
+      "child": "public.restaurant_cash_transactions",
+      "parent": "public.restaurant_staff",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_daily_reports_business_id_fkey",
+      "child": "public.restaurant_daily_reports",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_daily_reports_closed_by_fkey",
+      "child": "public.restaurant_daily_reports",
+      "parent": "public.restaurant_staff",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_demand_forecasts_business_id_fkey",
+      "child": "public.restaurant_demand_forecasts",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_floor_plans_business_id_fkey",
+      "child": "public.restaurant_floor_plans",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_guest_profiles_business_id_fkey",
+      "child": "public.restaurant_guest_profiles",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_guest_profiles_preferred_server_id_fkey",
+      "child": "public.restaurant_guest_profiles",
+      "parent": "public.restaurant_staff",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_historical_data_business_id_fkey",
+      "child": "public.restaurant_historical_data",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_ingredients_business_id_fkey",
+      "child": "public.restaurant_ingredients",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_item_modifier_groups_group_id_fkey",
+      "child": "public.restaurant_item_modifier_groups",
+      "parent": "public.restaurant_modifier_groups",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_item_modifier_groups_item_id_fkey",
+      "child": "public.restaurant_item_modifier_groups",
+      "parent": "public.restaurant_menu_items",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_kitchen_tickets_business_id_fkey",
+      "child": "public.restaurant_kitchen_tickets",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_kitchen_tickets_order_id_fkey",
+      "child": "public.restaurant_kitchen_tickets",
+      "parent": "public.restaurant_orders",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_menu_categories_business_id_fkey",
+      "child": "public.restaurant_menu_categories",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_menu_categories_parent_id_fkey",
+      "child": "public.restaurant_menu_categories",
+      "parent": "public.restaurant_menu_categories",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_menu_items_business_id_fkey",
+      "child": "public.restaurant_menu_items",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_menu_items_category_id_fkey",
+      "child": "public.restaurant_menu_items",
+      "parent": "public.restaurant_menu_categories",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_modifier_groups_business_id_fkey",
+      "child": "public.restaurant_modifier_groups",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_modifiers_group_id_fkey",
+      "child": "public.restaurant_modifiers",
+      "parent": "public.restaurant_modifier_groups",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_notifications_business_id_fkey",
+      "child": "public.restaurant_notifications",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_order_item_modifiers_modifier_id_fkey",
+      "child": "public.restaurant_order_item_modifiers",
+      "parent": "public.restaurant_modifiers",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_order_item_modifiers_order_item_id_fkey",
+      "child": "public.restaurant_order_item_modifiers",
+      "parent": "public.restaurant_order_items",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_order_items_item_id_fkey",
+      "child": "public.restaurant_order_items",
+      "parent": "public.restaurant_menu_items",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_order_items_order_id_fkey",
+      "child": "public.restaurant_order_items",
+      "parent": "public.restaurant_orders",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_orders_business_id_fkey",
+      "child": "public.restaurant_orders",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_orders_server_id_fkey",
+      "child": "public.restaurant_orders",
+      "parent": "public.restaurant_staff",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_orders_session_id_fkey",
+      "child": "public.restaurant_orders",
+      "parent": "public.restaurant_table_sessions",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_orders_table_id_fkey",
+      "child": "public.restaurant_orders",
+      "parent": "public.restaurant_tables",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_payments_business_id_fkey",
+      "child": "public.restaurant_payments",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_payments_order_id_fkey",
+      "child": "public.restaurant_payments",
+      "parent": "public.restaurant_orders",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_payments_processed_by_fkey",
+      "child": "public.restaurant_payments",
+      "parent": "public.restaurant_staff",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_recipes_ingredient_id_fkey",
+      "child": "public.restaurant_recipes",
+      "parent": "public.restaurant_ingredients",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_recipes_menu_item_id_fkey",
+      "child": "public.restaurant_recipes",
+      "parent": "public.restaurant_menu_items",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_reservations_business_id_fkey",
+      "child": "public.restaurant_reservations",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_reservations_created_by_fkey",
+      "child": "public.restaurant_reservations",
+      "parent": "public.restaurant_staff",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_reservations_guest_id_fkey",
+      "child": "public.restaurant_reservations",
+      "parent": "public.restaurant_guest_profiles",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_settings_business_id_fkey",
+      "child": "public.restaurant_settings",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_staff_business_id_fkey",
+      "child": "public.restaurant_staff",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_staff_user_id_fkey",
+      "child": "public.restaurant_staff",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_table_sessions_business_id_fkey",
+      "child": "public.restaurant_table_sessions",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_table_sessions_server_id_fkey",
+      "child": "public.restaurant_table_sessions",
+      "parent": "public.restaurant_staff",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_table_sessions_table_id_fkey",
+      "child": "public.restaurant_table_sessions",
+      "parent": "public.restaurant_tables",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_tables_business_id_fkey",
+      "child": "public.restaurant_tables",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_ticket_items_order_item_id_fkey",
+      "child": "public.restaurant_ticket_items",
+      "parent": "public.restaurant_order_items",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_ticket_items_ticket_id_fkey",
+      "child": "public.restaurant_ticket_items",
+      "parent": "public.restaurant_kitchen_tickets",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_void_logs_approved_by_fkey",
+      "child": "public.restaurant_void_logs",
+      "parent": "public.restaurant_staff",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_void_logs_business_id_fkey",
+      "child": "public.restaurant_void_logs",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_void_logs_order_id_fkey",
+      "child": "public.restaurant_void_logs",
+      "parent": "public.restaurant_orders",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_void_logs_order_item_id_fkey",
+      "child": "public.restaurant_void_logs",
+      "parent": "public.restaurant_order_items",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_void_logs_performed_by_fkey",
+      "child": "public.restaurant_void_logs",
+      "parent": "public.restaurant_staff",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_waitlist_business_id_fkey",
+      "child": "public.restaurant_waitlist",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_waitlist_table_id_fkey",
+      "child": "public.restaurant_waitlist",
+      "parent": "public.restaurant_tables",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_whatsapp_messages_business_id_fkey",
+      "child": "public.restaurant_whatsapp_messages",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_whatsapp_messages_guest_id_fkey",
+      "child": "public.restaurant_whatsapp_messages",
+      "parent": "public.restaurant_guest_profiles",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "restaurant_whatsapp_settings_business_id_fkey",
+      "child": "public.restaurant_whatsapp_settings",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "shift_transactions_fiscal_document_id_fkey",
+      "child": "public.shift_transactions",
+      "parent": "public.fiscal_documents",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "shift_transactions_performed_by_fkey",
+      "child": "public.shift_transactions",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "shift_transactions_shift_id_fkey",
+      "child": "public.shift_transactions",
+      "parent": "public.cash_shifts",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "shrinkage_records_approved_by_fkey",
+      "child": "public.shrinkage_records",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "shrinkage_records_batch_id_fkey",
+      "child": "public.shrinkage_records",
+      "parent": "public.inventory_batches",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "shrinkage_records_business_id_fkey",
+      "child": "public.shrinkage_records",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "shrinkage_records_ingredient_id_fkey",
+      "child": "public.shrinkage_records",
+      "parent": "public.restaurant_ingredients",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "shrinkage_records_menu_item_id_fkey",
+      "child": "public.shrinkage_records",
+      "parent": "public.restaurant_menu_items",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "shrinkage_records_recorded_by_fkey",
+      "child": "public.shrinkage_records",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "staff_shifts_report_id_fkey",
+      "child": "public.staff_shifts",
+      "parent": "public.restaurant_daily_reports",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "staff_shifts_staff_id_fkey",
+      "child": "public.staff_shifts",
+      "parent": "public.restaurant_staff",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "stock_take_items_counted_by_fkey",
+      "child": "public.stock_take_items",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "stock_take_items_ingredient_id_fkey",
+      "child": "public.stock_take_items",
+      "parent": "public.restaurant_ingredients",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "stock_take_items_menu_item_id_fkey",
+      "child": "public.stock_take_items",
+      "parent": "public.restaurant_menu_items",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "stock_take_items_stock_take_id_fkey",
+      "child": "public.stock_take_items",
+      "parent": "public.stock_takes",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "stock_takes_business_id_fkey",
+      "child": "public.stock_takes",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "stock_takes_completed_by_fkey",
+      "child": "public.stock_takes",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "stock_takes_created_by_fkey",
+      "child": "public.stock_takes",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "trip_activity_log_actor_user_id_fkey",
+      "child": "public.trip_activity_log",
+      "parent": "auth.users",
+      "selectedChildRows": 36,
+      "orphans": 0
+    },
+    {
+      "constraint": "trip_activity_log_user_id_fkey",
+      "child": "public.trip_activity_log",
+      "parent": "auth.users",
+      "selectedChildRows": 36,
+      "orphans": 0
+    },
+    {
+      "constraint": "trip_attachment_cleanup_queue_user_id_fkey",
+      "child": "public.trip_attachment_cleanup_queue",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "trip_financial_audit_actor_user_id_fkey",
+      "child": "public.trip_financial_audit",
+      "parent": "auth.users",
+      "selectedChildRows": 64,
+      "orphans": 0
+    },
+    {
+      "constraint": "trip_financial_audit_trip_id_fkey",
+      "child": "public.trip_financial_audit",
+      "parent": "public.trips",
+      "selectedChildRows": 64,
+      "orphans": 0
+    },
+    {
+      "constraint": "trip_financial_audit_user_id_fkey",
+      "child": "public.trip_financial_audit",
+      "parent": "auth.users",
+      "selectedChildRows": 64,
+      "orphans": 0
+    },
+    {
+      "constraint": "trip_installment_events_installment_id_fkey",
+      "child": "public.trip_installment_events",
+      "parent": "public.trip_installments",
+      "selectedChildRows": 4,
+      "orphans": 0
+    },
+    {
+      "constraint": "trip_installment_events_trip_id_fkey",
+      "child": "public.trip_installment_events",
+      "parent": "public.trips",
+      "selectedChildRows": 4,
+      "orphans": 0
+    },
+    {
+      "constraint": "trip_installment_events_user_id_fkey",
+      "child": "public.trip_installment_events",
+      "parent": "auth.users",
+      "selectedChildRows": 4,
+      "orphans": 0
+    },
+    {
+      "constraint": "trip_installments_payment_plan_id_fkey",
+      "child": "public.trip_installments",
+      "parent": "public.trip_payment_plans",
+      "selectedChildRows": 6,
+      "orphans": 0
+    },
+    {
+      "constraint": "trip_installments_trip_id_fkey",
+      "child": "public.trip_installments",
+      "parent": "public.trips",
+      "selectedChildRows": 6,
+      "orphans": 0
+    },
+    {
+      "constraint": "trip_installments_user_id_fkey",
+      "child": "public.trip_installments",
+      "parent": "auth.users",
+      "selectedChildRows": 6,
+      "orphans": 0
+    },
+    {
+      "constraint": "trip_notification_settings_user_id_fkey",
+      "child": "public.trip_notification_settings",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "trip_notifications_user_id_fkey",
+      "child": "public.trip_notifications",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "trip_packing_lists_trip_id_fkey",
+      "child": "public.trip_packing_lists",
+      "parent": "public.trips",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "trip_packing_lists_user_id_fkey",
+      "child": "public.trip_packing_lists",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "trip_payment_events_payment_plan_id_fkey",
+      "child": "public.trip_payment_events",
+      "parent": "public.trip_payment_plans",
+      "selectedChildRows": 4,
+      "orphans": 0
+    },
+    {
+      "constraint": "trip_payment_events_trip_id_fkey",
+      "child": "public.trip_payment_events",
+      "parent": "public.trips",
+      "selectedChildRows": 4,
+      "orphans": 0
+    },
+    {
+      "constraint": "trip_payment_events_user_id_fkey",
+      "child": "public.trip_payment_events",
+      "parent": "auth.users",
+      "selectedChildRows": 4,
+      "orphans": 0
+    },
+    {
+      "constraint": "trip_payment_plans_trip_id_fkey",
+      "child": "public.trip_payment_plans",
+      "parent": "public.trips",
+      "selectedChildRows": 4,
+      "orphans": 0
+    },
+    {
+      "constraint": "trip_payment_plans_user_id_fkey",
+      "child": "public.trip_payment_plans",
+      "parent": "auth.users",
+      "selectedChildRows": 4,
+      "orphans": 0
+    },
+    {
+      "constraint": "trip_pdf_rate_limits_user_id_fkey",
+      "child": "public.trip_pdf_rate_limits",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "trip_pricing_preferences_user_id_fkey",
+      "child": "public.trip_pricing_preferences",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "trip_templates_user_id_fkey",
+      "child": "public.trip_templates",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "trip_whatsapp_templates_user_id_fkey",
+      "child": "public.trip_whatsapp_templates",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "trip_write_requests_trip_id_fkey",
+      "child": "public.trip_write_requests",
+      "parent": "public.trips",
+      "selectedChildRows": 4,
+      "orphans": 0
+    },
+    {
+      "constraint": "trip_write_requests_user_id_fkey",
+      "child": "public.trip_write_requests",
+      "parent": "auth.users",
+      "selectedChildRows": 4,
+      "orphans": 0
+    },
+    {
+      "constraint": "trips_deleted_by_fkey",
+      "child": "public.trips",
+      "parent": "auth.users",
+      "selectedChildRows": 4,
+      "orphans": 0
+    },
+    {
+      "constraint": "trips_user_id_fkey",
+      "child": "public.trips",
+      "parent": "auth.users",
+      "selectedChildRows": 4,
+      "orphans": 0
+    },
+    {
+      "constraint": "user_profiles_business_id_fkey",
+      "child": "public.user_profiles",
+      "parent": "public.business_profiles",
+      "selectedChildRows": 2,
+      "orphans": 0
+    },
+    {
+      "constraint": "user_profiles_user_id_fkey",
+      "child": "public.user_profiles",
+      "parent": "auth.users",
+      "selectedChildRows": 2,
+      "orphans": 0
+    },
+    {
+      "constraint": "whatsapp_contact_consents_user_id_fkey",
+      "child": "public.whatsapp_contact_consents",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "whatsapp_message_log_reminder_id_fkey",
+      "child": "public.whatsapp_message_log",
+      "parent": "public.whatsapp_reminders",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "whatsapp_message_log_trip_id_fkey",
+      "child": "public.whatsapp_message_log",
+      "parent": "public.trips",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "whatsapp_message_log_user_id_fkey",
+      "child": "public.whatsapp_message_log",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "whatsapp_reminders_trip_id_fkey",
+      "child": "public.whatsapp_reminders",
+      "parent": "public.trips",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "whatsapp_reminders_user_id_fkey",
+      "child": "public.whatsapp_reminders",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "x_reports_business_id_fkey",
+      "child": "public.x_reports",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "x_reports_generated_by_fkey",
+      "child": "public.x_reports",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "x_reports_shift_id_fkey",
+      "child": "public.x_reports",
+      "parent": "public.cash_shifts",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "z_report_counters_business_id_fkey",
+      "child": "public.z_report_counters",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "z_reports_business_id_fkey",
+      "child": "public.z_reports",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "z_reports_generated_by_fkey",
+      "child": "public.z_reports",
+      "parent": "auth.users",
+      "selectedChildRows": 0,
+      "orphans": 0
+    },
+    {
+      "constraint": "z_reports_shift_id_fkey",
+      "child": "public.z_reports",
+      "parent": "public.cash_shifts",
+      "selectedChildRows": 0,
+      "orphans": 0
+    }
+  ],
+  "blockers": [],
+  "iterations": 2,
+  "identityRows": 2,
+  "rowsExported": 132,
+  "nonemptyTables": 11,
+  "financial": [
+    {
+      "table": "public.car_parts",
+      "column": "purchase_price_unit",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.car_parts",
+      "column": "purchase_price_unit",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.car_parts",
+      "column": "purchase_price_total",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.car_parts",
+      "column": "purchase_price_total",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.car_parts",
+      "column": "selling_price_unit",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.car_parts",
+      "column": "selling_price_unit",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.cash_shifts",
+      "column": "total_sales",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.cash_shifts",
+      "column": "total_sales",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.cash_shifts",
+      "column": "total_refunds",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.cash_shifts",
+      "column": "total_refunds",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.cash_shifts",
+      "column": "total_voids",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.cash_shifts",
+      "column": "total_voids",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.cash_shifts",
+      "column": "vat_17_amount",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.cash_shifts",
+      "column": "vat_17_amount",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.customers_ledger",
+      "column": "balance",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.customers_ledger",
+      "column": "balance",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.fiscal_document_items",
+      "column": "unit_price",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.fiscal_document_items",
+      "column": "discount_amount",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.fiscal_document_items",
+      "column": "line_subtotal",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.fiscal_document_items",
+      "column": "vat_amount",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.fiscal_document_items",
+      "column": "line_total",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.fiscal_document_items",
+      "column": "unit_cost",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.fiscal_document_items",
+      "column": "total_cost",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.fiscal_documents",
+      "column": "subtotal_before_vat",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.fiscal_documents",
+      "column": "subtotal_before_vat",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.fiscal_documents",
+      "column": "vat_amount",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.fiscal_documents",
+      "column": "vat_amount",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.fiscal_documents",
+      "column": "total_amount",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.fiscal_documents",
+      "column": "total_amount",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.fiscal_documents",
+      "column": "discount_amount",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.fiscal_documents",
+      "column": "discount_amount",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.fiscal_documents",
+      "column": "tip_amount",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.fiscal_documents",
+      "column": "tip_amount",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.fiscal_documents",
+      "column": "vat_17_amount",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.fiscal_documents",
+      "column": "vat_17_amount",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.inventory_batches",
+      "column": "unit_cost",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.inventory_batches",
+      "column": "unit_cost",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.inventory_batches",
+      "column": "total_cost",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.inventory_batches",
+      "column": "total_cost",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.market_transactions",
+      "column": "subtotal",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.market_transactions",
+      "column": "subtotal",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.market_transactions",
+      "column": "vat_amount",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.market_transactions",
+      "column": "vat_amount",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.market_transactions",
+      "column": "total_amount",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.market_transactions",
+      "column": "total_amount",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.market_transactions",
+      "column": "amount_paid",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.market_transactions",
+      "column": "amount_paid",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.market_transactions",
+      "column": "change_amount",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.market_transactions",
+      "column": "change_amount",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.repair_order_items",
+      "column": "cost",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.repair_order_items",
+      "column": "price",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.repair_orders",
+      "column": "parts_total",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.repair_orders",
+      "column": "parts_total",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.repair_orders",
+      "column": "parts_total",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.repair_orders",
+      "column": "labor_total",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.repair_orders",
+      "column": "labor_total",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.repair_orders",
+      "column": "labor_total",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.repair_orders",
+      "column": "total_amount",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.repair_orders",
+      "column": "total_amount",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.repair_orders",
+      "column": "total_amount",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.repair_orders",
+      "column": "paid_amount",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.repair_orders",
+      "column": "paid_amount",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.repair_orders",
+      "column": "paid_amount",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_cash_drawers",
+      "column": "opening_balance",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_cash_drawers",
+      "column": "opening_balance",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_cash_drawers",
+      "column": "expected_balance",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_cash_drawers",
+      "column": "expected_balance",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_cash_drawers",
+      "column": "actual_balance",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_cash_drawers",
+      "column": "actual_balance",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_cash_transactions",
+      "column": "amount",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "total_sales_cash",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "total_sales_cash",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "total_sales_cash",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "total_sales_card",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "total_sales_card",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "total_sales_card",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "total_tax",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "total_tax",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "total_tax",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "total_tips",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "total_tips",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "total_tips",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "total_expenses",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "total_expenses",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "total_expenses",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "total_labor_cost",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "total_labor_cost",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "total_labor_cost",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "net_profit",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "net_profit",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "net_profit",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "total_discounts",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "total_discounts",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "total_discounts",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "total_refunds",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "total_refunds",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "total_refunds",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "total_voids",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "total_voids",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "total_voids",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "total_covers",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "total_covers",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "total_covers",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "total_orders",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "total_orders",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_daily_reports",
+      "column": "total_orders",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_guest_profiles",
+      "column": "total_lifetime_spend",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_guest_profiles",
+      "column": "total_lifetime_spend",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_ingredients",
+      "column": "cost_per_unit",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_ingredients",
+      "column": "cost_per_unit",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_menu_items",
+      "column": "price",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_menu_items",
+      "column": "price",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_menu_items",
+      "column": "cost_price",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_menu_items",
+      "column": "cost_price",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_modifiers",
+      "column": "price_adjustment",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_order_item_modifiers",
+      "column": "price_adjustment",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_order_items",
+      "column": "price_at_time",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_orders",
+      "column": "total_amount",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_orders",
+      "column": "total_amount",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_orders",
+      "column": "total_amount",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_orders",
+      "column": "tax_amount",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_orders",
+      "column": "tax_amount",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_orders",
+      "column": "tax_amount",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_orders",
+      "column": "tip_amount",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_orders",
+      "column": "tip_amount",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_orders",
+      "column": "tip_amount",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_orders",
+      "column": "subtotal_amount",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_orders",
+      "column": "subtotal_amount",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_orders",
+      "column": "subtotal_amount",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_orders",
+      "column": "discount_amount",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_orders",
+      "column": "discount_amount",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_orders",
+      "column": "discount_amount",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_payments",
+      "column": "amount",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_payments",
+      "column": "amount",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_payments",
+      "column": "tip_amount",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_payments",
+      "column": "tip_amount",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_void_logs",
+      "column": "original_amount",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.restaurant_void_logs",
+      "column": "original_amount",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.shift_transactions",
+      "column": "amount",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.shrinkage_records",
+      "column": "unit_cost",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.shrinkage_records",
+      "column": "unit_cost",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.shrinkage_records",
+      "column": "total_value",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.shrinkage_records",
+      "column": "total_value",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.staff_shifts",
+      "column": "total_pay",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.stock_take_items",
+      "column": "unit_cost",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.stock_takes",
+      "column": "total_items",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.stock_takes",
+      "column": "total_items",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.trip_installments",
+      "column": "expected_amount_minor",
+      "dimensions": [],
+      "totals": [
+        {
+          "key": "[]",
+          "total": "200002"
+        }
+      ]
+    },
+    {
+      "table": "public.trip_installments",
+      "column": "expected_amount_minor",
+      "dimensions": [
+        "user_id"
+      ],
+      "totals": [
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\"]",
+          "total": "100001"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\"]",
+          "total": "100001"
+        }
+      ]
+    },
+    {
+      "table": "public.trip_installments",
+      "column": "expected_amount_minor",
+      "dimensions": [
+        "trip_id"
+      ],
+      "totals": [
+        {
+          "key": "[\"c52e3d34-926f-4806-8b38-adf0f8e634db\"]",
+          "total": "100001"
+        },
+        {
+          "key": "[\"e658e5e6-25bd-497b-90ef-74e753a8fc4c\"]",
+          "total": "100001"
+        }
+      ]
+    },
+    {
+      "table": "public.trip_installments",
+      "column": "paid_amount_minor",
+      "dimensions": [],
+      "totals": [
+        {
+          "key": "[]",
+          "total": "44446"
+        }
+      ]
+    },
+    {
+      "table": "public.trip_installments",
+      "column": "paid_amount_minor",
+      "dimensions": [
+        "user_id"
+      ],
+      "totals": [
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\"]",
+          "total": "22223"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\"]",
+          "total": "22223"
+        }
+      ]
+    },
+    {
+      "table": "public.trip_installments",
+      "column": "paid_amount_minor",
+      "dimensions": [
+        "trip_id"
+      ],
+      "totals": [
+        {
+          "key": "[\"c52e3d34-926f-4806-8b38-adf0f8e634db\"]",
+          "total": "22223"
+        },
+        {
+          "key": "[\"e658e5e6-25bd-497b-90ef-74e753a8fc4c\"]",
+          "total": "22223"
+        }
+      ]
+    },
+    {
+      "table": "public.trip_payment_plans",
+      "column": "card_total_minor",
+      "dimensions": [],
+      "totals": [
+        {
+          "key": "[]",
+          "total": "200002"
+        }
+      ]
+    },
+    {
+      "table": "public.trip_payment_plans",
+      "column": "card_total_minor",
+      "dimensions": [
+        "user_id"
+      ],
+      "totals": [
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\"]",
+          "total": "100001"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\"]",
+          "total": "100001"
+        }
+      ]
+    },
+    {
+      "table": "public.trip_payment_plans",
+      "column": "card_total_minor",
+      "dimensions": [
+        "trip_id"
+      ],
+      "totals": [
+        {
+          "key": "[\"7a2849f6-61ef-402e-91e4-0e0f70c1ad9b\"]",
+          "total": "0"
+        },
+        {
+          "key": "[\"a277ccb6-9479-4ce3-8fe1-161fe17c6618\"]",
+          "total": "0"
+        },
+        {
+          "key": "[\"c52e3d34-926f-4806-8b38-adf0f8e634db\"]",
+          "total": "100001"
+        },
+        {
+          "key": "[\"e658e5e6-25bd-497b-90ef-74e753a8fc4c\"]",
+          "total": "100001"
+        }
+      ]
+    },
+    {
+      "table": "public.trip_payment_plans",
+      "column": "card_total_minor",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"EUR\"]",
+          "total": "0"
+        },
+        {
+          "key": "[\"ILS\"]",
+          "total": "200002"
+        }
+      ]
+    },
+    {
+      "table": "public.trip_payment_plans",
+      "column": "card_total_minor",
+      "dimensions": [
+        "user_id",
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\",\"EUR\"]",
+          "total": "0"
+        },
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\",\"ILS\"]",
+          "total": "100001"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\",\"EUR\"]",
+          "total": "0"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\",\"ILS\"]",
+          "total": "100001"
+        }
+      ]
+    },
+    {
+      "table": "public.trip_payment_plans",
+      "column": "card_total_minor",
+      "dimensions": [
+        "trip_id",
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"7a2849f6-61ef-402e-91e4-0e0f70c1ad9b\",\"EUR\"]",
+          "total": "0"
+        },
+        {
+          "key": "[\"a277ccb6-9479-4ce3-8fe1-161fe17c6618\",\"EUR\"]",
+          "total": "0"
+        },
+        {
+          "key": "[\"c52e3d34-926f-4806-8b38-adf0f8e634db\",\"ILS\"]",
+          "total": "100001"
+        },
+        {
+          "key": "[\"e658e5e6-25bd-497b-90ef-74e753a8fc4c\",\"ILS\"]",
+          "total": "100001"
+        }
+      ]
+    },
+    {
+      "table": "public.trip_payment_plans",
+      "column": "cash_total_minor",
+      "dimensions": [],
+      "totals": [
+        {
+          "key": "[]",
+          "total": "230598"
+        }
+      ]
+    },
+    {
+      "table": "public.trip_payment_plans",
+      "column": "cash_total_minor",
+      "dimensions": [
+        "user_id"
+      ],
+      "totals": [
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\"]",
+          "total": "115299"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\"]",
+          "total": "115299"
+        }
+      ]
+    },
+    {
+      "table": "public.trip_payment_plans",
+      "column": "cash_total_minor",
+      "dimensions": [
+        "trip_id"
+      ],
+      "totals": [
+        {
+          "key": "[\"7a2849f6-61ef-402e-91e4-0e0f70c1ad9b\"]",
+          "total": "91843"
+        },
+        {
+          "key": "[\"a277ccb6-9479-4ce3-8fe1-161fe17c6618\"]",
+          "total": "91843"
+        },
+        {
+          "key": "[\"c52e3d34-926f-4806-8b38-adf0f8e634db\"]",
+          "total": "23456"
+        },
+        {
+          "key": "[\"e658e5e6-25bd-497b-90ef-74e753a8fc4c\"]",
+          "total": "23456"
+        }
+      ]
+    },
+    {
+      "table": "public.trip_payment_plans",
+      "column": "cash_total_minor",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"EUR\"]",
+          "total": "183686"
+        },
+        {
+          "key": "[\"ILS\"]",
+          "total": "46912"
+        }
+      ]
+    },
+    {
+      "table": "public.trip_payment_plans",
+      "column": "cash_total_minor",
+      "dimensions": [
+        "user_id",
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\",\"EUR\"]",
+          "total": "91843"
+        },
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\",\"ILS\"]",
+          "total": "23456"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\",\"EUR\"]",
+          "total": "91843"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\",\"ILS\"]",
+          "total": "23456"
+        }
+      ]
+    },
+    {
+      "table": "public.trip_payment_plans",
+      "column": "cash_total_minor",
+      "dimensions": [
+        "trip_id",
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"7a2849f6-61ef-402e-91e4-0e0f70c1ad9b\",\"EUR\"]",
+          "total": "91843"
+        },
+        {
+          "key": "[\"a277ccb6-9479-4ce3-8fe1-161fe17c6618\",\"EUR\"]",
+          "total": "91843"
+        },
+        {
+          "key": "[\"c52e3d34-926f-4806-8b38-adf0f8e634db\",\"ILS\"]",
+          "total": "23456"
+        },
+        {
+          "key": "[\"e658e5e6-25bd-497b-90ef-74e753a8fc4c\",\"ILS\"]",
+          "total": "23456"
+        }
+      ]
+    },
+    {
+      "table": "public.trip_payment_plans",
+      "column": "card_paid_minor",
+      "dimensions": [],
+      "totals": [
+        {
+          "key": "[]",
+          "total": "44446"
+        }
+      ]
+    },
+    {
+      "table": "public.trip_payment_plans",
+      "column": "card_paid_minor",
+      "dimensions": [
+        "user_id"
+      ],
+      "totals": [
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\"]",
+          "total": "22223"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\"]",
+          "total": "22223"
+        }
+      ]
+    },
+    {
+      "table": "public.trip_payment_plans",
+      "column": "card_paid_minor",
+      "dimensions": [
+        "trip_id"
+      ],
+      "totals": [
+        {
+          "key": "[\"7a2849f6-61ef-402e-91e4-0e0f70c1ad9b\"]",
+          "total": "0"
+        },
+        {
+          "key": "[\"a277ccb6-9479-4ce3-8fe1-161fe17c6618\"]",
+          "total": "0"
+        },
+        {
+          "key": "[\"c52e3d34-926f-4806-8b38-adf0f8e634db\"]",
+          "total": "22223"
+        },
+        {
+          "key": "[\"e658e5e6-25bd-497b-90ef-74e753a8fc4c\"]",
+          "total": "22223"
+        }
+      ]
+    },
+    {
+      "table": "public.trip_payment_plans",
+      "column": "card_paid_minor",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"EUR\"]",
+          "total": "0"
+        },
+        {
+          "key": "[\"ILS\"]",
+          "total": "44446"
+        }
+      ]
+    },
+    {
+      "table": "public.trip_payment_plans",
+      "column": "card_paid_minor",
+      "dimensions": [
+        "user_id",
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\",\"EUR\"]",
+          "total": "0"
+        },
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\",\"ILS\"]",
+          "total": "22223"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\",\"EUR\"]",
+          "total": "0"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\",\"ILS\"]",
+          "total": "22223"
+        }
+      ]
+    },
+    {
+      "table": "public.trip_payment_plans",
+      "column": "card_paid_minor",
+      "dimensions": [
+        "trip_id",
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"7a2849f6-61ef-402e-91e4-0e0f70c1ad9b\",\"EUR\"]",
+          "total": "0"
+        },
+        {
+          "key": "[\"a277ccb6-9479-4ce3-8fe1-161fe17c6618\",\"EUR\"]",
+          "total": "0"
+        },
+        {
+          "key": "[\"c52e3d34-926f-4806-8b38-adf0f8e634db\",\"ILS\"]",
+          "total": "22223"
+        },
+        {
+          "key": "[\"e658e5e6-25bd-497b-90ef-74e753a8fc4c\",\"ILS\"]",
+          "total": "22223"
+        }
+      ]
+    },
+    {
+      "table": "public.trip_payment_plans",
+      "column": "cash_paid_minor",
+      "dimensions": [],
+      "totals": [
+        {
+          "key": "[]",
+          "total": "78028"
+        }
+      ]
+    },
+    {
+      "table": "public.trip_payment_plans",
+      "column": "cash_paid_minor",
+      "dimensions": [
+        "user_id"
+      ],
+      "totals": [
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\"]",
+          "total": "39014"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\"]",
+          "total": "39014"
+        }
+      ]
+    },
+    {
+      "table": "public.trip_payment_plans",
+      "column": "cash_paid_minor",
+      "dimensions": [
+        "trip_id"
+      ],
+      "totals": [
+        {
+          "key": "[\"7a2849f6-61ef-402e-91e4-0e0f70c1ad9b\"]",
+          "total": "27011"
+        },
+        {
+          "key": "[\"a277ccb6-9479-4ce3-8fe1-161fe17c6618\"]",
+          "total": "27011"
+        },
+        {
+          "key": "[\"c52e3d34-926f-4806-8b38-adf0f8e634db\"]",
+          "total": "12003"
+        },
+        {
+          "key": "[\"e658e5e6-25bd-497b-90ef-74e753a8fc4c\"]",
+          "total": "12003"
+        }
+      ]
+    },
+    {
+      "table": "public.trip_payment_plans",
+      "column": "cash_paid_minor",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"EUR\"]",
+          "total": "54022"
+        },
+        {
+          "key": "[\"ILS\"]",
+          "total": "24006"
+        }
+      ]
+    },
+    {
+      "table": "public.trip_payment_plans",
+      "column": "cash_paid_minor",
+      "dimensions": [
+        "user_id",
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\",\"EUR\"]",
+          "total": "27011"
+        },
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\",\"ILS\"]",
+          "total": "12003"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\",\"EUR\"]",
+          "total": "27011"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\",\"ILS\"]",
+          "total": "12003"
+        }
+      ]
+    },
+    {
+      "table": "public.trip_payment_plans",
+      "column": "cash_paid_minor",
+      "dimensions": [
+        "trip_id",
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"7a2849f6-61ef-402e-91e4-0e0f70c1ad9b\",\"EUR\"]",
+          "total": "27011"
+        },
+        {
+          "key": "[\"a277ccb6-9479-4ce3-8fe1-161fe17c6618\",\"EUR\"]",
+          "total": "27011"
+        },
+        {
+          "key": "[\"c52e3d34-926f-4806-8b38-adf0f8e634db\",\"ILS\"]",
+          "total": "12003"
+        },
+        {
+          "key": "[\"e658e5e6-25bd-497b-90ef-74e753a8fc4c\",\"ILS\"]",
+          "total": "12003"
+        }
+      ]
+    },
+    {
+      "table": "public.trip_pricing_preferences",
+      "column": "minimum_profit_minor",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.trip_pricing_preferences",
+      "column": "minimum_profit_minor",
+      "dimensions": [
+        "user_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.trip_pricing_preferences",
+      "column": "minimum_profit_minor",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.trip_pricing_preferences",
+      "column": "minimum_profit_minor",
+      "dimensions": [
+        "user_id",
+        "currency"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.trips",
+      "column": "wholesale_cost",
+      "dimensions": [],
+      "totals": [
+        {
+          "key": "[]",
+          "total": "3396.84"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "wholesale_cost",
+      "dimensions": [
+        "user_id"
+      ],
+      "totals": [
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\"]",
+          "total": "1698.42"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\"]",
+          "total": "1698.42"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "wholesale_cost",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"EUR\"]",
+          "total": "1422.58"
+        },
+        {
+          "key": "[\"ILS\"]",
+          "total": "1974.26"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "wholesale_cost",
+      "dimensions": [
+        "user_id",
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\",\"EUR\"]",
+          "total": "711.29"
+        },
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\",\"ILS\"]",
+          "total": "987.13"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\",\"EUR\"]",
+          "total": "711.29"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\",\"ILS\"]",
+          "total": "987.13"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "sale_price",
+      "dimensions": [],
+      "totals": [
+        {
+          "key": "[]",
+          "total": "4306"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "sale_price",
+      "dimensions": [
+        "user_id"
+      ],
+      "totals": [
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\"]",
+          "total": "2153"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\"]",
+          "total": "2153"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "sale_price",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"EUR\"]",
+          "total": "1836.86"
+        },
+        {
+          "key": "[\"ILS\"]",
+          "total": "2469.14"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "sale_price",
+      "dimensions": [
+        "user_id",
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\",\"EUR\"]",
+          "total": "918.43"
+        },
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\",\"ILS\"]",
+          "total": "1234.57"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\",\"EUR\"]",
+          "total": "918.43"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\",\"ILS\"]",
+          "total": "1234.57"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "profit",
+      "dimensions": [],
+      "totals": [
+        {
+          "key": "[]",
+          "total": "909.16"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "profit",
+      "dimensions": [
+        "user_id"
+      ],
+      "totals": [
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\"]",
+          "total": "454.58"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\"]",
+          "total": "454.58"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "profit",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"EUR\"]",
+          "total": "414.28"
+        },
+        {
+          "key": "[\"ILS\"]",
+          "total": "494.88"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "profit",
+      "dimensions": [
+        "user_id",
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\",\"EUR\"]",
+          "total": "207.14"
+        },
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\",\"ILS\"]",
+          "total": "247.44"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\",\"EUR\"]",
+          "total": "207.14"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\",\"ILS\"]",
+          "total": "247.44"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "profit_percentage",
+      "dimensions": [],
+      "totals": [
+        {
+          "key": "[]",
+          "total": "108.38"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "profit_percentage",
+      "dimensions": [
+        "user_id"
+      ],
+      "totals": [
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\"]",
+          "total": "54.19"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\"]",
+          "total": "54.19"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "profit_percentage",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"EUR\"]",
+          "total": "58.24"
+        },
+        {
+          "key": "[\"ILS\"]",
+          "total": "50.14"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "profit_percentage",
+      "dimensions": [
+        "user_id",
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\",\"EUR\"]",
+          "total": "29.12"
+        },
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\",\"ILS\"]",
+          "total": "25.07"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\",\"EUR\"]",
+          "total": "29.12"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\",\"ILS\"]",
+          "total": "25.07"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "amount_paid",
+      "dimensions": [],
+      "totals": [
+        {
+          "key": "[]",
+          "total": "1224.74"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "amount_paid",
+      "dimensions": [
+        "user_id"
+      ],
+      "totals": [
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\"]",
+          "total": "612.37"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\"]",
+          "total": "612.37"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "amount_paid",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"EUR\"]",
+          "total": "540.22"
+        },
+        {
+          "key": "[\"ILS\"]",
+          "total": "684.52"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "amount_paid",
+      "dimensions": [
+        "user_id",
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\",\"EUR\"]",
+          "total": "270.11"
+        },
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\",\"ILS\"]",
+          "total": "342.26"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\",\"EUR\"]",
+          "total": "270.11"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\",\"ILS\"]",
+          "total": "342.26"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "amount_due",
+      "dimensions": [],
+      "totals": [
+        {
+          "key": "[]",
+          "total": "3081.26"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "amount_due",
+      "dimensions": [
+        "user_id"
+      ],
+      "totals": [
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\"]",
+          "total": "1540.63"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\"]",
+          "total": "1540.63"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "amount_due",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"EUR\"]",
+          "total": "1296.64"
+        },
+        {
+          "key": "[\"ILS\"]",
+          "total": "1784.62"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "amount_due",
+      "dimensions": [
+        "user_id",
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\",\"EUR\"]",
+          "total": "648.32"
+        },
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\",\"ILS\"]",
+          "total": "892.31"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\",\"EUR\"]",
+          "total": "648.32"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\",\"ILS\"]",
+          "total": "892.31"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "exchange_rate",
+      "dimensions": [],
+      "totals": [
+        {
+          "key": "[]",
+          "total": "4"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "exchange_rate",
+      "dimensions": [
+        "user_id"
+      ],
+      "totals": [
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\"]",
+          "total": "2"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\"]",
+          "total": "2"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "exchange_rate",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"EUR\"]",
+          "total": "2"
+        },
+        {
+          "key": "[\"ILS\"]",
+          "total": "2"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "exchange_rate",
+      "dimensions": [
+        "user_id",
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\",\"EUR\"]",
+          "total": "1"
+        },
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\",\"ILS\"]",
+          "total": "1"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\",\"EUR\"]",
+          "total": "1"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\",\"ILS\"]",
+          "total": "1"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "wholesale_original_amount",
+      "dimensions": [],
+      "totals": [
+        {
+          "key": "[]",
+          "total": "3396.84"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "wholesale_original_amount",
+      "dimensions": [
+        "user_id"
+      ],
+      "totals": [
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\"]",
+          "total": "1698.42"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\"]",
+          "total": "1698.42"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "wholesale_original_amount",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"EUR\"]",
+          "total": "1422.58"
+        },
+        {
+          "key": "[\"ILS\"]",
+          "total": "1974.26"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "wholesale_original_amount",
+      "dimensions": [
+        "user_id",
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\",\"EUR\"]",
+          "total": "711.29"
+        },
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\",\"ILS\"]",
+          "total": "987.13"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\",\"EUR\"]",
+          "total": "711.29"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\",\"ILS\"]",
+          "total": "987.13"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "sale_original_amount",
+      "dimensions": [],
+      "totals": [
+        {
+          "key": "[]",
+          "total": "4306"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "sale_original_amount",
+      "dimensions": [
+        "user_id"
+      ],
+      "totals": [
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\"]",
+          "total": "2153"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\"]",
+          "total": "2153"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "sale_original_amount",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"EUR\"]",
+          "total": "1836.86"
+        },
+        {
+          "key": "[\"ILS\"]",
+          "total": "2469.14"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "sale_original_amount",
+      "dimensions": [
+        "user_id",
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\",\"EUR\"]",
+          "total": "918.43"
+        },
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\",\"ILS\"]",
+          "total": "1234.57"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\",\"EUR\"]",
+          "total": "918.43"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\",\"ILS\"]",
+          "total": "1234.57"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "ticket_cost_ils",
+      "dimensions": [],
+      "totals": [
+        {
+          "key": "[]",
+          "total": "0"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "ticket_cost_ils",
+      "dimensions": [
+        "user_id"
+      ],
+      "totals": [
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\"]",
+          "total": "0"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\"]",
+          "total": "0"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "ticket_cost_ils",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"EUR\"]",
+          "total": "0"
+        },
+        {
+          "key": "[\"ILS\"]",
+          "total": "0"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "ticket_cost_ils",
+      "dimensions": [
+        "user_id",
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\",\"EUR\"]",
+          "total": "0"
+        },
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\",\"ILS\"]",
+          "total": "0"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\",\"EUR\"]",
+          "total": "0"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\",\"ILS\"]",
+          "total": "0"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "card_paid_amount",
+      "dimensions": [],
+      "totals": [
+        {
+          "key": "[]",
+          "total": "444.46"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "card_paid_amount",
+      "dimensions": [
+        "user_id"
+      ],
+      "totals": [
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\"]",
+          "total": "222.23"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\"]",
+          "total": "222.23"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "card_paid_amount",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"EUR\"]",
+          "total": "0"
+        },
+        {
+          "key": "[\"ILS\"]",
+          "total": "444.46"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "card_paid_amount",
+      "dimensions": [
+        "user_id",
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\",\"EUR\"]",
+          "total": "0"
+        },
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\",\"ILS\"]",
+          "total": "222.23"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\",\"EUR\"]",
+          "total": "0"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\",\"ILS\"]",
+          "total": "222.23"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "cash_paid_amount",
+      "dimensions": [],
+      "totals": [
+        {
+          "key": "[]",
+          "total": "780.28"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "cash_paid_amount",
+      "dimensions": [
+        "user_id"
+      ],
+      "totals": [
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\"]",
+          "total": "390.14"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\"]",
+          "total": "390.14"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "cash_paid_amount",
+      "dimensions": [
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"EUR\"]",
+          "total": "540.22"
+        },
+        {
+          "key": "[\"ILS\"]",
+          "total": "240.06"
+        }
+      ]
+    },
+    {
+      "table": "public.trips",
+      "column": "cash_paid_amount",
+      "dimensions": [
+        "user_id",
+        "currency"
+      ],
+      "totals": [
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\",\"EUR\"]",
+          "total": "270.11"
+        },
+        {
+          "key": "[\"49ac680e-c964-4d14-908b-1a760b7e5b35\",\"ILS\"]",
+          "total": "120.03"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\",\"EUR\"]",
+          "total": "270.11"
+        },
+        {
+          "key": "[\"b4a1c115-62e0-4cd8-a8cd-5e19ecb73496\",\"ILS\"]",
+          "total": "120.03"
+        }
+      ]
+    },
+    {
+      "table": "public.x_reports",
+      "column": "total_vat",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.x_reports",
+      "column": "total_vat",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.x_reports",
+      "column": "cash_total",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.x_reports",
+      "column": "cash_total",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.x_reports",
+      "column": "card_total",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.x_reports",
+      "column": "card_total",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.z_reports",
+      "column": "total_vat",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.z_reports",
+      "column": "total_vat",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.z_reports",
+      "column": "cash_total",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.z_reports",
+      "column": "cash_total",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.z_reports",
+      "column": "credit_card_total",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.z_reports",
+      "column": "credit_card_total",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.z_reports",
+      "column": "debit_card_total",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.z_reports",
+      "column": "debit_card_total",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.z_reports",
+      "column": "checks_total",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.z_reports",
+      "column": "checks_total",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.z_reports",
+      "column": "other_payments_total",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.z_reports",
+      "column": "other_payments_total",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.z_reports",
+      "column": "total_receipts",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.z_reports",
+      "column": "total_receipts",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.z_reports",
+      "column": "total_invoices",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.z_reports",
+      "column": "total_invoices",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.z_reports",
+      "column": "total_credit_notes",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.z_reports",
+      "column": "total_credit_notes",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    },
+    {
+      "table": "public.z_reports",
+      "column": "total_cancelled_docs",
+      "dimensions": [],
+      "totals": []
+    },
+    {
+      "table": "public.z_reports",
+      "column": "total_cancelled_docs",
+      "dimensions": [
+        "business_id"
+      ],
+      "totals": []
+    }
+  ],
+  "coverage": {
+    "users": 2,
+    "businesses": 2,
+    "trips": 4,
+    "travelers": 8,
+    "currencies": [
+      "EUR",
+      "ILS"
+    ],
+    "installments": 6,
+    "installmentEvents": 4,
+    "paymentEvents": 4,
+    "auditActivityRows": 100
+  }
+}
