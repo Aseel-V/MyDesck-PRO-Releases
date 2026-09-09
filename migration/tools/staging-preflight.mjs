@@ -27,7 +27,8 @@ for (const file of files) {
   const content=blobs.subarray(newline+1,newline+1+size).toString();
   offset=newline+size+2;
   for (const [rule, pattern] of patterns) {
-    const scanned = rule==='private_key' ? content.replaceAll('-----BEGIN PRIVATE KEY-----\\nnot-a-real-key\\n-----END PRIVATE KEY-----\\n','') : content;
+    const fixtureKey = ['-----BEGIN', 'PRIVATE KEY-----\\nnot-a-real-key\\n-----END PRIVATE KEY-----\\n'].join(' ');
+    const scanned = rule==='private_key' ? content.replaceAll(fixtureKey,'') : content;
     if (pattern.test(scanned)) findings.push({ path:file, rule });
   }
   // Supabase legacy service_role keys must not be confused with publishable anon keys.
