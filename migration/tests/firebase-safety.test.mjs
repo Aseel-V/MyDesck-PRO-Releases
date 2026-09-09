@@ -23,7 +23,7 @@
  */
 
 import assert from 'node:assert/strict';
-import { writeFileSync, rmSync, mkdtempSync } from 'node:fs';
+import { writeFileSync, rmSync, mkdtempSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -32,6 +32,10 @@ import {
   buildCleanupManifest, TEST_EMAIL_PREFIX,
 } from '../tools/lib/firebase-safety.mjs';
 import { parseBcrypt, classifyAccount, buildImportRecord } from '../tools/lib/auth-classify.mjs';
+import {
+  inspectAdc, inspectGacEnv, verifyCredentialSource, assertKeylessCredentials,
+  adcSearchPaths, REQUIRED_IAM, EXPECTED_PROJECT_ID,
+} from '../tools/lib/adc-credentials.mjs';
 
 let pass = 0;
 const failures = [];
@@ -174,6 +178,132 @@ await test('manifest refuses an identity outside the namespace', async () => {
   assert.throws(
     () => buildCleanupManifest([{ uid: 'u', email: 'real@customer.com' }], { projectId: 'mydesckpro' }),
     (e) => e.code === 'OUTSIDE_TEST_NAMESPACE');
+});
+
+// ================================================================ keyless ADC
+
+console.log('\n[adc] keyless credential source\n');
+
+const ADC_USER = { type: 'authorized_user', client_id: 'x.apps.googleusercontent.com',
+  client_secret: 'SHOULD-NOT-LEAK', refresh_token: 'SHOULD-NOT-LEAK' };
+const ADC_IMPERSONATED = {
+  type: 'impersonated_service_account',
+  service_account_impersonation_url:
+    'https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/' +
+    'mydesck-migration@mydesckpro.iam.gserviceaccount.com:generateAccessToken',
+  source_credentials: { type: 'authorized_user', refresh_token: 'SHOULD-NOT-LEAK' },
+};
+const ADC_STATIC_KEY = {
+  type: 'service_account', project_id: 'mydesckpro',
+  private_key_id: REVOKED_ID, private_key: FAKE_KEY,
+};
+
+await test('user-credential ADC is classified as keyless and acceptable', async () => {
+  const p = credFile('adc-user.json', ADC_USER);
+  const a = inspectAdc(p);
+  assert.equal(a.isUserCredential, true);
+  assert.equal(a.isStaticPrivateKey, false);
+  assert.ok(!JSON.stringify(a).includes('SHOULD-NOT-LEAK'), 'secret leaked from ADC inspection');
+});
+
+await test('impersonation ADC exposes only the target service-account email', async () => {
+  const p = credFile('adc-imp.json', ADC_IMPERSONATED);
+  const a = inspectAdc(p);
+  assert.equal(a.isImpersonation, true);
+  assert.equal(a.impersonatedServiceAccount,
+    'mydesck-migration@mydesckpro.iam.gserviceaccount.com');
+  assert.ok(!JSON.stringify(a).includes('SHOULD-NOT-LEAK'), 'source credential leaked');
+});
+
+await test('a static private key ADC is refused, and the revoked key is caught there too', async () => {
+  const p = credFile('adc-key.json', ADC_STATIC_KEY);
+  const a = inspectAdc(p);
+  assert.equal(a.isStaticPrivateKey, true);
+  assert.equal(a.isRevokedKey, true);
+  assert.ok(!JSON.stringify(a).includes('PRIVATE KEY'), 'key material leaked');
+});
+
+await test('GOOGLE_APPLICATION_CREDENTIALS pointing at the exposed key is unacceptable', async () => {
+  const p = credFile('gac-revoked.json', ADC_STATIC_KEY);
+  const g = inspectGacEnv({ GOOGLE_APPLICATION_CREDENTIALS: p });
+  assert.equal(g.acceptable, false);
+  assert.equal(g.reason, 'references_revoked_key');
+});
+
+await test('GOOGLE_APPLICATION_CREDENTIALS pointing at ANY static key is unacceptable', async () => {
+  const p = credFile('gac-otherkey.json', {
+    type: 'service_account', project_id: 'mydesckpro',
+    private_key_id: 'ffff0000ffff0000ffff0000ffff0000ffff0000', private_key: FAKE_KEY });
+  const g = inspectGacEnv({ GOOGLE_APPLICATION_CREDENTIALS: p });
+  assert.equal(g.acceptable, false, 'a non-revoked static key must still be refused');
+  assert.equal(g.reason, 'static_private_key_forbidden');
+});
+
+await test('absent GOOGLE_APPLICATION_CREDENTIALS is acceptable', async () => {
+  assert.equal(inspectGacEnv({}).acceptable, true);
+});
+
+await test('verification FAILS closed when no ADC exists', async () => {
+  const r = verifyCredentialSource({ CLOUDSDK_CONFIG: join(tmp, 'no-such-dir') });
+  assert.equal(r.passed, false);
+  assert.equal(r.summary.adcPresent, false);
+  assert.equal(r.summary.staticPrivateKeyUsed, false);
+  assert.throws(() => assertKeylessCredentials({ CLOUDSDK_CONFIG: join(tmp, 'no-such-dir') }),
+    (e) => e.code === 'ADC_NOT_READY');
+});
+
+await test('verification PASSES with impersonation ADC and correct project vars', async () => {
+  const dir = join(tmp, 'gcloudcfg');
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, 'application_default_credentials.json'),
+    JSON.stringify(ADC_IMPERSONATED), 'utf8');
+  const env = {
+    CLOUDSDK_CONFIG: dir,
+    GOOGLE_CLOUD_PROJECT: EXPECTED_PROJECT_ID,
+    FIREBASE_PROJECT_ID: EXPECTED_PROJECT_ID,
+  };
+  const r = verifyCredentialSource(env);
+  assert.equal(r.passed, true, JSON.stringify(r.checks.filter((c) => !c.passed)));
+  assert.equal(r.summary.credentialType, 'impersonated_service_account');
+  assert.equal(r.summary.staticPrivateKeyUsed, false);
+  assert.equal(assertKeylessCredentials(env).passed, true);
+});
+
+await test('verification FAILS if ADC is a static key even with correct project vars', async () => {
+  const dir = join(tmp, 'gcloudcfg-key');
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, 'application_default_credentials.json'),
+    JSON.stringify(ADC_STATIC_KEY), 'utf8');
+  const r = verifyCredentialSource({
+    CLOUDSDK_CONFIG: dir,
+    GOOGLE_CLOUD_PROJECT: EXPECTED_PROJECT_ID,
+    FIREBASE_PROJECT_ID: EXPECTED_PROJECT_ID,
+  });
+  assert.equal(r.passed, false);
+  assert.equal(r.summary.staticPrivateKeyUsed, true);
+});
+
+await test('wrong project is refused even with valid keyless ADC', async () => {
+  const dir = join(tmp, 'gcloudcfg');
+  const r = verifyCredentialSource({
+    CLOUDSDK_CONFIG: dir,
+    GOOGLE_CLOUD_PROJECT: 'travelbuddy-7d674',
+    FIREBASE_PROJECT_ID: EXPECTED_PROJECT_ID,
+  });
+  assert.equal(r.passed, false, 'a different project must not pass');
+});
+
+await test('least-privilege IAM never includes owner, editor or firebase.admin', async () => {
+  assert.equal(REQUIRED_IAM.role, 'roles/firebaseauth.admin');
+  for (const bad of ['roles/owner', 'roles/editor', 'roles/firebase.admin']) {
+    assert.ok(REQUIRED_IAM.explicitlyNotGranted.some((x) => x.startsWith(bad)),
+      `${bad} must be explicitly excluded`);
+  }
+});
+
+await test('ADC search honours CLOUDSDK_CONFIG first', async () => {
+  const paths = adcSearchPaths({ CLOUDSDK_CONFIG: 'C:/custom', APPDATA: 'C:/appdata' });
+  assert.ok(paths[0].includes('custom'), 'CLOUDSDK_CONFIG must take precedence');
 });
 
 // ================================================================ real bcrypt
