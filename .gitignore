@@ -57,3 +57,12 @@ release-state.json
 *.key
 *.crt
 *.cache
+
+# Service-account and credential files. *.pem and *.key above do not cover the
+# JSON form Google issues (e.g. <project>-firebase-adminsdk-<id>.json), which is
+# the shape most likely to be dropped into a repo by accident.
+*firebase-adminsdk*.json
+*service-account*.json
+*serviceaccount*.json
+gcp-credentials*.json
+**/secrets/
