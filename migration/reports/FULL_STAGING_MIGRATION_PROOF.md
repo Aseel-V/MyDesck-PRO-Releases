@@ -145,7 +145,8 @@ Run date: 2026-09-09. Decision: **BLOCKED — FIX BEFORE FULL-DATA MIGRATION REH
 ## Git
 
 - Starting commit: `287f4cc2a10c02911ee15c6a35639b3b24e91c2a`.
-- Migration commits: `48e0747`, `3647ed4`, `a52e5d2`.
+- Migration commits: `48e0747`, `3647ed4`, `a52e5d2`, `64a5600`, `a633d92`.
+- Recovery tag: `recovery/pre-staging-data-migration-20260909-160436`.
 - Unrelated staged paths before: 213.
 - Unrelated staged paths after: 213; index entries and working-file bytes preserved.
 - New migration commits used explicit pathspecs. The suspected token file was not
