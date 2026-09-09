@@ -1,0 +1,180 @@
+{
+  "generatedAt": "2026-09-09T20:10:39.357Z",
+  "status": "ALL_CORRUPTIONS_DETECTED",
+  "targetMode": "emulator",
+  "targetProject": "mydesck-migration-proof",
+  "controls": 16,
+  "detected": 16,
+  "restoredClean": 16,
+  "failures": 0,
+  "results": [
+    {
+      "control": "missing document",
+      "expectedFinding": "MISSING_TARGET_DOCUMENT",
+      "detected": true,
+      "findingCodesSeen": [
+        "MISSING_TARGET_DOCUMENT",
+        "ORPHANED_REFERENCE"
+      ],
+      "restoredClean": true,
+      "pass": true
+    },
+    {
+      "control": "extra unexpected document",
+      "expectedFinding": "UNEXPECTED_TARGET_DOCUMENT",
+      "detected": true,
+      "findingCodesSeen": [
+        "UNEXPECTED_TARGET_DOCUMENT"
+      ],
+      "restoredClean": true,
+      "pass": true
+    },
+    {
+      "control": "wrong UID",
+      "expectedFinding": "UID_NOT_PRESERVED",
+      "detected": true,
+      "findingCodesSeen": [
+        "UID_NOT_PRESERVED"
+      ],
+      "restoredClean": true,
+      "pass": true
+    },
+    {
+      "control": "wrong businessId",
+      "expectedFinding": "ENTITY_HASH_MISMATCH",
+      "detected": true,
+      "findingCodesSeen": [
+        "ENTITY_HASH_MISMATCH"
+      ],
+      "restoredClean": true,
+      "pass": true
+    },
+    {
+      "control": "broken parent reference",
+      "expectedFinding": "ORPHANED_REFERENCE",
+      "detected": true,
+      "findingCodesSeen": [
+        "MISSING_TARGET_DOCUMENT",
+        "ORPHANED_REFERENCE"
+      ],
+      "restoredClean": true,
+      "pass": true
+    },
+    {
+      "control": "changed financial integer",
+      "expectedFinding": "REVERSE_CONVERSION_MISMATCH",
+      "detected": true,
+      "findingCodesSeen": [
+        "ENTITY_HASH_MISMATCH",
+        "REVERSE_CONVERSION_MISMATCH"
+      ],
+      "restoredClean": true,
+      "pass": true
+    },
+    {
+      "control": "wrong scale",
+      "expectedFinding": "REVERSE_CONVERSION_MISMATCH",
+      "detected": true,
+      "findingCodesSeen": [
+        "ENTITY_HASH_MISMATCH",
+        "REVERSE_CONVERSION_MISMATCH"
+      ],
+      "restoredClean": true,
+      "pass": true
+    },
+    {
+      "control": "overflow / precision loss",
+      "expectedFinding": "STORED_AMOUNT_UNREADABLE",
+      "detected": true,
+      "findingCodesSeen": [
+        "TARGET_DOCUMENT_UNREADABLE",
+        "STORED_AMOUNT_UNREADABLE"
+      ],
+      "restoredClean": true,
+      "pass": true
+    },
+    {
+      "control": "reordered event",
+      "expectedFinding": "EVENT_SEQUENCE_MISMATCH",
+      "detected": true,
+      "findingCodesSeen": [
+        "EVENT_ORDER_MISMATCH",
+        "EVENT_SEQUENCE_MISMATCH"
+      ],
+      "restoredClean": true,
+      "pass": true
+    },
+    {
+      "control": "altered timestamp",
+      "expectedFinding": "ENTITY_HASH_MISMATCH",
+      "detected": true,
+      "findingCodesSeen": [
+        "ENTITY_HASH_MISMATCH"
+      ],
+      "restoredClean": true,
+      "pass": true
+    },
+    {
+      "control": "missing audit event",
+      "expectedFinding": "MISSING_TARGET_DOCUMENT",
+      "detected": true,
+      "findingCodesSeen": [
+        "MISSING_TARGET_DOCUMENT",
+        "EVENT_ORDER_MISMATCH"
+      ],
+      "restoredClean": true,
+      "pass": true
+    },
+    {
+      "control": "wrong currency",
+      "expectedFinding": "ENTITY_HASH_MISMATCH",
+      "detected": true,
+      "findingCodesSeen": [
+        "ENTITY_HASH_MISMATCH"
+      ],
+      "restoredClean": true,
+      "pass": true
+    },
+    {
+      "control": "cross-tenant document",
+      "expectedFinding": "OWNERSHIP_MISMATCH",
+      "detected": true,
+      "findingCodesSeen": [
+        "OWNERSHIP_MISMATCH"
+      ],
+      "restoredClean": true,
+      "pass": true
+    },
+    {
+      "control": "owner outside approved slice",
+      "expectedFinding": "DOCUMENT_OUTSIDE_APPROVED_SLICE",
+      "detected": true,
+      "findingCodesSeen": [
+        "OWNERSHIP_MISMATCH",
+        "DOCUMENT_OUTSIDE_APPROVED_SLICE"
+      ],
+      "restoredClean": true,
+      "pass": true
+    },
+    {
+      "control": "blanked text field",
+      "expectedFinding": "ENTITY_HASH_MISMATCH",
+      "detected": true,
+      "findingCodesSeen": [
+        "ENTITY_HASH_MISMATCH"
+      ],
+      "restoredClean": true,
+      "pass": true
+    },
+    {
+      "control": "JSON null collapsed to SQL NULL",
+      "expectedFinding": "ENTITY_HASH_MISMATCH",
+      "detected": true,
+      "findingCodesSeen": [
+        "ENTITY_HASH_MISMATCH"
+      ],
+      "restoredClean": true,
+      "pass": true
+    }
+  ]
+}

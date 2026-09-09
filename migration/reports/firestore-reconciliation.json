@@ -1,0 +1,636 @@
+{
+  "generatedAt": "2026-09-09T20:10:39.303Z",
+  "status": "RECONCILED",
+  "targetMode": "emulator",
+  "targetProject": "mydesck-migration-proof",
+  "transformVersion": 1,
+  "levels": {
+    "1_source_coverage": "PASS",
+    "2_target_coverage": "PASS",
+    "3_entity_parity": "PASS",
+    "4_relationship_parity": "PASS",
+    "5_financial_parity": "PASS",
+    "6_user_parity": "PASS",
+    "7_file_parity": "SEE migration/reports/firestore-storage-manifest.json",
+    "8_behavioural_parity": "NOT RUN — application layer, later milestone"
+  },
+  "totals": {
+    "sourceRowsChecked": 130,
+    "targetDocuments": 130,
+    "missingDocuments": 0,
+    "unexpectedDocuments": 0,
+    "hashMismatches": 0,
+    "referencesChecked": 136,
+    "orphans": 0,
+    "financialValuesChecked": 72,
+    "reverseConversionMismatches": 0,
+    "unexplainedFinancialDelta": 0,
+    "eventsChecked": 108,
+    "eventOrderingMismatches": 0,
+    "uidMismatches": 0,
+    "ownershipMismatches": 0,
+    "crossTenantDocuments": 0
+  },
+  "perTable": [
+    {
+      "table": "user_profiles",
+      "collection": "users",
+      "sourceRows": 2,
+      "targetDocuments": 2,
+      "missing": 0,
+      "mismatched": 0,
+      "unexpected": 0
+    },
+    {
+      "table": "business_profiles",
+      "collection": "businesses",
+      "sourceRows": 2,
+      "targetDocuments": 2,
+      "missing": 0,
+      "mismatched": 0,
+      "unexpected": 0
+    },
+    {
+      "table": "business_settings",
+      "collection": "businessSettings",
+      "sourceRows": 0,
+      "targetDocuments": 0,
+      "missing": 0,
+      "mismatched": 0,
+      "unexpected": 0
+    },
+    {
+      "table": "trips",
+      "collection": "trips",
+      "sourceRows": 4,
+      "targetDocuments": 4,
+      "missing": 0,
+      "mismatched": 0,
+      "unexpected": 0
+    },
+    {
+      "table": "trip_payment_plans",
+      "collection": "tripPaymentPlans",
+      "sourceRows": 4,
+      "targetDocuments": 4,
+      "missing": 0,
+      "mismatched": 0,
+      "unexpected": 0
+    },
+    {
+      "table": "trip_installments",
+      "collection": "tripInstallments",
+      "sourceRows": 6,
+      "targetDocuments": 6,
+      "missing": 0,
+      "mismatched": 0,
+      "unexpected": 0
+    },
+    {
+      "table": "trip_payment_events",
+      "collection": "tripPaymentEvents",
+      "sourceRows": 4,
+      "targetDocuments": 4,
+      "missing": 0,
+      "mismatched": 0,
+      "unexpected": 0
+    },
+    {
+      "table": "trip_installment_events",
+      "collection": "tripInstallmentEvents",
+      "sourceRows": 4,
+      "targetDocuments": 4,
+      "missing": 0,
+      "mismatched": 0,
+      "unexpected": 0
+    },
+    {
+      "table": "trip_financial_audit",
+      "collection": "tripFinancialAudit",
+      "sourceRows": 64,
+      "targetDocuments": 64,
+      "missing": 0,
+      "mismatched": 0,
+      "unexpected": 0
+    },
+    {
+      "table": "trip_activity_log",
+      "collection": "tripActivityLog",
+      "sourceRows": 36,
+      "targetDocuments": 36,
+      "missing": 0,
+      "mismatched": 0,
+      "unexpected": 0
+    },
+    {
+      "table": "trip_write_requests",
+      "collection": "idempotency",
+      "sourceRows": 4,
+      "targetDocuments": 4,
+      "missing": 0,
+      "mismatched": 0,
+      "unexpected": 0
+    },
+    {
+      "table": "audit_logs",
+      "collection": "auditEvents",
+      "sourceRows": 0,
+      "targetDocuments": 0,
+      "missing": 0,
+      "mismatched": 0,
+      "unexpected": 0
+    }
+  ],
+  "relationships": [
+    {
+      "table": "user_profiles",
+      "field": "business_id",
+      "parent": "businesses",
+      "checked": 0,
+      "broken": 0
+    },
+    {
+      "table": "business_settings",
+      "field": "business_id",
+      "parent": "users",
+      "checked": 0,
+      "broken": 0
+    },
+    {
+      "table": "trips",
+      "field": "deleted_by",
+      "parent": "users",
+      "checked": 0,
+      "broken": 0
+    },
+    {
+      "table": "trip_payment_plans",
+      "field": "trip_id",
+      "parent": "trips",
+      "checked": 4,
+      "broken": 0
+    },
+    {
+      "table": "trip_installments",
+      "field": "trip_id",
+      "parent": "trips",
+      "checked": 6,
+      "broken": 0
+    },
+    {
+      "table": "trip_installments",
+      "field": "payment_plan_id",
+      "parent": "tripPaymentPlans",
+      "checked": 6,
+      "broken": 0
+    },
+    {
+      "table": "trip_payment_events",
+      "field": "trip_id",
+      "parent": "trips",
+      "checked": 4,
+      "broken": 0
+    },
+    {
+      "table": "trip_payment_events",
+      "field": "payment_plan_id",
+      "parent": "tripPaymentPlans",
+      "checked": 4,
+      "broken": 0
+    },
+    {
+      "table": "trip_installment_events",
+      "field": "trip_id",
+      "parent": "trips",
+      "checked": 4,
+      "broken": 0
+    },
+    {
+      "table": "trip_installment_events",
+      "field": "installment_id",
+      "parent": "tripInstallments",
+      "checked": 4,
+      "broken": 0
+    },
+    {
+      "table": "trip_financial_audit",
+      "field": "trip_id",
+      "parent": "trips",
+      "checked": 64,
+      "broken": 0
+    },
+    {
+      "table": "trip_activity_log",
+      "field": "trip_id",
+      "parent": "trips",
+      "checked": 36,
+      "broken": 0,
+      "note": "no foreign key in source; validated by migration"
+    },
+    {
+      "table": "trip_write_requests",
+      "field": "trip_id",
+      "parent": "trips",
+      "checked": 4,
+      "broken": 0
+    },
+    {
+      "table": "audit_logs",
+      "field": "business_id",
+      "parent": "businesses",
+      "checked": 0,
+      "broken": 0
+    }
+  ],
+  "financial": [
+    {
+      "collection": "trips",
+      "field": "wholesaleCost",
+      "currency": "EUR",
+      "values": 2,
+      "sourceTotal": "1422.58",
+      "targetTotal": "1422.58",
+      "match": true
+    },
+    {
+      "collection": "trips",
+      "field": "wholesaleCost",
+      "currency": "ILS",
+      "values": 2,
+      "sourceTotal": "1974.26",
+      "targetTotal": "1974.26",
+      "match": true
+    },
+    {
+      "collection": "trips",
+      "field": "salePrice",
+      "currency": "EUR",
+      "values": 2,
+      "sourceTotal": "1836.86",
+      "targetTotal": "1836.86",
+      "match": true
+    },
+    {
+      "collection": "trips",
+      "field": "salePrice",
+      "currency": "ILS",
+      "values": 2,
+      "sourceTotal": "2469.14",
+      "targetTotal": "2469.14",
+      "match": true
+    },
+    {
+      "collection": "trips",
+      "field": "profit",
+      "currency": "EUR",
+      "values": 2,
+      "sourceTotal": "414.28",
+      "targetTotal": "414.28",
+      "match": true
+    },
+    {
+      "collection": "trips",
+      "field": "profit",
+      "currency": "ILS",
+      "values": 2,
+      "sourceTotal": "494.88",
+      "targetTotal": "494.88",
+      "match": true
+    },
+    {
+      "collection": "trips",
+      "field": "profitPercentage",
+      "currency": "EUR",
+      "values": 2,
+      "sourceTotal": "58.24",
+      "targetTotal": "58.24",
+      "match": true
+    },
+    {
+      "collection": "trips",
+      "field": "profitPercentage",
+      "currency": "ILS",
+      "values": 2,
+      "sourceTotal": "50.14",
+      "targetTotal": "50.14",
+      "match": true
+    },
+    {
+      "collection": "trips",
+      "field": "amountPaid",
+      "currency": "EUR",
+      "values": 2,
+      "sourceTotal": "540.22",
+      "targetTotal": "540.22",
+      "match": true
+    },
+    {
+      "collection": "trips",
+      "field": "amountPaid",
+      "currency": "ILS",
+      "values": 2,
+      "sourceTotal": "684.52",
+      "targetTotal": "684.52",
+      "match": true
+    },
+    {
+      "collection": "trips",
+      "field": "amountDue",
+      "currency": "EUR",
+      "values": 2,
+      "sourceTotal": "1296.64",
+      "targetTotal": "1296.64",
+      "match": true
+    },
+    {
+      "collection": "trips",
+      "field": "amountDue",
+      "currency": "ILS",
+      "values": 2,
+      "sourceTotal": "1784.62",
+      "targetTotal": "1784.62",
+      "match": true
+    },
+    {
+      "collection": "trips",
+      "field": "exchangeRate",
+      "currency": "EUR",
+      "values": 2,
+      "sourceTotal": "2",
+      "targetTotal": "2",
+      "match": true
+    },
+    {
+      "collection": "trips",
+      "field": "exchangeRate",
+      "currency": "ILS",
+      "values": 2,
+      "sourceTotal": "2",
+      "targetTotal": "2",
+      "match": true
+    },
+    {
+      "collection": "trips",
+      "field": "wholesaleOriginalAmount",
+      "currency": "EUR",
+      "values": 2,
+      "sourceTotal": "1422.58",
+      "targetTotal": "1422.58",
+      "match": true
+    },
+    {
+      "collection": "trips",
+      "field": "wholesaleOriginalAmount",
+      "currency": "ILS",
+      "values": 2,
+      "sourceTotal": "1974.26",
+      "targetTotal": "1974.26",
+      "match": true
+    },
+    {
+      "collection": "trips",
+      "field": "saleOriginalAmount",
+      "currency": "EUR",
+      "values": 2,
+      "sourceTotal": "1836.86",
+      "targetTotal": "1836.86",
+      "match": true
+    },
+    {
+      "collection": "trips",
+      "field": "saleOriginalAmount",
+      "currency": "ILS",
+      "values": 2,
+      "sourceTotal": "2469.14",
+      "targetTotal": "2469.14",
+      "match": true
+    },
+    {
+      "collection": "trips",
+      "field": "cardPaidAmount",
+      "currency": "EUR",
+      "values": 2,
+      "sourceTotal": "0.00000000000000000000",
+      "targetTotal": "0.00000000000000000000",
+      "match": true
+    },
+    {
+      "collection": "trips",
+      "field": "cardPaidAmount",
+      "currency": "ILS",
+      "values": 2,
+      "sourceTotal": "444.4600000000000000",
+      "targetTotal": "444.4600000000000000",
+      "match": true
+    },
+    {
+      "collection": "trips",
+      "field": "cashPaidAmount",
+      "currency": "EUR",
+      "values": 2,
+      "sourceTotal": "540.2200000000000000",
+      "targetTotal": "540.2200000000000000",
+      "match": true
+    },
+    {
+      "collection": "trips",
+      "field": "cashPaidAmount",
+      "currency": "ILS",
+      "values": 2,
+      "sourceTotal": "240.0600000000000000",
+      "targetTotal": "240.0600000000000000",
+      "match": true
+    },
+    {
+      "collection": "tripPaymentPlans",
+      "field": "cardTotalMinor",
+      "currency": "ILS",
+      "values": 2,
+      "sourceTotal": "2000.02",
+      "targetTotal": "2000.02",
+      "match": true
+    },
+    {
+      "collection": "tripPaymentPlans",
+      "field": "cardTotalMinor",
+      "currency": "EUR",
+      "values": 2,
+      "sourceTotal": "0.00",
+      "targetTotal": "0.00",
+      "match": true
+    },
+    {
+      "collection": "tripPaymentPlans",
+      "field": "cashTotalMinor",
+      "currency": "ILS",
+      "values": 2,
+      "sourceTotal": "469.12",
+      "targetTotal": "469.12",
+      "match": true
+    },
+    {
+      "collection": "tripPaymentPlans",
+      "field": "cashTotalMinor",
+      "currency": "EUR",
+      "values": 2,
+      "sourceTotal": "1836.86",
+      "targetTotal": "1836.86",
+      "match": true
+    },
+    {
+      "collection": "tripPaymentPlans",
+      "field": "cardPaidMinor",
+      "currency": "ILS",
+      "values": 2,
+      "sourceTotal": "444.46",
+      "targetTotal": "444.46",
+      "match": true
+    },
+    {
+      "collection": "tripPaymentPlans",
+      "field": "cardPaidMinor",
+      "currency": "EUR",
+      "values": 2,
+      "sourceTotal": "0.00",
+      "targetTotal": "0.00",
+      "match": true
+    },
+    {
+      "collection": "tripPaymentPlans",
+      "field": "cashPaidMinor",
+      "currency": "ILS",
+      "values": 2,
+      "sourceTotal": "240.06",
+      "targetTotal": "240.06",
+      "match": true
+    },
+    {
+      "collection": "tripPaymentPlans",
+      "field": "cashPaidMinor",
+      "currency": "EUR",
+      "values": 2,
+      "sourceTotal": "540.22",
+      "targetTotal": "540.22",
+      "match": true
+    },
+    {
+      "collection": "tripInstallments",
+      "field": "expectedAmountMinor",
+      "currency": "ILS",
+      "values": 6,
+      "sourceTotal": "2000.02",
+      "targetTotal": "2000.02",
+      "match": true
+    },
+    {
+      "collection": "tripInstallments",
+      "field": "paidAmountMinor",
+      "currency": "ILS",
+      "values": 6,
+      "sourceTotal": "444.46",
+      "targetTotal": "444.46",
+      "match": true
+    }
+  ],
+  "events": [
+    {
+      "table": "trip_payment_events",
+      "parents": 4,
+      "events": 4
+    },
+    {
+      "table": "trip_installment_events",
+      "parents": 2,
+      "events": 4
+    },
+    {
+      "table": "trip_financial_audit",
+      "parents": 4,
+      "events": 64
+    },
+    {
+      "table": "trip_activity_log",
+      "parents": 4,
+      "events": 36
+    },
+    {
+      "table": "audit_logs",
+      "parents": 0,
+      "events": 0
+    }
+  ],
+  "ledger": {
+    "total": 130,
+    "byState": {
+      "PENDING": 0,
+      "COPIED": 0,
+      "VERIFIED": 130,
+      "FAILED": 0,
+      "SKIPPED_WITH_REASON": 0
+    },
+    "byTable": {
+      "user_profiles": {
+        "total": 2,
+        "verified": 2,
+        "failed": 0,
+        "skipped": 0
+      },
+      "business_profiles": {
+        "total": 2,
+        "verified": 2,
+        "failed": 0,
+        "skipped": 0
+      },
+      "trips": {
+        "total": 4,
+        "verified": 4,
+        "failed": 0,
+        "skipped": 0
+      },
+      "trip_payment_plans": {
+        "total": 4,
+        "verified": 4,
+        "failed": 0,
+        "skipped": 0
+      },
+      "trip_installments": {
+        "total": 6,
+        "verified": 6,
+        "failed": 0,
+        "skipped": 0
+      },
+      "trip_payment_events": {
+        "total": 4,
+        "verified": 4,
+        "failed": 0,
+        "skipped": 0
+      },
+      "trip_installment_events": {
+        "total": 4,
+        "verified": 4,
+        "failed": 0,
+        "skipped": 0
+      },
+      "trip_financial_audit": {
+        "total": 64,
+        "verified": 64,
+        "failed": 0,
+        "skipped": 0
+      },
+      "trip_activity_log": {
+        "total": 36,
+        "verified": 36,
+        "failed": 0,
+        "skipped": 0
+      },
+      "trip_write_requests": {
+        "total": 4,
+        "verified": 4,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    "carriedOver": 130
+  },
+  "findings": []
+}

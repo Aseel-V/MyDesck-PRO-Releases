@@ -1,0 +1,664 @@
+{
+  "generatedAt": "2026-09-09T20:08:36.009Z",
+  "status": "ALL_CLASSIFIED",
+  "scannedFiles": 244,
+  "totals": {
+    "rpcs": 42,
+    "directTableAccess": 48,
+    "storageBuckets": 3,
+    "edgeFunctions": 4,
+    "authCalls": 7,
+    "realtimeChannels": 2,
+    "unclassified": 0
+  },
+  "byClassification": {
+    "SERVER_TRANSACTION": 21,
+    "SECURITY_OPERATION": 10,
+    "PURE_QUERY": 10,
+    "DERIVED_ANALYTICS": 5
+  },
+  "rpcs": [
+    {
+      "name": "add_repair_service_transaction",
+      "callSites": [
+        "src/components/cars/AddServiceModal.tsx"
+      ],
+      "classification": "SERVER_TRANSACTION",
+      "replacement": "Retail vertical; deferred with the vertical."
+    },
+    {
+      "name": "apply_discount_secure",
+      "callSites": [
+        "src/hooks/useRestaurant.ts"
+      ],
+      "classification": "SECURITY_OPERATION",
+      "replacement": "Financial adjustment with approval; server only."
+    },
+    {
+      "name": "authenticate_staff",
+      "callSites": [
+        "src/contexts/AuthContext.tsx"
+      ],
+      "classification": "SECURITY_OPERATION",
+      "replacement": "Credential check; server only, never a client-evaluable rule."
+    },
+    {
+      "name": "authorize_staff_action",
+      "callSites": [
+        "src/hooks/useRestaurant.ts"
+      ],
+      "classification": "SECURITY_OPERATION",
+      "replacement": "Privilege decision; server only."
+    },
+    {
+      "name": "cancel_fiscal_document",
+      "callSites": [
+        "src/lib/fiscal/fiscalDocumentService.ts"
+      ],
+      "classification": "SECURITY_OPERATION",
+      "replacement": "Regulated document; append-only cancellation, server only."
+    },
+    {
+      "name": "close_business_day_secure",
+      "callSites": [
+        "src/hooks/useRestaurant.ts"
+      ],
+      "classification": "SECURITY_OPERATION",
+      "replacement": "Fiscal close; server only, append-only outcome."
+    },
+    {
+      "name": "close_shift_with_z_report",
+      "callSites": [
+        "src/lib/reports/zReportService.ts"
+      ],
+      "classification": "SERVER_TRANSACTION",
+      "replacement": "Fiscal Z report with hash chaining; server only."
+    },
+    {
+      "name": "create_kitchen_ticket",
+      "callSites": [
+        "src/hooks/useRestaurant.ts"
+      ],
+      "classification": "SERVER_TRANSACTION",
+      "replacement": "Restaurant vertical; deferred with the vertical."
+    },
+    {
+      "name": "create_trip_event_notification",
+      "callSites": [
+        "src/lib/pdfGenerator.ts"
+      ],
+      "classification": "SERVER_TRANSACTION",
+      "replacement": "Notification creation deduplicated on dedupe_key."
+    },
+    {
+      "name": "create_trip_payment_plan",
+      "callSites": [
+        "src/lib/tripPayments.ts"
+      ],
+      "classification": "SERVER_TRANSACTION",
+      "replacement": "Creates financial schedule; callable function."
+    },
+    {
+      "name": "delete_menu_item_secure",
+      "callSites": [
+        "src/hooks/useRestaurant.ts"
+      ],
+      "classification": "SECURITY_OPERATION",
+      "replacement": "Privileged delete; server only."
+    },
+    {
+      "name": "delete_staff_secure",
+      "callSites": [
+        "src/hooks/useRestaurant.ts"
+      ],
+      "classification": "SECURITY_OPERATION",
+      "replacement": "Privilege change; callable function with explicit authorization."
+    },
+    {
+      "name": "get_deleted_trips_page",
+      "callSites": [
+        "src/lib/tripTrashQueries.ts"
+      ],
+      "classification": "PURE_QUERY",
+      "replacement": "trips where isDeleted == true, ordered by deletedAt."
+    },
+    {
+      "name": "get_next_document_number",
+      "callSites": [
+        "src/lib/fiscal/documentNumbering.ts"
+      ],
+      "classification": "SERVER_TRANSACTION",
+      "replacement": "Gapless counter; a transaction on a counter document."
+    },
+    {
+      "name": "get_previous_document_hash",
+      "callSites": [
+        "src/lib/fiscal/hashChain.ts"
+      ],
+      "classification": "PURE_QUERY",
+      "replacement": "Reads the previous link in the fiscal hash chain."
+    },
+    {
+      "name": "get_previous_z_hash",
+      "callSites": [
+        "src/lib/fiscal/hashChain.ts"
+      ],
+      "classification": "PURE_QUERY",
+      "replacement": "Reads the previous link in the Z-report hash chain."
+    },
+    {
+      "name": "get_server_time",
+      "callSites": [
+        "src/components/restaurant/ReservationsBoard.tsx"
+      ],
+      "classification": "PURE_QUERY",
+      "replacement": "Replaced by the server timestamp a function returns; no round trip needed."
+    },
+    {
+      "name": "get_travel_analytics_summary",
+      "callSites": [
+        "src/lib/analyticsQueries.ts"
+      ],
+      "classification": "DERIVED_ANALYTICS",
+      "replacement": "Summary document rebuilt from canonical events; never a client-side full scan."
+    },
+    {
+      "name": "get_travel_payment_analytics",
+      "callSites": [
+        "src/lib/analyticsQueries.ts"
+      ],
+      "classification": "DERIVED_ANALYTICS",
+      "replacement": "Summary document, reconcilable against the event ledger."
+    },
+    {
+      "name": "get_travel_payment_contract_version",
+      "callSites": [
+        "src/lib/paymentContractCompatibility.ts"
+      ],
+      "classification": "PURE_QUERY",
+      "replacement": "Read of a featureRollouts configuration document."
+    },
+    {
+      "name": "get_travel_reports",
+      "callSites": [
+        "src/lib/travelReports.ts"
+      ],
+      "classification": "DERIVED_ANALYTICS",
+      "replacement": "Server-side aggregation in a callable function."
+    },
+    {
+      "name": "get_trip_activity_page",
+      "callSites": [
+        "src/lib/tripAuditQueries.ts"
+      ],
+      "classification": "PURE_QUERY",
+      "replacement": "tripActivityLog by tripId, ordered by sequence."
+    },
+    {
+      "name": "get_trip_dashboard_items",
+      "callSites": [
+        "src/lib/tripQueries.ts"
+      ],
+      "classification": "PURE_QUERY",
+      "replacement": "Owner-constrained trips query with a composite index."
+    },
+    {
+      "name": "get_trip_details",
+      "callSites": [
+        "src/lib/tripQueries.ts"
+      ],
+      "classification": "PURE_QUERY",
+      "replacement": "Document read plus owner-constrained child queries."
+    },
+    {
+      "name": "get_trip_financial_audit_page",
+      "callSites": [
+        "src/lib/tripAuditQueries.ts"
+      ],
+      "classification": "PURE_QUERY",
+      "replacement": "tripFinancialAudit by tripId, ordered by sequence."
+    },
+    {
+      "name": "get_trip_years",
+      "callSites": [
+        "src/components/Dashboard.tsx",
+        "src/components/trips/Trips.tsx"
+      ],
+      "classification": "DERIVED_ANALYTICS",
+      "replacement": "Distinct years; maintained on a per-owner summary document."
+    },
+    {
+      "name": "get_trips_page",
+      "callSites": [
+        "src/lib/tripQueries.ts"
+      ],
+      "classification": "PURE_QUERY",
+      "replacement": "Firestore query on trips, ownerUid + isDeleted + createdAt cursor."
+    },
+    {
+      "name": "log_business_activity_v2",
+      "callSites": [
+        "src/hooks/useRestaurant.ts"
+      ],
+      "classification": "SERVER_TRANSACTION",
+      "replacement": "Append-only audit; server only."
+    },
+    {
+      "name": "log_trip_activity",
+      "callSites": [
+        "src/components/trips/DuplicateTripDialog.tsx",
+        "src/components/trips/TripWhatsappDialog.tsx",
+        "src/lib/pdfGenerator.ts"
+      ],
+      "classification": "SERVER_TRANSACTION",
+      "replacement": "Append-only history; clients may not write it directly."
+    },
+    {
+      "name": "mark_all_trip_notifications_read",
+      "callSites": [
+        "src/lib/tripNotifications.ts"
+      ],
+      "classification": "SERVER_TRANSACTION",
+      "replacement": "Bulk owned-write; batched writes in a callable function."
+    },
+    {
+      "name": "materialize_due_visa_progress_events",
+      "callSites": [
+        "src/lib/visaPaymentArrivals.ts"
+      ],
+      "classification": "SERVER_TRANSACTION",
+      "replacement": "Writes financial events; scheduled function with per-event idempotency keys."
+    },
+    {
+      "name": "open_cash_shift",
+      "callSites": [
+        "src/lib/reports/zReportService.ts"
+      ],
+      "classification": "SERVER_TRANSACTION",
+      "replacement": "Restaurant vertical; deferred with the vertical."
+    },
+    {
+      "name": "permanently_delete_trips",
+      "callSites": [
+        "src/lib/tripTrashQueries.ts"
+      ],
+      "classification": "SERVER_TRANSACTION",
+      "replacement": "Hard delete with descendants; callable function, cascade is explicit, never implicit."
+    },
+    {
+      "name": "recalculate_future_trip_installments",
+      "callSites": [
+        "src/lib/tripPayments.ts"
+      ],
+      "classification": "SERVER_TRANSACTION",
+      "replacement": "Redistributes future amounts; must preserve confirmed rows."
+    },
+    {
+      "name": "record_trip_cash_payment",
+      "callSites": [
+        "src/lib/tripPayments.ts"
+      ],
+      "classification": "SERVER_TRANSACTION",
+      "replacement": "Money moves; callable function, idempotent, transactional."
+    },
+    {
+      "name": "record_trip_installment_payment",
+      "callSites": [
+        "src/lib/tripPayments.ts"
+      ],
+      "classification": "SERVER_TRANSACTION",
+      "replacement": "Money moves; callable function, idempotent, transactional."
+    },
+    {
+      "name": "reschedule_trip_installment",
+      "callSites": [
+        "src/lib/tripPayments.ts"
+      ],
+      "classification": "SERVER_TRANSACTION",
+      "replacement": "Alters a schedule with confirmed history; callable function."
+    },
+    {
+      "name": "restore_deleted_trips",
+      "callSites": [
+        "src/lib/tripTrashQueries.ts"
+      ],
+      "classification": "SERVER_TRANSACTION",
+      "replacement": "Un-deletes owned trips; callable function with ownership checks."
+    },
+    {
+      "name": "retry_trip_attachment_cleanup",
+      "callSites": [
+        "src/lib/tripTrashQueries.ts"
+      ],
+      "classification": "SERVER_TRANSACTION",
+      "replacement": "Storage cleanup queue; server-owned, retry-safe."
+    },
+    {
+      "name": "save_trip_transaction",
+      "callSites": [
+        "src/hooks/useTripMutations.ts"
+      ],
+      "classification": "SERVER_TRANSACTION",
+      "replacement": "Callable function + Firestore transaction. Prototyped and tested in this milestone."
+    },
+    {
+      "name": "use_trip_template",
+      "callSites": [
+        "src/lib/tripTemplates.ts"
+      ],
+      "classification": "SERVER_TRANSACTION",
+      "replacement": "Creates a trip from a template; same path as save_trip_transaction."
+    },
+    {
+      "name": "void_order_item_secure",
+      "callSites": [
+        "src/hooks/useRestaurant.ts"
+      ],
+      "classification": "SECURITY_OPERATION",
+      "replacement": "Financial void with approval; server only."
+    }
+  ],
+  "edgeFunctions": [
+    {
+      "name": "create-user",
+      "callSites": [
+        "src/components/admin/CreateUserForm.tsx"
+      ],
+      "classification": "SECURITY_OPERATION",
+      "replacement": "Creates identities; Admin SDK in a callable function with explicit authorization."
+    },
+    {
+      "name": "generate-trip-pdf",
+      "callSites": [
+        "src/lib/tripPdfClient.ts"
+      ],
+      "classification": "SERVER_TRANSACTION",
+      "replacement": "HTTPS function; writes the artefact to Storage, no client credentials."
+    },
+    {
+      "name": "get-guide-analytics",
+      "callSites": [
+        "src/pages/GuideWallet.tsx"
+      ],
+      "classification": "DERIVED_ANALYTICS",
+      "replacement": "HTTPS function reading owner-scoped summaries."
+    },
+    {
+      "name": "send-whatsapp",
+      "callSites": [
+        "src/lib/repairWhatsApp.ts"
+      ],
+      "classification": "SECURITY_OPERATION",
+      "replacement": "QUARANTINED. Must remain disabled; no provider credential is migrated."
+    }
+  ],
+  "directTableAccess": [
+    {
+      "table": "allocation_numbers_log",
+      "callSites": 1
+    },
+    {
+      "table": "business",
+      "callSites": 1
+    },
+    {
+      "table": "business_profiles",
+      "callSites": 6
+    },
+    {
+      "table": "business_settings",
+      "callSites": 1
+    },
+    {
+      "table": "car_parts",
+      "callSites": 2
+    },
+    {
+      "table": "cash_shifts",
+      "callSites": 1
+    },
+    {
+      "table": "customer_vehicles",
+      "callSites": 3
+    },
+    {
+      "table": "customers_ledger",
+      "callSites": 1
+    },
+    {
+      "table": "fiscal_counters",
+      "callSites": 1
+    },
+    {
+      "table": "fiscal_document_items",
+      "callSites": 1
+    },
+    {
+      "table": "fiscal_documents",
+      "callSites": 5
+    },
+    {
+      "table": "market_transactions",
+      "callSites": 4
+    },
+    {
+      "table": "repair_order_items",
+      "callSites": 1
+    },
+    {
+      "table": "repair_orders",
+      "callSites": 3
+    },
+    {
+      "table": "restaurant",
+      "callSites": 1
+    },
+    {
+      "table": "restaurant_daily_reports",
+      "callSites": 1
+    },
+    {
+      "table": "restaurant_demand_forecasts",
+      "callSites": 1
+    },
+    {
+      "table": "restaurant_guest_profiles",
+      "callSites": 1
+    },
+    {
+      "table": "restaurant_historical_data",
+      "callSites": 1
+    },
+    {
+      "table": "restaurant_kitchen_tickets",
+      "callSites": 2
+    },
+    {
+      "table": "restaurant_menu_categories",
+      "callSites": 3
+    },
+    {
+      "table": "restaurant_menu_items",
+      "callSites": 7
+    },
+    {
+      "table": "restaurant_modifier_groups",
+      "callSites": 1
+    },
+    {
+      "table": "restaurant_modifiers",
+      "callSites": 1
+    },
+    {
+      "table": "restaurant_order_item_modifiers",
+      "callSites": 1
+    },
+    {
+      "table": "restaurant_order_items",
+      "callSites": 4
+    },
+    {
+      "table": "restaurant_orders",
+      "callSites": 7
+    },
+    {
+      "table": "restaurant_payments",
+      "callSites": 1
+    },
+    {
+      "table": "restaurant_reservations",
+      "callSites": 1
+    },
+    {
+      "table": "restaurant_staff",
+      "callSites": 4
+    },
+    {
+      "table": "restaurant_table_sessions",
+      "callSites": 2
+    },
+    {
+      "table": "restaurant_tables",
+      "callSites": 1
+    },
+    {
+      "table": "restaurant_ticket_items",
+      "callSites": 2
+    },
+    {
+      "table": "restaurant_waitlist",
+      "callSites": 1
+    },
+    {
+      "table": "shift_transactions",
+      "callSites": 1
+    },
+    {
+      "table": "trip_attachment_cleanup_queue",
+      "callSites": 1
+    },
+    {
+      "table": "trip_installment_events",
+      "callSites": 1
+    },
+    {
+      "table": "trip_installments",
+      "callSites": 1
+    },
+    {
+      "table": "trip_notification_settings",
+      "callSites": 1
+    },
+    {
+      "table": "trip_notifications",
+      "callSites": 2
+    },
+    {
+      "table": "trip_packing_lists",
+      "callSites": 1
+    },
+    {
+      "table": "trip_payment_plans",
+      "callSites": 1
+    },
+    {
+      "table": "trip_templates",
+      "callSites": 1
+    },
+    {
+      "table": "trip_whatsapp_templates",
+      "callSites": 1
+    },
+    {
+      "table": "trips",
+      "callSites": 8
+    },
+    {
+      "table": "user_profiles",
+      "callSites": 5
+    },
+    {
+      "table": "x_reports",
+      "callSites": 1
+    },
+    {
+      "table": "z_reports",
+      "callSites": 3
+    }
+  ],
+  "storageBuckets": [
+    {
+      "bucket": "business-logos",
+      "callSites": [
+        "src/components/Settings.tsx"
+      ]
+    },
+    {
+      "bucket": "business-signatures",
+      "callSites": [
+        "src/components/Settings.tsx"
+      ]
+    },
+    {
+      "bucket": "restaurant-assets",
+      "callSites": [
+        "src/components/market/AddProductModal.tsx"
+      ]
+    }
+  ],
+  "auth": {
+    "calls": [
+      {
+        "call": "getSession",
+        "callSites": 2
+      },
+      {
+        "call": "onAuthStateChange",
+        "callSites": 1
+      },
+      {
+        "call": "resetPasswordForEmail",
+        "callSites": 1
+      },
+      {
+        "call": "signInWithPassword",
+        "callSites": 1
+      },
+      {
+        "call": "signOut",
+        "callSites": 1
+      },
+      {
+        "call": "signUp",
+        "callSites": 1
+      },
+      {
+        "call": "updateUser",
+        "callSites": 2
+      }
+    ],
+    "replacement": "Firebase Authentication. Already proven end to end with UID preservation; signInWithPassword, signUp, signOut, getSession, onAuthStateChange, updateUser and resetPasswordForEmail all have direct Firebase equivalents."
+  },
+  "realtime": {
+    "channels": [
+      {
+        "channel": "${table}_changes",
+        "callSites": [
+          "src/hooks/useRestaurant.ts"
+        ]
+      },
+      {
+        "channel": "channelName",
+        "callSites": [
+          "src/hooks/useKitchenDisplay.ts"
+        ]
+      }
+    ],
+    "finding": "Realtime is used only by the restaurant vertical (kitchen display and a generic table-change invalidator). The travel product uses none, so the travel cutover does not depend on realtime at all.",
+    "replacement": "Firestore listeners, each constrained to a tenant-scoped query. The generic whole-table subscription in useRestaurant must NOT be ported as-is: an unconstrained listener over a collection is both a cost problem and a rules failure."
+  },
+  "notes": [
+    "Direct .from() access is not automatically portable. Every table read becomes a Firestore query that must carry its ownerUid constraint, because rules are not filters.",
+    "Writes that touch money are removed from the client entirely and become callable functions, which is stricter than the source RLS allowed."
+  ]
+}

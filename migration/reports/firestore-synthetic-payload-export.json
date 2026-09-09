@@ -1,0 +1,167 @@
+{
+  "generatedAt": "2026-09-09T20:08:56.173Z",
+  "status": "EXPORTED_SYNTHETIC_ONLY",
+  "sourceSafety": {
+    "start": {
+      "read_only": "on",
+      "isolation": "repeatable read"
+    },
+    "rejectedWriteSqlState": "25006",
+    "successfulWrites": 0,
+    "end": {
+      "read_only": "on",
+      "isolation": "repeatable read"
+    },
+    "transactionOutcome": "ROLLBACK"
+  },
+  "sourceWrites": 0,
+  "realCustomerRowsExported": 0,
+  "approvedUidCount": 2,
+  "businessIdCount": 2,
+  "authUsersExported": 2,
+  "authColumnsExcluded": "credential and token columns never selected",
+  "totalRows": 130,
+  "payloadPath": "migration/firestore/export.local/synthetic-payloads.json",
+  "tables": [
+    {
+      "table": "user_profiles",
+      "status": "EXPORTED",
+      "rows": 2,
+      "ownerColumn": "user_id",
+      "reachedVia": "user"
+    },
+    {
+      "table": "business_profiles",
+      "status": "EXPORTED",
+      "rows": 2,
+      "ownerColumn": "user_id",
+      "reachedVia": "user"
+    },
+    {
+      "table": "business_settings",
+      "status": "EXPORTED",
+      "rows": 0,
+      "ownerColumn": "business_id",
+      "reachedVia": "user (column named business_id)"
+    },
+    {
+      "table": "trips",
+      "status": "EXPORTED",
+      "rows": 4,
+      "ownerColumn": "user_id",
+      "reachedVia": "user"
+    },
+    {
+      "table": "trip_payment_plans",
+      "status": "EXPORTED",
+      "rows": 4,
+      "ownerColumn": "user_id",
+      "reachedVia": "user"
+    },
+    {
+      "table": "trip_installments",
+      "status": "EXPORTED",
+      "rows": 6,
+      "ownerColumn": "user_id",
+      "reachedVia": "user"
+    },
+    {
+      "table": "trip_payment_events",
+      "status": "EXPORTED",
+      "rows": 4,
+      "ownerColumn": "user_id",
+      "reachedVia": "user"
+    },
+    {
+      "table": "trip_installment_events",
+      "status": "EXPORTED",
+      "rows": 4,
+      "ownerColumn": "user_id",
+      "reachedVia": "user"
+    },
+    {
+      "table": "trip_financial_audit",
+      "status": "EXPORTED",
+      "rows": 64,
+      "ownerColumn": "user_id",
+      "reachedVia": "user"
+    },
+    {
+      "table": "trip_activity_log",
+      "status": "EXPORTED",
+      "rows": 36,
+      "ownerColumn": "user_id",
+      "reachedVia": "user"
+    },
+    {
+      "table": "trip_write_requests",
+      "status": "EXPORTED",
+      "rows": 4,
+      "ownerColumn": "user_id",
+      "reachedVia": "user"
+    },
+    {
+      "table": "trip_templates",
+      "status": "EXPORTED",
+      "rows": 0,
+      "ownerColumn": "user_id",
+      "reachedVia": "user"
+    },
+    {
+      "table": "trip_notifications",
+      "status": "EXPORTED",
+      "rows": 0,
+      "ownerColumn": "user_id",
+      "reachedVia": "user"
+    },
+    {
+      "table": "trip_notification_settings",
+      "status": "EXPORTED",
+      "rows": 0,
+      "ownerColumn": "user_id",
+      "reachedVia": "user"
+    },
+    {
+      "table": "trip_packing_lists",
+      "status": "EXPORTED",
+      "rows": 0,
+      "ownerColumn": "user_id",
+      "reachedVia": "user"
+    },
+    {
+      "table": "trip_pricing_preferences",
+      "status": "EXPORTED",
+      "rows": 0,
+      "ownerColumn": "user_id",
+      "reachedVia": "user"
+    },
+    {
+      "table": "trip_whatsapp_templates",
+      "status": "EXPORTED",
+      "rows": 0,
+      "ownerColumn": "user_id",
+      "reachedVia": "user"
+    },
+    {
+      "table": "trip_attachment_cleanup_queue",
+      "status": "EXPORTED",
+      "rows": 0,
+      "ownerColumn": "user_id",
+      "reachedVia": "user"
+    },
+    {
+      "table": "trip_pdf_rate_limits",
+      "status": "EXPORTED",
+      "rows": 0,
+      "ownerColumn": "user_id",
+      "reachedVia": "user"
+    },
+    {
+      "table": "audit_logs",
+      "status": "EXPORTED",
+      "rows": 0,
+      "ownerColumn": "business_id",
+      "reachedVia": "business"
+    }
+  ]
+}

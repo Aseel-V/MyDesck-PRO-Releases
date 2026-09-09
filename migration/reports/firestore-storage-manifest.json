@@ -1,0 +1,187 @@
+{
+  "generatedAt": "2026-09-09T20:10:49.709Z",
+  "status": "INVENTORIED_NOT_COPIED",
+  "sourceSafety": {
+    "start": {
+      "read_only": "on",
+      "isolation": "repeatable read"
+    },
+    "rejectedWriteSqlState": "25006",
+    "successfulWrites": 0,
+    "end": {
+      "read_only": "on",
+      "isolation": "repeatable read"
+    },
+    "transactionOutcome": "ROLLBACK"
+  },
+  "sourceWrites": 0,
+  "objectsCopied": 0,
+  "productionBytesDownloaded": 0,
+  "buckets": [
+    {
+      "id": "logos",
+      "name": "logos",
+      "public": "true",
+      "file_size_limit": null,
+      "allowed_mime_types": null,
+      "created_at": "2025-11-19 17:21:11.688032+00"
+    },
+    {
+      "id": "restaurant-assets",
+      "name": "restaurant-assets",
+      "public": "true",
+      "file_size_limit": null,
+      "allowed_mime_types": null,
+      "created_at": "2026-01-24 19:38:59.248755+00"
+    }
+  ],
+  "objectCount": 3,
+  "manifest": [
+    {
+      "sourceBucket": "logos",
+      "sourcePath": "business-logos/72647632-d481-4889-bf27-ed1bb14ad347-1763727428700.png",
+      "sourceOwner": "72647632-d481-4889-bf27-ed1bb14ad347",
+      "businessId": "UNRESOLVED_UNTIL_COPY_PHASE",
+      "tripId": null,
+      "mime": "image/png",
+      "sizeBytes": "292332",
+      "privacy": "PUBLIC",
+      "sourceSha256": "BLOCKED — object bytes not downloaded; copy not authorized by this milestone",
+      "targetPath": "businesses/{businessId}/logos/72647632-d481-4889-bf27-ed1bb14ad347-1763727428700.png",
+      "targetSha256": "NOT_COPIED",
+      "migrationStatus": "PENDING"
+    },
+    {
+      "sourceBucket": "logos",
+      "sourcePath": "business-signatures/sig-72647632-d481-4889-bf27-ed1bb14ad347-1766403021165.jpeg",
+      "sourceOwner": "72647632-d481-4889-bf27-ed1bb14ad347",
+      "businessId": "UNRESOLVED_UNTIL_COPY_PHASE",
+      "tripId": null,
+      "mime": "image/jpeg",
+      "sizeBytes": "146338",
+      "privacy": "PUBLIC",
+      "sourceSha256": "BLOCKED — object bytes not downloaded; copy not authorized by this milestone",
+      "targetPath": "businesses/{businessId}/logos/sig-72647632-d481-4889-bf27-ed1bb14ad347-1766403021165.jpeg",
+      "targetSha256": "NOT_COPIED",
+      "migrationStatus": "PENDING"
+    },
+    {
+      "sourceBucket": "restaurant-assets",
+      "sourcePath": "market-items/b7ee6930-12e7-4b03-ba23-757cf6f5c960/.emptyFolderPlaceholder",
+      "sourceOwner": null,
+      "businessId": "UNRESOLVED_UNTIL_COPY_PHASE",
+      "tripId": null,
+      "mime": "application/octet-stream",
+      "sizeBytes": "0",
+      "privacy": "PUBLIC",
+      "sourceSha256": "BLOCKED — object bytes not downloaded; copy not authorized by this milestone",
+      "targetPath": "businesses/{businessId}/restaurant/.emptyFolderPlaceholder",
+      "targetSha256": "NOT_COPIED",
+      "migrationStatus": "PENDING"
+    }
+  ],
+  "checksumGate": {
+    "status": "PASS",
+    "checks": [
+      {
+        "check": "round trip preserves bytes",
+        "pass": true,
+        "sourceSha256": "4f4261f84c303d1665e7c9f0c3218877ce00a5c3f27064b02203728eeedf5852",
+        "targetSha256": "4f4261f84c303d1665e7c9f0c3218877ce00a5c3f27064b02203728eeedf5852"
+      },
+      {
+        "check": "a single flipped byte is detected",
+        "pass": true,
+        "differs": true
+      },
+      {
+        "check": "a missing object is detected",
+        "pass": true
+      },
+      {
+        "check": "a truncated object is detected",
+        "pass": true,
+        "sourceBytes": 4150,
+        "targetBytes": 4149
+      }
+    ]
+  },
+  "findings": [
+    {
+      "code": "SOURCE_BUCKETS_ARE_PUBLIC",
+      "detail": [
+        "logos",
+        "restaurant-assets"
+      ],
+      "impact": "Every stored object in these buckets is readable by anyone with the URL.",
+      "target": "Storage rules make logos authenticated-read and everything else owner-only."
+    },
+    {
+      "code": "SIGNATURE_BUCKET_DOES_NOT_EXIST",
+      "detail": "The client calls storage.from('business-signatures').upload and getPublicUrl, but the source has no such bucket.",
+      "impact": "Signature upload is either failing silently or writing somewhere public. A public signature URL is a forgery kit.",
+      "target": "businesses/{businessId}/signatures/** is private and owner-only, and the public-URL call must be replaced with an authenticated read.",
+      "blocksCutover": true
+    },
+    {
+      "code": "CLIENT_BUCKET_NAMES_DIVERGE_FROM_SOURCE",
+      "detail": {
+        "clientReferences": [
+          "business-logos",
+          "business-signatures"
+        ],
+        "sourceBuckets": [
+          "logos",
+          "restaurant-assets"
+        ]
+      },
+      "impact": "The application writes to bucket names that do not exist in the source.",
+      "target": "Resolve during the storage copy phase; unresolved names block file parity."
+    }
+  ],
+  "referencingColumns": [
+    {
+      "table_name": "business_profiles",
+      "column_name": "logo_url"
+    },
+    {
+      "table_name": "business_profiles",
+      "column_name": "signature_url"
+    },
+    {
+      "table_name": "fiscal_documents",
+      "column_name": "signature_data"
+    },
+    {
+      "table_name": "restaurant_floor_plans",
+      "column_name": "background_image_url"
+    },
+    {
+      "table_name": "restaurant_menu_items",
+      "column_name": "image_url"
+    },
+    {
+      "table_name": "shrinkage_records",
+      "column_name": "photo_url"
+    },
+    {
+      "table_name": "trip_attachment_cleanup_queue",
+      "column_name": "attachments"
+    },
+    {
+      "table_name": "trips",
+      "column_name": "attachments"
+    },
+    {
+      "table_name": "z_reports",
+      "column_name": "signature_chain_valid"
+    }
+  ],
+  "fileParityGate": {
+    "expectedObjects": 3,
+    "accountedFor": 3,
+    "copied": 0,
+    "checksumMismatches": "NOT MEASURED — nothing copied",
+    "verdict": "BLOCKED — storage copy is a later milestone; the gate itself is proven above"
+  }
+}

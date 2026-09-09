@@ -1,0 +1,272 @@
+rules_version = '2';
+
+// MyDesck PRO — Firestore Security Rules (migration milestone 1)
+//
+// These rules translate the SECURITY INTENT of the source PostgreSQL RLS, not
+// its SQL text. The source intent is uniform and strict:
+//
+//   * every tenant row is reachable only by its owner (auth.uid() = user_id)
+//   * a global admin may read, never write, across tenants (is_admin())
+//   * audit and event tables have SELECT policies only, so clients cannot write
+//     them at all — those rows come from SECURITY DEFINER code
+//   * payment plans and installments additionally verify the PARENT TRIP is
+//     owned by the caller before a write is allowed
+//
+// Two deliberate hardenings go beyond the source, because Firestore has no
+// generated columns and no triggers to fall back on:
+//
+//   1. Money is never client-writable. In PostgreSQL `profit`, `amount_due` and
+//      `profit_percentage` are GENERATED columns and `amount_paid` is
+//      synchronised by save_trip_transaction. Firestore would happily let a
+//      client write any number into those fields, so they are server-only here
+//      and the callable function is the only write path for them.
+//   2. Ownership and privilege fields are immutable to clients. The source
+//      relies on a BEFORE UPDATE trigger to stop financial-permission
+//      escalation; rules enforce the equivalent without a trigger.
+//
+// Rules are NOT filters. `read` is evaluated per document, so a query that is
+// not already constrained to the caller's own data FAILS rather than silently
+// returning a subset. Every client query must carry its ownerUid constraint.
+//
+// Anything not matched here is denied by the final catch-all, including the
+// migration_test_v1_* proof namespace: proof data is never client-readable.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // -- identity ---------------------------------------------------------
+
+    function signedIn() {
+      return request.auth != null && request.auth.uid != null;
+    }
+
+    // Global admin is a custom claim, not a document field. The role changes
+    // rarely and applies across tenants, which is the case claims are actually
+    // good for; membership-style authorization stays in documents where it can
+    // be changed without waiting for a token refresh.
+    function isAdmin() {
+      return signedIn() && request.auth.token.admin == true;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // -- field-level helpers ----------------------------------------------
+
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    function unchanged(field) {
+      return field in existing()
+        ? (field in incoming()) && incoming()[field] == existing()[field]
+        : !(field in incoming());
+    }
+
+    function allUnchanged(fields) {
+      return fields.toSet().difference(
+        incoming().diff(existing()).affectedKeys()).size() == fields.size();
+    }
+
+    function noneOf(fields) {
+      return incoming().diff(existing()).affectedKeys().hasAny(fields.toSet()) == false;
+    }
+
+    // A document may only carry fields the model knows about. Firestore is
+    // schemaless; the application must not be, or an unvalidated field becomes
+    // the next place authorization state hides.
+    function onlyFields(allowed) {
+      return incoming().keys().hasOnly(allowed);
+    }
+
+    function requiresFields(required) {
+      return incoming().keys().hasAll(required);
+    }
+
+    // Money is stored as an exact scaled integer, never a float. A client that
+    // could write a bare number into a money field would reintroduce exactly
+    // the precision loss the migration exists to prevent.
+    function isExactAmount(value) {
+      return value is map
+        && value.keys().hasAll(['unitsText', 'scale'])
+        && value.unitsText is string
+        && value.scale is int;
+    }
+
+    // -- users ------------------------------------------------------------
+    // Document id IS the Firebase UID, which is the preserved Supabase UID.
+
+    match /users/{uid} {
+      // Privilege state a client must never write to its own profile. This is
+      // the Phase 1 self-escalation fix, restated where Firestore can enforce it.
+      function privilegedFields() {
+        return ['uid', 'role', 'isSuspended', 'canViewFinancials', 'businessId',
+                'legacyProfileId', 'schemaVersion', 'createdAt'];
+      }
+
+      allow get: if isOwner(uid) || isAdmin();
+      // A list over /users is never legitimate for a normal client: there is no
+      // owner-constrained shape of it, so only an admin may enumerate.
+      allow list: if isAdmin();
+
+      allow create: if isOwner(uid)
+        && incoming().uid == uid
+        && incoming().role == 'user'
+        && incoming().isSuspended == false
+        && incoming().canViewFinancials == false
+        && requiresFields(['uid', 'role', 'isSuspended', 'fullName'])
+        && onlyFields(['uid', 'role', 'isSuspended', 'canViewFinancials', 'businessId',
+                       'fullName', 'phoneNumber', 'legacyProfileId', 'schemaVersion',
+                       'createdAt', 'createdAtMicros', 'updatedAt', 'updatedAtMicros']);
+
+      // A user may edit their own display details and nothing else. Granting
+      // themselves admin, lifting their own suspension, unlocking financial
+      // visibility or moving to another tenant are all blocked by one rule.
+      allow update: if isOwner(uid) && noneOf(privilegedFields());
+
+      // Deleting an identity is an administrative act with downstream effects
+      // on every owned record; it does not happen from a client.
+      allow delete: if false;
+    }
+
+    // -- businesses -------------------------------------------------------
+
+    match /businesses/{businessId} {
+      allow get: if isAdmin()
+        || (signedIn() && existing().ownerUid == request.auth.uid);
+      allow list: if isAdmin()
+        || (signedIn() && existing().ownerUid == request.auth.uid);
+
+      allow create: if signedIn()
+        && incoming().ownerUid == request.auth.uid
+        && requiresFields(['ownerUid', 'businessName']);
+
+      // ownerUid is the security field for this document and every child of it.
+      // If a client could change it, it could hand its own tenant to someone
+      // else — or take someone else's.
+      allow update: if signedIn()
+        && existing().ownerUid == request.auth.uid
+        && noneOf(['ownerUid', 'isSuspended', 'subscriptionStatus', 'schemaVersion']);
+
+      allow delete: if signedIn() && existing().ownerUid == request.auth.uid;
+
+      match /settings/{settingsId} {
+        function business() {
+          return get(/databases/$(database)/documents/businesses/$(businessId)).data;
+        }
+        allow read: if signedIn() && business().ownerUid == request.auth.uid;
+        allow write: if signedIn() && business().ownerUid == request.auth.uid
+          && incoming().ownerUid == request.auth.uid;
+      }
+    }
+
+    // -- trips ------------------------------------------------------------
+
+    match /trips/{tripId} {
+      // Server-authoritative money. `profit`, `profitPercentage` and `amountDue`
+      // are GENERATED in PostgreSQL and `amountPaid` is synchronised from the
+      // native ledger; none of them is a client's to assert.
+      function serverOwnedFields() {
+        return ['ownerUid', 'amountPaid', 'amountDue', 'profit', 'profitPercentage',
+                'cashPaidAmount', 'cardPaidAmount', 'paymentStatus',
+                'searchDocument', 'schemaVersion', 'createdAt', 'createdAtMicros',
+                'deletedAt', 'deletedAtMicros', 'deletedBy'];
+      }
+
+      allow get: if isAdmin() || (signedIn() && existing().ownerUid == request.auth.uid);
+      // Per-document evaluation means an unconstrained list fails outright.
+      allow list: if isAdmin() || (signedIn() && existing().ownerUid == request.auth.uid);
+
+      // Creating a trip goes through the callable function, which computes the
+      // derived financial fields inside a transaction. Allowing a client create
+      // here would mean trusting client-supplied totals.
+      allow create: if false;
+      allow update: if signedIn()
+        && existing().ownerUid == request.auth.uid
+        && noneOf(serverOwnedFields());
+      allow delete: if false; // soft delete only, via the server
+    }
+
+    // -- payment plans and installments -----------------------------------
+    // The source policy checks the PARENT TRIP is owned before allowing a
+    // write. Money moves here, so the client gets read access only and every
+    // write goes through the server-authoritative function.
+
+    match /tripPaymentPlans/{planId} {
+      allow get, list: if isAdmin()
+        || (signedIn() && existing().ownerUid == request.auth.uid);
+      allow create, update, delete: if false;
+    }
+
+    match /tripInstallments/{installmentId} {
+      allow get, list: if isAdmin()
+        || (signedIn() && existing().ownerUid == request.auth.uid);
+      allow create, update, delete: if false;
+    }
+
+    // -- append-only history ----------------------------------------------
+    // The source grants SELECT and nothing else on these tables. Backdating,
+    // rewriting or deleting history is not a client capability.
+
+    match /tripPaymentEvents/{eventId} {
+      allow get, list: if isAdmin()
+        || (signedIn() && existing().ownerUid == request.auth.uid);
+      allow write: if false;
+    }
+
+    match /tripInstallmentEvents/{eventId} {
+      allow get, list: if isAdmin()
+        || (signedIn() && existing().ownerUid == request.auth.uid);
+      allow write: if false;
+    }
+
+    match /tripFinancialAudit/{auditId} {
+      allow get, list: if isAdmin()
+        || (signedIn() && existing().ownerUid == request.auth.uid);
+      allow write: if false;
+    }
+
+    match /tripActivityLog/{activityId} {
+      allow get, list: if isAdmin()
+        || (signedIn() && existing().ownerUid == request.auth.uid);
+      allow write: if false;
+    }
+
+    match /auditEvents/{eventId} {
+      allow get, list: if isAdmin()
+        || (signedIn() && existing().ownerUid == request.auth.uid);
+      allow write: if false;
+    }
+
+    // -- server-only ------------------------------------------------------
+    // The idempotency ledger decides whether a financial write already
+    // happened. A client that could read or forge it could replay or suppress
+    // a payment, so it is invisible from the client entirely.
+
+    match /idempotency/{key} {
+      allow read, write: if false;
+    }
+
+    match /storageCleanupQueue/{queueId} {
+      allow read, write: if false;
+    }
+
+    match /rateLimits/{key} {
+      allow read, write: if false;
+    }
+
+    match /featureRollouts/{rolloutId} {
+      allow get, list: if signedIn();
+      allow write: if false;
+    }
+
+    // -- default deny ------------------------------------------------------
+    // Everything not named above, including the migration_test_v1_* proof
+    // namespace, is denied to every client. Migration tooling reaches those
+    // paths with the Admin SDK, which bypasses these rules by design — which
+    // is exactly why the functions that use it do their own authorization.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

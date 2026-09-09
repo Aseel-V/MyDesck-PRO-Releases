@@ -1,0 +1,88 @@
+rules_version = '2';
+
+// MyDesck PRO — Cloud Storage Security Rules (migration milestone 1)
+//
+// The source Supabase buckets are `logos` and `restaurant-assets`, and BOTH are
+// public. The application also calls `storage.from('business-signatures')`,
+// a bucket that does not exist in the source at all — so signatures today are
+// either failing to upload or landing somewhere public.
+//
+// Either way the target must not reproduce it. Signatures are a means of
+// authenticating documents; a public signature URL is a forgery kit. Here they
+// are private, owner-only, and unreadable without authentication.
+//
+// Paths carry the tenant in the path itself, so authorization is legible:
+//   businesses/{businessId}/logos/...
+//   businesses/{businessId}/signatures/...
+//   businesses/{businessId}/trips/{tripId}/attachments/...
+//
+// Object names are never treated as secrets. An unguessable path is not access
+// control, and the previous public-URL behaviour is what that assumption costs.
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function signedIn() {
+      return request.auth != null && request.auth.uid != null;
+    }
+
+    // Ownership comes from Firestore, which is the system of record for it.
+    // Storage rules can read Firestore, so the tenant boundary is decided in
+    // one place rather than duplicated into object metadata a client controls.
+    function ownsBusiness(businessId) {
+      return signedIn() && firestore.get(
+        /databases/(default)/documents/businesses/$(businessId)).data.ownerUid == request.auth.uid;
+    }
+
+    function underSizeLimit(megabytes) {
+      return request.resource.size < megabytes * 1024 * 1024;
+    }
+
+    function isImage() {
+      return request.resource.contentType.matches('image/(png|jpeg|jpg|webp|svg\\+xml)');
+    }
+
+    function isAttachment() {
+      return request.resource.contentType.matches('image/.*')
+        || request.resource.contentType == 'application/pdf';
+    }
+
+    // -- logos -------------------------------------------------------------
+    // Logos appear on customer-facing documents and were public in the source.
+    // Authenticated read preserves that usage without leaving them open to the
+    // whole internet; anonymous read is not required by any code path.
+
+    match /businesses/{businessId}/logos/{fileName} {
+      allow read: if signedIn();
+      allow write: if ownsBusiness(businessId) && isImage() && underSizeLimit(5);
+    }
+
+    // -- signatures --------------------------------------------------------
+    // Private. Not readable anonymously, not readable by another tenant.
+
+    match /businesses/{businessId}/signatures/{fileName} {
+      allow read: if ownsBusiness(businessId);
+      allow write: if ownsBusiness(businessId) && isImage() && underSizeLimit(2);
+    }
+
+    // -- trip attachments --------------------------------------------------
+    // Travel documents can include passports and tickets. Owner only.
+
+    match /businesses/{businessId}/trips/{tripId}/attachments/{fileName} {
+      allow read: if ownsBusiness(businessId);
+      allow write: if ownsBusiness(businessId) && isAttachment() && underSizeLimit(25);
+    }
+
+    // -- restaurant assets -------------------------------------------------
+
+    match /businesses/{businessId}/restaurant/{fileName} {
+      allow read: if signedIn();
+      allow write: if ownsBusiness(businessId) && isImage() && underSizeLimit(5);
+    }
+
+    // -- default deny ------------------------------------------------------
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

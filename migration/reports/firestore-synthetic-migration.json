@@ -1,0 +1,184 @@
+{
+  "generatedAt": "2026-09-09T20:09:14.554Z",
+  "status": "MIGRATED",
+  "targetMode": "emulator",
+  "targetProject": "mydesck-migration-proof",
+  "transformVersion": 1,
+  "sourceWrites": 0,
+  "existingProductionCustomerChanges": 0,
+  "documentsWritten": 130,
+  "skippedAlreadyVerified": 0,
+  "failures": 0,
+  "warnings": [],
+  "ledger": {
+    "total": 130,
+    "byState": {
+      "PENDING": 0,
+      "COPIED": 130,
+      "VERIFIED": 0,
+      "FAILED": 0,
+      "SKIPPED_WITH_REASON": 0
+    },
+    "byTable": {
+      "user_profiles": {
+        "total": 2,
+        "verified": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "business_profiles": {
+        "total": 2,
+        "verified": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "trips": {
+        "total": 4,
+        "verified": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "trip_payment_plans": {
+        "total": 4,
+        "verified": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "trip_installments": {
+        "total": 6,
+        "verified": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "trip_payment_events": {
+        "total": 4,
+        "verified": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "trip_installment_events": {
+        "total": 4,
+        "verified": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "trip_financial_audit": {
+        "total": 64,
+        "verified": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "trip_activity_log": {
+        "total": 36,
+        "verified": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "trip_write_requests": {
+        "total": 4,
+        "verified": 0,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    "carriedOver": 130
+  },
+  "tables": [
+    {
+      "table": "user_profiles",
+      "collection": "users",
+      "status": "MIGRATED",
+      "sourceRows": 2,
+      "written": 2,
+      "skippedAlreadyVerified": 0
+    },
+    {
+      "table": "business_profiles",
+      "collection": "businesses",
+      "status": "MIGRATED",
+      "sourceRows": 2,
+      "written": 2,
+      "skippedAlreadyVerified": 0
+    },
+    {
+      "table": "business_settings",
+      "collection": "businessSettings",
+      "status": "MIGRATED",
+      "sourceRows": 0,
+      "written": 0,
+      "skippedAlreadyVerified": 0
+    },
+    {
+      "table": "trips",
+      "collection": "trips",
+      "status": "MIGRATED",
+      "sourceRows": 4,
+      "written": 4,
+      "skippedAlreadyVerified": 0
+    },
+    {
+      "table": "trip_payment_plans",
+      "collection": "tripPaymentPlans",
+      "status": "MIGRATED",
+      "sourceRows": 4,
+      "written": 4,
+      "skippedAlreadyVerified": 0
+    },
+    {
+      "table": "trip_installments",
+      "collection": "tripInstallments",
+      "status": "MIGRATED",
+      "sourceRows": 6,
+      "written": 6,
+      "skippedAlreadyVerified": 0
+    },
+    {
+      "table": "trip_payment_events",
+      "collection": "tripPaymentEvents",
+      "status": "MIGRATED",
+      "sourceRows": 4,
+      "written": 4,
+      "skippedAlreadyVerified": 0
+    },
+    {
+      "table": "trip_installment_events",
+      "collection": "tripInstallmentEvents",
+      "status": "MIGRATED",
+      "sourceRows": 4,
+      "written": 4,
+      "skippedAlreadyVerified": 0
+    },
+    {
+      "table": "trip_financial_audit",
+      "collection": "tripFinancialAudit",
+      "status": "MIGRATED",
+      "sourceRows": 64,
+      "written": 64,
+      "skippedAlreadyVerified": 0
+    },
+    {
+      "table": "trip_activity_log",
+      "collection": "tripActivityLog",
+      "status": "MIGRATED",
+      "sourceRows": 36,
+      "written": 36,
+      "skippedAlreadyVerified": 0
+    },
+    {
+      "table": "trip_write_requests",
+      "collection": "idempotency",
+      "status": "MIGRATED",
+      "sourceRows": 4,
+      "written": 4,
+      "skippedAlreadyVerified": 0
+    },
+    {
+      "table": "audit_logs",
+      "collection": "auditEvents",
+      "status": "MIGRATED",
+      "sourceRows": 0,
+      "written": 0,
+      "skippedAlreadyVerified": 0
+    }
+  ]
+}

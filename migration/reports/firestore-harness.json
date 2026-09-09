@@ -1,0 +1,132 @@
+{
+  "generatedAt": "2026-09-09T20:10:49.756Z",
+  "status": "PASS",
+  "environment": {
+    "firestoreEmulator": "127.0.0.1:8080",
+    "storageEmulator": "127.0.0.1:9199",
+    "postgresOracle": "not reachable in this environment"
+  },
+  "steps": [
+    {
+      "label": "source domain inventory (read-only)",
+      "kind": "tool",
+      "outcome": "PASS"
+    },
+    {
+      "label": "RPC and query inventory",
+      "kind": "tool",
+      "outcome": "PASS"
+    },
+    {
+      "label": "data model coverage document",
+      "kind": "tool",
+      "outcome": "PASS"
+    },
+    {
+      "label": "exact decimal / money",
+      "kind": "test",
+      "outcome": "PASS"
+    },
+    {
+      "label": "canonical serialisation",
+      "kind": "test",
+      "outcome": "PASS"
+    },
+    {
+      "label": "source to Firestore transform",
+      "kind": "test",
+      "outcome": "PASS"
+    },
+    {
+      "label": "migration ledger",
+      "kind": "test",
+      "outcome": "PASS"
+    },
+    {
+      "label": "table map coverage",
+      "kind": "test",
+      "outcome": "PASS"
+    },
+    {
+      "label": "synthetic payload export (read-only)",
+      "kind": "tool",
+      "outcome": "PASS"
+    },
+    {
+      "label": "Security Rules matrix + negative controls",
+      "kind": "test",
+      "outcome": "PASS"
+    },
+    {
+      "label": "save_trip_transaction (idempotency, concurrency)",
+      "kind": "test",
+      "outcome": "PASS"
+    },
+    {
+      "label": "migrate synthetic slice",
+      "kind": "tool",
+      "outcome": "PASS"
+    },
+    {
+      "label": "reconcile (levels 1-6 + event order)",
+      "kind": "tool",
+      "outcome": "PASS"
+    },
+    {
+      "label": "negative controls on the reconciler",
+      "kind": "tool",
+      "outcome": "PASS"
+    },
+    {
+      "label": "storage manifest + checksum gate",
+      "kind": "tool",
+      "outcome": "PASS"
+    }
+  ],
+  "totals": {
+    "steps": 15,
+    "passed": 15,
+    "failed": 0,
+    "notRun": 0,
+    "assertionCallSites": 355,
+    "testSuites": 7
+  },
+  "outcomes": {
+    "documentsMigrated": 130,
+    "migrationFailures": 0,
+    "reconciliation": "RECONCILED",
+    "reconciliationLevels": {
+      "1_source_coverage": "PASS",
+      "2_target_coverage": "PASS",
+      "3_entity_parity": "PASS",
+      "4_relationship_parity": "PASS",
+      "5_financial_parity": "PASS",
+      "6_user_parity": "PASS",
+      "7_file_parity": "SEE migration/reports/firestore-storage-manifest.json",
+      "8_behavioural_parity": "NOT RUN — application layer, later milestone"
+    },
+    "reconciliationTotals": {
+      "sourceRowsChecked": 130,
+      "targetDocuments": 130,
+      "missingDocuments": 0,
+      "unexpectedDocuments": 0,
+      "hashMismatches": 0,
+      "referencesChecked": 136,
+      "orphans": 0,
+      "financialValuesChecked": 72,
+      "reverseConversionMismatches": 0,
+      "unexplainedFinancialDelta": 0,
+      "eventsChecked": 108,
+      "eventOrderingMismatches": 0,
+      "uidMismatches": 0,
+      "ownershipMismatches": 0,
+      "crossTenantDocuments": 0
+    },
+    "negativeControls": {
+      "status": "ALL_CORRUPTIONS_DETECTED",
+      "controls": 16,
+      "detected": 16,
+      "failures": 0
+    }
+  }
+}

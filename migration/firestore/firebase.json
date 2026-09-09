@@ -1,0 +1,27 @@
+{
+  "//": [
+    "Emulator configuration for the Firestore migration proof.",
+    "",
+    "The emulator is used because the migration service account has no Firestore",
+    "IAM in the real mydesckpro project, and because a throwaway emulator is the",
+    "right place to exercise rules and negative controls against production",
+    "collection names without any production data existing to endanger.",
+    "",
+    "An emulator PASS is not authorization to cut over. It proves the rules and",
+    "the transforms; the real project still has to be proven separately."
+  ],
+  "firestore": {
+    "rules": "rules/firestore.rules",
+    "indexes": "rules/firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "rules/storage.rules"
+  },
+  "emulators": {
+    "auth": { "port": 9099 },
+    "firestore": { "port": 8080 },
+    "storage": { "port": 9199 },
+    "ui": { "enabled": false },
+    "singleProjectMode": true
+  }
+}
