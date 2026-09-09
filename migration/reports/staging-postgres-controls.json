@@ -1,0 +1,47 @@
+{
+  "generatedAt": "2026-09-09T16:15:49.048Z",
+  "scope": "local temporary fixtures, not migrated Supabase data",
+  "status": "PASS",
+  "tests": [
+    {
+      "name": "native type roundtrip, historical timestamps, and generated balance match",
+      "status": "PASS"
+    },
+    {
+      "name": "import trigger restored",
+      "status": "PASS"
+    },
+    {
+      "name": "detects missing row",
+      "status": "PASS"
+    },
+    {
+      "name": "detects changed UUID/FK",
+      "status": "PASS"
+    },
+    {
+      "name": "detects NUMERIC delta of 0.00000001",
+      "status": "PASS"
+    },
+    {
+      "name": "detects event reordering",
+      "status": "PASS"
+    },
+    {
+      "name": "detects timestamp microsecond",
+      "status": "PASS"
+    },
+    {
+      "name": "repaired identity sequence permits a real insert without collision",
+      "status": "PASS"
+    },
+    {
+      "name": "clean restored rows and zero orphans with FK constraints checked",
+      "status": "PASS"
+    }
+  ],
+  "sourceProductionWrites": 0,
+  "temporaryTablesRemoved": true,
+  "assertions": 9,
+  "failures": 0
+}

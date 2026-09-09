@@ -1,0 +1,155 @@
+{
+  "generatedAt": "2026-09-09T16:19:44.890Z",
+  "decision": "BLOCKED — FIX BEFORE FULL STAGING MIGRATION",
+  "startingCommit": "287f4cc2a10c02911ee15c6a35639b3b24e91c2a",
+  "recoveryTag": "recovery/pre-staging-data-migration-20260909-160436",
+  "implementationCommit": "48e07472e22d5db5e75c77f86b83c47b3931cd07",
+  "source": {
+    "project": "pubugnfaqqukelvgckdr",
+    "identityRowsReadAcrossAttempts": 6,
+    "distinctSyntheticIdentities": 3,
+    "businessPayloadRowsRead": 0,
+    "realCustomerRowsExported": 0,
+    "successfulWrites": 0,
+    "rejectedWriteControls": 3,
+    "failedInventoryAttempts": 1,
+    "failedInventoryReason": "SELECT allowlist rejected privilege-name literal after reading 3 identities; corrected with a bound parameter",
+    "directSyntheticRows": "0",
+    "readOnly": {
+      "start": {
+        "read_only": "on",
+        "isolation": "repeatable read"
+      },
+      "rejectedWriteSqlState": "25006",
+      "successfulWrites": 0,
+      "end": {
+        "read_only": "on",
+        "isolation": "repeatable read"
+      },
+      "transactionOutcome": "ROLLBACK"
+    },
+    "independentCatalogReadOnly": {
+      "start": {
+        "read_only": "on",
+        "isolation": "repeatable read"
+      },
+      "rejectedWriteSqlState": "25006",
+      "successfulWrites": 0,
+      "end": {
+        "read_only": "on",
+        "isolation": "repeatable read"
+      },
+      "transactionOutcome": "ROLLBACK"
+    },
+    "globalAuditLogsInspected": false
+  },
+  "cloud": {
+    "project": "mydesckpro",
+    "operatorInstanceListExitCode": 0,
+    "instances": [],
+    "migrationServiceAccountInstanceList": "PERMISSION_DENIED",
+    "createdResources": 0,
+    "database": null,
+    "version": null,
+    "encoding": null,
+    "productionAppConnected": false
+  },
+  "importedProductionSliceRows": 0,
+  "reconciliation": {
+    "status": "BLOCKED",
+    "tablesChecked": 0,
+    "countMismatches": null,
+    "pkMismatches": null,
+    "contentMismatches": null,
+    "financialDelta": null,
+    "sourceOrphanBaseline": null,
+    "migrationOrphans": null,
+    "eventOrderingMismatches": null
+  },
+  "entities": [
+    {
+      "user": "f1191f99-f242-4eb5-a1a6-d45c5222c7a8",
+      "sourceIdentityRows": 1,
+      "targetIdentityRows": null,
+      "businessRows": null,
+      "tripRows": null,
+      "financialTotals": null,
+      "eventCounts": null,
+      "documentCounts": null,
+      "attachmentReferenceCounts": null,
+      "status": "BLOCKED"
+    },
+    {
+      "user": "14819359-83d9-4401-9795-fcb42176e59b",
+      "sourceIdentityRows": 1,
+      "targetIdentityRows": null,
+      "businessRows": null,
+      "tripRows": null,
+      "financialTotals": null,
+      "eventCounts": null,
+      "documentCounts": null,
+      "attachmentReferenceCounts": null,
+      "status": "BLOCKED"
+    },
+    {
+      "user": "608befcc-7ed8-4466-80f4-d99a45c5e4c5",
+      "sourceIdentityRows": 1,
+      "targetIdentityRows": null,
+      "businessRows": null,
+      "tripRows": null,
+      "financialTotals": null,
+      "eventCounts": null,
+      "documentCounts": null,
+      "attachmentReferenceCounts": null,
+      "status": "BLOCKED"
+    }
+  ],
+  "schemaDifference": {
+    "sourcePublicTables": 77,
+    "targetPublicTables": 75,
+    "sourceOnly": [
+      "whatsapp_contact_consents",
+      "whatsapp_message_log",
+      "whatsapp_reminders",
+      "whatsapp_server_templates",
+      "whatsapp_webhook_events"
+    ],
+    "targetOnly": [
+      "payouts",
+      "transactions",
+      "wallets"
+    ]
+  },
+  "localValidation": {
+    "status": "PASS",
+    "migrations": 93,
+    "migrationFailures": 0,
+    "baselineAssertions": 120,
+    "offlineAssertions": 19,
+    "postgresFixtureAssertions": 9,
+    "totalAssertions": 148,
+    "failures": 0,
+    "realCloudImportTested": false,
+    "temporaryFixturesRemoved": true
+  },
+  "storage": {
+    "status": "BLOCKED",
+    "copied": 0,
+    "checksumMismatches": null
+  },
+  "production": {
+    "customerWrites": 0,
+    "authChanges": 0,
+    "applicationConfigChanges": 0,
+    "cutover": false
+  },
+  "unrelatedStagedPathsPreserved": 213,
+  "blockers": [
+    "PREEXISTING_STAGED_GITHUB_TOKEN_CANDIDATE",
+    "EMPTY_SYNTHETIC_BUSINESS_SLICE",
+    "SOURCE_REPLAY_SCHEMA_DRIFT",
+    "NO_CLOUD_SQL_TARGET",
+    "MIGRATION_ACCOUNT_CLOUD_SQL_ACCESS_DENIED",
+    "LIVE_FK_CLOSURE_EXPORT_IMPORT_AND_RECONCILIATION_NOT_EXECUTED"
+  ]
+}

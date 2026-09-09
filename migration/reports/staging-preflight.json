@@ -1,0 +1,32 @@
+{
+  "generatedAt": "2026-09-09T16:19:44.447Z",
+  "startingCommit": "287f4cc2a10c02911ee15c6a35639b3b24e91c2a",
+  "currentCommit": "48e07472e22d5db5e75c77f86b83c47b3931cd07",
+  "branch": "codex/firebase-migration",
+  "recoveryTag": "recovery/pre-staging-data-migration-20260909-160436",
+  "recoveryTagCommit": "287f4cc2a10c02911ee15c6a35639b3b24e91c2a",
+  "previousRecoveryTags": [
+    "recovery/full-firebase-migration-20260909-073409",
+    "recovery/phase1-20260908-115621",
+    "recovery/pre-firebase-migration-20260909-070229"
+  ],
+  "unrelatedStagedPaths": 213,
+  "currentStagedPaths": 213,
+  "baselineIndexEntriesPreserved": true,
+  "unrelatedWorktreeBytesPreserved": true,
+  "localEnvironmentIgnored": true,
+  "secretScan": {
+    "scope": "current index; pattern scan, not a guarantee about history or unknown secret formats",
+    "pathsScanned": 948,
+    "findings": [
+      {
+        "path": "migration/tools/staging-preflight.mjs",
+        "rule": "private_key"
+      },
+      {
+        "path": "src/commit_log.txt",
+        "rule": "github_token"
+      }
+    ]
+  }
+}
