@@ -25,9 +25,9 @@ try {
     report.foreignKeys = (await select(`SELECT c.conname AS name,
       ns.nspname AS child_schema, rel.relname AS child_table,
       pn.nspname AS parent_schema, pr.relname AS parent_table,
-      ARRAY(SELECT a.attname FROM unnest(c.conkey) WITH ORDINALITY k(id,ord)
+      ARRAY(SELECT a.attname::text FROM unnest(c.conkey) WITH ORDINALITY k(id,ord)
         JOIN pg_attribute a ON a.attrelid=c.conrelid AND a.attnum=k.id ORDER BY k.ord) AS child_columns,
-      ARRAY(SELECT a.attname FROM unnest(c.confkey) WITH ORDINALITY k(id,ord)
+      ARRAY(SELECT a.attname::text FROM unnest(c.confkey) WITH ORDINALITY k(id,ord)
         JOIN pg_attribute a ON a.attrelid=c.confrelid AND a.attnum=k.id ORDER BY k.ord) AS parent_columns
       FROM pg_constraint c JOIN pg_class rel ON rel.oid=c.conrelid
       JOIN pg_namespace ns ON ns.oid=rel.relnamespace

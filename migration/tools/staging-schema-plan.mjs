@@ -12,7 +12,7 @@ try {
       WHERE n.nspname='public' AND c.relkind IN ('r','p') AND a.attnum>0 AND NOT a.attisdropped
       ORDER BY c.relname,a.attnum`)).rows;
     report.primaryKeys=(await select(`SELECT rel.relname AS table_name,
-      ARRAY(SELECT a.attname FROM unnest(c.conkey) WITH ORDINALITY k(id,ord)
+      ARRAY(SELECT a.attname::text FROM unnest(c.conkey) WITH ORDINALITY k(id,ord)
         JOIN pg_attribute a ON a.attrelid=c.conrelid AND a.attnum=k.id ORDER BY k.ord) AS columns
       FROM pg_constraint c JOIN pg_class rel ON rel.oid=c.conrelid JOIN pg_namespace n ON n.oid=rel.relnamespace
       WHERE n.nspname='public' AND c.contype='p' ORDER BY rel.relname`)).rows;
