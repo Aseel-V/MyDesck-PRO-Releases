@@ -20,7 +20,8 @@
  *     --source "postgres://...supabase..." --out migration/reports/auth-dry-run.json
  */
 
-import { writeFileSync, mkdirSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
+import { writeReport } from './lib/write-report.mjs';
 import pg from 'pg';
 import {
   classifyAccount, buildImportRecord, chunk, redact, toLedgerRows, summarize,
@@ -173,8 +174,7 @@ report.verdict =
   : !report.uidPreservation.allPreserved ? 'NO_GO: at least one UID would not be preserved'
   : 'GO: ready for staging import once the bcrypt round-trip is proved';
 
-mkdirSync('migration/reports', { recursive: true });
-writeFileSync(OUT, JSON.stringify(report, null, 2) + '\n', 'utf8');
+writeReport(OUT, JSON.stringify(report, null, 2) + '\n');
 
 // Ledger SQL, so the mapping is inserted from a reviewed artifact rather than
 // generated inline at import time.
@@ -196,7 +196,7 @@ const ledgerSql =
     'firebase_uid=EXCLUDED.firebase_uid, auth_class=EXCLUDED.auth_class, updated_at=now();'
   ).join('\n') + '\n';
 const ledgerPath = OUT.replace(/\.json$/, '') + '.ledger.sql';
-writeFileSync(ledgerPath, ledgerSql, 'utf8');
+writeReport(ledgerPath, ledgerSql);
 
 console.log('');
 console.log(`  source accounts ........... ${report.totals.sourceAccounts}`);

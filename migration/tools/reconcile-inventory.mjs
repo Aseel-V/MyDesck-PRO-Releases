@@ -10,7 +10,8 @@
  *   PGURL=postgres://... node migration/tools/reconcile-inventory.mjs
  */
 
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
+import { writeReport } from './lib/write-report.mjs';
 import pg from 'pg';
 
 const PGURL = process.env.PGURL || process.env.DATABASE_URL;
@@ -60,8 +61,6 @@ const staticPolicyStmts = inv.database.policyCount;
 // A DROP+CREATE pair, or a later migration replacing an earlier policy of the
 // same name, counts twice statically but once live.
 const policyNames = [];
-for (const f of inv.database ? [] : []) void f; // placeholder, see below
-const allSql = readFileSync('migration/reports/portability.json', 'utf8'); // not used for text
 const migrationText = (await import('node:fs')).readdirSync('supabase/migrations')
   .filter((f) => f.endsWith('.sql')).sort()
   .map((f) => readFileSync(`supabase/migrations/${f}`, 'utf8')).join('\n');
@@ -119,8 +118,7 @@ const report = {
   rls: { tablesWithRls: rlsOn, tablesWithForceRls: forceOn, totalTables: liveTables.length },
 };
 
-mkdirSync('migration/reports', { recursive: true });
-writeFileSync('migration/reports/inventory-reconciliation.json', JSON.stringify(report, null, 2) + '\n');
+writeReport('migration/reports/inventory-reconciliation.json', JSON.stringify(report, null, 2) + '\n');
 await c.end();
 
 const line = (k, v) => console.log(`  ${k.padEnd(38)} ${v}`);

@@ -17,7 +17,8 @@
  *   node migration/tools/classify-migrations.mjs
  */
 
-import { readFileSync, readdirSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
+import { writeReport } from './lib/write-report.mjs';
 import { join } from 'node:path';
 
 const DIR = 'supabase/migrations';
@@ -154,8 +155,7 @@ const report = {
   migrations: results,
 };
 
-mkdirSync('migration/reports', { recursive: true });
-writeFileSync(OUT, JSON.stringify(report, null, 2) + '\n', 'utf8');
+writeReport(OUT, JSON.stringify(report, null, 2) + '\n');
 
 console.log(`[portability] ${files.length} migrations classified -> ${OUT}\n`);
 for (const [k, v] of Object.entries(summary)) {

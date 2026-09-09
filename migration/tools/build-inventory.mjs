@@ -13,7 +13,8 @@
  *   node migration/tools/build-inventory.mjs --check   # non-zero exit on drift
  */
 
-import { readFileSync, readdirSync, writeFileSync, mkdirSync, existsSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
+import { writeReport } from './lib/write-report.mjs';
 import { join, relative, basename } from 'node:path';
 
 const ROOT = process.cwd();
@@ -272,7 +273,6 @@ const inventory = {
   edgeFunctions,
 };
 
-mkdirSync('migration/reports', { recursive: true });
 
 // --check compares against the committed inventory, ignoring the timestamp.
 if (process.argv.includes('--check')) {
@@ -291,7 +291,7 @@ if (process.argv.includes('--check')) {
   process.exit(0);
 }
 
-writeFileSync(OUT, JSON.stringify(inventory, null, 2) + '\n', 'utf8');
+writeReport(OUT, JSON.stringify(inventory, null, 2) + '\n');
 
 const d = inventory.database;
 const c = inventory.client;

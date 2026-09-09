@@ -19,7 +19,8 @@
  *   PGURL=postgres://... node migration/tools/replay-migrations.mjs
  */
 
-import { readFileSync, readdirSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
+import { writeReport } from './lib/write-report.mjs';
 import { join } from 'node:path';
 import pg from 'pg';
 
@@ -197,8 +198,7 @@ const report = {
   migrations: results,
 };
 
-mkdirSync('migration/reports', { recursive: true });
-writeFileSync(OUT, JSON.stringify(report, null, 2) + '\n', 'utf8');
+writeReport(OUT, JSON.stringify(report, null, 2) + '\n');
 await admin.end();
 
 console.log('\n' + '='.repeat(64));
