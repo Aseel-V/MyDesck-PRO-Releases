@@ -35,6 +35,7 @@ const STEPS = [
   ['auth classify (offline)', 'migration/tests/auth-classify.test.mjs'],
   ['firebase safety guards', 'migration/tests/firebase-safety.test.mjs'],
   ['keyless Admin guards (offline)', 'migration/tests/keyless-admin.test.mjs'],
+  ['Firebase transaction boundary (offline)', 'migration/tests/firebase-transaction.test.mjs'],
   ['restore replayed schema', 'migration/tools/replay-migrations.mjs'],
 ];
 

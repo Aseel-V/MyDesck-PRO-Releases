@@ -1,19 +1,56 @@
 {
-  "generatedAt": "2026-09-09T09:34:00.491Z",
+  "generatedAt": "2026-09-09T09:58:18.791Z",
+  "runId": "20260909095818-c31fdc9e-a352-4043-addd-658872cac5f4",
   "firebaseProject": "mydesckpro",
   "supabaseProject": "pubugnfaqqukelvgckdr",
   "namespace": "migration-test--",
   "deletionApproved": false,
-  "syntheticFirebaseUsers": 0,
-  "syntheticSupabaseUsers": 0,
-  "count": 0,
-  "identities": [],
-  "entryFields": [
-    "uid",
-    "email",
-    "source",
-    "created_at",
-    "cleanup_status"
+  "count": 6,
+  "syntheticFirebaseUsers": 3,
+  "syntheticSupabaseUsers": 3,
+  "identities": [
+    {
+      "uid": "f1191f99-f242-4eb5-a1a6-d45c5222c7a8",
+      "email": "migration-test--20260909095818-c31fdc9e-a352-4043-addd-658872cac5f4-a@example.test",
+      "source": "Supabase",
+      "created_at": "2026-09-09T09:58:29.409951Z",
+      "cleanup_status": "retained_pending_approval"
+    },
+    {
+      "uid": "f1191f99-f242-4eb5-a1a6-d45c5222c7a8",
+      "email": "migration-test--20260909095818-c31fdc9e-a352-4043-addd-658872cac5f4-a@example.test",
+      "source": "Firebase",
+      "created_at": "2026-09-09T09:58:31.000Z",
+      "cleanup_status": "retained_pending_approval"
+    },
+    {
+      "uid": "14819359-83d9-4401-9795-fcb42176e59b",
+      "email": "migration-test--20260909095818-c31fdc9e-a352-4043-addd-658872cac5f4-b@example.test",
+      "source": "Supabase",
+      "created_at": "2026-09-09T09:58:35.279209Z",
+      "cleanup_status": "retained_pending_approval"
+    },
+    {
+      "uid": "14819359-83d9-4401-9795-fcb42176e59b",
+      "email": "migration-test--20260909095818-c31fdc9e-a352-4043-addd-658872cac5f4-b@example.test",
+      "source": "Firebase",
+      "created_at": "2026-09-09T09:58:37.000Z",
+      "cleanup_status": "retained_pending_approval"
+    },
+    {
+      "uid": "608befcc-7ed8-4466-80f4-d99a45c5e4c5",
+      "email": "migration-test--20260909095818-c31fdc9e-a352-4043-addd-658872cac5f4-c@example.test",
+      "source": "Supabase",
+      "created_at": "2026-09-09T09:58:40.658026Z",
+      "cleanup_status": "retained_pending_approval"
+    },
+    {
+      "uid": "608befcc-7ed8-4466-80f4-d99a45c5e4c5",
+      "email": "migration-test--20260909095818-c31fdc9e-a352-4043-addd-658872cac5f4-c@example.test",
+      "source": "Firebase",
+      "created_at": "2026-09-09T09:58:42.000Z",
+      "cleanup_status": "retained_pending_approval"
+    }
   ],
-  "note": "No identities created: source PostgreSQL credentials are missing. No deletion is authorized."
+  "note": "Only identities created by this run; no automatic deletion. Pending outcomes require review."
 }

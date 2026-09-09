@@ -32,6 +32,18 @@ which is ignored by the existing `*.local` rule. The Supabase PostgreSQL URL
 is separate from `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. The latter
 two API settings cannot retrieve bcrypt hashes from `auth.users`.
 
+If the pooler presents Supabase's private CA chain, set `SUPABASE_CA_FILE`
+in that same ignored file to the downloaded Supabase root certificate. This
+run uses `migration/secrets/supabase-ca.crt`. Certificate and hostname
+verification remain enabled (`rejectUnauthorized: true`); no project SSL
+settings are changed. The download URL is published in
+[Supabase Studio's certificate configuration](https://github.com/supabase/supabase/blob/master/apps/studio/hooks/custom-content/custom-content.json).
+The verified Supabase Root 2021 CA SHA-256 fingerprint is
+`80:70:25:AD:50:D4:ED:21:9D:2C:9C:7D:29:9C:00:4F:82:4E:B0:0C:F7:F6:5A:FE:F6:07:D0:7B:72:E6:CA:FA`.
+The prerequisite report includes only allowlisted diagnostic codes, so a TLS
+failure can be distinguished from PostgreSQL `28P01` (password rejected)
+without recording a credential or raw server error message.
+
 ```powershell
 node migration/tools/verify-auth-proof-inputs.mjs
 ```
@@ -54,6 +66,22 @@ Never set `PGURL` to the Supabase source or any production database. The new
 Admin guard tests are offline and do not replace the outstanding real GoTrue
 round trip or the real-token PostgreSQL proof. A passing local harness alone
 must never produce a migration-ready decision.
+
+The authorized live proof is run only with the explicit flag below. It creates
+exactly three new `migration-test--` accounts, imports their original bcrypt
+hashes and UIDs, tests password round trips, then runs the token-derived local
+PostgreSQL checks. It preserves the cleanup manifest with deletion disabled:
+
+```powershell
+$env:GOOGLE_CLOUD_PROJECT = 'mydesckpro'
+$env:FIREBASE_PROJECT_ID = 'mydesckpro'
+node migration/tools/real-gotrue-firebase-proof.mjs --execute-synthetic
+```
+
+`PGURL` must remain the disposable local PostgreSQL 17 target. `SUPABASE_DB_URL`
+is used only for the exact synthetic source rows and GoTrue signup path. The
+proof never queries production customers, lists Firebase users, or deletes an
+identity.
 
 No cleanup deletion is authorized. The manifest must keep
 `deletionApproved = false`; every future synthetic identity must record its

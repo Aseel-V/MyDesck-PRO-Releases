@@ -1,0 +1,223 @@
+{
+  "generatedAt": "2026-09-09T09:58:18.791Z",
+  "runId": "20260909095818-c31fdc9e-a352-4043-addd-658872cac5f4",
+  "status": "PASS",
+  "existingCustomerChanges": 0,
+  "productionDataMigration": "NOT STARTED",
+  "sourceHashRowsRead": 3,
+  "accounts": [
+    {
+      "uid": "f1191f99-f242-4eb5-a1a6-d45c5222c7a8",
+      "email": "migration-test--20260909095818-c31fdc9e-a352-4043-addd-658872cac5f4-a@example.test",
+      "source_created_at": "2026-09-09T09:58:29.409951Z",
+      "emailVerified": true,
+      "imported": true
+    },
+    {
+      "uid": "14819359-83d9-4401-9795-fcb42176e59b",
+      "email": "migration-test--20260909095818-c31fdc9e-a352-4043-addd-658872cac5f4-b@example.test",
+      "source_created_at": "2026-09-09T09:58:35.279209Z",
+      "emailVerified": true,
+      "imported": true
+    },
+    {
+      "uid": "608befcc-7ed8-4466-80f4-d99a45c5e4c5",
+      "email": "migration-test--20260909095818-c31fdc9e-a352-4043-addd-658872cac5f4-c@example.test",
+      "source_created_at": "2026-09-09T09:58:40.658026Z",
+      "emailVerified": true,
+      "imported": true
+    }
+  ],
+  "tests": [
+    {
+      "name": "NC_malformed_bcrypt_before_import",
+      "status": "PASS"
+    },
+    {
+      "name": "same_password_a",
+      "status": "PASS"
+    },
+    {
+      "name": "wrong_password_a",
+      "status": "PASS"
+    },
+    {
+      "name": "token_and_uid_a",
+      "status": "PASS"
+    },
+    {
+      "name": "same_password_b",
+      "status": "PASS"
+    },
+    {
+      "name": "wrong_password_b",
+      "status": "PASS"
+    },
+    {
+      "name": "token_and_uid_b",
+      "status": "PASS"
+    },
+    {
+      "name": "same_password_c",
+      "status": "PASS"
+    },
+    {
+      "name": "wrong_password_c",
+      "status": "PASS"
+    },
+    {
+      "name": "token_and_uid_c",
+      "status": "PASS"
+    },
+    {
+      "name": "duplicate_uid_guard",
+      "status": "PASS"
+    },
+    {
+      "name": "duplicate_email_guard",
+      "status": "PASS"
+    },
+    {
+      "name": "account_conservation",
+      "status": "PASS"
+    },
+    {
+      "name": "identity_A",
+      "status": "PASS"
+    },
+    {
+      "name": "identity_B",
+      "status": "PASS"
+    },
+    {
+      "name": "A_own_select",
+      "status": "PASS"
+    },
+    {
+      "name": "A_cross_select",
+      "status": "PASS"
+    },
+    {
+      "name": "A_cross_update",
+      "status": "PASS"
+    },
+    {
+      "name": "A_cross_delete",
+      "status": "PASS"
+    },
+    {
+      "name": "A_cross_insert",
+      "status": "PASS"
+    },
+    {
+      "name": "B_cross_select",
+      "status": "PASS"
+    },
+    {
+      "name": "anonymous_private_data",
+      "status": "PASS"
+    },
+    {
+      "name": "invalid_token_before_database",
+      "status": "PASS"
+    },
+    {
+      "name": "invalid_signature_before_database",
+      "status": "PASS"
+    },
+    {
+      "name": "expired_real_token_controlled_clock",
+      "status": "PASS"
+    },
+    {
+      "name": "rpc_uses_auth_uid",
+      "status": "PASS"
+    },
+    {
+      "name": "rpc_own_tenant",
+      "status": "PASS"
+    },
+    {
+      "name": "rpc_cross_tenant",
+      "status": "PASS"
+    },
+    {
+      "name": "self_admin",
+      "status": "PASS"
+    },
+    {
+      "name": "self_unsuspend",
+      "status": "PASS"
+    },
+    {
+      "name": "set_role_service_role",
+      "status": "PASS"
+    },
+    {
+      "name": "set_role_supabase_admin",
+      "status": "PASS"
+    },
+    {
+      "name": "client_cannot_call_binder",
+      "status": "PASS"
+    },
+    {
+      "name": "runtime_posture",
+      "status": "PASS"
+    },
+    {
+      "name": "pool_A_B_anonymous_same_connection",
+      "status": "PASS"
+    },
+    {
+      "name": "pool_25_alternations",
+      "status": "PASS"
+    },
+    {
+      "name": "pool_40_interleaved",
+      "status": "PASS"
+    },
+    {
+      "name": "NC_session_global_detected",
+      "status": "PASS"
+    },
+    {
+      "name": "NC_bypassrls_detected",
+      "status": "PASS"
+    },
+    {
+      "name": "NC_open_policy_detected",
+      "status": "PASS"
+    },
+    {
+      "name": "NC_wrong_uid_detected",
+      "status": "PASS"
+    },
+    {
+      "name": "secure_state_and_financial_values_restored",
+      "status": "PASS"
+    }
+  ],
+  "blockers": [],
+  "hashStorage": "memory only",
+  "passwordStorage": "memory only",
+  "tokenStorage": "memory only",
+  "credentials": {
+    "firebaseProject": "mydesckpro",
+    "isProductionProject": true,
+    "adcPresent": true,
+    "credentialType": "impersonated_service_account",
+    "impersonatedServiceAccount": "mydesck-migration@mydesckpro.iam.gserviceaccount.com",
+    "staticPrivateKeyUsed": false
+  },
+  "firebaseAdminReadOnly": "PASS",
+  "localTarget": {
+    "version": 170010,
+    "encoding": "UTF8",
+    "address": "127.0.0.1/32",
+    "binder": true
+  },
+  "finishedAt": "2026-09-09T09:58:59.489Z",
+  "passed": 42,
+  "failed": 0
+}

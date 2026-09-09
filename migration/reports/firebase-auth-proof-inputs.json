@@ -1,19 +1,18 @@
 {
-  "generatedAt": "2026-09-09T09:33:01.609Z",
-  "status": "BLOCKED",
+  "generatedAt": "2026-09-09T09:48:49.474Z",
+  "status": "INPUTS_READY_ONLY",
   "sourceProject": "pubugnfaqqukelvgckdr",
   "firebaseProject": "mydesckpro",
   "inputs": {
-    "SUPABASE_DB_URL": false,
+    "SUPABASE_DB_URL": true,
     "VITE_SUPABASE_URL": true,
     "VITE_SUPABASE_ANON_KEY": true,
-    "FIREBASE_WEB_API_KEY": true
+    "FIREBASE_WEB_API_KEY": true,
+    "SUPABASE_CA_FILE": true
   },
-  "sourceDatabaseReadOnlyConnection": "NOT RUN",
+  "sourceDatabaseReadOnlyConnection": "PASS",
   "customerRowsRead": 0,
   "customerHashesRead": 0,
   "usersCreated": 0,
-  "blockers": [
-    "MISSING_SUPABASE_DB_URL"
-  ]
+  "blockers": []
 }

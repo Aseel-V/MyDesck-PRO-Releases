@@ -5,7 +5,8 @@ import { parseEnv } from 'node:util';
 import pg from 'pg';
 import { writeReport } from './lib/write-report.mjs';
 
-const allowed = ['SUPABASE_DB_URL', 'VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY', 'FIREBASE_WEB_API_KEY'];
+const required = ['SUPABASE_DB_URL', 'VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY', 'FIREBASE_WEB_API_KEY'];
+const allowed = [...required, 'SUPABASE_CA_FILE'];
 const config = {};
 for (const file of ['.env', '.env.local', 'migration/.env.local']) {
   if (!existsSync(file)) continue;
@@ -20,7 +21,7 @@ const report = { generatedAt: new Date().toISOString(), status: 'NOT RUN',
   sourceDatabaseReadOnlyConnection: 'NOT RUN', customerRowsRead: 0,
   customerHashesRead: 0, usersCreated: 0, blockers: [],
 };
-for (const key of allowed) if (!config[key]) report.blockers.push(`MISSING_${key}`);
+for (const key of required) if (!config[key]) report.blockers.push(`MISSING_${key}`);
 
 let client;
 try {
@@ -37,7 +38,9 @@ try {
     // Explicit fields prevent URL sslmode/no-verify options overriding TLS.
     client = new pg.Client({ host: url.hostname, port: Number(url.port || 5432),
       user, password: decodeURIComponent(url.password), database: url.pathname.slice(1) || 'postgres',
-      ssl: { rejectUnauthorized: true }, connectionTimeoutMillis: 10000,
+      ssl: { rejectUnauthorized: true,
+        ...(config.SUPABASE_CA_FILE ? { ca: readFileSync(config.SUPABASE_CA_FILE, 'utf8') } : {}),
+      }, connectionTimeoutMillis: 10000,
       statement_timeout: 10000, application_name: 'migration-test--auth-proof-preflight',
     });
     await client.connect();
@@ -55,6 +58,9 @@ try {
 } catch (error) {
   const safeCodes = ['SOURCE_API_PROJECT_MISMATCH', 'SOURCE_DATABASE_PROJECT_MISMATCH', 'SOURCE_SYNTHETIC_HASH_READ_PERMISSION_MISSING'];
   report.blockers.push(safeCodes.includes(error.message) ? error.message : 'SOURCE_DATABASE_CONNECTION_FAILED');
+  const diagnosticCodes = ['SELF_SIGNED_CERT_IN_CHAIN', 'UNABLE_TO_VERIFY_LEAF_SIGNATURE',
+    'ERR_TLS_CERT_ALTNAME_INVALID', '28P01', 'ENOTFOUND', 'ECONNREFUSED', 'ETIMEDOUT'];
+  report.errorCode = diagnosticCodes.includes(error.code) ? error.code : 'SOURCE_CHECK_FAILED';
   report.sourceDatabaseReadOnlyConnection = 'FAIL';
 } finally {
   if (client) await client.end().catch(() => {});
