@@ -1,0 +1,884 @@
+{
+  "generatedAt": "2026-09-09T08:31:42.720Z",
+  "target": {
+    "serverVersion": "17.10"
+  },
+  "stubInstalled": true,
+  "totalMigrations": 93,
+  "summary": {
+    "PASS": 26,
+    "PASS_WITH_SHIM": 60,
+    "SKIP_WITH_JUSTIFICATION": 7,
+    "FAIL": 0
+  },
+  "liveSchema": {
+    "publicTables": 75,
+    "fksToAuthUsers": 79,
+    "rlsPolicies": 113,
+    "publicFunctions": 169,
+    "securityDefinerFunctions": 75,
+    "securityDefinerWithoutSearchPath": [
+      "add_repair_service_transaction",
+      "calculate_document_hash",
+      "cancel_fiscal_document",
+      "close_shift_with_z_report",
+      "create_default_restaurant_staff",
+      "deduct_from_batch_fefo",
+      "deduct_ingredients_on_order",
+      "get_expiring_items",
+      "get_fefo_batch",
+      "get_next_document_number",
+      "get_next_z_number",
+      "get_previous_document_hash",
+      "get_previous_z_hash",
+      "is_restaurant_manager",
+      "open_cash_shift",
+      "trg_auto_ledger_debt",
+      "trg_update_vehicle_on_completion",
+      "update_shift_totals",
+      "validate_staff_pin"
+    ],
+    "tablesWithRlsEnabled": 75,
+    "tablesWithForceRls": 0,
+    "tablesWithoutRls": []
+  },
+  "migrations": [
+    {
+      "order": 1,
+      "file": "20240101000010_analytics.sql",
+      "staticClassification": "PORTABLE",
+      "outcome": "PASS",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 2,
+      "file": "20251118170905_create_business_profiles_and_settings.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 3,
+      "file": "20251118171613_create_trips_table.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 4,
+      "file": "20251118173508_create_user_profiles.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 5,
+      "file": "20251118175038_create_business_profiles_and_settings.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 6,
+      "file": "20251118175044_create_trips_table.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 7,
+      "file": "20251118175050_create_user_profiles.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 8,
+      "file": "20251118175056_add_admin_policies.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 9,
+      "file": "20251130123500_payment_system.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 10,
+      "file": "20251221123500_add_currency_to_trips.sql",
+      "staticClassification": "PORTABLE",
+      "outcome": "PASS",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 11,
+      "file": "20251221130000_add_attachments_to_trips.sql",
+      "staticClassification": "PORTABLE",
+      "outcome": "PASS",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 12,
+      "file": "20251221131000_add_payment_date.sql",
+      "staticClassification": "PORTABLE",
+      "outcome": "PASS",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 13,
+      "file": "20251221140000_fix_historical_rates.sql",
+      "staticClassification": "PORTABLE",
+      "outcome": "PASS",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 14,
+      "file": "20251222111000_add_business_registration.sql",
+      "staticClassification": "PORTABLE",
+      "outcome": "PASS",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 15,
+      "file": "20251222112000_add_signature_url.sql",
+      "staticClassification": "PORTABLE",
+      "outcome": "PASS",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 16,
+      "file": "20251222122600_add_room_type_and_board_basis.sql",
+      "staticClassification": "PORTABLE",
+      "outcome": "PASS",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 17,
+      "file": "20251222133800_create_logos_bucket.sql",
+      "staticClassification": "BLOCKED",
+      "outcome": "SKIP_WITH_JUSTIFICATION",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 18,
+      "file": "20251223100000_get_trips_by_year.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 19,
+      "file": "20251223103000_get_trip_years.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 20,
+      "file": "20251223110000_fix_trips_schema_and_rpc.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 21,
+      "file": "20251223123000_get_yearly_stats_overview.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 22,
+      "file": "20260110000010_add_business_id_to_user_profiles.sql",
+      "staticClassification": "PORTABLE",
+      "outcome": "PASS",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 23,
+      "file": "20260110000020_add_trip_original_currency.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 24,
+      "file": "20260111000000_restaurant_schema_baseline.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 25,
+      "file": "20260111000010_restaurant_v2_baseline.sql",
+      "staticClassification": "BLOCKED",
+      "outcome": "SKIP_WITH_JUSTIFICATION",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 26,
+      "file": "20260111000020_restaurant_production_baseline.sql",
+      "staticClassification": "BLOCKED",
+      "outcome": "SKIP_WITH_JUSTIFICATION",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 27,
+      "file": "20260112000010_fix_authorize_action.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 28,
+      "file": "20260112000020_fix_staff_active.sql",
+      "staticClassification": "PORTABLE",
+      "outcome": "PASS",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 29,
+      "file": "20260112000030_restaurant_currency.sql",
+      "staticClassification": "PORTABLE",
+      "outcome": "PASS",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 30,
+      "file": "20260112000040_restaurant_security.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 31,
+      "file": "20260112000050_restaurant_storage.sql",
+      "staticClassification": "BLOCKED",
+      "outcome": "SKIP_WITH_JUSTIFICATION",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 32,
+      "file": "20260115000000_restaurant_security_hardening_baseline.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 33,
+      "file": "20260116000010_reservation_validation.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 34,
+      "file": "20260116000020_secure_pin_hashing.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 35,
+      "file": "20260117000010_restaurant_inventory.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 36,
+      "file": "20260117180000_room_type_to_jsonb.sql",
+      "staticClassification": "PORTABLE",
+      "outcome": "PASS",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 37,
+      "file": "20260117200000_market_mode_settings.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 38,
+      "file": "20260117201000_add_barcode_to_menu_items.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 39,
+      "file": "20260119000010_add_cost_tracking.sql",
+      "staticClassification": "PORTABLE",
+      "outcome": "PASS",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 40,
+      "file": "20260119000020_complete_fiscal_migration.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 41,
+      "file": "20260119000030_fiscal_documents.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 42,
+      "file": "20260119000040_inventory_extensions.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 43,
+      "file": "20260119000050_z_reports.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 44,
+      "file": "20260122000010_fix_menu_items.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 45,
+      "file": "20260122000020_market_products.sql",
+      "staticClassification": "PORTABLE",
+      "outcome": "PASS",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 46,
+      "file": "20260122000030_market_transactions.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 47,
+      "file": "20260123000010_fix_market_permissions.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 48,
+      "file": "20260124000010_add_staff_auth.sql",
+      "staticClassification": "PORTABLE",
+      "outcome": "PASS",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 49,
+      "file": "20260124000020_add_ticket_item_timestamps.sql",
+      "staticClassification": "PORTABLE",
+      "outcome": "PASS",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 50,
+      "file": "20260124000030_fix_kds_ticket_creation.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 51,
+      "file": "20260124000040_fix_storage_policies.sql",
+      "staticClassification": "BLOCKED",
+      "outcome": "SKIP_WITH_JUSTIFICATION",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 52,
+      "file": "20260125000010_add_cost_price_to_menu_items.sql",
+      "staticClassification": "PORTABLE",
+      "outcome": "PASS",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 53,
+      "file": "20260131000010_car_parts.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 54,
+      "file": "20260201000010_auto_repair_complete.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 55,
+      "file": "20260201000020_fix_default_staff_trigger.sql",
+      "staticClassification": "PORTABLE",
+      "outcome": "PASS",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 56,
+      "file": "20260201000030_update_business_type_enum.sql",
+      "staticClassification": "PORTABLE",
+      "outcome": "PASS",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 57,
+      "file": "20260203000010_add_repair_service_rpc.sql",
+      "staticClassification": "PORTABLE",
+      "outcome": "PASS",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 58,
+      "file": "20260203000020_drop_legacy_inventory_trigger.sql",
+      "staticClassification": "PORTABLE",
+      "outcome": "PASS",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 59,
+      "file": "20260203000030_fix_repair_items_fk.sql",
+      "staticClassification": "PORTABLE",
+      "outcome": "PASS",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 60,
+      "file": "20260203000040_fix_repair_items_policy.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 61,
+      "file": "20260429120000_trip_security_and_contract_fixes.sql",
+      "staticClassification": "BLOCKED",
+      "outcome": "SKIP_WITH_JUSTIFICATION",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 62,
+      "file": "20260716000010_add_trip_payment_method_fields.sql",
+      "staticClassification": "PORTABLE",
+      "outcome": "PASS",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 63,
+      "file": "20260716000020_add_trip_service_type_and_hotel_name.sql",
+      "staticClassification": "PORTABLE",
+      "outcome": "PASS",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 64,
+      "file": "20260716000030_add_trip_ticket_fields.sql",
+      "staticClassification": "PORTABLE",
+      "outcome": "PASS",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 65,
+      "file": "20260718120000_refresh_trips_by_year_contract.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 66,
+      "file": "20260719090000_travel_mode_production_hardening.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 67,
+      "file": "20260719130000_refresh_travel_rpc_contracts.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 68,
+      "file": "20260719140000_travel_mode_product_features.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 69,
+      "file": "20260719150000_fix_trip_detail_and_write_runtime.sql",
+      "staticClassification": "SUPABASE_SPECIFIC",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 70,
+      "file": "20260719160000_travel_mode_smart_workflows.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 71,
+      "file": "20260719170000_trip_card_payment_summary.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 72,
+      "file": "20260719180000_travel_whatsapp_composer.sql",
+      "staticClassification": "PORTABLE",
+      "outcome": "PASS",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 73,
+      "file": "20260720200000_fix_trip_encrypt_travelers_contract.sql",
+      "staticClassification": "SUPABASE_SPECIFIC",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 74,
+      "file": "20260720210000_fix_save_trip_generated_columns.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 75,
+      "file": "20260721090000_fix_save_trip_conflict_constraint.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 76,
+      "file": "20260721100000_fix_trip_payment_plan_source_check.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 77,
+      "file": "20260721110000_fix_save_trip_currency_contract.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 78,
+      "file": "20260721120000_add_trip_sorting_support.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 79,
+      "file": "20260723090000_reconcile_restaurant_security_baseline.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 80,
+      "file": "20260723100000_fix_trip_payment_save_contract.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 81,
+      "file": "20260723110000_sync_trip_payment_summaries.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 82,
+      "file": "20260723140000_travel_analytics_rpc.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 83,
+      "file": "20260729110000_canonical_trip_payment_contract.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 84,
+      "file": "20260729120000_fix_cash_payment_plan_compatibility.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 85,
+      "file": "20260729130000_trip_card_payment_clarity.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 86,
+      "file": "20260813120000_automatic_visa_schedule_collection.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 87,
+      "file": "20260908090000_protect_platform_privileges.sql",
+      "staticClassification": "SUPABASE_SPECIFIC",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 88,
+      "file": "20260908091000_quarantine_whatsapp_credentials.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 89,
+      "file": "20260908092000_private_business_signatures.sql",
+      "staticClassification": "BLOCKED",
+      "outcome": "SKIP_WITH_JUSTIFICATION",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 90,
+      "file": "20260908093000_contain_restaurant_order_access.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 91,
+      "file": "20260908094000_reconcile_account_status_contract.sql",
+      "staticClassification": "SUPABASE_SPECIFIC",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 92,
+      "file": "20260908095000_close_legacy_analytics_rpc_leaks.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    },
+    {
+      "order": 93,
+      "file": "20260908120000_reconcile_application_rpcs.sql",
+      "staticClassification": "PORTABLE_WITH_SHIM",
+      "outcome": "PASS_WITH_SHIM",
+      "sqlState": null,
+      "error": null,
+      "possiblyCascading": false
+    }
+  ]
+}

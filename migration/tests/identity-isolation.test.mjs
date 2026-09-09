@@ -19,6 +19,16 @@
  *   PGURL=postgres://user:pass@host:5432/db node migration/tests/identity-isolation.test.mjs
  *
  * Point it at a DISPOSABLE database. It creates and drops its own fixtures.
+ *
+ * DESTRUCTIVE — RUN LAST.
+ * The setup below issues `DROP SCHEMA auth CASCADE` to install a clean
+ * compatibility layer. That cascade also removes every RLS policy whose
+ * expression calls auth.uid(), which on a replayed MyDesck schema is most of
+ * them. Run this before security-posture.test.mjs and that suite will test a
+ * schema whose tenant policies have quietly vanished.
+ *
+ * Use migration/tools/run-harness.mjs, which enforces the correct order and
+ * replays the schema afterwards.
  */
 
 import { readFileSync } from 'node:fs';
@@ -98,16 +108,20 @@ try {
     [UID_A, UID_B]
   );
 
-  // A login role shaped like the Cloud Run service account: can log in, holds
-  // service_role so it may call bind_identity, and must NOT have BYPASSRLS.
+  // A login role shaped like the Cloud Run service account.
+  //
+  // Provisioned through auth.grant_runtime_access(), which deliberately does NOT
+  // grant service_role membership: SET ROLE is checked against the session
+  // user's memberships, so a connection that has switched down to
+  // `authenticated` could otherwise climb back up to service_role and inherit
+  // BYPASSRLS. security-posture.test.mjs proves that specific escape is closed.
   await admin.query(`
     DO $$ BEGIN
       IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='mydesck_app') THEN
-        CREATE ROLE mydesck_app LOGIN PASSWORD 'app_test_pw' NOBYPASSRLS;
+        CREATE ROLE mydesck_app LOGIN PASSWORD 'app_test_pw' NOBYPASSRLS NOSUPERUSER;
       END IF;
     END $$`);
-  await admin.query('GRANT service_role, authenticated, anon TO mydesck_app');
-  await admin.query('GRANT USAGE ON SCHEMA auth, public TO mydesck_app');
+  await admin.query('SELECT auth.grant_runtime_access($1)', ['mydesck_app']);
 
   const appUrl = new URL(PGURL);
   appUrl.username = 'mydesck_app';

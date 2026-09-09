@@ -196,6 +196,59 @@ GRANT EXECUTE ON FUNCTION auth.uid()  TO anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION auth.role() TO anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION auth.jwt()  TO anon, authenticated, service_role;
 
+-- ---------------------------------------------------------------- runtime role
+--
+-- HOW THE RUNTIME LOGIN ROLE MUST BE PROVISIONED.
+--
+-- The obvious setup is wrong and was caught by
+-- migration/tests/security-posture.test.mjs:
+--
+--     GRANT service_role, authenticated, anon TO mydesck_runtime;   -- DO NOT
+--
+-- SET ROLE is authorised against the SESSION user's memberships, not the
+-- currently active role. So a connection that has switched down to
+-- `authenticated` can still issue `SET ROLE service_role` and climb back up —
+-- and service_role holds BYPASSRLS. Anything able to run arbitrary SQL on that
+-- connection escapes every tenant policy in the database.
+--
+-- The runtime role therefore gets membership in `authenticated` and `anon`
+-- only, plus a direct EXECUTE grant on bind_identity. It can establish an
+-- identity; it can never become service_role.
+--
+-- Call once per environment, as a superuser, after creating the login role:
+--     SELECT auth.grant_runtime_access('mydesck_runtime');
+
+CREATE OR REPLACE FUNCTION auth.grant_runtime_access(p_role text)
+RETURNS void
+LANGUAGE plpgsql
+SET search_path = pg_catalog, auth
+AS $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = p_role) THEN
+    RAISE EXCEPTION 'role % does not exist', p_role USING ERRCODE = '42704';
+  END IF;
+
+  -- Refuse to configure a role that could bypass RLS regardless of grants.
+  IF EXISTS (SELECT 1 FROM pg_catalog.pg_roles
+              WHERE rolname = p_role AND (rolbypassrls OR rolsuper)) THEN
+    RAISE EXCEPTION 'runtime role % must not hold BYPASSRLS or SUPERUSER', p_role
+      USING ERRCODE = '42501';
+  END IF;
+
+  EXECUTE format('REVOKE service_role FROM %I', p_role);
+  EXECUTE format('GRANT authenticated, anon TO %I', p_role);
+  EXECUTE format('GRANT USAGE ON SCHEMA auth, public TO %I', p_role);
+  EXECUTE format(
+    'GRANT EXECUTE ON FUNCTION auth.bind_identity(uuid, text, jsonb) TO %I', p_role);
+END
+$$;
+
+-- Recreating schema public (as a restore or a rebuild does) drops the default
+-- PUBLIC grants, after which `authenticated` cannot resolve any table and every
+-- query fails with "permission denied for schema public". Restore them here so
+-- a rebuilt target behaves like the original.
+GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+
 -- ---------------------------------------------------------------- self-checks
 --
 -- Assertions that must hold for the security model to mean anything. Run by
@@ -208,9 +261,11 @@ SET search_path = pg_catalog, auth
 AS $$
 BEGIN
   RETURN QUERY
+  -- pg_proc.provolatile is type "char"; the cast is required or the || is
+  -- ambiguous ("operator is not unique: unknown || char").
   SELECT 'auth.uid is STABLE not IMMUTABLE'::text,
          p.provolatile = 's',
-         'provolatile=' || p.provolatile
+         'provolatile=' || p.provolatile::text
   FROM pg_catalog.pg_proc p
   JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
   WHERE n.nspname = 'auth' AND p.proname = 'uid';
