@@ -41,6 +41,8 @@ const STEPS = [
     script: 'migration/firestore/tests/ledger.test.mjs' },
   { label: 'table map coverage', kind: 'test',
     script: 'migration/firestore/tests/table-map.test.mjs' },
+  { label: 'target selection safety', kind: 'test',
+    script: 'migration/firestore/tests/firestore-target.test.mjs' },
 
   { label: 'synthetic payload export (read-only)', kind: 'tool',
     script: 'migration/firestore/tools/export-synthetic-payloads.mjs', needs: 'source' },

@@ -291,12 +291,14 @@ deleted or scheduled for deletion.
 
 ## Harness
 
-- Firestore harness: **15 / 15 steps PASS, 0 failed, 0 not run**
-- Assertion call sites in passing suites: **355** across 7 suites
-  (exact-decimal 65, canonical 40, transform 59, ledger, table-map, rules 60,
-  save-trip-transaction 56)
-- Test cases: 19 + 19 + 17 + 10 + 14 + 22 + 17 = **118**
+- Firestore harness: **16 / 16 steps PASS, 0 failed, 0 not run**
+- Assertion call sites in passing suites: **368** across 8 suites
+  (exact-decimal, canonical, transform, ledger, table-map, target-safety,
+  rules, save-trip-transaction)
+- Test cases: 19 + 19 + 17 + 10 + 14 + 7 + 22 + 17 = **125**
 - Reconciliation: RECONCILED · Negative controls: 16/16 · Failures: **0**
+- Restartability proven: after a full run, a rerun without `--force` writes 0
+  documents, skips 130/130 already-verified rows, and still reconciles.
 
 **PostgreSQL harness (the previous 148-assertion suite): NOT RUN.** Its
 PostgreSQL steps require a local oracle at `127.0.0.1:55433`. No PostgreSQL
@@ -385,6 +387,11 @@ Recorded because each was a real way data could have changed silently:
    failure; a resumed run skips 130/130 verified rows and stays reconciled.
 7. **Forbidden ledger fields silently dropped** rather than rejected — a caller
    passing `passwordHash` would have believed it was stored.
+8. **The real-project guard double-prefixed an already-prefixed collection**,
+   sending it to `migration_test_v1_migration_test_v1_trips`. Still inside the
+   proof namespace, so never a production-safety hole, but it would have split
+   proof data across two collections. Found by writing the test for the safety
+   claim rather than asserting it in this report.
 
 ## DECISION
 

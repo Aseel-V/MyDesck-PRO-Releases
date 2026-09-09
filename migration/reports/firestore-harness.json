@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-09T20:10:49.756Z",
+  "generatedAt": "2026-09-09T20:16:01.775Z",
   "status": "PASS",
   "environment": {
     "firestoreEmulator": "127.0.0.1:8080",
@@ -48,6 +48,11 @@
       "outcome": "PASS"
     },
     {
+      "label": "target selection safety",
+      "kind": "test",
+      "outcome": "PASS"
+    },
+    {
       "label": "synthetic payload export (read-only)",
       "kind": "tool",
       "outcome": "PASS"
@@ -84,12 +89,12 @@
     }
   ],
   "totals": {
-    "steps": 15,
-    "passed": 15,
+    "steps": 16,
+    "passed": 16,
     "failed": 0,
     "notRun": 0,
-    "assertionCallSites": 355,
-    "testSuites": 7
+    "assertionCallSites": 368,
+    "testSuites": 8
   },
   "outcomes": {
     "documentsMigrated": 130,
