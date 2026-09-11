@@ -22,7 +22,7 @@
  * real one. Nothing below relies on a rule to stop it.
  */
 
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHash } from 'node:crypto';
 import { SaveTripInput, validate } from '../lib/schemas.mjs';
 import { splitExactMoney, moneyFromMinorUnits, sumExactMoney } from '../lib/exact-decimal.mjs';
 import { SCHEMA_VERSION, TRANSFORM_VERSION, MINOR_UNIT_SCALE } from '../lib/entities.mjs';
@@ -119,17 +119,12 @@ export async function saveTripTransaction(deps, call) {
   const { clientRequestId, trip, paymentPlan } = input;
 
   if (trip.endDate < trip.startDate) fail('INVALID_TRIP_DATES');
-  if (paymentPlan) validatePaymentPlan(paymentPlan, trip.salePriceMinor);
+  if (paymentPlan) { validatePaymentPlan(paymentPlan, trip.salePriceMinor); if (paymentPlan.currency && paymentPlan.currency !== trip.currency) fail('CURRENCY_MISMATCH'); }
 
   const idempotencyId = `${uid}__${clientRequestId}`;
   const idempotencyRef = db.collection('idempotency').doc(idempotencyId);
 
-  // A fast path outside the transaction is only an optimisation; the
-  // authoritative check happens inside, where it is serialised.
-  const preexisting = await idempotencyRef.get();
-  if (preexisting.exists) {
-    return { ...preexisting.data().responsePayload, idempotentReplay: true };
-  }
+  const fingerprint = createHash('sha256').update(JSON.stringify(input)).digest('hex');
 
   // Ids are UUIDs, matching the source primary keys and the migrated corpus, so
   // the target does not end up with two id vocabularies. They are generated
@@ -145,16 +140,23 @@ export async function saveTripTransaction(deps, call) {
   const result = await db.runTransaction(async (tx) => {
     // ---- reads (all reads must precede all writes in a transaction) ----
     const idempotencySnap = await tx.get(idempotencyRef);
-    if (idempotencySnap.exists) {
-      return { replay: idempotencySnap.data().responsePayload };
-    }
+
 
     const userSnap = await tx.get(db.collection('users').doc(uid));
     if (!userSnap.exists) fail('USER_PROFILE_NOT_FOUND');
     const user = userSnap.data();
     if (user.isSuspended === true) fail('USER_SUSPENDED');
-    const businessId = user.businessId ?? null;
+    const businesses = await tx.get(db.collection('businesses').where('ownerUid', '==', uid).limit(2));
+    if (businesses.size !== 1) fail('BUSINESS_NOT_UNIQUE');
+    const business = businesses.docs[0];
+    if (business.data().isSuspended === true) fail('BUSINESS_SUSPENDED');
+    const businessId = business.id;
+    if (user.businessId && user.businessId !== businessId) fail('BUSINESS_ACCESS_DENIED');
 
+    if (idempotencySnap.exists) {
+      if (idempotencySnap.data().fingerprint !== fingerprint) fail('IDEMPOTENCY_CONFLICT');
+      return { replay: idempotencySnap.data().responsePayload };
+    }
     const tripSnap = await tx.get(tripRef);
     const isEdit = Boolean(trip.id);
     if (isEdit) {
@@ -300,6 +302,10 @@ export async function saveTripTransaction(deps, call) {
 
     // The authoritative summary, computed from the plan and the installments
     // that will exist after this transaction — never from the caller's numbers.
+    if (!paymentPlan && existingPlanDoc) {
+      planData = existingPlanDoc.data();
+      if (planData.currency !== trip.currency || planData.cardTotalMinor + planData.cashTotalMinor !== trip.salePriceMinor) fail('PAYMENT_PLAN_REQUIRED_FOR_FINANCIAL_EDIT');
+    }
     const projectedInstallments = planData
       ? [
         ...existingInstallments
@@ -322,6 +328,7 @@ export async function saveTripTransaction(deps, call) {
     const profit = money(trip.salePriceMinor - trip.wholesaleCostMinor);
 
     const tripData = {
+      revision: (tripSnap.data()?.revision ?? 0) + 1,
       schemaVersion: SCHEMA_VERSION,
       transformVersion: TRANSFORM_VERSION,
       id: tripId,
@@ -376,7 +383,7 @@ export async function saveTripTransaction(deps, call) {
 
     // Activity is written in the same transaction, so a committed trip always
     // has its record and a rolled-back one leaves none.
-    const activityRef = db.collection('tripActivityLog').doc();
+    const activityRef = db.collection('tripActivityLog').doc(`${uid}__${clientRequestId}`);
     tx.set(activityRef, {
       schemaVersion: SCHEMA_VERSION,
       transformVersion: TRANSFORM_VERSION,
@@ -397,6 +404,13 @@ export async function saveTripTransaction(deps, call) {
     // arrives before this commits will contend on the same document and lose,
     // which is what makes the guarantee hold under concurrency rather than
     // only under sequential replay.
+    tx.create(db.collection('tripFinancialAudit').doc(idempotencyId), {
+      schemaVersion: SCHEMA_VERSION, transformVersion: TRANSFORM_VERSION,
+      userId: uid, ownerUid: uid, businessId, tripId, actorUserId: uid,
+      sequence: now.getTime(), changedField: 'trip', operationType: isEdit ? 'UPDATE' : 'INSERT',
+      before: tripSnap.exists ? { salePrice: tripSnap.data().salePrice, wholesaleCost: tripSnap.data().wholesaleCost } : null,
+      after: { salePrice, wholesaleCost }, isDeleted: false, createdAt: timestamp, createdAtMicros: micros,
+    });
     tx.create(idempotencyRef, {
       schemaVersion: SCHEMA_VERSION,
       transformVersion: TRANSFORM_VERSION,
@@ -404,6 +418,7 @@ export async function saveTripTransaction(deps, call) {
       ownerUid: uid,
       clientRequestId,
       tripId,
+      fingerprint,
       responsePayload: response,
       isDeleted: false,
       createdAt: timestamp,

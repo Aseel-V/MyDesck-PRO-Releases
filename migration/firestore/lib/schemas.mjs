@@ -45,7 +45,7 @@ export const ExactAmount = z.object({
 { message: 'units must equal unitsText', path: ['units'] });
 
 /** A BIGINT minor-unit amount, bounded by int64 as the source column is. */
-export const MinorUnits = z.number().int()
+export const MinorUnits = z.number().int().safe()
   .refine((v) => BigInt(v) <= INT64_MAX && BigInt(v) >= INT64_MIN,
     'minor units must fit in a signed 64-bit integer');
 

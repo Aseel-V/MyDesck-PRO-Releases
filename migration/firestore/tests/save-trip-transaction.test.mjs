@@ -57,7 +57,7 @@ const tripInput = (overrides = {}) => ({
 /** Remove everything this suite created, so reconciliation stays meaningful. */
 async function cleanup() {
   for (const collection of ['trips', 'tripPaymentPlans', 'tripInstallments',
-    'tripActivityLog', 'idempotency', 'users', 'businesses']) {
+    'tripActivityLog', 'tripFinancialAudit', 'idempotency', 'users', 'businesses']) {
     const snapshot = await target.db.collection(collection)
       .where('ownerUid', 'in', [UID_A, UID_B]).get().catch(() => ({ docs: [] }));
     await Promise.all(snapshot.docs.map((d) => d.ref.delete()));
