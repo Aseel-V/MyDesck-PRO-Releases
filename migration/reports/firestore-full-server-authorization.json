@@ -1,0 +1,27 @@
+{
+  "generatedAt": "2026-09-11T12:08:00Z",
+  "status": "PASS_FOR_IMPLEMENTED_TRAVEL_OPERATIONS",
+  "operationsReviewed": [
+    "saveTripTransaction",
+    "recordPayment",
+    "recordInstallmentPayment",
+    "setTripState",
+    "travelAnalytics"
+  ],
+  "controls": {
+    "callerAuthenticated": "PASS",
+    "userAndBusinessMembershipResolvedServerSide": "PASS",
+    "businessOwnershipValidated": "PASS",
+    "inputValidated": "PASS",
+    "ownerAndBusinessFieldsDerivedServerSide": "PASS",
+    "financialFieldsDerivedServerSide": "PASS",
+    "idempotencyLedgerAtomic": "PASS",
+    "adminSdkRulesBypassExplicitlyCompensated": "PASS"
+  },
+  "evidence": {
+    "transactionSuites": "37/37 PASS",
+    "rulesSuite": "25/25 PASS",
+    "fullCorpusSecurityMatrix": "50/50 PASS"
+  },
+  "scope": "Implemented Firebase-native travel operations only; remaining Supabase privileged operations are cutover blockers until ported and reviewed."
+}

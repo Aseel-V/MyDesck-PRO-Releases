@@ -46,7 +46,7 @@ test('every PostgreSQL type in the live schema maps, and nothing else does', () 
   const expected = {
     uuid: 'string', text: 'string', 'character varying': 'string',
     smallint: 'int', integer: 'int', bigint: 'int',
-    numeric: 'decimal', boolean: 'bool',
+    numeric: 'decimal', 'double precision': 'decimal', real: 'decimal', boolean: 'bool',
     'timestamp with time zone': 'timestamp', 'timestamp without time zone': 'timestamp',
     date: 'date', json: 'json', jsonb: 'json', bytea: 'bytes', ARRAY: 'array',
     'USER-DEFINED': 'string',

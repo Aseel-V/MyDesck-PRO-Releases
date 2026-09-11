@@ -64,6 +64,23 @@ test('a rerun converges instead of duplicating', () => {
   resumed.record({ sourceTable: 'trips', sourcePk: ['id-3'], targetPath: 'trips/id-3',
     state: LEDGER_STATES.VERIFIED });
   assert.equal(resumed.summary().total, 5);
+  assert.equal(resumed.get('trips', ['id-3']).attemptCount, 1,
+    're-verifying a completed row does not count as another copy attempt');
+});
+
+test('attempt counts and timestamps survive a failed retry', () => {
+  const path = scratch();
+  const ledger = new MigrationLedger(path, { transformVersion: '1.full.1' });
+  ledger.record({ sourceTable: 'trips', sourcePk: ['x'], targetPath: 'trips/x',
+    state: LEDGER_STATES.PENDING });
+  ledger.record({ sourceTable: 'trips', sourcePk: ['x'], targetPath: 'trips/x',
+    state: LEDGER_STATES.FAILED, error: 'temporary failure' });
+  const verified = ledger.record({ sourceTable: 'trips', sourcePk: ['x'], targetPath: 'trips/x',
+    state: LEDGER_STATES.VERIFIED });
+  assert.equal(verified.attemptCount, 2);
+  assert.ok(verified.firstAttemptAt);
+  assert.ok(verified.lastAttemptAt);
+  assert.ok(verified.verifiedAt);
 });
 
 test('a ledger from a different transform version is discarded, not trusted', () => {

@@ -1,0 +1,27 @@
+{
+  "generatedAt": "2026-09-11T11:32:15.460Z",
+  "status": "PASS",
+  "representativeBusinesses": 6,
+  "representativeUsers": 6,
+  "checks": 50,
+  "passed": 50,
+  "failed": 0,
+  "categories": {
+    "owner_business_read": "PASS",
+    "anonymous_business_read": "PASS",
+    "cross_tenant_business_read": "PASS",
+    "owner_trip_read": "PASS",
+    "anonymous_trip_read": "PASS",
+    "cross_tenant_trip_read": "PASS",
+    "tenant_constrained_trip_query": "PASS",
+    "global_trip_query_denied": "PASS",
+    "ownership_mutation_denied": "PASS",
+    "business_id_mutation_denied": "PASS",
+    "financial_summary_overwrite_denied": "PASS",
+    "role_escalation_denied": "PASS",
+    "self_unsuspend_denied": "PASS",
+    "payment_plan_client_write_denied": "PASS",
+    "audit_mutation_denied": "PASS",
+    "server_only_collection_denied": "PASS"
+  }
+}

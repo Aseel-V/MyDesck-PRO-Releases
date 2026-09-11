@@ -1,0 +1,81 @@
+{
+  "generatedAt": "2026-09-11T12:05:45.007Z",
+  "status": "ALL_CORRUPTIONS_DETECTED",
+  "controls": 18,
+  "detected": 18,
+  "failures": 0,
+  "results": [
+    {
+      "name": "missing_document",
+      "caught": true
+    },
+    {
+      "name": "unexpected_extra_document",
+      "caught": true
+    },
+    {
+      "name": "wrong_uid",
+      "caught": true
+    },
+    {
+      "name": "wrong_business_id",
+      "caught": true
+    },
+    {
+      "name": "broken_parent_reference",
+      "caught": true
+    },
+    {
+      "name": "cross_tenant_reference",
+      "caught": true
+    },
+    {
+      "name": "financial_unit_changed_by_one",
+      "caught": true
+    },
+    {
+      "name": "wrong_numeric_scale",
+      "caught": true
+    },
+    {
+      "name": "large_numeric_overflow",
+      "caught": true
+    },
+    {
+      "name": "currency_changed",
+      "caught": true
+    },
+    {
+      "name": "event_removed",
+      "caught": true
+    },
+    {
+      "name": "event_reordered",
+      "caught": true
+    },
+    {
+      "name": "timestamp_changed",
+      "caught": true
+    },
+    {
+      "name": "sql_null_to_json_null",
+      "caught": true
+    },
+    {
+      "name": "json_numeric_literal_changed",
+      "caught": true
+    },
+    {
+      "name": "derived_financial_summary_changed",
+      "caught": true
+    },
+    {
+      "name": "audit_event_modified",
+      "caught": true
+    },
+    {
+      "name": "migration_ledger_state_corrupted",
+      "caught": true
+    }
+  ]
+}

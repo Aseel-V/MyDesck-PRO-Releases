@@ -82,17 +82,26 @@ export class MigrationLedger {
     if (state === LEDGER_STATES.SKIPPED_WITH_REASON && !error) {
       throw new Error('SKIPPED_REQUIRES_REASON');
     }
+    const key = MigrationLedger.key(sourceTable, sourcePk);
+    const previous = this.entries.get(key);
+    const now = new Date().toISOString();
+    const startsAttempt = !previous || state === LEDGER_STATES.PENDING
+      || (previous.state === LEDGER_STATES.FAILED && state !== LEDGER_STATES.FAILED);
     const entry = {
-      key: MigrationLedger.key(sourceTable, sourcePk),
+      key,
       sourceTable,
       sourcePk,
       targetPath,
       transformVersion: this.transformVersion,
-      sourceHash: sourceHash ?? null,
-      targetHash: targetHash ?? null,
+      sourceHash: sourceHash ?? previous?.sourceHash ?? null,
+      targetHash: targetHash ?? previous?.targetHash ?? null,
       state,
       error: error ?? null,
-      migratedAt: new Date().toISOString(),
+      attemptCount: (previous?.attemptCount ?? 0) + (startsAttempt ? 1 : 0),
+      firstAttemptAt: previous?.firstAttemptAt ?? now,
+      lastAttemptAt: now,
+      migratedAt: now,
+      ...(state === LEDGER_STATES.VERIFIED ? { verifiedAt: now } : {}),
     };
     for (const key of Object.keys(entry)) {
       if (FORBIDDEN_KEYS.test(key)) throw new Error(`LEDGER_FORBIDDEN_FIELD: ${key}`);

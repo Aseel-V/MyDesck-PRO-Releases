@@ -1,0 +1,98 @@
+{
+  "generatedAt": "2026-09-11T12:02:51.311Z",
+  "status": "PASS",
+  "suites": [
+    {
+      "label": "exact decimal and money",
+      "file": "migration/firestore/tests/exact-decimal.test.mjs",
+      "outcome": "PASS",
+      "tests": 19
+    },
+    {
+      "label": "canonical serialization",
+      "file": "migration/firestore/tests/canonical.test.mjs",
+      "outcome": "PASS",
+      "tests": 19
+    },
+    {
+      "label": "source transform",
+      "file": "migration/firestore/tests/transform.test.mjs",
+      "outcome": "PASS",
+      "tests": 17
+    },
+    {
+      "label": "migration ledger",
+      "file": "migration/firestore/tests/ledger.test.mjs",
+      "outcome": "PASS",
+      "tests": 11
+    },
+    {
+      "label": "77-table mapping",
+      "file": "migration/firestore/tests/table-map.test.mjs",
+      "outcome": "PASS",
+      "tests": 14
+    },
+    {
+      "label": "target safety",
+      "file": "migration/firestore/tests/firestore-target.test.mjs",
+      "outcome": "PASS",
+      "tests": 7
+    },
+    {
+      "label": "full rehearsal core",
+      "file": "migration/firestore/tests/full-rehearsal-core.test.mjs",
+      "outcome": "PASS",
+      "tests": 6
+    },
+    {
+      "label": "application boundary",
+      "file": "scripts/test-firestore-app-layer.mjs",
+      "outcome": "PASS",
+      "tests": 0
+    },
+    {
+      "label": "Firestore Rules",
+      "file": "migration/firestore/tests/rules.test.mjs",
+      "outcome": "PASS",
+      "tests": 25
+    },
+    {
+      "label": "trip transaction",
+      "file": "migration/firestore/tests/save-trip-transaction.test.mjs",
+      "outcome": "PASS",
+      "tests": 17
+    },
+    {
+      "label": "payment/installment/state transactions",
+      "file": "migration/firestore/tests/travel-operations.test.mjs",
+      "outcome": "PASS",
+      "tests": 20
+    },
+    {
+      "label": "Storage Rules",
+      "file": "migration/firestore/tests/storage-rules.test.mjs",
+      "outcome": "PASS",
+      "tests": 5
+    },
+    {
+      "label": "Auth emulator lifecycle",
+      "file": "migration/firestore/tests/client-auth-emulator.test.mjs",
+      "outcome": "PASS",
+      "tests": 1
+    }
+  ],
+  "totals": {
+    "steps": 14,
+    "passed": 14,
+    "failed": 0,
+    "nodeTestCases": 161,
+    "assertionCallSites": 455,
+    "fullCorpusApplicationAssertions": 1023,
+    "fullCorpusSecurityChecks": 50,
+    "corruptionControls": 18
+  },
+  "evidencePresence": {
+    "expected": 9,
+    "missing": []
+  }
+}

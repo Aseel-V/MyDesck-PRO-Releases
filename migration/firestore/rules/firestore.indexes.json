@@ -40,5 +40,19 @@
       ]
     }
   ],
-  "fieldOverrides": []
+  "fieldOverrides": [
+    { "collectionGroup": "trips", "fieldPath": "travelers", "indexes": [] },
+    { "collectionGroup": "trips", "fieldPath": "itinerary", "indexes": [] },
+    { "collectionGroup": "trips", "fieldPath": "payments", "indexes": [] },
+    { "collectionGroup": "trips", "fieldPath": "attachments", "indexes": [] },
+    { "collectionGroup": "trips", "fieldPath": "notes", "indexes": [] },
+    { "collectionGroup": "trips", "fieldPath": "searchDocument", "indexes": [] },
+    { "collectionGroup": "tripFinancialAudit", "fieldPath": "previousValue", "indexes": [] },
+    { "collectionGroup": "tripFinancialAudit", "fieldPath": "newValue", "indexes": [] },
+    { "collectionGroup": "tripActivityLog", "fieldPath": "metadata", "indexes": [] },
+    { "collectionGroup": "auditEvents", "fieldPath": "details", "indexes": [] },
+    { "collectionGroup": "idempotency", "fieldPath": "responsePayload", "indexes": [] },
+    { "collectionGroup": "storageCleanupQueue", "fieldPath": "attachments", "indexes": [] },
+    { "collectionGroup": "storageCleanupQueue", "fieldPath": "lastError", "indexes": [] }
+  ]
 }

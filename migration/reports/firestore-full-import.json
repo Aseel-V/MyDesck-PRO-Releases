@@ -1,0 +1,1207 @@
+{
+  "generatedAt": "2026-09-11T12:04:38.888Z",
+  "status": "IMPORTED_AND_IMMEDIATELY_VERIFIED",
+  "sourceSnapshot": {
+    "readOnly": true,
+    "isolationLevel": "repeatable read",
+    "consistent": true,
+    "rejectedWriteSqlState": "25006",
+    "sourceWritesCaused": 0,
+    "transactionOutcome": "ROLLBACK"
+  },
+  "target": {
+    "mode": "emulator",
+    "project": "mydesck-migration-proof",
+    "productionWrites": 0,
+    "documents": 1439,
+    "schemaVersion": 1,
+    "transformVersion": "1.full.1"
+  },
+  "sourceCoverage": {
+    "tables": 77,
+    "rows": 1444,
+    "migrated": 1436,
+    "excluded": 8,
+    "unknown": 0,
+    "conservationMatches": true
+  },
+  "auth": {
+    "users": 10,
+    "TRANSPARENT": 7,
+    "REAUTH": 0,
+    "RESET_REQUIRED": 0,
+    "MANUAL_REVIEW": 3,
+    "unknown": 0,
+    "accounted": 10
+  },
+  "sizes": {
+    "SAFE": 1436,
+    "NEAR_LIMIT": 0,
+    "TOO_LARGE": 0,
+    "largest": {
+      "path": "trips/<sha256:03392ba6f447>",
+      "bytes": 4835,
+      "entityType": "trips",
+      "classification": "SAFE"
+    }
+  },
+  "indexes": {
+    "pathological": 0,
+    "nearLimit": 0,
+    "largestEstimate": 109
+  },
+  "credentials": {
+    "excludedFields": [
+      {
+        "table": "restaurant_staff",
+        "fields": [
+          "pin_code",
+          "pin_hash",
+          "password"
+        ],
+        "reason": "REPROVISION_REQUIRED"
+      },
+      {
+        "table": "restaurant_whatsapp_settings",
+        "fields": [
+          "access_token",
+          "webhook_verify_token"
+        ],
+        "reason": "REPROVISION_REQUIRED"
+      }
+    ]
+  },
+  "relationships": {
+    "checked": 3047,
+    "sourceOrphans": 0,
+    "crossTenantReferences": 0
+  },
+  "finance": {
+    "valuesChecked": 1447,
+    "currencies": [
+      "EUR",
+      "ILS",
+      "UNSPECIFIED",
+      "USD"
+    ],
+    "immediateRoundTripMismatches": 0
+  },
+  "migration": {
+    "written": 1439,
+    "reusedVerified": 0,
+    "failed": 0,
+    "skipped": 8,
+    "processed": 1444,
+    "ledger": {
+      "total": 1444,
+      "byState": {
+        "PENDING": 0,
+        "COPIED": 0,
+        "VERIFIED": 1436,
+        "FAILED": 0,
+        "SKIPPED_WITH_REASON": 8
+      },
+      "byTable": {
+        "business_profiles": {
+          "total": 6,
+          "verified": 6,
+          "failed": 0,
+          "skipped": 0
+        },
+        "business_settings": {
+          "total": 1,
+          "verified": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "restaurant_menu_categories": {
+          "total": 17,
+          "verified": 17,
+          "failed": 0,
+          "skipped": 0
+        },
+        "restaurant_staff": {
+          "total": 1,
+          "verified": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "restaurant_tables": {
+          "total": 13,
+          "verified": 13,
+          "failed": 0,
+          "skipped": 0
+        },
+        "travel_payment_feature_rollouts": {
+          "total": 1,
+          "verified": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "trip_activity_log": {
+          "total": 489,
+          "verified": 489,
+          "failed": 0,
+          "skipped": 0
+        },
+        "trip_attachment_cleanup_queue": {
+          "total": 8,
+          "verified": 8,
+          "failed": 0,
+          "skipped": 0
+        },
+        "trip_pdf_rate_limits": {
+          "total": 8,
+          "verified": 0,
+          "failed": 0,
+          "skipped": 8
+        },
+        "trips": {
+          "total": 99,
+          "verified": 99,
+          "failed": 0,
+          "skipped": 0
+        },
+        "whatsapp_server_templates": {
+          "total": 24,
+          "verified": 24,
+          "failed": 0,
+          "skipped": 0
+        },
+        "car_parts": {
+          "total": 1,
+          "verified": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "customer_vehicles": {
+          "total": 1,
+          "verified": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "restaurant_audit_logs": {
+          "total": 4,
+          "verified": 4,
+          "failed": 0,
+          "skipped": 0
+        },
+        "restaurant_menu_items": {
+          "total": 4,
+          "verified": 4,
+          "failed": 0,
+          "skipped": 0
+        },
+        "trip_financial_audit": {
+          "total": 452,
+          "verified": 452,
+          "failed": 0,
+          "skipped": 0
+        },
+        "trip_payment_plans": {
+          "total": 99,
+          "verified": 99,
+          "failed": 0,
+          "skipped": 0
+        },
+        "trip_write_requests": {
+          "total": 108,
+          "verified": 108,
+          "failed": 0,
+          "skipped": 0
+        },
+        "user_profiles": {
+          "total": 7,
+          "verified": 7,
+          "failed": 0,
+          "skipped": 0
+        },
+        "restaurant_orders": {
+          "total": 10,
+          "verified": 10,
+          "failed": 0,
+          "skipped": 0
+        },
+        "trip_installments": {
+          "total": 37,
+          "verified": 37,
+          "failed": 0,
+          "skipped": 0
+        },
+        "trip_payment_events": {
+          "total": 4,
+          "verified": 4,
+          "failed": 0,
+          "skipped": 0
+        },
+        "market_transactions": {
+          "total": 1,
+          "verified": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "restaurant_kitchen_tickets": {
+          "total": 11,
+          "verified": 11,
+          "failed": 0,
+          "skipped": 0
+        },
+        "restaurant_order_items": {
+          "total": 17,
+          "verified": 17,
+          "failed": 0,
+          "skipped": 0
+        },
+        "trip_installment_events": {
+          "total": 4,
+          "verified": 4,
+          "failed": 0,
+          "skipped": 0
+        },
+        "restaurant_ticket_items": {
+          "total": 17,
+          "verified": 17,
+          "failed": 0,
+          "skipped": 0
+        }
+      },
+      "carriedOver": 0
+    },
+    "injectedTransientFailure": false
+  },
+  "tableCoverage": [
+    {
+      "table": "business_profiles",
+      "disposition": "TOP_LEVEL_COLLECTION",
+      "sourceRows": 6,
+      "eligibleRows": 6,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}",
+      "targetDocuments": 6,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "business_settings",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 1,
+      "eligibleRows": 1,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/settings/{settingsId}",
+      "targetDocuments": 1,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "cash_shifts",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/cashShifts/{shiftId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "customers_ledger",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/customerLedger/{entryId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "fiscal_counters",
+      "disposition": "ARCHIVE",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/fiscalCounters/{counterId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "fiscal_documents",
+      "disposition": "ARCHIVE",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/fiscalDocuments/{documentId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "restaurant_demand_forecasts",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/demandForecasts/{forecastId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "restaurant_floor_plans",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/floorPlans/{planId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "restaurant_historical_data",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/restaurantHistory/{recordId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "restaurant_ingredients",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/ingredients/{ingredientId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "restaurant_menu_categories",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 17,
+      "eligibleRows": 17,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/menuCategories/{categoryId}",
+      "targetDocuments": 17,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "restaurant_modifier_groups",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/modifierGroups/{groupId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "restaurant_notifications",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/restaurantNotifications/{notificationId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "restaurant_settings",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/restaurant/settings",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "restaurant_staff",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 1,
+      "eligibleRows": 1,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/restaurantStaff/{staffId}",
+      "targetDocuments": 1,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "restaurant_tables",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 13,
+      "eligibleRows": 13,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/tables/{tableId}",
+      "targetDocuments": 13,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "restaurant_whatsapp_settings",
+      "disposition": "ARCHIVE",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/restaurantWhatsappSettings/{settingsId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "stock_takes",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/stockTakes/{stockTakeId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "travel_payment_feature_rollouts",
+      "disposition": "TOP_LEVEL_COLLECTION",
+      "sourceRows": 1,
+      "eligibleRows": 1,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "featureRollouts/{rolloutId}",
+      "targetDocuments": 1,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "trip_activity_log",
+      "disposition": "TOP_LEVEL_COLLECTION",
+      "sourceRows": 489,
+      "eligibleRows": 489,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "tripActivityLog/{activityId}",
+      "targetDocuments": 489,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "trip_attachment_cleanup_queue",
+      "disposition": "TOP_LEVEL_COLLECTION",
+      "sourceRows": 8,
+      "eligibleRows": 8,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "storageCleanupQueue/{queueId}",
+      "targetDocuments": 8,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "trip_notification_settings",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "users/{firebaseUid}/settings/{settingsId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "trip_notifications",
+      "disposition": "TOP_LEVEL_COLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "tripNotifications/{notificationId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "trip_pdf_rate_limits",
+      "disposition": "DERIVED",
+      "sourceRows": 8,
+      "eligibleRows": 0,
+      "excludedRows": 8,
+      "exclusionReason": "DERIVED_OPERATIONAL_STATE_REBUILT_BY_TARGET",
+      "target": "rateLimits/{ownerUid}__pdf",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 8
+    },
+    {
+      "table": "trip_pricing_preferences",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "users/{firebaseUid}/settings/{settingsId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "trip_templates",
+      "disposition": "TOP_LEVEL_COLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "tripTemplates/{templateId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "trip_whatsapp_templates",
+      "disposition": "TOP_LEVEL_COLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "tripWhatsappTemplates/{templateId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "trips",
+      "disposition": "TOP_LEVEL_COLLECTION",
+      "sourceRows": 99,
+      "eligibleRows": 99,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "trips/{tripId}",
+      "targetDocuments": 99,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "whatsapp_contact_consents",
+      "disposition": "ARCHIVE",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/whatsappConsents/{consentId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "whatsapp_server_templates",
+      "disposition": "ARCHIVE",
+      "sourceRows": 24,
+      "eligibleRows": 24,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "whatsappServerTemplates/{templateId}",
+      "targetDocuments": 24,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "whatsapp_webhook_events",
+      "disposition": "ARCHIVE",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "whatsappWebhookEvents/{eventId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "z_report_counters",
+      "disposition": "ARCHIVE",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/zReportCounters/{counterId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "allocation_numbers_log",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/allocationNumbers/{entryId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "audit_logs",
+      "disposition": "TOP_LEVEL_COLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "auditEvents/{eventId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "car_parts",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 1,
+      "eligibleRows": 1,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/parts/{partId}",
+      "targetDocuments": 1,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "customer_vehicles",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 1,
+      "eligibleRows": 1,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/vehicles/{vehicleId}",
+      "targetDocuments": 1,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "fiscal_document_items",
+      "disposition": "ARCHIVE",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/fiscalDocumentItems/{itemId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "restaurant_audit_logs",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 4,
+      "eligibleRows": 4,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/restaurantAuditLogs/{logId}",
+      "targetDocuments": 4,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "restaurant_cash_drawers",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/cashDrawers/{drawerId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "restaurant_daily_reports",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/dailyReports/{reportId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "restaurant_guest_profiles",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/guestProfiles/{guestId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "restaurant_menu_items",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 4,
+      "eligibleRows": 4,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/menuItems/{itemId}",
+      "targetDocuments": 4,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "restaurant_modifiers",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/modifiers/{modifierId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "restaurant_table_sessions",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/tableSessions/{sessionId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "restaurant_waitlist",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/waitlist/{entryId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "shift_transactions",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/shiftTransactions/{transactionId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "trip_financial_audit",
+      "disposition": "TOP_LEVEL_COLLECTION",
+      "sourceRows": 452,
+      "eligibleRows": 452,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "tripFinancialAudit/{auditId}",
+      "targetDocuments": 452,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "trip_packing_lists",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "trips/{tripId}/packingLists/{listId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "trip_payment_plans",
+      "disposition": "TOP_LEVEL_COLLECTION",
+      "sourceRows": 99,
+      "eligibleRows": 99,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "tripPaymentPlans/{planId}",
+      "targetDocuments": 99,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "trip_write_requests",
+      "disposition": "TOP_LEVEL_COLLECTION",
+      "sourceRows": 108,
+      "eligibleRows": 108,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "idempotency/{ownerUid}__{clientRequestId}",
+      "targetDocuments": 108,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "user_profiles",
+      "disposition": "TOP_LEVEL_COLLECTION",
+      "sourceRows": 7,
+      "eligibleRows": 7,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "users/{firebaseUid}",
+      "targetDocuments": 7,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "whatsapp_reminders",
+      "disposition": "ARCHIVE",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/whatsappReminders/{reminderId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "x_reports",
+      "disposition": "ARCHIVE",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/xReports/{reportId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "z_reports",
+      "disposition": "ARCHIVE",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/zReports/{reportId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "inventory_batches",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/inventoryBatches/{batchId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "repair_orders",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/repairOrders/{orderId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "restaurant_cash_transactions",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/cashTransactions/{transactionId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "restaurant_item_modifier_groups",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/itemModifierGroups/{linkId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "restaurant_orders",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 10,
+      "eligibleRows": 10,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/orders/{orderId}",
+      "targetDocuments": 10,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "restaurant_recipes",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/recipes/{recipeId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "restaurant_reservations",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/reservations/{reservationId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "restaurant_whatsapp_messages",
+      "disposition": "ARCHIVE",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/restaurantWhatsappMessages/{messageId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "staff_shifts",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/staffShifts/{shiftId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "stock_take_items",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/stockTakeItems/{itemId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "trip_installments",
+      "disposition": "TOP_LEVEL_COLLECTION",
+      "sourceRows": 37,
+      "eligibleRows": 37,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "tripInstallments/{installmentId}",
+      "targetDocuments": 37,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "trip_payment_events",
+      "disposition": "TOP_LEVEL_COLLECTION",
+      "sourceRows": 4,
+      "eligibleRows": 4,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "tripPaymentEvents/{eventId}",
+      "targetDocuments": 4,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "whatsapp_message_log",
+      "disposition": "ARCHIVE",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/whatsappMessageLog/{messageId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "market_transactions",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 1,
+      "eligibleRows": 1,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/marketTransactions/{transactionId}",
+      "targetDocuments": 1,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "repair_order_items",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/repairOrderItems/{itemId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "restaurant_kitchen_tickets",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 11,
+      "eligibleRows": 11,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/kitchenTickets/{ticketId}",
+      "targetDocuments": 11,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "restaurant_order_items",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 17,
+      "eligibleRows": 17,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/orderItems/{itemId}",
+      "targetDocuments": 17,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "restaurant_payments",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/restaurantPayments/{paymentId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "shrinkage_records",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/shrinkageRecords/{recordId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "trip_installment_events",
+      "disposition": "TOP_LEVEL_COLLECTION",
+      "sourceRows": 4,
+      "eligibleRows": 4,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "tripInstallmentEvents/{eventId}",
+      "targetDocuments": 4,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "restaurant_order_item_modifiers",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/orderItemModifiers/{linkId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "restaurant_ticket_items",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 17,
+      "eligibleRows": 17,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/ticketItems/{itemId}",
+      "targetDocuments": 17,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    },
+    {
+      "table": "restaurant_void_logs",
+      "disposition": "SUBCOLLECTION",
+      "sourceRows": 0,
+      "eligibleRows": 0,
+      "excludedRows": 0,
+      "exclusionReason": null,
+      "target": "businesses/{businessId}/voidLogs/{logId}",
+      "targetDocuments": 0,
+      "skippedAlreadyVerified": 0,
+      "skipped": 0
+    }
+  ],
+  "warnings": [],
+  "productionChanges": {
+    "supabaseCustomerWrites": 0,
+    "firebaseCustomerWrites": 0,
+    "firebaseAuthImports": 0,
+    "backendCutover": "NOT STARTED",
+    "supabaseDeletion": "NOT STARTED",
+    "cloudSql": "NOT USED"
+  }
+}

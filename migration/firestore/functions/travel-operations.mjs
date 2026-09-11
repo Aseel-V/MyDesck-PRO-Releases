@@ -12,6 +12,28 @@ const stateInput = z.object({ clientRequestId: uuid, tripId: uuid, state: z.enum
 const safe = (n) => { if(n>BigInt(Number.MAX_SAFE_INTEGER)||n<BigInt(Number.MIN_SAFE_INTEGER)) fail('AMOUNT_OUT_OF_RANGE'); return Number(n); };
 const integer = (n) => { if(!Number.isSafeInteger(n)) fail('UNSAFE_STORED_AMOUNT'); return BigInt(n); };
 
+// The Admin SDK retries optimistic conflicts, but the emulator and production
+// service can still surface ABORTED after their inner retry budget is spent.
+// Retrying the whole idempotent command is safe: the request ledger is written
+// atomically with the mutation, so an ambiguous commit converges to its stored
+// response instead of creating another payment event.
+export async function runWithAbortedRetry(work, attempts = 5) {
+  let last;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try { return await work(); }
+    catch (error) {
+      last = error;
+      const text = String(error?.message);
+      const retryable = error?.code === 10 || error?.code === 'ABORTED'
+        || /\bABORTED\b/.test(text)
+        || (error?.code === 3 && /Transaction is invalid or closed/.test(text));
+      if (!retryable || attempt === attempts) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 25 * attempt));
+    }
+  }
+  throw last;
+}
+
 export async function authorizedBusiness(db, tx, uid) {
   if(!uid) fail('USER_NOT_AUTHENTICATED');
   const user = await tx.get(db.collection('users').doc(uid));
@@ -33,7 +55,7 @@ export async function recordPayment(deps, call, installment = false) {
   const fingerprint=createHash('sha256').update(JSON.stringify({operation,...input})).digest('hex');
   const key=`${uid}__${input.clientRequestId}`;
   const {db,Timestamp}=deps; const now=deps.now??new Date();
-  return db.runTransaction(async tx=>{
+  return runWithAbortedRetry(()=>db.runTransaction(async tx=>{
     const businessId=await authorizedBusiness(db,tx,uid);
     const ledgerRef=db.collection('idempotency').doc(key), ledger=await tx.get(ledgerRef);
     if(ledger.exists) { if(ledger.data().fingerprint!==fingerprint) fail('IDEMPOTENCY_CONFLICT'); return {...ledger.data().responsePayload,idempotentReplay:true}; }
@@ -66,7 +88,7 @@ export async function recordPayment(deps, call, installment = false) {
     tx.create(db.collection('tripActivityLog').doc(key),{...event,activityType:'payment_recorded'});
     tx.create(ledgerRef,{schemaVersion:1,ownerUid:uid,userId:uid,businessId,tripId:input.tripId,isDeleted:false,clientRequestId:input.clientRequestId,fingerprint,responsePayload:response,createdAt:stamp,createdAtMicros:micros});
     return {...response,idempotentReplay:false};
-  });
+  }));
 }
 
 export async function setTripState(deps,call){

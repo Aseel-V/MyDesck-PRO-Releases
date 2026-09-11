@@ -1,0 +1,110 @@
+{
+  "generatedAt": "2026-09-11T11:38:39.246Z",
+  "status": "PASS_WITH_SEARCH_BLOCKER",
+  "sourceSnapshot": {
+    "readOnly": true,
+    "isolation": "repeatable read",
+    "writes": 0
+  },
+  "corpus": {
+    "businesses": 6,
+    "trips": 99,
+    "travelers": 8,
+    "attachments": 0
+  },
+  "parity": {
+    "business": "PASS",
+    "trips": "PASS",
+    "travelers": "PASS",
+    "payments": "PASS",
+    "installments": "PASS",
+    "events": "PASS",
+    "documents": "PASS",
+    "analytics": "PASS",
+    "pagination": "PASS",
+    "search": "BLOCKED"
+  },
+  "pagination": {
+    "pagesChecked": 13,
+    "middlePages": 9,
+    "lastPages": 4,
+    "stableOrdering": true,
+    "tieBreaker": "__name__"
+  },
+  "search": {
+    "tripArbitraryText": "EXTERNAL_SEARCH_REQUIRED",
+    "currentEmulatorWorkspace": "CLIENT_FILTER_ON_BOUNDED_SET",
+    "exactStatusDateCurrencyFilters": "SUPPORTED_DIRECTLY",
+    "prefixFields": "PREFIX_MODEL_POSSIBLE_NOT_IMPLEMENTED",
+    "criticalParity": "BLOCKED",
+    "reason": "Current Firestore UI filters only the loaded page; it cannot reproduce source-wide SQL/tsvector search."
+  },
+  "assertions": 1023,
+  "failures": 0,
+  "categories": {
+    "business": {
+      "assertions": 6,
+      "failures": 0
+    },
+    "pagination_set": {
+      "assertions": 12,
+      "failures": 0
+    },
+    "pagination_count": {
+      "assertions": 12,
+      "failures": 0
+    },
+    "trip_details": {
+      "assertions": 99,
+      "failures": 0
+    },
+    "trip_ownership": {
+      "assertions": 99,
+      "failures": 0
+    },
+    "travelers": {
+      "assertions": 99,
+      "failures": 0
+    },
+    "attachments": {
+      "assertions": 99,
+      "failures": 0
+    },
+    "tripPaymentPlans": {
+      "assertions": 99,
+      "failures": 0
+    },
+    "tripInstallments": {
+      "assertions": 99,
+      "failures": 0
+    },
+    "tripPaymentEvents": {
+      "assertions": 99,
+      "failures": 0
+    },
+    "tripInstallmentEvents": {
+      "assertions": 99,
+      "failures": 0
+    },
+    "tripFinancialAudit": {
+      "assertions": 99,
+      "failures": 0
+    },
+    "tripActivityLog": {
+      "assertions": 99,
+      "failures": 0
+    },
+    "analytics_financial": {
+      "assertions": 1,
+      "failures": 0
+    },
+    "analytics_derived": {
+      "assertions": 1,
+      "failures": 0
+    },
+    "events_ordering": {
+      "assertions": 1,
+      "failures": 0
+    }
+  }
+}

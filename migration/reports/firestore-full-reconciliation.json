@@ -1,0 +1,258 @@
+{
+  "generatedAt": "2026-09-11T12:05:46.720Z",
+  "status": "RECONCILED",
+  "schemaVersion": 1,
+  "transformVersion": "1.full.1",
+  "levels": {
+    "sourceCoverage": "PASS",
+    "targetCoverage": "PASS",
+    "entityCanonicalParity": "PASS",
+    "relationshipParity": "PASS",
+    "financialParity": "PASS",
+    "userOwnershipParity": "PASS",
+    "eventParity": "PASS",
+    "timestampParity": "PASS",
+    "documentSizeValidity": "PASS",
+    "migrationLedger": "PASS",
+    "applicationBehavioralParity": "SEE migration/reports/firestore-full-application-parity.json"
+  },
+  "coverage": {
+    "expectedDocuments": 1439,
+    "actualDocuments": 1439,
+    "missingDocuments": 0,
+    "unexpectedDocuments": 0,
+    "canonicalMismatches": 0,
+    "rawMismatches": 0
+  },
+  "ids": {
+    "uidMismatches": 0,
+    "pkDocumentIdMismatches": 0
+  },
+  "relationships": {
+    "checked": 3047,
+    "relationshipMismatches": 0,
+    "crossTenantReferences": 0,
+    "migrationCreatedOrphans": 0
+  },
+  "financial": {
+    "currencies": [
+      "EUR",
+      "ILS",
+      "UNSPECIFIED",
+      "USD"
+    ],
+    "valuesChecked": 1447,
+    "perCurrencySourceDigests": [
+      {
+        "currency": "EUR",
+        "values": 30,
+        "digest": "881199369a3bf6f974a24bc24371af56a847a33f8155f8d14031d1123b2259df"
+      },
+      {
+        "currency": "ILS",
+        "values": 868,
+        "digest": "968114474c198a8784a9fac91e576180ad7b26103b30aae7bfe883e0448a676b"
+      },
+      {
+        "currency": "UNSPECIFIED",
+        "values": 112,
+        "digest": "b019b817ff5f1d0e8cf488ac5296f66bdee10481f1e15a01cbd3e061b67233e7"
+      },
+      {
+        "currency": "USD",
+        "values": 437,
+        "digest": "e7f7e5ed2ed88389e34834df03998f12d0352325092b49f7046c5684707d5033"
+      }
+    ],
+    "perCurrencyTargetDigests": [
+      {
+        "currency": "EUR",
+        "values": 30,
+        "digest": "881199369a3bf6f974a24bc24371af56a847a33f8155f8d14031d1123b2259df"
+      },
+      {
+        "currency": "ILS",
+        "values": 868,
+        "digest": "968114474c198a8784a9fac91e576180ad7b26103b30aae7bfe883e0448a676b"
+      },
+      {
+        "currency": "UNSPECIFIED",
+        "values": 112,
+        "digest": "b019b817ff5f1d0e8cf488ac5296f66bdee10481f1e15a01cbd3e061b67233e7"
+      },
+      {
+        "currency": "USD",
+        "values": 437,
+        "digest": "e7f7e5ed2ed88389e34834df03998f12d0352325092b49f7046c5684707d5033"
+      }
+    ],
+    "perValueMismatches": 0,
+    "digestMismatches": 0,
+    "derivedSummariesChecked": 198,
+    "derivedSummaryMismatches": 0,
+    "unexplainedDelta": 0
+  },
+  "events": {
+    "events": 953,
+    "missing": 0,
+    "extra": 0,
+    "orderingMismatches": 0,
+    "amountMismatches": 0
+  },
+  "timestamps": {
+    "compared": 1784,
+    "precisionLossCases": 0,
+    "unexplainedMismatches": 0
+  },
+  "json": {
+    "compared": 2025,
+    "sqlNullVsJsonNull": "PRESERVED",
+    "numericLiteral": "PRESERVED_OR_TEXT_ENCODED",
+    "mismatches": 0
+  },
+  "size": {
+    "nearLimit": 0,
+    "tooLarge": 0
+  },
+  "ledger": {
+    "entries": 1444,
+    "mismatches": 0
+  },
+  "perTable": {
+    "auth.users": {
+      "expected": 3,
+      "found": 3,
+      "canonicalMismatches": 0
+    },
+    "business_profiles": {
+      "expected": 6,
+      "found": 6,
+      "canonicalMismatches": 0
+    },
+    "business_settings": {
+      "expected": 1,
+      "found": 1,
+      "canonicalMismatches": 0
+    },
+    "car_parts": {
+      "expected": 1,
+      "found": 1,
+      "canonicalMismatches": 0
+    },
+    "customer_vehicles": {
+      "expected": 1,
+      "found": 1,
+      "canonicalMismatches": 0
+    },
+    "market_transactions": {
+      "expected": 1,
+      "found": 1,
+      "canonicalMismatches": 0
+    },
+    "restaurant_audit_logs": {
+      "expected": 4,
+      "found": 4,
+      "canonicalMismatches": 0
+    },
+    "restaurant_kitchen_tickets": {
+      "expected": 11,
+      "found": 11,
+      "canonicalMismatches": 0
+    },
+    "restaurant_menu_categories": {
+      "expected": 17,
+      "found": 17,
+      "canonicalMismatches": 0
+    },
+    "restaurant_menu_items": {
+      "expected": 4,
+      "found": 4,
+      "canonicalMismatches": 0
+    },
+    "restaurant_order_items": {
+      "expected": 17,
+      "found": 17,
+      "canonicalMismatches": 0
+    },
+    "restaurant_orders": {
+      "expected": 10,
+      "found": 10,
+      "canonicalMismatches": 0
+    },
+    "restaurant_staff": {
+      "expected": 1,
+      "found": 1,
+      "canonicalMismatches": 0
+    },
+    "restaurant_tables": {
+      "expected": 13,
+      "found": 13,
+      "canonicalMismatches": 0
+    },
+    "restaurant_ticket_items": {
+      "expected": 17,
+      "found": 17,
+      "canonicalMismatches": 0
+    },
+    "travel_payment_feature_rollouts": {
+      "expected": 1,
+      "found": 1,
+      "canonicalMismatches": 0
+    },
+    "trip_activity_log": {
+      "expected": 489,
+      "found": 489,
+      "canonicalMismatches": 0
+    },
+    "trip_attachment_cleanup_queue": {
+      "expected": 8,
+      "found": 8,
+      "canonicalMismatches": 0
+    },
+    "trip_financial_audit": {
+      "expected": 452,
+      "found": 452,
+      "canonicalMismatches": 0
+    },
+    "trip_installment_events": {
+      "expected": 4,
+      "found": 4,
+      "canonicalMismatches": 0
+    },
+    "trip_installments": {
+      "expected": 37,
+      "found": 37,
+      "canonicalMismatches": 0
+    },
+    "trip_payment_events": {
+      "expected": 4,
+      "found": 4,
+      "canonicalMismatches": 0
+    },
+    "trip_payment_plans": {
+      "expected": 99,
+      "found": 99,
+      "canonicalMismatches": 0
+    },
+    "trip_write_requests": {
+      "expected": 108,
+      "found": 108,
+      "canonicalMismatches": 0
+    },
+    "trips": {
+      "expected": 99,
+      "found": 99,
+      "canonicalMismatches": 0
+    },
+    "user_profiles": {
+      "expected": 7,
+      "found": 7,
+      "canonicalMismatches": 0
+    },
+    "whatsapp_server_templates": {
+      "expected": 24,
+      "found": 24,
+      "canonicalMismatches": 0
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "generatedAt": "2026-09-11T11:27:42.089Z",
+  "status": "FULL_STORAGE_REHEARSAL_PASS",
+  "sourceSnapshot": {
+    "readOnly": true,
+    "isolation": "repeatable read",
+    "writes": 0,
+    "transactionOutcome": "ROLLBACK"
+  },
+  "storage": {
+    "sourceObjects": 3,
+    "manifested": 3,
+    "copied": 3,
+    "bytesRehearsed": 438670,
+    "missing": 0,
+    "unexpected": 0,
+    "shaMismatches": 0,
+    "existingSourceOrphans": 1,
+    "migrationCreatedOrphans": 0,
+    "signatureObjects": 1,
+    "privacyFailures": 0,
+    "privacy": "PASS"
+  },
+  "productionWrites": 0
+}

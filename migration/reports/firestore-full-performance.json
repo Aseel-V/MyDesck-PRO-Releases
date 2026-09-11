@@ -1,0 +1,30 @@
+{
+  "generatedAt": "2026-09-11T11:44:31.643Z",
+  "status": "PASS_WITH_EMULATOR_TIMINGS",
+  "corpusDocuments": 1439,
+  "timingsMilliseconds": {
+    "tripList": 116.207,
+    "tripDetailWithRelated": 23.89,
+    "analytics": 98.77,
+    "boundedSearch": 38.224,
+    "createTrip": 87.309,
+    "paymentWrite": 118.577,
+    "installmentWrite": 71.368,
+    "archiveAndRestore": 135.48
+  },
+  "reads": {
+    "tripListDocuments": 25,
+    "detailFixedQueries": 7,
+    "detailRelatedDocuments": 1,
+    "analyticsBound": 1001,
+    "searchBound": 100
+  },
+  "risks": {
+    "nPlusOne": "NO_VARIABLE_PER_CHILD_READ_LOOP",
+    "fixedDetailFanout": 7,
+    "unboundedCollectionScans": 0,
+    "hotspot": "trip document serializes concurrent financial updates; idempotent ABORTED retry is required",
+    "hugeDocuments": 0
+  },
+  "limitations": "Emulator timings are regression signals, not production latency estimates."
+}

@@ -51,7 +51,10 @@ export function canonicalTypeFor(pgType, udtName) {
       return 'string';
     case 'smallint': case 'integer': case 'bigint':
       return 'int';
-    case 'numeric': case 'decimal':
+    case 'numeric': case 'decimal': case 'double precision': case 'real':
+      // PostgreSQL text is authoritative even for legacy geometry floats.
+      // Treating them as exact decimal text avoids a Number round-trip during
+      // migration. The application may convert geometry to a Number later.
       return 'decimal';
     case 'boolean':
       return 'bool';

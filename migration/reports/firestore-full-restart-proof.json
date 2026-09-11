@@ -1,0 +1,22 @@
+{
+  "generatedAt": "2026-09-11T11:07:56.989Z",
+  "status": "PASS",
+  "injected": {
+    "transientWriteFailure": 1,
+    "processInterruptionAfterEntities": 200
+  },
+  "resume": {
+    "carriedLedgerEntries": 200,
+    "verifiedDocumentsReusedWithoutRewrite": 199,
+    "failedEntitiesRetriedToVerified": 1,
+    "remainingFailed": 0
+  },
+  "idempotency": {
+    "ledgerEntries": 1444,
+    "distinctLedgerKeys": 1444,
+    "expectedTargetDocuments": 1439,
+    "distinctTargetPaths": 1439,
+    "duplicateLedgerKeys": 0,
+    "duplicateTargetPaths": 0
+  }
+}

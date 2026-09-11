@@ -1,0 +1,17 @@
+{
+  "generatedAt": "2026-09-11T14:56:00+03:00",
+  "environment": "local disposable PostgreSQL oracle",
+  "serverVersion": "17.10",
+  "steps": { "attempted": 10, "passed": 10, "failed": 0 },
+  "migrations": {
+    "attempted": 93,
+    "pass": 26,
+    "passWithHarnessCompatibilityShim": 60,
+    "skipWithJustification": 7,
+    "failed": 0
+  },
+  "namedChecks": { "passed": 120, "failed": 0 },
+  "encoding": "UTF8",
+  "sourceProductionUsed": false,
+  "result": "PASS"
+}
