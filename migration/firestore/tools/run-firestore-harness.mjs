@@ -43,6 +43,9 @@ const STEPS = [
     script: 'migration/firestore/tests/table-map.test.mjs' },
   { label: 'target selection safety', kind: 'test',
     script: 'migration/firestore/tests/firestore-target.test.mjs' },
+  { label: 'application backend and direct-access guards', kind: 'test',
+    script: 'scripts/test-firestore-app-layer.mjs',
+    nodeArgs: ['scripts/run-typescript-source-test.mjs', 'scripts/test-firestore-app-layer.mjs'] },
 
   { label: 'synthetic payload export (read-only)', kind: 'tool',
     script: 'migration/firestore/tools/export-synthetic-payloads.mjs', needs: 'source' },
@@ -51,24 +54,38 @@ const STEPS = [
     script: 'migration/firestore/tests/rules.test.mjs', needs: 'emulator' },
   { label: 'save_trip_transaction (idempotency, concurrency)', kind: 'test',
     script: 'migration/firestore/tests/save-trip-transaction.test.mjs', needs: 'emulator' },
+  { label: 'travel payments, installments, state and analytics transactions', kind: 'test',
+    script: 'migration/firestore/tests/travel-operations.test.mjs', needs: 'emulator' },
+  { label: 'Storage Rules privacy and checksum', kind: 'test',
+    script: 'migration/firestore/tests/storage-rules.test.mjs', needs: 'emulator+storage' },
 
   { label: 'migrate synthetic slice', kind: 'tool',
     script: 'migration/firestore/tools/migrate-synthetic.mjs',
     args: ['--target', 'emulator', '--force'], needs: 'emulator' },
+  { label: 'seed synthetic Firebase identities', kind: 'tool',
+    script: 'migration/firestore/tools/seed-app-emulator.mjs', needs: 'emulator+auth' },
+  { label: 'Firebase client login, refresh and logout/login', kind: 'test',
+    script: 'migration/firestore/tests/client-auth-emulator.test.mjs', needs: 'emulator+auth' },
   { label: 'reconcile (levels 1-6 + event order)', kind: 'tool',
     script: 'migration/firestore/tools/reconcile.mjs',
     args: ['--target', 'emulator'], needs: 'emulator' },
+  { label: 'application dual-read and analytics parity', kind: 'tool',
+    script: 'migration/firestore/tools/application-parity.mjs', needs: 'emulator' },
   { label: 'negative controls on the reconciler', kind: 'tool',
     script: 'migration/firestore/tools/negative-controls.mjs',
     args: ['--target', 'emulator'], needs: 'emulator' },
 
   { label: 'storage manifest + checksum gate', kind: 'tool',
     script: 'migration/firestore/tools/storage-manifest.mjs', needs: 'source+storage' },
+  { label: 'Supabase runtime burn-down inventory', kind: 'tool',
+    script: 'migration/firestore/tools/runtime-burndown.mjs' },
 ];
 
 const unavailable = (needs) => {
   if (needs === 'emulator' && !EMULATOR) return 'FIRESTORE_EMULATOR_HOST not set';
   if (needs === 'source+storage' && !STORAGE) return 'FIREBASE_STORAGE_EMULATOR_HOST not set';
+  if (needs === 'emulator+storage' && (!EMULATOR || !STORAGE)) return 'Firestore or Storage emulator host not set';
+  if (needs === 'emulator+auth' && (!EMULATOR || !process.env.FIREBASE_AUTH_EMULATOR_HOST)) return 'Firestore or Auth emulator host not set';
   return null;
 };
 
@@ -81,9 +98,9 @@ for (const step of STEPS) {
     continue;
   }
   console.log(`\n${'='.repeat(72)}\n  ${step.label}\n${'='.repeat(72)}`);
-  const args = step.kind === 'test'
+  const args = step.nodeArgs ?? (step.kind === 'test'
     ? ['--test', step.script]
-    : [step.script, ...(step.args ?? [])];
+    : [step.script, ...(step.args ?? [])]);
   const run = spawnSync(process.execPath, args, { stdio: 'inherit', env: process.env });
   results.push({ ...step, outcome: run.status === 0 ? 'PASS' : 'FAIL', exitCode: run.status });
   if (run.status !== 0) console.error(`\n  STEP FAILED: ${step.label} (exit ${run.status})`);

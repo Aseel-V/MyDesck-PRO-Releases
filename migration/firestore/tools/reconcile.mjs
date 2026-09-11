@@ -462,7 +462,7 @@ const report = {
       uidMismatches === 0 && ownershipMismatches === 0 && crossTenantDocuments === 0
         ? 'PASS' : 'FAIL',
     '7_file_parity': 'SEE migration/reports/firestore-storage-manifest.json',
-    '8_behavioural_parity': 'NOT RUN — application layer, later milestone',
+    '8_behavioural_parity': 'SEE migration/reports/firestore-application-parity.json',
   },
   totals,
   perTable,
