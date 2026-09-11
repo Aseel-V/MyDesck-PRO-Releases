@@ -1,0 +1,27 @@
+import test, { before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import { RulesClient, emulatorToken } from '../lib/rules-client.mjs';
+const project='mydesck-migration-proof',bucket=project+'.appspot.com';
+if(process.env.FIREBASE_STORAGE_EMULATOR_HOST!=='127.0.0.1:9199') throw Error('LOCAL_STORAGE_REQUIRED');
+const admin=RulesClient.asAdminBypass({host:'127.0.0.1:8080',projectId:project});
+const uid='migration-test--storage-a',bob='migration-test--storage-b',business='storage-rules-business-a';
+const base=`http://127.0.0.1:9199/v0/b/${bucket}/o`;
+const path=`businesses/${business}/signatures/proof.png`,attachment=`businesses/${business}/trips/trip-a/attachments/ticket.pdf`;
+const bytes=Buffer.from('synthetic signature proof only');
+const headers=(token)=>token?{Authorization:`${token==='owner'?'Bearer':'Firebase'} ${token}`}:{ };
+const upload=(name,token,contentType='image/png')=>{
+ const boundary='migration-test-boundary';
+ const metadata=JSON.stringify({name,contentType});
+ const body=Buffer.concat([Buffer.from(`--${boundary}\r\nContent-Type: application/json; charset=utf-8\r\n\r\n${metadata}\r\n--${boundary}\r\nContent-Type: ${contentType}\r\n\r\n`),bytes,Buffer.from(`\r\n--${boundary}--\r\n`)]);
+ return fetch(`${base}?uploadType=multipart&name=${encodeURIComponent(name)}`,{method:'POST',headers:{...headers(token),'X-Goog-Upload-Protocol':'multipart','Content-Type':`multipart/related; boundary=${boundary}`},body});
+};
+const download=(name,token)=>fetch(`${base}/${encodeURIComponent(name)}?alt=media`,{headers:headers(token)});
+const denied=r=>assert.ok([401,403].includes(r.status),`expected denied; got ${r.status}`);
+before(async()=>{await admin.set(`businesses/${business}`,{ownerUid:uid});await admin.set('trips/trip-a',{ownerUid:uid,businessId:business});});
+after(async()=>{for(const name of [path,attachment])await fetch(`${base}/${encodeURIComponent(name)}`,{method:'DELETE',headers:headers('owner')});await admin.delete(`businesses/${business}`);await admin.delete('trips/trip-a');});
+test('owner uploads and reads private signature; exact SHA256 roundtrip',async()=>{const token=emulatorToken(uid);const write=await upload(path,token);assert.equal(write.ok,true,`upload ${write.status}`);const read=await download(path,token);assert.equal(read.ok,true);const actual=Buffer.from(await read.arrayBuffer());assert.equal(createHash('sha256').update(actual).digest('hex'),createHash('sha256').update(bytes).digest('hex'));});
+test('cross-tenant and anonymous signature reads denied',async()=>{denied(await download(path,emulatorToken(bob)));denied(await download(path));});
+test('authorized attachment upload/read succeeds; other tenant denied',async()=>{assert.equal((await upload(attachment,emulatorToken(uid),'application/pdf')).ok,true);assert.equal((await download(attachment,emulatorToken(uid))).ok,true);denied(await download(attachment,emulatorToken(bob)));denied(await download(attachment));});
+test('cross-tenant and anonymous uploads denied',async()=>{denied(await upload(path,emulatorToken(bob)));denied(await upload(path));});
+test('ownership-changing path and unsupported content type denied',async()=>{denied(await upload('businesses/another-business/signatures/proof.png',emulatorToken(uid)));denied(await upload(path,emulatorToken(uid),'text/html'));});

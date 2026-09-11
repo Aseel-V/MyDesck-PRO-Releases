@@ -141,6 +141,8 @@ test('a query that is not owner-constrained fails rather than returning a subset
 });
 
 test('ownership fields cannot be changed by a client', async () => {
+  assert.equal(isDenied(await alice.update(`trips/${TRIP_A}`, { businessId: BUSINESS_B })), true);
+  assert.equal(isDenied(await alice.update(`users/${UID_A}`, { ownerUid: UID_B })), true);
   assert.equal(isDenied(await alice.update(`trips/${TRIP_A}`, { ownerUid: UID_B })), true,
     'a trip must not be handed to another tenant');
   assert.equal(isDenied(await alice.update(`businesses/${BUSINESS_A}`, { ownerUid: UID_B })), true);
@@ -304,6 +306,14 @@ test('the suite catches deliberately insecure rules', async (t) => {
       async () => isAllowed(await bob.update(`tripFinancialAudit/${AUDIT_A}`, { sequence: 999 }))],
   ];
 
+  insecure.push(
+    ['mutable businessId', `rules_version = '2'; service cloud.firestore { match /databases/{d}/documents { match /trips/{id} { allow update: if request.auth.uid == resource.data.ownerUid; } } }`,
+      async () => isAllowed(await alice.update(`trips/${TRIP_A}`, { businessId: BUSINESS_B }))],
+    ['client unsuspend', `rules_version = '2'; service cloud.firestore { match /databases/{d}/documents { match /users/{id} { allow update: if request.auth.uid == id; } } }`,
+      async () => { await admin.update(`users/${UID_A}`, { isSuspended: true }); return isAllowed(await alice.update(`users/${UID_A}`, { isSuspended: false })); }],
+    ['audit deletion', `rules_version = '2'; service cloud.firestore { match /databases/{d}/documents { match /tripFinancialAudit/{id} { allow delete: if request.auth != null; } } }`,
+      async () => isAllowed(await alice.delete(`tripFinancialAudit/${AUDIT_A}`))],
+  );
   for (const [name, rules, breach] of insecure) {
     await t.test(`insecure: ${name}`, async () => {
       await loadRules(rules);
