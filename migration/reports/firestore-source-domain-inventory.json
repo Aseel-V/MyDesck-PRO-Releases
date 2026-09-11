@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-09T20:08:35.211Z",
+  "generatedAt": "2026-09-11T05:46:35.579Z",
   "phase": "A",
   "status": "INVENTORIED",
   "sourceSafety": {
@@ -16100,7 +16100,7 @@
       "name": "trip_payment_plans",
       "rlsEnabled": true,
       "rlsForced": false,
-      "estimatedRows": "85",
+      "estimatedRows": "98",
       "primaryKey": [
         "id"
       ],

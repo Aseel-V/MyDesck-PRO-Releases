@@ -1,0 +1,25 @@
+{
+  "generatedAt": "2026-09-11T05:43:22.047Z",
+  "status": "PASS",
+  "runner": "Playwright CLI against Vite and Firebase Auth/Functions/Firestore emulators",
+  "project": "mydesck-migration-proof",
+  "identityScope": "migration-test-- only",
+  "realCustomers": 0,
+  "checks": [
+    { "name": "Firebase Auth login and business load", "outcome": "PASS" },
+    { "name": "session persists across renderer reload", "outcome": "PASS" },
+    { "name": "logout and login again", "outcome": "PASS" },
+    { "name": "two-trip tenant list with ILS and EUR", "outcome": "PASS" },
+    { "name": "trip detail relationships and exact money", "outcome": "PASS" },
+    { "name": "create mixed-plan trip with three installments", "outcome": "PASS" },
+    { "name": "edit multilingual destination", "outcome": "PASS" },
+    { "name": "record 1.01 payment after server confirmation", "outcome": "PASS" },
+    { "name": "archive state transition", "outcome": "PASS" },
+    { "name": "analytics rendered with exact ILS/EUR totals", "outcome": "PASS" },
+    { "name": "offline payment shows failure and leaves 270.11 unchanged", "outcome": "PASS" },
+    { "name": "Arabic direction", "outcome": "PASS", "dir": "rtl", "lang": "ar" },
+    { "name": "Hebrew direction", "outcome": "PASS", "dir": "rtl", "lang": "he" },
+    { "name": "English direction", "outcome": "PASS", "dir": "ltr", "lang": "en" }
+  ],
+  "notes": "The create/edit/payment/archive mutations occurred only in the disposable emulator and were discarded before the final 130-document reconciliation run."
+}

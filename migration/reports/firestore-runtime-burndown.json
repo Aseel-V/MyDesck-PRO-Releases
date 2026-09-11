@@ -1,0 +1,471 @@
+{
+  "generatedAt": "2026-09-11T05:48:03.918Z",
+  "scope": "production src runtime exact supabase.<api> call sites",
+  "totals": {
+    "from": 185,
+    "rpc": 44,
+    "storage": 11,
+    "channel": 2,
+    "auth": 12
+  },
+  "total": 254,
+  "classes": {
+    "MIGRATED": 0,
+    "ADAPTER_ONLY": 8,
+    "BLOCKED": 72,
+    "DEFERRED": 174,
+    "DEAD": 0
+  },
+  "entries": [
+    {
+      "file": "src/components/admin/AdminDashboard.tsx",
+      "kind": "from",
+      "count": 2,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/components/admin/EditUserModal.tsx",
+      "kind": "from",
+      "count": 2,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/components/analytics/EditRestaurantOrderModal.tsx",
+      "kind": "from",
+      "count": 4,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/components/analytics/RestaurantAnalytics.tsx",
+      "kind": "from",
+      "count": 3,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/components/analytics/RestaurantOrderModal.tsx",
+      "kind": "from",
+      "count": 1,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/components/auth/ResetPassword.tsx",
+      "kind": "auth",
+      "count": 1,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/components/cars/AddServiceModal.tsx",
+      "kind": "from",
+      "count": 1,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/components/cars/AddServiceModal.tsx",
+      "kind": "rpc",
+      "count": 1,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/components/cars/Cars.tsx",
+      "kind": "from",
+      "count": 2,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/components/cars/NewCarForm.tsx",
+      "kind": "from",
+      "count": 4,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/components/CommandPalette.tsx",
+      "kind": "from",
+      "count": 1,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/components/Dashboard.tsx",
+      "kind": "from",
+      "count": 1,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/components/Dashboard.tsx",
+      "kind": "rpc",
+      "count": 1,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/components/dashboards/AutoRepairDashboard.tsx",
+      "kind": "from",
+      "count": 2,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/components/dashboards/SupermarketDashboard.tsx",
+      "kind": "from",
+      "count": 4,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/components/ForgotPassword.tsx",
+      "kind": "auth",
+      "count": 1,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/components/market/AddProductModal.tsx",
+      "kind": "from",
+      "count": 4,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/components/market/AddProductModal.tsx",
+      "kind": "storage",
+      "count": 2,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/components/parts/CarPartsInventory.tsx",
+      "kind": "from",
+      "count": 4,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/components/repair/RepairOrderModal.tsx",
+      "kind": "from",
+      "count": 7,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/components/restaurant/CloseDayWizard.tsx",
+      "kind": "from",
+      "count": 1,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/components/restaurant/OrderEntry.tsx",
+      "kind": "from",
+      "count": 1,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/components/restaurant/OrderEntry.tsx",
+      "kind": "rpc",
+      "count": 1,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/components/restaurant/OrderHistoryModal.tsx",
+      "kind": "from",
+      "count": 1,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/components/restaurant/OrderModal.tsx",
+      "kind": "from",
+      "count": 5,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/components/restaurant/ReservationsBoard.tsx",
+      "kind": "auth",
+      "count": 1,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/components/restaurant/RestaurantModeRouter.tsx",
+      "kind": "from",
+      "count": 1,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/components/restaurant/StaffShiftScreen.tsx",
+      "kind": "from",
+      "count": 1,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/components/Settings.tsx",
+      "kind": "from",
+      "count": 6,
+      "classification": "BLOCKED"
+    },
+    {
+      "file": "src/components/Settings.tsx",
+      "kind": "storage",
+      "count": 2,
+      "classification": "BLOCKED"
+    },
+    {
+      "file": "src/components/Settings.tsx",
+      "kind": "auth",
+      "count": 1,
+      "classification": "BLOCKED"
+    },
+    {
+      "file": "src/components/trips/DuplicateTripDialog.tsx",
+      "kind": "rpc",
+      "count": 1,
+      "classification": "BLOCKED"
+    },
+    {
+      "file": "src/components/trips/NewTripForm.tsx",
+      "kind": "from",
+      "count": 1,
+      "classification": "BLOCKED"
+    },
+    {
+      "file": "src/components/trips/Trips.tsx",
+      "kind": "rpc",
+      "count": 1,
+      "classification": "BLOCKED"
+    },
+    {
+      "file": "src/components/trips/TripSmartToolsDialog.tsx",
+      "kind": "from",
+      "count": 2,
+      "classification": "BLOCKED"
+    },
+    {
+      "file": "src/components/trips/TripTrash.tsx",
+      "kind": "from",
+      "count": 1,
+      "classification": "BLOCKED"
+    },
+    {
+      "file": "src/components/trips/TripWhatsappDialog.tsx",
+      "kind": "from",
+      "count": 1,
+      "classification": "BLOCKED"
+    },
+    {
+      "file": "src/components/trips/TripWhatsappDialog.tsx",
+      "kind": "rpc",
+      "count": 1,
+      "classification": "BLOCKED"
+    },
+    {
+      "file": "src/components/ui/FileUpload.tsx",
+      "kind": "storage",
+      "count": 2,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/contexts/AuthContext.tsx",
+      "kind": "from",
+      "count": 5,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/contexts/AuthContext.tsx",
+      "kind": "rpc",
+      "count": 1,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/contexts/AuthContext.tsx",
+      "kind": "auth",
+      "count": 7,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/contexts/RestaurantRoleContext.tsx",
+      "kind": "from",
+      "count": 3,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/contexts/RestaurantRoleContext.tsx",
+      "kind": "rpc",
+      "count": 1,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/data/SupabaseStorageRepository.ts",
+      "kind": "storage",
+      "count": 2,
+      "classification": "ADAPTER_ONLY"
+    },
+    {
+      "file": "src/data/SupabaseStorageRepository.ts",
+      "kind": "auth",
+      "count": 1,
+      "classification": "ADAPTER_ONLY"
+    },
+    {
+      "file": "src/data/SupabaseTripRepository.ts",
+      "kind": "from",
+      "count": 4,
+      "classification": "ADAPTER_ONLY"
+    },
+    {
+      "file": "src/data/SupabaseTripRepository.ts",
+      "kind": "rpc",
+      "count": 1,
+      "classification": "ADAPTER_ONLY"
+    },
+    {
+      "file": "src/hooks/useKitchenDisplay.ts",
+      "kind": "channel",
+      "count": 1,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/hooks/useRestaurant.ts",
+      "kind": "from",
+      "count": 74,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/hooks/useRestaurant.ts",
+      "kind": "rpc",
+      "count": 9,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/hooks/useRestaurant.ts",
+      "kind": "channel",
+      "count": 1,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/lib/analyticsQueries.ts",
+      "kind": "rpc",
+      "count": 2,
+      "classification": "BLOCKED"
+    },
+    {
+      "file": "src/lib/businessImages.ts",
+      "kind": "storage",
+      "count": 1,
+      "classification": "BLOCKED"
+    },
+    {
+      "file": "src/lib/demandForecasting.ts",
+      "kind": "from",
+      "count": 4,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/lib/fiscal/bkmvExporter.ts",
+      "kind": "from",
+      "count": 1,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/lib/paymentContractCompatibility.ts",
+      "kind": "rpc",
+      "count": 1,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/lib/pdfGenerator.ts",
+      "kind": "rpc",
+      "count": 2,
+      "classification": "BLOCKED"
+    },
+    {
+      "file": "src/lib/travelReports.ts",
+      "kind": "rpc",
+      "count": 1,
+      "classification": "BLOCKED"
+    },
+    {
+      "file": "src/lib/tripAttachments.ts",
+      "kind": "storage",
+      "count": 2,
+      "classification": "BLOCKED"
+    },
+    {
+      "file": "src/lib/tripAuditQueries.ts",
+      "kind": "rpc",
+      "count": 2,
+      "classification": "BLOCKED"
+    },
+    {
+      "file": "src/lib/tripNotifications.ts",
+      "kind": "from",
+      "count": 7,
+      "classification": "BLOCKED"
+    },
+    {
+      "file": "src/lib/tripNotifications.ts",
+      "kind": "rpc",
+      "count": 1,
+      "classification": "BLOCKED"
+    },
+    {
+      "file": "src/lib/tripPayments.ts",
+      "kind": "from",
+      "count": 3,
+      "classification": "BLOCKED"
+    },
+    {
+      "file": "src/lib/tripPayments.ts",
+      "kind": "rpc",
+      "count": 5,
+      "classification": "BLOCKED"
+    },
+    {
+      "file": "src/lib/tripQueries.ts",
+      "kind": "from",
+      "count": 4,
+      "classification": "BLOCKED"
+    },
+    {
+      "file": "src/lib/tripQueries.ts",
+      "kind": "rpc",
+      "count": 6,
+      "classification": "BLOCKED"
+    },
+    {
+      "file": "src/lib/tripTemplates.ts",
+      "kind": "from",
+      "count": 7,
+      "classification": "BLOCKED"
+    },
+    {
+      "file": "src/lib/tripTemplates.ts",
+      "kind": "rpc",
+      "count": 1,
+      "classification": "BLOCKED"
+    },
+    {
+      "file": "src/lib/tripTrashQueries.ts",
+      "kind": "from",
+      "count": 1,
+      "classification": "BLOCKED"
+    },
+    {
+      "file": "src/lib/tripTrashQueries.ts",
+      "kind": "rpc",
+      "count": 4,
+      "classification": "BLOCKED"
+    },
+    {
+      "file": "src/lib/tripWhatsapp.ts",
+      "kind": "from",
+      "count": 6,
+      "classification": "BLOCKED"
+    },
+    {
+      "file": "src/lib/visaPaymentArrivals.ts",
+      "kind": "from",
+      "count": 2,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/lib/visaPaymentArrivals.ts",
+      "kind": "rpc",
+      "count": 1,
+      "classification": "DEFERRED"
+    },
+    {
+      "file": "src/modules/market/hooks/useMarketLogic.ts",
+      "kind": "from",
+      "count": 1,
+      "classification": "DEFERRED"
+    }
+  ]
+}

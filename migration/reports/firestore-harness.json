@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-09T20:16:01.775Z",
+  "generatedAt": "2026-09-11T05:48:03.944Z",
   "status": "PASS",
   "environment": {
     "firestoreEmulator": "127.0.0.1:8080",
@@ -53,6 +53,11 @@
       "outcome": "PASS"
     },
     {
+      "label": "application backend and direct-access guards",
+      "kind": "test",
+      "outcome": "PASS"
+    },
+    {
       "label": "synthetic payload export (read-only)",
       "kind": "tool",
       "outcome": "PASS"
@@ -68,12 +73,37 @@
       "outcome": "PASS"
     },
     {
+      "label": "travel payments, installments, state and analytics transactions",
+      "kind": "test",
+      "outcome": "PASS"
+    },
+    {
+      "label": "Storage Rules privacy and checksum",
+      "kind": "test",
+      "outcome": "PASS"
+    },
+    {
       "label": "migrate synthetic slice",
       "kind": "tool",
       "outcome": "PASS"
     },
     {
+      "label": "seed synthetic Firebase identities",
+      "kind": "tool",
+      "outcome": "PASS"
+    },
+    {
+      "label": "Firebase client login, refresh and logout/login",
+      "kind": "test",
+      "outcome": "PASS"
+    },
+    {
       "label": "reconcile (levels 1-6 + event order)",
+      "kind": "tool",
+      "outcome": "PASS"
+    },
+    {
+      "label": "application dual-read and analytics parity",
       "kind": "tool",
       "outcome": "PASS"
     },
@@ -86,15 +116,20 @@
       "label": "storage manifest + checksum gate",
       "kind": "tool",
       "outcome": "PASS"
+    },
+    {
+      "label": "Supabase runtime burn-down inventory",
+      "kind": "tool",
+      "outcome": "PASS"
     }
   ],
   "totals": {
-    "steps": 16,
-    "passed": 16,
+    "steps": 23,
+    "passed": 23,
     "failed": 0,
     "notRun": 0,
-    "assertionCallSites": 368,
-    "testSuites": 8
+    "assertionCallSites": 435,
+    "testSuites": 12
   },
   "outcomes": {
     "documentsMigrated": 130,
@@ -108,7 +143,7 @@
       "5_financial_parity": "PASS",
       "6_user_parity": "PASS",
       "7_file_parity": "SEE migration/reports/firestore-storage-manifest.json",
-      "8_behavioural_parity": "NOT RUN — application layer, later milestone"
+      "8_behavioural_parity": "SEE migration/reports/firestore-application-parity.json"
     },
     "reconciliationTotals": {
       "sourceRowsChecked": 130,

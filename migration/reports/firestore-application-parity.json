@@ -1,0 +1,30 @@
+{
+  "generatedAt": "2026-09-11T05:47:21.385Z",
+  "status": "PASS",
+  "mode": "developer-only dual read",
+  "source": "read-only synthetic PostgreSQL export",
+  "target": "Firestore emulator",
+  "realCustomers": 0,
+  "perTenant": [
+    {
+      "uid": "49ac680e-c964-4d14-908b-1a760b7e5b35",
+      "businessId": "ea7b6ef7-415e-4bc3-8f0f-5832602be97c",
+      "trips": 2,
+      "analyticsCurrencies": [
+        "EUR",
+        "ILS"
+      ]
+    },
+    {
+      "uid": "b4a1c115-62e0-4cd8-a8cd-5e19ecb73496",
+      "businessId": "0812c5b2-e8e3-45cd-a732-8f380a12e447",
+      "trips": 2,
+      "analyticsCurrencies": [
+        "EUR",
+        "ILS"
+      ]
+    }
+  ],
+  "assertions": 63,
+  "failures": 0
+}

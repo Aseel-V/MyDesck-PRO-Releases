@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-09-09T20:08:36.009Z",
+  "generatedAt": "2026-09-11T05:46:35.877Z",
   "status": "ALL_CLASSIFIED",
-  "scannedFiles": 244,
+  "scannedFiles": 255,
   "totals": {
     "rpcs": 42,
     "directTableAccess": 48,
     "storageBuckets": 3,
     "edgeFunctions": 4,
-    "authCalls": 7,
+    "authCalls": 8,
     "realtimeChannels": 2,
     "unclassified": 0
   },
@@ -336,7 +336,7 @@
     {
       "name": "save_trip_transaction",
       "callSites": [
-        "src/hooks/useTripMutations.ts"
+        "src/data/SupabaseTripRepository.ts"
       ],
       "classification": "SERVER_TRANSACTION",
       "replacement": "Callable function + Firestore transaction. Prototyped and tested in this milestone."
@@ -399,7 +399,7 @@
     },
     {
       "table": "business",
-      "callSites": 1
+      "callSites": 2
     },
     {
       "table": "business_profiles",
@@ -596,7 +596,7 @@
     {
       "bucket": "business-signatures",
       "callSites": [
-        "src/components/Settings.tsx"
+        "src/data/SupabaseStorageRepository.ts"
       ]
     },
     {
@@ -611,6 +611,10 @@
       {
         "call": "getSession",
         "callSites": 2
+      },
+      {
+        "call": "getUser",
+        "callSites": 1
       },
       {
         "call": "onAuthStateChange",
