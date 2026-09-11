@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { selectBackend } from '../src/data/backendMode.js';
 import { moneyText, tripSchema } from '../src/data/schemas.js';
 
@@ -16,6 +17,15 @@ assert.equal(tripSchema.safeParse({ schemaVersion: 2 }).success, false, 'unknown
 const workspace = readFileSync('src/migration-app/TravelWorkspace.tsx', 'utf8');
 assert.doesNotMatch(workspace, /firebase\/(firestore|functions|storage)|supabase[.]/,
   'UI may only use domain repositories');
+const migratedFiles = ['src/data/FirestoreTravelRepository.ts', 'src/data/TripService.ts',
+  'src/data/SearchRepository.ts', 'src/data/contracts.ts'];
+const collect = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+  const path = join(dir, entry.name); return entry.isDirectory() ? collect(path) : [path];
+});
+migratedFiles.push(...collect('src/migration-app').filter((path) => /\.(ts|tsx)$/.test(path)));
+for (const path of migratedFiles) assert.doesNotMatch(readFileSync(path, 'utf8'),
+  /(?:from\s+['"][^'"]*supabase|supabase\s*\.\s*(?:from|rpc|storage|channel|auth))/,
+  `${path} may not add a direct Supabase dependency`);
 const hook = readFileSync('src/hooks/useTripMutations.ts', 'utf8');
 assert.doesNotMatch(hook, /supabase[.](from|rpc|storage|channel)/,
   'migrated trip mutation hook may only use its adapter');

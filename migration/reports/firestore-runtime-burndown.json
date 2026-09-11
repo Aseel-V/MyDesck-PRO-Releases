@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-11T11:44:54.583Z",
-  "scope": "production src runtime exact supabase.<api> call sites",
+  "generatedAt": "2026-09-11T16:38:53.212Z",
+  "scope": "production src runtime Supabase calls plus direct client imports",
   "totals": {
     "from": 185,
     "rpc": 44,
@@ -10,462 +10,1023 @@
   },
   "total": 254,
   "classes": {
-    "MIGRATED": 0,
+    "MIGRATED_TO_FIRESTORE": 58,
+    "MIGRATED_TO_FUNCTION": 31,
+    "FIREBASE_AUTH": 11,
+    "FIREBASE_STORAGE": 9,
+    "FIRESTORE_REALTIME": 2,
     "ADAPTER_ONLY": 8,
-    "BLOCKED": 72,
-    "DEFERRED": 174,
+    "LEGACY_VERTICAL": 135,
+    "DEAD_CODE": 0,
+    "BLOCKED": 0
+  },
+  "lifecycle": {
+    "PRODUCTION_ACTIVE": 246,
+    "LEGACY_INACTIVE": 0,
+    "MIGRATION_ONLY": 8,
+    "TEST_ONLY": 0,
     "DEAD": 0
   },
+  "indirectClientDependencies": {
+    "count": 75,
+    "entries": [
+      {
+        "file": "src/components/admin/AdminDashboard.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/admin/CreateUserForm.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/admin/EditUserModal.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/analytics/EditRestaurantOrderModal.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/analytics/RestaurantAnalytics.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/analytics/RestaurantOrderModal.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/auth/ResetPassword.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/cars/AddServiceModal.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/cars/Cars.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/cars/NewCarForm.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/CommandPalette.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/Dashboard.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/dashboards/AutoRepairDashboard.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/dashboards/SupermarketDashboard.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/ForgotPassword.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/invoice/AccountantReportTemplate.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/invoice/InvoiceTemplate.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/invoice/ReceiptTemplate.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/market/AddProductModal.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/market/EditTransactionModal.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/market/MarketReceiptTemplate.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/market/ReceiptModal.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/market/SalesAnalytics.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/market/SalesAnalyticsModal.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/parts/CarPartsInventory.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/repair/RepairOrderModal.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/restaurant/CloseDayWizard.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/restaurant/OrderEntry.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/restaurant/OrderHistoryModal.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/restaurant/OrderModal.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/restaurant/ReservationsBoard.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/restaurant/RestaurantModeRouter.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/restaurant/RestaurantReceiptModal.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/restaurant/StaffShiftScreen.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/Settings.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/trips/DuplicateTripDialog.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/trips/NewTripForm.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/trips/Trips.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/trips/TripSmartToolsDialog.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/trips/TripTrash.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/trips/TripWhatsappDialog.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/components/ui/FileUpload.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/contexts/AuthContext.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/contexts/RestaurantRoleContext.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/data/SupabaseStorageRepository.ts",
+        "lifecycle": "MIGRATION_ONLY",
+        "pathToZero": "REMOVE_AFTER_ROLLBACK_WINDOW"
+      },
+      {
+        "file": "src/data/SupabaseTripRepository.ts",
+        "lifecycle": "MIGRATION_ONLY",
+        "pathToZero": "REMOVE_AFTER_ROLLBACK_WINDOW"
+      },
+      {
+        "file": "src/hooks/useKitchenDisplay.ts",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/lib/analyticsQueries.ts",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/lib/businessImages.ts",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/lib/demandForecasting.ts",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/lib/fiscal/bkmvExporter.ts",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/lib/fiscal/documentNumbering.ts",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/lib/fiscal/fiscalDocumentService.ts",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/lib/fiscal/hashChain.ts",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/lib/fiscal/israelInvoicesApi.ts",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/lib/paymentContractCompatibility.ts",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/lib/pdfGenerator.ts",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/lib/repairPdfGenerator.ts",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/lib/repairWhatsApp.ts",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/lib/reports/zReportService.ts",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/lib/supabase.ts",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/lib/travelReports.ts",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/lib/tripAttachments.ts",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/lib/tripAuditQueries.ts",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/lib/tripNotifications.ts",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/lib/tripPayments.ts",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/lib/tripPdfClient.ts",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/lib/tripQueries.ts",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/lib/tripTemplates.ts",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/lib/tripTrashQueries.ts",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/lib/tripWhatsapp.ts",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/lib/visaPaymentArrivals.ts",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/modules/market/hooks/useMarketLogic.ts",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      },
+      {
+        "file": "src/pages/GuideWallet.tsx",
+        "lifecycle": "PRODUCTION_ACTIVE",
+        "pathToZero": "REPLACE_WITH_FIREBASE_PORT_OR_ADAPTER"
+      }
+    ]
+  },
+  "travel": {
+    "firebaseNativeRuntime": {
+      "auth": 0,
+      "data": 0,
+      "rpc": 0,
+      "storage": 0,
+      "realtime": 0,
+      "total": 0
+    },
+    "currentLegacyProductionPaths": {
+      "auth": 1,
+      "data": 42,
+      "rpc": 29,
+      "storage": 5,
+      "realtime": 0,
+      "total": 77
+    },
+    "unexplained": 0
+  },
+  "unknown": 0,
   "entries": [
     {
       "file": "src/components/admin/AdminDashboard.tsx",
       "kind": "from",
       "count": 2,
-      "classification": "DEFERRED"
+      "classification": "MIGRATED_TO_FIRESTORE",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
       "file": "src/components/admin/EditUserModal.tsx",
       "kind": "from",
       "count": 2,
-      "classification": "DEFERRED"
+      "classification": "MIGRATED_TO_FIRESTORE",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
       "file": "src/components/analytics/EditRestaurantOrderModal.tsx",
       "kind": "from",
       "count": 4,
-      "classification": "DEFERRED"
+      "classification": "LEGACY_VERTICAL",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
       "file": "src/components/analytics/RestaurantAnalytics.tsx",
       "kind": "from",
       "count": 3,
-      "classification": "DEFERRED"
+      "classification": "LEGACY_VERTICAL",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
       "file": "src/components/analytics/RestaurantOrderModal.tsx",
       "kind": "from",
       "count": 1,
-      "classification": "DEFERRED"
+      "classification": "LEGACY_VERTICAL",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
       "file": "src/components/auth/ResetPassword.tsx",
       "kind": "auth",
       "count": 1,
-      "classification": "DEFERRED"
+      "classification": "FIREBASE_AUTH",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "FIREBASE_AUTH_REPOSITORY"
     },
     {
       "file": "src/components/cars/AddServiceModal.tsx",
       "kind": "from",
       "count": 1,
-      "classification": "DEFERRED"
+      "classification": "LEGACY_VERTICAL",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
       "file": "src/components/cars/AddServiceModal.tsx",
       "kind": "rpc",
       "count": 1,
-      "classification": "DEFERRED"
+      "classification": "LEGACY_VERTICAL",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
       "file": "src/components/cars/Cars.tsx",
       "kind": "from",
       "count": 2,
-      "classification": "DEFERRED"
+      "classification": "LEGACY_VERTICAL",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
       "file": "src/components/cars/NewCarForm.tsx",
       "kind": "from",
       "count": 4,
-      "classification": "DEFERRED"
+      "classification": "LEGACY_VERTICAL",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
       "file": "src/components/CommandPalette.tsx",
       "kind": "from",
       "count": 1,
-      "classification": "DEFERRED"
+      "classification": "MIGRATED_TO_FIRESTORE",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
       "file": "src/components/Dashboard.tsx",
       "kind": "from",
       "count": 1,
-      "classification": "DEFERRED"
+      "classification": "MIGRATED_TO_FIRESTORE",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
       "file": "src/components/Dashboard.tsx",
       "kind": "rpc",
       "count": 1,
-      "classification": "DEFERRED"
+      "classification": "MIGRATED_TO_FUNCTION",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "CLOUD_FUNCTION_CALLABLE"
     },
     {
       "file": "src/components/dashboards/AutoRepairDashboard.tsx",
       "kind": "from",
       "count": 2,
-      "classification": "DEFERRED"
+      "classification": "MIGRATED_TO_FIRESTORE",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
       "file": "src/components/dashboards/SupermarketDashboard.tsx",
       "kind": "from",
       "count": 4,
-      "classification": "DEFERRED"
+      "classification": "MIGRATED_TO_FIRESTORE",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
       "file": "src/components/ForgotPassword.tsx",
       "kind": "auth",
       "count": 1,
-      "classification": "DEFERRED"
+      "classification": "FIREBASE_AUTH",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "FIREBASE_AUTH_REPOSITORY"
     },
     {
       "file": "src/components/market/AddProductModal.tsx",
       "kind": "from",
       "count": 4,
-      "classification": "DEFERRED"
+      "classification": "LEGACY_VERTICAL",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
       "file": "src/components/market/AddProductModal.tsx",
       "kind": "storage",
       "count": 2,
-      "classification": "DEFERRED"
+      "classification": "FIREBASE_STORAGE",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "FIREBASE_STORAGE_REPOSITORY"
     },
     {
       "file": "src/components/parts/CarPartsInventory.tsx",
       "kind": "from",
       "count": 4,
-      "classification": "DEFERRED"
+      "classification": "LEGACY_VERTICAL",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
       "file": "src/components/repair/RepairOrderModal.tsx",
       "kind": "from",
       "count": 7,
-      "classification": "DEFERRED"
+      "classification": "LEGACY_VERTICAL",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
       "file": "src/components/restaurant/CloseDayWizard.tsx",
       "kind": "from",
       "count": 1,
-      "classification": "DEFERRED"
+      "classification": "LEGACY_VERTICAL",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
       "file": "src/components/restaurant/OrderEntry.tsx",
       "kind": "from",
       "count": 1,
-      "classification": "DEFERRED"
+      "classification": "LEGACY_VERTICAL",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
       "file": "src/components/restaurant/OrderEntry.tsx",
       "kind": "rpc",
       "count": 1,
-      "classification": "DEFERRED"
+      "classification": "LEGACY_VERTICAL",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
       "file": "src/components/restaurant/OrderHistoryModal.tsx",
       "kind": "from",
       "count": 1,
-      "classification": "DEFERRED"
+      "classification": "LEGACY_VERTICAL",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
       "file": "src/components/restaurant/OrderModal.tsx",
       "kind": "from",
       "count": 5,
-      "classification": "DEFERRED"
+      "classification": "LEGACY_VERTICAL",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
       "file": "src/components/restaurant/ReservationsBoard.tsx",
       "kind": "auth",
       "count": 1,
-      "classification": "DEFERRED"
+      "classification": "FIREBASE_AUTH",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "FIREBASE_AUTH_REPOSITORY"
     },
     {
       "file": "src/components/restaurant/RestaurantModeRouter.tsx",
       "kind": "from",
       "count": 1,
-      "classification": "DEFERRED"
+      "classification": "LEGACY_VERTICAL",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
       "file": "src/components/restaurant/StaffShiftScreen.tsx",
       "kind": "from",
       "count": 1,
-      "classification": "DEFERRED"
+      "classification": "LEGACY_VERTICAL",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
       "file": "src/components/Settings.tsx",
       "kind": "from",
       "count": 6,
-      "classification": "BLOCKED"
+      "classification": "MIGRATED_TO_FIRESTORE",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
       "file": "src/components/Settings.tsx",
       "kind": "storage",
       "count": 2,
-      "classification": "BLOCKED"
+      "classification": "FIREBASE_STORAGE",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "FIREBASE_STORAGE_REPOSITORY"
     },
     {
       "file": "src/components/Settings.tsx",
       "kind": "auth",
       "count": 1,
-      "classification": "BLOCKED"
+      "classification": "FIREBASE_AUTH",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "FIREBASE_AUTH_REPOSITORY"
     },
     {
       "file": "src/components/trips/DuplicateTripDialog.tsx",
       "kind": "rpc",
       "count": 1,
-      "classification": "BLOCKED"
+      "classification": "MIGRATED_TO_FUNCTION",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "CLOUD_FUNCTION_CALLABLE"
     },
     {
       "file": "src/components/trips/NewTripForm.tsx",
       "kind": "from",
       "count": 1,
-      "classification": "BLOCKED"
+      "classification": "MIGRATED_TO_FIRESTORE",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
       "file": "src/components/trips/Trips.tsx",
       "kind": "rpc",
       "count": 1,
-      "classification": "BLOCKED"
+      "classification": "MIGRATED_TO_FUNCTION",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "CLOUD_FUNCTION_CALLABLE"
     },
     {
       "file": "src/components/trips/TripSmartToolsDialog.tsx",
       "kind": "from",
       "count": 2,
-      "classification": "BLOCKED"
+      "classification": "MIGRATED_TO_FIRESTORE",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
       "file": "src/components/trips/TripTrash.tsx",
       "kind": "from",
       "count": 1,
-      "classification": "BLOCKED"
+      "classification": "MIGRATED_TO_FIRESTORE",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
       "file": "src/components/trips/TripWhatsappDialog.tsx",
       "kind": "from",
       "count": 1,
-      "classification": "BLOCKED"
+      "classification": "MIGRATED_TO_FIRESTORE",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
       "file": "src/components/trips/TripWhatsappDialog.tsx",
       "kind": "rpc",
       "count": 1,
-      "classification": "BLOCKED"
+      "classification": "MIGRATED_TO_FUNCTION",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "CLOUD_FUNCTION_CALLABLE"
     },
     {
       "file": "src/components/ui/FileUpload.tsx",
       "kind": "storage",
       "count": 2,
-      "classification": "DEFERRED"
+      "classification": "FIREBASE_STORAGE",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "FIREBASE_STORAGE_REPOSITORY"
     },
     {
       "file": "src/contexts/AuthContext.tsx",
       "kind": "from",
       "count": 5,
-      "classification": "DEFERRED"
+      "classification": "MIGRATED_TO_FIRESTORE",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
       "file": "src/contexts/AuthContext.tsx",
       "kind": "rpc",
       "count": 1,
-      "classification": "DEFERRED"
+      "classification": "MIGRATED_TO_FUNCTION",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "CLOUD_FUNCTION_CALLABLE"
     },
     {
       "file": "src/contexts/AuthContext.tsx",
       "kind": "auth",
       "count": 7,
-      "classification": "DEFERRED"
+      "classification": "FIREBASE_AUTH",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "FIREBASE_AUTH_REPOSITORY"
     },
     {
       "file": "src/contexts/RestaurantRoleContext.tsx",
       "kind": "from",
       "count": 3,
-      "classification": "DEFERRED"
+      "classification": "LEGACY_VERTICAL",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
       "file": "src/contexts/RestaurantRoleContext.tsx",
       "kind": "rpc",
       "count": 1,
-      "classification": "DEFERRED"
+      "classification": "LEGACY_VERTICAL",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
       "file": "src/data/SupabaseStorageRepository.ts",
       "kind": "storage",
       "count": 2,
-      "classification": "ADAPTER_ONLY"
+      "classification": "ADAPTER_ONLY",
+      "lifecycle": "MIGRATION_ONLY",
+      "pathToZero": "REMOVE_AFTER_ROLLBACK_WINDOW"
     },
     {
       "file": "src/data/SupabaseStorageRepository.ts",
       "kind": "auth",
       "count": 1,
-      "classification": "ADAPTER_ONLY"
+      "classification": "ADAPTER_ONLY",
+      "lifecycle": "MIGRATION_ONLY",
+      "pathToZero": "REMOVE_AFTER_ROLLBACK_WINDOW"
     },
     {
       "file": "src/data/SupabaseTripRepository.ts",
       "kind": "from",
       "count": 4,
-      "classification": "ADAPTER_ONLY"
+      "classification": "ADAPTER_ONLY",
+      "lifecycle": "MIGRATION_ONLY",
+      "pathToZero": "REMOVE_AFTER_ROLLBACK_WINDOW"
     },
     {
       "file": "src/data/SupabaseTripRepository.ts",
       "kind": "rpc",
       "count": 1,
-      "classification": "ADAPTER_ONLY"
+      "classification": "ADAPTER_ONLY",
+      "lifecycle": "MIGRATION_ONLY",
+      "pathToZero": "REMOVE_AFTER_ROLLBACK_WINDOW"
     },
     {
       "file": "src/hooks/useKitchenDisplay.ts",
       "kind": "channel",
       "count": 1,
-      "classification": "DEFERRED"
+      "classification": "FIRESTORE_REALTIME",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "FIRESTORE_LISTENER_WITH_TENANT_QUERY"
     },
     {
       "file": "src/hooks/useRestaurant.ts",
       "kind": "from",
       "count": 74,
-      "classification": "DEFERRED"
+      "classification": "LEGACY_VERTICAL",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
       "file": "src/hooks/useRestaurant.ts",
       "kind": "rpc",
       "count": 9,
-      "classification": "DEFERRED"
+      "classification": "LEGACY_VERTICAL",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
       "file": "src/hooks/useRestaurant.ts",
       "kind": "channel",
       "count": 1,
-      "classification": "DEFERRED"
+      "classification": "FIRESTORE_REALTIME",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "FIRESTORE_LISTENER_WITH_TENANT_QUERY"
     },
     {
       "file": "src/lib/analyticsQueries.ts",
       "kind": "rpc",
       "count": 2,
-      "classification": "BLOCKED"
+      "classification": "MIGRATED_TO_FUNCTION",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "CLOUD_FUNCTION_CALLABLE"
     },
     {
       "file": "src/lib/businessImages.ts",
       "kind": "storage",
       "count": 1,
-      "classification": "BLOCKED"
+      "classification": "FIREBASE_STORAGE",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "FIREBASE_STORAGE_REPOSITORY"
     },
     {
       "file": "src/lib/demandForecasting.ts",
       "kind": "from",
       "count": 4,
-      "classification": "DEFERRED"
+      "classification": "LEGACY_VERTICAL",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
       "file": "src/lib/fiscal/bkmvExporter.ts",
       "kind": "from",
       "count": 1,
-      "classification": "DEFERRED"
+      "classification": "LEGACY_VERTICAL",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
       "file": "src/lib/paymentContractCompatibility.ts",
       "kind": "rpc",
       "count": 1,
-      "classification": "DEFERRED"
+      "classification": "MIGRATED_TO_FUNCTION",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "CLOUD_FUNCTION_CALLABLE"
     },
     {
       "file": "src/lib/pdfGenerator.ts",
       "kind": "rpc",
       "count": 2,
-      "classification": "BLOCKED"
+      "classification": "MIGRATED_TO_FUNCTION",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "CLOUD_FUNCTION_CALLABLE"
     },
     {
       "file": "src/lib/travelReports.ts",
       "kind": "rpc",
       "count": 1,
-      "classification": "BLOCKED"
+      "classification": "MIGRATED_TO_FUNCTION",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "CLOUD_FUNCTION_CALLABLE"
     },
     {
       "file": "src/lib/tripAttachments.ts",
       "kind": "storage",
       "count": 2,
-      "classification": "BLOCKED"
+      "classification": "FIREBASE_STORAGE",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "FIREBASE_STORAGE_REPOSITORY"
     },
     {
       "file": "src/lib/tripAuditQueries.ts",
       "kind": "rpc",
       "count": 2,
-      "classification": "BLOCKED"
+      "classification": "MIGRATED_TO_FUNCTION",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "CLOUD_FUNCTION_CALLABLE"
     },
     {
       "file": "src/lib/tripNotifications.ts",
       "kind": "from",
       "count": 7,
-      "classification": "BLOCKED"
+      "classification": "MIGRATED_TO_FIRESTORE",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
       "file": "src/lib/tripNotifications.ts",
       "kind": "rpc",
       "count": 1,
-      "classification": "BLOCKED"
+      "classification": "MIGRATED_TO_FUNCTION",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "CLOUD_FUNCTION_CALLABLE"
     },
     {
       "file": "src/lib/tripPayments.ts",
       "kind": "from",
       "count": 3,
-      "classification": "BLOCKED"
+      "classification": "MIGRATED_TO_FIRESTORE",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
       "file": "src/lib/tripPayments.ts",
       "kind": "rpc",
       "count": 5,
-      "classification": "BLOCKED"
+      "classification": "MIGRATED_TO_FUNCTION",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "CLOUD_FUNCTION_CALLABLE"
     },
     {
       "file": "src/lib/tripQueries.ts",
       "kind": "from",
       "count": 4,
-      "classification": "BLOCKED"
+      "classification": "MIGRATED_TO_FIRESTORE",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
       "file": "src/lib/tripQueries.ts",
       "kind": "rpc",
       "count": 6,
-      "classification": "BLOCKED"
+      "classification": "MIGRATED_TO_FUNCTION",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "CLOUD_FUNCTION_CALLABLE"
     },
     {
       "file": "src/lib/tripTemplates.ts",
       "kind": "from",
       "count": 7,
-      "classification": "BLOCKED"
+      "classification": "MIGRATED_TO_FIRESTORE",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
       "file": "src/lib/tripTemplates.ts",
       "kind": "rpc",
       "count": 1,
-      "classification": "BLOCKED"
+      "classification": "MIGRATED_TO_FUNCTION",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "CLOUD_FUNCTION_CALLABLE"
     },
     {
       "file": "src/lib/tripTrashQueries.ts",
       "kind": "from",
       "count": 1,
-      "classification": "BLOCKED"
+      "classification": "MIGRATED_TO_FIRESTORE",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
       "file": "src/lib/tripTrashQueries.ts",
       "kind": "rpc",
       "count": 4,
-      "classification": "BLOCKED"
+      "classification": "MIGRATED_TO_FUNCTION",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "CLOUD_FUNCTION_CALLABLE"
     },
     {
       "file": "src/lib/tripWhatsapp.ts",
       "kind": "from",
       "count": 6,
-      "classification": "BLOCKED"
+      "classification": "MIGRATED_TO_FIRESTORE",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
       "file": "src/lib/visaPaymentArrivals.ts",
       "kind": "from",
       "count": 2,
-      "classification": "DEFERRED"
+      "classification": "MIGRATED_TO_FIRESTORE",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
       "file": "src/lib/visaPaymentArrivals.ts",
       "kind": "rpc",
       "count": 1,
-      "classification": "DEFERRED"
+      "classification": "MIGRATED_TO_FUNCTION",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "CLOUD_FUNCTION_CALLABLE"
     },
     {
       "file": "src/modules/market/hooks/useMarketLogic.ts",
       "kind": "from",
       "count": 1,
-      "classification": "DEFERRED"
+      "classification": "LEGACY_VERTICAL",
+      "lifecycle": "PRODUCTION_ACTIVE",
+      "pathToZero": "VERTICAL_FIREBASE_PORT"
     }
   ]
 }

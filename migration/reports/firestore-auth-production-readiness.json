@@ -1,0 +1,126 @@
+{
+  "generatedAt": "2026-09-11T16:36:11.831Z",
+  "sourceSnapshot": {
+    "readOnly": true,
+    "isolationLevel": "repeatable read",
+    "writesCaused": 0
+  },
+  "totalUsers": 10,
+  "TRANSPARENT": 7,
+  "REAUTH_REQUIRED": 0,
+  "RESET_REQUIRED": 0,
+  "MANUAL_OPERATOR_ACTION": 3,
+  "INTENTIONALLY_EXCLUDED_WITH_JUSTIFICATION": 0,
+  "unknown": 0,
+  "accounted": 10,
+  "uidMismatches": 0,
+  "users": [
+    {
+      "uidFingerprint": "95e3cb04de08",
+      "sourceTargetUidEqual": true,
+      "uidPreserved": true,
+      "classification": "MANUAL_OPERATOR_ACTION",
+      "requiredAction": "CONFIRM_ACCOUNT_PURPOSE_AND_CREATE_OR_EXPLICITLY_DENY_APPLICATION_LINKAGE_BEFORE_ENABLEMENT",
+      "emailVerified": true,
+      "status": "ACTIVE",
+      "blockingReasons": [
+        "MISSING_PROFILE_AND_BUSINESS"
+      ]
+    },
+    {
+      "uidFingerprint": "29f3c0367460",
+      "sourceTargetUidEqual": true,
+      "uidPreserved": true,
+      "classification": "TRANSPARENT",
+      "requiredAction": "IMPORT_UID_AND_COMPATIBLE_BCRYPT",
+      "emailVerified": true,
+      "status": "ACTIVE",
+      "blockingReasons": []
+    },
+    {
+      "uidFingerprint": "6d65321887ee",
+      "sourceTargetUidEqual": true,
+      "uidPreserved": true,
+      "classification": "TRANSPARENT",
+      "requiredAction": "IMPORT_UID_AND_COMPATIBLE_BCRYPT",
+      "emailVerified": true,
+      "status": "ACTIVE",
+      "blockingReasons": []
+    },
+    {
+      "uidFingerprint": "4ca1630f70b0",
+      "sourceTargetUidEqual": true,
+      "uidPreserved": true,
+      "classification": "MANUAL_OPERATOR_ACTION",
+      "requiredAction": "CONFIRM_ACCOUNT_PURPOSE_AND_CREATE_OR_EXPLICITLY_DENY_APPLICATION_LINKAGE_BEFORE_ENABLEMENT",
+      "emailVerified": true,
+      "status": "ACTIVE",
+      "blockingReasons": [
+        "MISSING_PROFILE_AND_BUSINESS"
+      ]
+    },
+    {
+      "uidFingerprint": "a3d78f6c5a53",
+      "sourceTargetUidEqual": true,
+      "uidPreserved": true,
+      "classification": "TRANSPARENT",
+      "requiredAction": "IMPORT_UID_AND_COMPATIBLE_BCRYPT",
+      "emailVerified": true,
+      "status": "ACTIVE",
+      "blockingReasons": []
+    },
+    {
+      "uidFingerprint": "14639a9664ae",
+      "sourceTargetUidEqual": true,
+      "uidPreserved": true,
+      "classification": "TRANSPARENT",
+      "requiredAction": "IMPORT_UID_AND_COMPATIBLE_BCRYPT",
+      "emailVerified": true,
+      "status": "ACTIVE",
+      "blockingReasons": []
+    },
+    {
+      "uidFingerprint": "4ed545194685",
+      "sourceTargetUidEqual": true,
+      "uidPreserved": true,
+      "classification": "TRANSPARENT",
+      "requiredAction": "IMPORT_UID_AND_COMPATIBLE_BCRYPT",
+      "emailVerified": true,
+      "status": "ACTIVE",
+      "blockingReasons": []
+    },
+    {
+      "uidFingerprint": "2f93402fb0f7",
+      "sourceTargetUidEqual": true,
+      "uidPreserved": true,
+      "classification": "TRANSPARENT",
+      "requiredAction": "IMPORT_UID_AND_COMPATIBLE_BCRYPT",
+      "emailVerified": true,
+      "status": "ACTIVE",
+      "blockingReasons": []
+    },
+    {
+      "uidFingerprint": "14f005e47862",
+      "sourceTargetUidEqual": true,
+      "uidPreserved": true,
+      "classification": "TRANSPARENT",
+      "requiredAction": "IMPORT_UID_AND_COMPATIBLE_BCRYPT",
+      "emailVerified": true,
+      "status": "ACTIVE",
+      "blockingReasons": []
+    },
+    {
+      "uidFingerprint": "f3b8c72c5a7d",
+      "sourceTargetUidEqual": true,
+      "uidPreserved": true,
+      "classification": "MANUAL_OPERATOR_ACTION",
+      "requiredAction": "CONFIRM_ACCOUNT_PURPOSE_AND_CREATE_OR_EXPLICITLY_DENY_APPLICATION_LINKAGE_BEFORE_ENABLEMENT",
+      "emailVerified": true,
+      "status": "ACTIVE",
+      "blockingReasons": [
+        "MISSING_PROFILE_AND_BUSINESS"
+      ]
+    }
+  ],
+  "productionFirebaseImports": 0
+}

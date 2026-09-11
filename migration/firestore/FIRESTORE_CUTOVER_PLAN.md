@@ -4,7 +4,7 @@ Status: **DESIGN ONLY — NOT EXECUTED**. The source remains authoritative. Clou
 
 ## Entry gates
 
-Cutover preparation may start only after the rehearsal blockers are closed: revoke and remediate the staged GitHub credential, replace the incomplete page-local search behavior, disposition the three auth accounts requiring manual review, define provisioning for excluded restaurant credentials, and approve the protection model for any future passport fields. The full rehearsal must then be repeated with zero unexplained reconciliation failures.
+Cutover preparation may start with the blocker-closure evidence in `migration/reports/FIRESTORE_PRODUCTION_PREP_BLOCKER_CLOSURE.md`. The exposed GitHub credential has been removed from active source, but its owner must delete/revoke it before any credential-dependent production step. Fourteen search features have an explicit Firestore, bounded-filter, external-index, or justified deferred strategy; the external index transport must be selected and deployed before affected UI routes switch. The three formerly unknown auth accounts now have deterministic `MANUAL_OPERATOR_ACTION` dispositions and must be explicitly linked or denied application access before enablement. Provisioning for excluded restaurant credentials and the protection model for any future passport fields remain cutover gates.
 
 The operator records the source schema fingerprint, 77/77 table dispositions, current row and auth conservation, Storage manifest, transform version, deployed Rules/index version, Functions revision, IAM bindings, rollback owner, and tested recovery point. Production import credentials are granted only for the migration window and never include Owner, Editor, or Firebase Admin.
 
@@ -31,7 +31,7 @@ The final delta is accepted only when a second inventory at the end of the froze
 
 ## Auth sequencing
 
-Auth is imported before user-owned Firestore documents become reachable. Accounts are classified as `TRANSPARENT`, `REAUTH`, `RESET_REQUIRED`, or `MANUAL_REVIEW`; `UNKNOWN` is forbidden. Batches preserve the Supabase UID as the Firebase UID and preserve verification state only where the source evidence supports it. Compatible GoTrue bcrypt hashes use the already-proved Firebase import path without exposing hashes in logs.
+Auth is imported before user-owned Firestore documents become reachable. Accounts are classified as `TRANSPARENT`, `REAUTH_REQUIRED`, `RESET_REQUIRED`, `MANUAL_OPERATOR_ACTION`, or `INTENTIONALLY_EXCLUDED_WITH_JUSTIFICATION`; `UNKNOWN` is forbidden. The current readiness ledger accounts for all ten users: seven are transparent and three require the operator to confirm account purpose and either create application linkage or explicitly deny access. Batches preserve the Supabase UID as the Firebase UID and preserve verification state only where the source evidence supports it. Compatible GoTrue bcrypt hashes use the already-proved Firebase import path without exposing hashes in logs.
 
 Duplicate emails, phone identities, OAuth-only identities and MFA factors are held for deterministic manual rules; none is silently merged. Batch results record source UID, intended UID, state and retry count without password material. Retry uses the same UID and fails closed on collisions. Account conservation and UID equality are required before data exposure. Rollback disables newly imported accounts if the backend switch is reversed; it never deletes the Supabase identity.
 

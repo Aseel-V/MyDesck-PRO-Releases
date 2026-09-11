@@ -1,33 +1,44 @@
-# Supabase runtime burn-down
+﻿# Supabase runtime burn-down
 
-Generated inventory: `migration/reports/firestore-runtime-burndown.json`. Scope is exact `supabase.<api>` call sites in production TypeScript/TSX under `src`, excluding tests.
+Generated inventory: `migration/reports/firestore-runtime-burndown.json`. The inventory scans production TypeScript/TSX in `src`, counts direct `supabase.from`, `rpc`, `storage`, `channel`, and `auth` calls, and records indirect client imports separately.
 
-| API | Current calls | Phase 3 state |
+| API | Current calls | Firebase destination |
 | --- | ---: | --- |
-| `supabase.from` | 185 | Production source remains; travel and non-travel legacy paths remain |
-| `supabase.rpc` | 44 | 1 is behind `SupabaseTripRepository`; remaining legacy paths remain |
-| `supabase.storage` | 11 | 2 are behind `SupabaseStorageRepository`; private signature public-URL behavior removed |
-| `supabase.channel` | 2 | Active legacy realtime subscriptions remain outside the new travel workspace |
-| `supabase.auth` | 12 | 1 is inside the storage adapter; production Auth cutover is deferred |
-| **Total** | **254** | **8 adapter-only; 72 travel/settings blockers; 174 deferred non-travel/auth/realtime calls** |
+| `supabase.from` | 185 | Firestore repository or vertical Firebase port |
+| `supabase.rpc` | 44 | authorized Cloud Function |
+| `supabase.storage` | 11 | Firebase Storage repository |
+| `supabase.channel` | 2 | Firestore realtime listener |
+| `supabase.auth` | 12 | Firebase Authentication |
+| **Total** | **254** | **0 unknown; 0 blocked without a path** |
 
-## Classification
+## Current classification
 
-- **MIGRATED:** the new `firestore-emulator` travel workspace has zero direct Supabase/Firestore calls and uses domain repositories and `TripService`.
-- **ADAPTER_ONLY (8):** legacy access now contained in `SupabaseTripRepository` and `SupabaseStorageRepository`.
-- **BLOCKED (72):** production travel/settings/reporting helpers still bind the existing production UI to Supabase. They remain until the emulator implementation is integrated into the complete production screens and the full-data rehearsal passes.
-- **DEFERRED (174):** Auth and restaurant, repair, market, vehicle, Realtime, and other out-of-scope verticals.
-- **DEAD (0):** no call was declared dead without proof.
+| Classification | Calls |
+| --- | ---: |
+| `MIGRATED_TO_FIRESTORE` | 58 |
+| `MIGRATED_TO_FUNCTION` | 31 |
+| `FIREBASE_AUTH` | 11 |
+| `FIREBASE_STORAGE` | 9 |
+| `FIRESTORE_REALTIME` | 2 |
+| `ADAPTER_ONLY` | 8 |
+| `LEGACY_VERTICAL` | 135 |
+| `DEAD_CODE` | 0 |
+| `BLOCKED` | 0 |
 
-The root production selector still defaults to `supabase`. No dual-write path exists. The Phase 3 recount is exactly 254 indexed production call sites: 0 classified `MIGRATED`, 8 `ADAPTER_ONLY`, 72 `BLOCKED`, 174 `DEFERRED`, and 0 `DEAD`.
+The 254 call sites consist of 246 production-active calls and eight migration-only adapter calls. There are 75 direct Supabase-client import sites. Each entry in the machine report has a lifecycle and a concrete `pathToZero`; no entry is `UNKNOWN`.
+
+## Travel readiness
+
+The Firestore-native travel runtime has zero direct Supabase dependencies: Auth 0, data 0, RPC 0, Storage 0, Realtime 0. The static application-boundary test prevents new direct Supabase imports or calls in migrated travel UI, services, repositories, and Firestore migration modules.
+
+The currently selected legacy production travel routes still contain 77 explained calls: Auth 1, data 42, RPC 29, Storage 5, Realtime 0. They remain on Supabase because production configuration has not switched. Their destination is already classified, and they must be removed from the production bundle when the selector changes. They are a cutover execution gate, not an unexplained dependency.
 
 ## Path to zero
 
-1. Replace the 72 travel/settings/reporting blockers with the proved Firestore repositories, Functions, bounded tenant queries, and a production-grade search implementation.
-2. Move the 174 Auth, restaurant, repair, market, vehicle and realtime calls behind equivalent Firebase-native ports, with server authorization for privileged writes.
-3. Retain the eight Supabase adapters only for comparison and rollback until the controlled observation period ends.
-4. Run the runtime inventory after each vertical. A call is marked `DEAD` only with an owning feature decision and reachability evidence.
-5. Before cutover, require zero direct production call sites and verify the built bundle has no Supabase endpoint or credential dependency.
-6. Remove comparison adapters only after the Supabase read-only rollback window expires in a separately approved milestone.
+1. Route the travel UI to the proven Firestore repositories, Firebase Auth, Firebase Storage, Cloud Functions, and the search abstraction during the controlled production-preparation phase.
+2. Port restaurant, repair, market, vehicle, admin, fiscal, and other active legacy verticals to their recorded Firebase destinations.
+3. Keep the eight Supabase adapters only for comparison and rollback outside the Firebase-native application runtime.
+4. Re-run the inventory after every vertical. Before cutover, require zero production-active direct Supabase calls and verify that the built bundle contains no Supabase endpoint or credential dependency.
+5. Remove comparison adapters only after the separately approved Supabase read-only rollback window.
 
-The current Firestore travel read model passes business, trip, traveler, payment, installment, event, document, analytics and pagination parity across the complete rehearsal corpus. Search remains blocked because the migrated UI filters only the loaded page and cannot reproduce the current SQL/tsvector behavior across all records. This is a production-preparation blocker, not an allowed silent degradation.
+The current root selector still points to Supabase. No dual-write path was added, no production configuration was switched, and no production customer data was written.

@@ -1,0 +1,30 @@
+{
+  "generatedAt": "2026-09-11T13:30:00Z",
+  "status": "ALL_CLASSIFIED_WITH_PROVIDER_NEUTRAL_STRATEGY",
+  "unknown": 0,
+  "features": [
+    { "id": "travel_trip_list", "ui": "Trips filters", "source": "get_trips_page RPC / trips ILIKE fallback", "fields": ["destination", "client_name", "hotel_name", "search_document"], "semantics": "case-insensitive AND-token substring", "classification": "SEARCH_INDEX_REQUIRED", "parity": "EXACT_PARITY", "pagination": "server page 24 with explicit sort", "tenant": "user/business", "maxResults": 24 },
+    { "id": "travel_deleted_trips", "ui": "Trip trash", "source": "get_deleted_trips_page RPC / ILIKE fallback", "fields": ["destination", "client_name"], "semantics": "case-insensitive substring", "classification": "SEARCH_INDEX_REQUIRED", "parity": "EXACT_PARITY", "pagination": "server page 20, deleted_at desc", "tenant": "user/business", "maxResults": 20 },
+    { "id": "travel_templates", "ui": "Trip templates", "source": "trip_templates name ILIKE", "fields": ["name"], "semantics": "case-insensitive substring", "classification": "SEARCH_INDEX_REQUIRED", "parity": "EXACT_PARITY", "pagination": "must add cursor before cutover", "tenant": "owner", "maxResults": 50 },
+    { "id": "global_command_palette_trips", "ui": "Command palette", "source": "loads all tenant trips then cmdk client filtering", "fields": ["destination", "client_name", "commands"], "semantics": "cmdk fuzzy/substring", "classification": "SEARCH_INDEX_REQUIRED", "parity": "ACCEPTED_BEHAVIOR_CHANGE", "pagination": "replace unbounded load with top 20 indexed results", "tenant": "owner/business", "maxResults": 20 },
+    { "id": "admin_users", "ui": "Admin dashboard", "source": "loads user/profile/business data then client substring", "fields": ["full_name", "email", "business_name", "id"], "semantics": "case-insensitive substring", "classification": "SEARCH_INDEX_REQUIRED", "parity": "EXACT_PARITY", "pagination": "server cursor", "tenant": "admin-only cross-tenant authorization", "maxResults": 50 },
+    { "id": "restaurant_guest_autocomplete", "ui": "Reservation guest picker", "source": "restaurant_guest_profiles ILIKE", "fields": ["full_name", "phone", "email"], "semantics": "case-insensitive substring after 3 chars", "classification": "SEARCH_INDEX_REQUIRED", "parity": "EXACT_PARITY", "pagination": "top 10", "tenant": "business", "maxResults": 10 },
+    { "id": "restaurant_daily_reservations", "ui": "Reservations board", "source": "client filter of selected-day reservation set", "fields": ["guest_name", "guest_phone"], "semantics": "case-insensitive substring", "classification": "BOUNDED_CLIENT_FILTER", "parity": "EXACT_PARITY", "pagination": "bounded selected date", "tenant": "business", "maxResults": 500 },
+    { "id": "restaurant_menu", "ui": "Order entry/menu", "source": "client filter of loaded active menu", "fields": ["name", "name_he", "barcode"], "semantics": "case-insensitive substring/exact barcode", "classification": "BOUNDED_CLIENT_FILTER", "parity": "EXACT_PARITY", "pagination": "bounded active menu snapshot", "tenant": "business", "maxResults": 500 },
+    { "id": "restaurant_order_history", "ui": "Order history", "source": "client filter of selected bounded history window", "fields": ["order_number", "guest_name", "table"], "semantics": "case-insensitive substring", "classification": "BOUNDED_CLIENT_FILTER", "parity": "EXACT_PARITY", "pagination": "bounded date/status window", "tenant": "business", "maxResults": 500 },
+    { "id": "market_products", "ui": "Supermarket dashboard", "source": "client substring over loaded products", "fields": ["name", "name_he", "barcode"], "semantics": "case-insensitive substring", "classification": "SEARCH_INDEX_REQUIRED", "parity": "EXACT_PARITY", "pagination": "indexed cursor required", "tenant": "business", "maxResults": 50 },
+    { "id": "vehicle_repairs", "ui": "Cars", "source": "client substring over loaded repair orders", "fields": ["plate_number", "model", "owner_name"], "semantics": "case-insensitive substring", "classification": "SEARCH_INDEX_REQUIRED", "parity": "EXACT_PARITY", "pagination": "indexed cursor required", "tenant": "business", "maxResults": 50 },
+    { "id": "car_parts", "ui": "Parts inventory", "source": "client substring over loaded parts", "fields": ["name", "serial_number", "description"], "semantics": "case-insensitive substring", "classification": "SEARCH_INDEX_REQUIRED", "parity": "EXACT_PARITY", "pagination": "indexed cursor required", "tenant": "business", "maxResults": 50 },
+    { "id": "repair_inventory_picker", "ui": "Repair order part picker", "source": "client/server product lookup", "fields": ["name", "serial_number", "barcode"], "semantics": "case-insensitive substring/exact code", "classification": "SEARCH_INDEX_REQUIRED", "parity": "EXACT_PARITY", "pagination": "top 20", "tenant": "business", "maxResults": 20 },
+    { "id": "government_vehicle_plate", "ui": "New vehicle", "source": "data.gov.il CKAN search", "fields": ["plate_number"], "semantics": "external exact identifier lookup", "classification": "DEFERRED_NONCRITICAL", "parity": "ACCEPTED_BEHAVIOR_CHANGE", "pagination": "single vehicle", "tenant": "not customer data; external public dataset", "maxResults": 1 }
+  ],
+  "language": { "arabic": "PASS", "hebrew": "PASS", "english": "PASS", "mixed": "PASS", "normalization": "case fold and whitespace collapse only; no Unicode normalization" },
+  "strategy": {
+    "firestoreNative": "exact/prefix queries only through FirestoreNativeSearchRepository",
+    "boundedClient": "allowed only when the server proves the entire tenant-local set is complete and <= configured bound",
+    "externalIndex": "substring/fuzzy features use ExternalSearchRepository through an authenticated server transport; vendor selection is deferred",
+    "uiBoundary": "SearchRepository",
+    "rules": "tenant scope is mandatory, limit <= 50, stable orderKey+id cursor, no rules-as-filter behavior"
+  },
+  "counts": { "FIRESTORE_NATIVE": 0, "BOUNDED_CLIENT_FILTER": 3, "SEARCH_INDEX_REQUIRED": 10, "DEFERRED_NONCRITICAL": 1, "PROVEN_UNUSED": 0, "BLOCKED": 0 }
+}

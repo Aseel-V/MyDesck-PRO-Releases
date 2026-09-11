@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-11T12:02:51.311Z",
+  "generatedAt": "2026-09-11T16:44:35.702Z",
   "status": "PASS",
   "suites": [
     {
@@ -45,6 +45,18 @@
       "tests": 6
     },
     {
+      "label": "secret scanner regression",
+      "file": "migration/firestore/tests/secret-scanner.test.mjs",
+      "outcome": "PASS",
+      "tests": 3
+    },
+    {
+      "label": "search repository parity",
+      "file": "scripts/test-search-repository.ts",
+      "outcome": "PASS",
+      "tests": 0
+    },
+    {
       "label": "application boundary",
       "file": "scripts/test-firestore-app-layer.mjs",
       "outcome": "PASS",
@@ -82,12 +94,13 @@
     }
   ],
   "totals": {
-    "steps": 14,
-    "passed": 14,
+    "steps": 16,
+    "passed": 16,
     "failed": 0,
-    "nodeTestCases": 161,
-    "assertionCallSites": 455,
+    "nodeTestCases": 164,
+    "assertionCallSites": 480,
     "fullCorpusApplicationAssertions": 1023,
+    "searchCorpusCases": 12,
     "fullCorpusSecurityChecks": 50,
     "corruptionControls": 18
   },

@@ -1,0 +1,15 @@
+{
+  "generatedAt": "2026-09-11T16:40:08.307Z",
+  "status": "PASS",
+  "sourceSnapshot": {
+    "readOnly": true,
+    "isolationLevel": "repeatable read",
+    "writesCaused": 0
+  },
+  "corpusRows": 99,
+  "tenants": 3,
+  "cases": 12,
+  "mismatches": 0,
+  "piiPersisted": false,
+  "semantics": "case-insensitive AND-token substring with stable order"
+}

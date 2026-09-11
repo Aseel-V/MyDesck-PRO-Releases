@@ -1,0 +1,98 @@
+{
+  "generatedAt": "2026-09-11T17:05:00+03:00",
+  "startingSha": "43fe0897d82475172e5714f21d754526f943a5bb",
+  "endingSha": "COMMIT_CONTAINING_THIS_EVIDENCE",
+  "recoveryTag": "recovery/pre-production-prep-blocker-closure-20260911-161337",
+  "stagedSafety": {
+    "baselinePaths": 213,
+    "baselineManifestSha256": "6912063bab1918961b2995196017f530ec2e276b607ff6786c745d85b174c201",
+    "byteIdenticalUnrelatedPaths": 212,
+    "authorizedSecretFileEdits": 1,
+    "secretFileOtherContentPreserved": true
+  },
+  "secret": {
+    "classification": "GITHUB_CLASSIC_PERSONAL_ACCESS_TOKEN",
+    "activeSourcePresence": false,
+    "reachableHistoryPresenceAtDiscovery": false,
+    "otherActiveOccurrences": 0,
+    "revocation": "EXPLICITLY_OPERATOR_BLOCKED",
+    "credentialTreatedAsCompromised": true,
+    "productionGate": "OWNER_CONFIRM_REVOCATION_BEFORE_CREDENTIAL_DEPENDENT_PRODUCTION_STEP"
+  },
+  "search": {
+    "features": 14,
+    "firestoreNative": 0,
+    "boundedClientFilter": 3,
+    "externalIndexRequired": 10,
+    "deferredNoncritical": 1,
+    "blocked": 0,
+    "unknown": 0,
+    "fullCorpusRows": 99,
+    "fullCorpusTenants": 3,
+    "corpusCases": 12,
+    "mismatches": 0,
+    "arabic": "PASS",
+    "hebrew": "PASS",
+    "english": "PASS",
+    "tenantIsolation": "PASS",
+    "parityResult": "CONCRETE_STRATEGY_FOR_ALL_FEATURES"
+  },
+  "auth": {
+    "totalUsers": 10,
+    "transparent": 7,
+    "reauthRequired": 0,
+    "resetRequired": 0,
+    "manualOperatorAction": 3,
+    "excluded": 0,
+    "unknown": 0,
+    "accounted": 10,
+    "uidMismatches": 0,
+    "productionImports": 0
+  },
+  "supabaseBurnDown": {
+    "previousCount": 254,
+    "currentCount": 254,
+    "productionActive": 246,
+    "legacyInactive": 0,
+    "migrationOnly": 8,
+    "testOnly": 0,
+    "dead": 0,
+    "blocked": 0,
+    "unknown": 0,
+    "indirectClientImports": 75,
+    "travelFirebaseNative": { "auth": 0, "data": 0, "rpc": 0, "storage": 0, "realtime": 0, "total": 0 },
+    "travelCurrentLegacyExplained": { "auth": 1, "data": 42, "rpc": 29, "storage": 5, "realtime": 0, "total": 77 },
+    "travelUnexplained": 0
+  },
+  "regressions": {
+    "fullRehearsalRepeated": false,
+    "reason": "No transform, schema, Rules, transaction, or storage regression required repeating the full production-data extraction/import.",
+    "reconciliation": "RECONCILED",
+    "financialDelta": 0,
+    "relationshipMismatches": 0,
+    "migrationCreatedOrphans": 0,
+    "eventMismatches": 0,
+    "rules": "25/25 PASS",
+    "tenantMatrix": "50/50 PASS",
+    "transactions": "37/37 PASS",
+    "storage": "3/3, 438670 bytes, 0 checksum mismatches",
+    "applicationParity": "PASS; search strategy closure is recorded separately"
+  },
+  "postgresOracle": {
+    "result": "PASS",
+    "version": "17.10",
+    "migrations": 93,
+    "checks": 120,
+    "failures": 0
+  },
+  "harness": { "steps": 16, "passed": 16, "tests": 164, "assertionCallSites": 480, "failures": 0 },
+  "productionChanges": {
+    "supabaseCustomerWrites": 0,
+    "firebaseCustomerWrites": 0,
+    "firebaseProductionUserImports": 0,
+    "backendCutover": "NOT STARTED",
+    "supabaseDeletion": "NOT STARTED",
+    "cloudSql": "NOT USED"
+  },
+  "decision": "READY FOR CONTROLLED FIRESTORE PRODUCTION MIGRATION PREPARATION"
+}
