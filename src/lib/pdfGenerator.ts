@@ -1,4 +1,5 @@
-﻿import { Trip } from '../types/trip';
+﻿import { resolvePrivateSignature } from './businessImages';
+import { Trip } from '../types/trip';
 import { RestaurantOrder, RestaurantTable, DailyReport } from '../types/restaurant';
 import { supabase, type BusinessProfile } from './supabase';
 import { formatRoomConfiguration } from './tripRoom';
@@ -372,7 +373,7 @@ async function generateTripRasterPDF(mode: 'invoice' | 'summary', options: PDFOp
   const { jsPDF } = await import('jspdf');
   const { default: html2canvas } = await import('html2canvas');
   const logoUrl = await imageUrlToDataUrl(options.profile.logo_url);
-  const signatureUrl = await imageUrlToDataUrl(options.profile.signature_url);
+  const signatureUrl = await imageUrlToDataUrl(await resolvePrivateSignature(options.profile.signature_url));
 
   const container = document.createElement('div');
   container.style.cssText = 'position:absolute;left:-10000px;top:0;background:#fff;';

@@ -5,7 +5,7 @@ import type { Database } from '../types/supabase';
 import { RestaurantStaff } from '../types/restaurant';
 import { safeImageSrc } from '../lib/safeUrl';
 import { getFriendlyAuthError } from '../lib/authNetwork';
-import { canonicalBusinessImage, resolveBusinessImage } from '../lib/businessImages';
+import { canonicalBusinessImage, resolveBusinessImage, resolvePrivateSignature } from '../lib/businessImages';
 
 const CACHE_KEY_BUSINESS_PROFILE = 'app_business_profile';
 const CACHE_KEY_USER_PROFILE = 'app_user_profile';
@@ -110,7 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
       if (!data) return null;
       const [logo_url, signature_url] = await Promise.all([
-        resolveBusinessImage(data.logo_url), resolveBusinessImage(data.signature_url),
+        resolveBusinessImage(data.logo_url), resolvePrivateSignature(data.signature_url),
       ]);
       return sanitizeBusinessProfile({ ...data, logo_url, signature_url } as BusinessProfile);
     } catch (e) {

@@ -1,3 +1,4 @@
+import { SupabaseStorageRepository } from '../data/SupabaseStorageRepository';
 import { supabase } from './supabase';
 
 // Keep stable references in profiles; resolve private objects only for display.
@@ -20,6 +21,18 @@ export function canonicalBusinessImage(value: string | null | undefined): string
 export async function resolveBusinessImage(value: string | null | undefined): Promise<string | null> {
   const ref = businessImageReference(value);
   if (!ref) return value || null;
+  if (ref.bucket === 'business-signatures') {
+    try { const blob = await new SupabaseStorageRepository().readPrivateFile(ref.path);
+      return await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result)); reader.onerror = reject; reader.readAsDataURL(blob); });
+    } catch { return null; }
+  }
   const { data, error } = await supabase.storage.from(ref.bucket).createSignedUrl(ref.path, 600);
   return error ? null : data.signedUrl;
+}
+
+export async function resolvePrivateSignature(value: string | null | undefined): Promise<string | null> {
+  if (value?.startsWith('data:image/')) return value;
+  const reference = businessImageReference(value);
+  if (!reference || reference.bucket !== 'business-signatures') return null;
+  return resolveBusinessImage(value);
 }

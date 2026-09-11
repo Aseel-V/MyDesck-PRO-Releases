@@ -1,3 +1,4 @@
+import { SupabaseStorageRepository } from '../data/SupabaseStorageRepository';
 import { useState, useEffect, ChangeEvent, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -467,17 +468,7 @@ export default function Settings() {
       const fileName = `sig-${user.id}-${Date.now()}.${fileExt}`;
       const filePath = `${user.id}/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage.from('business-signatures').upload(filePath, file, {
-        upsert: true,
-        cacheControl: '3600',
-        contentType: file.type,
-      });
-
-      if (uploadError) throw uploadError;
-
-      const { data: publicUrlData } = supabase.storage.from('business-signatures').getPublicUrl(filePath);
-      const newSigUrl = publicUrlData?.publicUrl?.replace('/object/public/', '/object/authenticated/');
-      if (!newSigUrl) throw new Error('Could not get public URL');
+      const newSigUrl = await new SupabaseStorageRepository().uploadPrivateFile(filePath, file);
 
       setSignatureUrl(newSigUrl);
 
