@@ -2,7 +2,7 @@
 
 ## Production preparation status
 
-The App Check API is enabled in `mydesckpro`, but the read-only configuration request returned 403 and no enforcement state was inferred. The registered client is a Firebase web app. Real enforcement remains `NOT RUN` until an approved principal can read configuration and the project has the Functions/Storage capability required for end-to-end verification.
+Phase 4B read-only configuration now succeeds after adding the quota-project header. The API is enabled; returned Firestore, Identity Toolkit and Data Connect service configurations are UNENFORCED. The registered client is a Firebase web app. The production client has no initialized App Check provider yet. Provider registration and client integration, including a supported packaged Electron attestation path, remain prerequisites. Real token/enforcement proof remains NOT_RUN while Functions/Storage capability is blocked. See `PRODUCTION_REAL_SMOKE_PLAN.md` and the environment inventory for current evidence.
 
 The candidate production callables set `enforceAppCheck: true`. They must be deployed dormant and exercised with synthetic identities before the backend selector can switch. Firestore and Storage enforcement must be enabled only after browser and packaged Electron clients both obtain valid tokens; otherwise a working desktop release would be locked out.
 
@@ -20,7 +20,7 @@ Treat Electron as a separate client posture. The renderer must contain only the 
 
 ## Functions
 
-After web and desktop token acquisition pass, change callable declarations to `onCall({ enforceAppCheck: true }, handler)`. Monitor rejection metrics before enforcement. Idempotency remains the replay defense for financial commands; App Check replay protection can be evaluated separately because it adds another network round trip.
+Candidate production callables already declare `enforceAppCheck: true`; preserve it. Prove web and desktop token acquisition before any application activation. Idempotency remains the replay defense for financial commands; App Check replay protection can be evaluated separately because it adds another network round trip.
 
 ## Firestore and Storage
 

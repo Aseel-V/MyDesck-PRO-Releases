@@ -16,6 +16,8 @@ const suites = [
     ['scripts/run-typescript-source-test.mjs', 'scripts/test-search-repository.ts']],
   ['application boundary', 'scripts/test-firestore-app-layer.mjs', ['scripts/run-typescript-source-test.mjs', 'scripts/test-firestore-app-layer.mjs']],
   ['production preparation guards', 'migration/firestore/tests/production-preparation.test.mjs'],
+  ['production environment and cleanup guards', 'migration/firestore/tests/environment-readiness.test.mjs'],
+  ['isolated readiness callable and rollback emulator', 'migration/firestore/tests/readiness-smoke.test.mjs'],
   ['production cutover controls', 'scripts/test-production-cutover-controls.ts',
     ['scripts/run-typescript-source-test.mjs', 'scripts/test-production-cutover-controls.ts']],
   ['production dry-run orchestrator', 'migration/firestore/tools/production-dry-run.mjs',
@@ -40,7 +42,7 @@ for (const [label, file, args = ['--test', file]] of suites) {
       continue;
     }
   }
-  const run = spawnSync(process.execPath, args, { encoding: 'utf8', env: process.env });
+  const run = spawnSync(process.execPath, args, { encoding: 'utf8', env: process.env, timeout: 120000 });
   process.stdout.write(run.stdout ?? '');
   process.stderr.write(run.stderr ?? '');
   const tests = Number((run.stdout ?? '').match(/^(?:#|ℹ) tests (\d+)$/m)?.[1] ?? 0);

@@ -10,12 +10,12 @@
     "productionFunctionsEntrypoint": "1b3ddfa817edd08f880381846e20f31f9890c3705bcc23632d04e4dc668c0c80"
   },
   "expectedCurrentProductionHashes": {
-    "firestoreRules": "UNREADABLE_403",
-    "storageRules": "UNREADABLE_403"
+    "firestoreRules": "ecf30f940747dcc3c5ba4993093e9a11ac9fc5df7e14b2a1512d2446923d84eb",
+    "storageRules": "UNREADABLE_NO_BUCKET_API_DISABLED"
   },
   "rollbackArtifacts": {
-    "firestoreRules": "PENDING_READ_ACCESS",
-    "storageRules": "PENDING_READ_ACCESS"
+    "firestoreRules": "migration/firestore/release/rollback-production/source-0.rules",
+    "storageRules": "PENDING_BUCKET_AND_SECURE_DATABASE_INTEGRATION"
   },
   "deployment": {
     "packageCommand": "node migration/firestore/tools/build-production-functions-package.mjs",
@@ -23,5 +23,5 @@
     "allowedOnlyAfterGo": true,
     "hashDriftBehavior": "REFUSE"
   },
-  "readiness": "NO_GO_CURRENT_RULES_BASELINE_UNAVAILABLE"
+  "readiness": "NO_GO_STORAGE_CAPABILITY_AND_OPERATOR_APPROVAL_REQUIRED"
 }

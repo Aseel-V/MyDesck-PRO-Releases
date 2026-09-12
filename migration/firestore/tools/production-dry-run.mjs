@@ -3,6 +3,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { evaluateGo, validateCounts, validateIdentity } from '../lib/production-guard.mjs';
+import { environmentGoEvidence } from '../lib/environment-go-evidence.mjs';
 
 const value = (name, fallback) => process.argv.find((x) => x.startsWith(`${name}=`))?.slice(name.length + 1) ?? fallback;
 if (process.argv.some((x) => x.startsWith('--mode=') && x !== '--mode=dry-run')) throw Error('DRY_RUN_ORCHESTRATOR_REFUSES_WRITES');
@@ -54,6 +55,7 @@ Object.assign(evidence, {
   observability: { status: 'PASS', evidence: 'run-scoped safe metric schema' },
   backendSwitch: { status: 'PASS', evidence: 'project/database/release/fallback-off selector gates' },
 });
+Object.assign(evidence, environmentGoEvidence());
 const go = evaluateGo(evidence);
 const result = { generatedAt: new Date().toISOString(), migrationRunId, mode: 'dry-run', productionWrites: 0,
   environmentIdentity: { firebaseProject: inventory.project.id, firestoreDatabaseId: inventory.firestore.verifiedDatabaseId },

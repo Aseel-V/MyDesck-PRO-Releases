@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "source": "../env-blocker-closure.local/smoke-functions",
+    "codebase": "migration-readiness",
+    "runtime": "nodejs22"
+  }
+}

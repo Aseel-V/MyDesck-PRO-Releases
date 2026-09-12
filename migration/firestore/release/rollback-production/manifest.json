@@ -1,0 +1,12 @@
+{
+  "release": "projects/mydesckpro/releases/cloud.firestore/default",
+  "ruleset": "projects/mydesckpro/rulesets/c6fc85cd-4681-491c-bb7c-b879e5893a92",
+  "updateTime": "2026-09-09T08:05:20.911440Z",
+  "files": [
+    {
+      "name": "firestore.rules",
+      "path": "migration/firestore/release/rollback-production/source-0.rules",
+      "sha256": "ecf30f940747dcc3c5ba4993093e9a11ac9fc5df7e14b2a1512d2446923d84eb"
+    }
+  ]
+}

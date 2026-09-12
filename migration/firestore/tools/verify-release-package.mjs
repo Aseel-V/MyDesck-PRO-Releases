@@ -15,6 +15,9 @@ assert.equal(sha('migration/firestore/rules/firestore.indexes.json'), manifest.c
 assert.equal(sha('migration/firestore/functions/production-index.mjs'), manifest.candidateHashes.productionFunctionsEntrypoint);
 const currentReady = !Object.values(manifest.expectedCurrentProductionHashes).some((x) => x.startsWith('UNREADABLE'));
 const rollbackReady = !Object.values(manifest.rollbackArtifacts).some((x) => x.startsWith('PENDING'));
+if (!manifest.rollbackArtifacts.firestoreRules.startsWith('PENDING')) {
+  assert.equal(sha(manifest.rollbackArtifacts.firestoreRules), manifest.expectedCurrentProductionHashes.firestoreRules);
+}
 console.log(JSON.stringify({ candidateHashes: 'PASS', currentBaseline: currentReady ? 'PASS' : 'NOT_RUN',
   rollbackArtifacts: rollbackReady ? 'PASS' : 'NOT_RUN', decision: currentReady && rollbackReady ? 'GO' : 'NO_GO' }));
 if (!currentReady || !rollbackReady) process.exitCode = 2;

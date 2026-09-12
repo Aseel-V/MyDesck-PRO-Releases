@@ -1,0 +1,9 @@
+{
+  "project": "mydesckpro",
+  "bucket": null,
+  "state": "UNPROVISIONED",
+  "pinSource": "Must be returned by authenticated Firebase and Cloud Storage inventory after operator provisioning",
+  "migrationIdentity": "mydesck-storage-migration@mydesckpro.iam.gserviceaccount.com",
+  "privatePaths": ["businesses/{syntheticBusinessId}/signatures/{syntheticObjectId}", "businesses/{syntheticBusinessId}/trips/{syntheticTripId}/attachments/{syntheticObjectId}"],
+  "publicAccess": false
+}

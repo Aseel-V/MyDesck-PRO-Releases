@@ -1,0 +1,92 @@
+{
+  "runtime": "nodejs22",
+  "region": "us-central1",
+  "runtimeIdentity": "mydesck-functions@mydesckpro.iam.gserviceaccount.com",
+  "functions": [
+    {
+      "name": "saveTrip",
+      "trigger": "callable",
+      "auth": true,
+      "appCheck": true,
+      "idempotency": "ownerUid+clientRequestId",
+      "migrationSafety": "SAFE_DURING_BULK_MIGRATION",
+      "externalSideEffects": [],
+      "deploymentClassification": "ENABLE_AFTER_CUTOVER"
+    },
+    {
+      "name": "recordPayment",
+      "trigger": "callable",
+      "auth": true,
+      "appCheck": true,
+      "idempotency": "ownerUid+clientRequestId",
+      "migrationSafety": "SAFE_DURING_BULK_MIGRATION",
+      "externalSideEffects": [],
+      "deploymentClassification": "ENABLE_AFTER_CUTOVER"
+    },
+    {
+      "name": "recordInstallmentPayment",
+      "trigger": "callable",
+      "auth": true,
+      "appCheck": true,
+      "idempotency": "ownerUid+clientRequestId",
+      "migrationSafety": "SAFE_DURING_BULK_MIGRATION",
+      "externalSideEffects": [],
+      "deploymentClassification": "ENABLE_AFTER_CUTOVER"
+    },
+    {
+      "name": "setTripState",
+      "trigger": "callable",
+      "auth": true,
+      "appCheck": true,
+      "idempotency": "ownerUid+clientRequestId",
+      "migrationSafety": "SAFE_DURING_BULK_MIGRATION",
+      "externalSideEffects": [],
+      "deploymentClassification": "ENABLE_AFTER_CUTOVER"
+    },
+    {
+      "name": "travelAnalytics",
+      "trigger": "callable",
+      "auth": true,
+      "appCheck": true,
+      "idempotency": "read-only",
+      "migrationSafety": "SAFE_DURING_BULK_MIGRATION",
+      "externalSideEffects": [],
+      "deploymentClassification": "DORMANT_SAFE_TO_DEPLOY"
+    }
+  ],
+  "evaluatedButNotTravelCutoverFunctions": [
+    {
+      "operation": "privilege/staff changes",
+      "status": "LEGACY_VERTICAL",
+      "activation": "ENABLE_ONLY_AFTER_CUTOVER",
+      "deploymentClassification": "ENABLE_AFTER_CUTOVER"
+    },
+    {
+      "operation": "document generation",
+      "status": "CLIENT_OR_LEGACY_VERTICAL",
+      "activation": "ENABLE_ONLY_AFTER_CUTOVER",
+      "deploymentClassification": "ENABLE_AFTER_CUTOVER"
+    },
+    {
+      "operation": "storage cleanup",
+      "status": "QUEUE_ONLY_NO_DRAINER",
+      "activation": "ENABLE_ONLY_AFTER_CUTOVER",
+      "deploymentClassification": "MIGRATION_SUPPRESSED"
+    }
+  ],
+  "firestoreTriggers": [],
+  "quarantined": [
+    "WhatsApp",
+    "email",
+    "payment provider calls",
+    "external webhooks"
+  ],
+  "notificationClassification": "NOTIFICATION_QUARANTINED",
+  "separateSyntheticCandidate": {
+    "name": "productionReadinessSmoke",
+    "entrypoint": "functions/production-readiness-smoke.mjs",
+    "deploymentClassification": "DORMANT_SAFE_TO_DEPLOY",
+    "realProjectStatus": "NOT_RUN",
+    "customerDataAllowed": false
+  }
+}

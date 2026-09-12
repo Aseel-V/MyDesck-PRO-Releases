@@ -1,5 +1,7 @@
 # Production IAM least-privilege plan
 
+Phase 4B current identity/permission evidence and executable plan supersede the proposed identities below: see [PRODUCTION_ENV_IAM_ANALYSIS.md](PRODUCTION_ENV_IAM_ANALYSIS.md). The verified migration writer identity is `mydesck-migration@mydesckpro.iam.gserviceaccount.com`. No grant has been applied.
+
 No role is granted by this plan. Static service-account keys are forbidden. Human operators use short-lived service-account impersonation and receive `iam.serviceAccounts.getAccessToken` only on the named identity they operate.
 
 | Identity | Proposed binding | Scope | Purpose |

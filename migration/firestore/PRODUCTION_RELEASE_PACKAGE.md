@@ -1,5 +1,7 @@
 # Firestore Rules, indexes, and Functions release package
 
+Phase 4B update: Firestore current/rollback Rules are now captured under `release/current-production` and immutable `release/rollback-production`. The production Firebase config explicitly selects database `default`. Storage still blocks this release, including its candidate `(default)` cross-service lookup mismatch; see [PRODUCTION_REAL_SMOKE_PLAN.md](PRODUCTION_REAL_SMOKE_PLAN.md). Current plan/state/commands are in `migration/reports/firebase-production-index-readiness.json`. Do not run the combined release command as blocker closure. Earlier preparation observations below are historical.
+
 The production Functions source is assembled into the ignored private build directory with:
 
 ```text

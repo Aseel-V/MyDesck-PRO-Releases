@@ -1,0 +1,12 @@
+title: MyDesck Rules Release Deployer
+description: Read, validate and publish Rules releases; rollback by restoring a prior ruleset reference.
+stage: GA
+includedPermissions:
+  - firebaserules.releases.get
+  - firebaserules.releases.list
+  - firebaserules.releases.create
+  - firebaserules.releases.update
+  - firebaserules.rulesets.get
+  - firebaserules.rulesets.list
+  - firebaserules.rulesets.create
+  - firebaserules.rulesets.test
