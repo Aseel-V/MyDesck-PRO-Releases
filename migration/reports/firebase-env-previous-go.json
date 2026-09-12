@@ -1,0 +1,176 @@
+{
+  "generatedAt": "2026-09-12T04:46:31.550Z",
+  "migrationRunId": "harness-production-prep",
+  "mode": "dry-run",
+  "productionWrites": 0,
+  "environmentIdentity": {
+    "firebaseProject": "mydesckpro",
+    "firestoreDatabaseId": "default"
+  },
+  "sourceIdentity": {
+    "supabaseProject": "pubugnfaqqukelvgckdr"
+  },
+  "targetIdentity": {
+    "firebaseProject": "mydesckpro",
+    "firestoreDatabaseId": "default"
+  },
+  "approvedCommitSha": "PENDING_POST_REVIEW_PIN",
+  "executableCommitSha": "6cd86d95a855fd1b2fd6e930b6cc88b5ebf839fe",
+  "identityFailures": [
+    "EXECUTABLE_COMMIT_MISMATCH"
+  ],
+  "configHashes": {
+    "firestoreRules": "bfb3413ad1af01377b8e079dd4cfa9ea7813a2b18b61a70c43ac0f9c520cee90",
+    "storageRules": "5ccf1d426c4fbe75133e0bdc31562888523ac7d7bce8ba4d11e5be6e09af73bb",
+    "indexes": "b145d250a7f5238a6092761217efff7122409253f2ce34846b2d9393e9ef1832",
+    "deltaMap": "cf60c2b43faf32d30a5965e958a10d2226cc57e161095eff40342ba1d5d3db85"
+  },
+  "counts": {
+    "sourceRowsLastRehearsal": 1444,
+    "sourceUsers": 10,
+    "currentTargetAuthUsers": 5,
+    "storageObjectsLastRehearsal": 3
+  },
+  "go": {
+    "gates": [
+      {
+        "name": "environment",
+        "status": "FAIL",
+        "evidence": [
+          "EXECUTABLE_COMMIT_MISMATCH"
+        ]
+      },
+      {
+        "name": "secret",
+        "status": "FAIL",
+        "evidence": "credential removed from source; owner revocation confirmation missing"
+      },
+      {
+        "name": "iam",
+        "status": "FAIL",
+        "evidence": "proposed identities/bindings not created; pre-existing human Owner remains"
+      },
+      {
+        "name": "rules",
+        "status": "NOT_RUN",
+        "evidence": "current real Rules read returned 403; candidate tests PASS"
+      },
+      {
+        "name": "indexes",
+        "status": "FAIL",
+        "evidence": "0/3 required indexes present"
+      },
+      {
+        "name": "functions",
+        "status": "FAIL",
+        "evidence": "DISABLED"
+      },
+      {
+        "name": "auth",
+        "status": "PASS",
+        "evidence": "10/10, unknown 0"
+      },
+      {
+        "name": "bulkData",
+        "status": "PASS",
+        "evidence": "streaming/checkpoint/retry writer and dry-run guard present"
+      },
+      {
+        "name": "delta",
+        "status": "PASS",
+        "evidence": "77/77, unknown 0"
+      },
+      {
+        "name": "financial",
+        "status": "PASS",
+        "evidence": "full rehearsal exact delta"
+      },
+      {
+        "name": "relationships",
+        "status": "PASS",
+        "evidence": "full rehearsal relationship gates"
+      },
+      {
+        "name": "events",
+        "status": "PASS",
+        "evidence": "full rehearsal event gates"
+      },
+      {
+        "name": "storage",
+        "status": "FAIL",
+        "evidence": "real buckets 0; rehearsal 3/3"
+      },
+      {
+        "name": "search",
+        "status": "PASS",
+        "evidence": "14/14 classified"
+      },
+      {
+        "name": "arabic",
+        "status": "PASS",
+        "evidence": "existing RTL suite"
+      },
+      {
+        "name": "hebrew",
+        "status": "PASS",
+        "evidence": "existing RTL suite"
+      },
+      {
+        "name": "english",
+        "status": "PASS",
+        "evidence": "existing LTR suite"
+      },
+      {
+        "name": "electron",
+        "status": "NOT_RUN",
+        "evidence": "real App Check packaged Electron proof pending"
+      },
+      {
+        "name": "writeFreeze",
+        "status": "PASS",
+        "evidence": "maintenance guard and localized failure behavior"
+      },
+      {
+        "name": "rollback",
+        "status": "PASS",
+        "evidence": "before/after write runbook and journal model"
+      },
+      {
+        "name": "observability",
+        "status": "PASS",
+        "evidence": "run-scoped safe metric schema"
+      },
+      {
+        "name": "backendSwitch",
+        "status": "PASS",
+        "evidence": "project/database/release/fallback-off selector gates"
+      }
+    ],
+    "pass": 14,
+    "fail": 6,
+    "notRun": 2,
+    "missing": 0,
+    "decision": "NO_GO",
+    "blockers": [
+      "environment",
+      "secret",
+      "iam",
+      "rules",
+      "indexes",
+      "functions",
+      "storage",
+      "electron"
+    ]
+  },
+  "knownBlockers": [
+    "environment",
+    "secret",
+    "iam",
+    "rules",
+    "indexes",
+    "functions",
+    "storage",
+    "electron"
+  ],
+  "decision": "NO_GO"
+}

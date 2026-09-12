@@ -1,0 +1,11 @@
+{
+  "generatedAt": "2026-09-12T08:57:59.914Z",
+  "migrationRunId": "migration-test--production-readiness-662f3c21-06e0-4536-bd70-bc28a3d9dc22",
+  "project": "mydesckpro",
+  "database": "projects/mydesckpro/databases/default",
+  "state": "NOT_RUN",
+  "resources": [],
+  "created": 0,
+  "deleted": 0,
+  "cleanupPolicy": "Exact created-by-run receipt, live run marker and version precondition; no wildcard deletion"
+}

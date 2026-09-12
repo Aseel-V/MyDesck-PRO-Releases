@@ -1,0 +1,620 @@
+{
+  "generatedAt": "2026-09-12T08:48:35.161Z",
+  "project": "mydesckpro",
+  "database": "projects/mydesckpro/databases/default",
+  "migrationIdentity": "mydesck-migration@mydesckpro.iam.gserviceaccount.com",
+  "readOnly": true,
+  "productionMutations": 0,
+  "impersonation": "PASS",
+  "evidence": {
+    "billing": {
+      "http": 200,
+      "data": {
+        "billingEnabled": false,
+        "accountLinked": false
+      }
+    },
+    "project": {
+      "http": 200,
+      "data": {
+        "name": "projects/816880250172",
+        "projectId": "mydesckpro",
+        "state": "ACTIVE",
+        "displayName": "MyDesckPRO",
+        "createTime": "2026-09-09T07:29:43.056Z",
+        "updateTime": "2026-09-09T07:29:59.838902Z",
+        "etag": "W/\"aad384e4d31c144a\"",
+        "labels": {
+          "firebase": "enabled",
+          "firebase-core": "disabled"
+        }
+      }
+    },
+    "firebase": {
+      "http": 200,
+      "data": {
+        "projectId": "mydesckpro",
+        "projectNumber": "816880250172",
+        "displayName": "MyDesckPRO",
+        "name": "projects/mydesckpro",
+        "resources": {
+          "hostingSite": "mydesckpro",
+          "realtimeDatabaseInstance": "mydesckpro-default-rtdb"
+        },
+        "state": "ACTIVE",
+        "etag": "1_7b062c2e-6d82-4bb0-904b-4f07d449e3d8"
+      }
+    },
+    "databases": {
+      "http": 200,
+      "data": {
+        "databases": [
+          {
+            "name": "projects/mydesckpro/databases/default",
+            "uid": "96d662b1-1c4d-4883-9709-d433e14e3e57",
+            "createTime": "2026-09-09T08:05:18.016190Z",
+            "updateTime": "2026-09-09T08:05:18.016190Z",
+            "locationId": "nam5",
+            "type": "FIRESTORE_NATIVE",
+            "concurrencyMode": "OPTIMISTIC",
+            "versionRetentionPeriod": "3600s",
+            "earliestVersionTime": "2026-09-12T07:48:26.175756Z",
+            "appEngineIntegrationMode": "DISABLED",
+            "pointInTimeRecoveryEnablement": "POINT_IN_TIME_RECOVERY_DISABLED",
+            "deleteProtectionState": "DELETE_PROTECTION_DISABLED",
+            "databaseEdition": "ENTERPRISE",
+            "freeTier": true,
+            "realtimeUpdatesMode": "REALTIME_UPDATES_MODE_ENABLED",
+            "firestoreDataAccessMode": "DATA_ACCESS_MODE_ENABLED",
+            "mongodbCompatibleDataAccessMode": "DATA_ACCESS_MODE_DISABLED",
+            "enhancedTextSearchQueryMode": "ENHANCED_QUERY_MODE_ENABLED",
+            "etag": "IISHip3U6JYDMIPCl9GH55YD"
+          }
+        ]
+      }
+    },
+    "defaultDatabase": {
+      "http": 200,
+      "data": {
+        "name": "projects/mydesckpro/databases/default",
+        "uid": "96d662b1-1c4d-4883-9709-d433e14e3e57",
+        "createTime": "2026-09-09T08:05:18.016190Z",
+        "updateTime": "2026-09-09T08:05:18.016190Z",
+        "locationId": "nam5",
+        "type": "FIRESTORE_NATIVE",
+        "concurrencyMode": "OPTIMISTIC",
+        "versionRetentionPeriod": "3600s",
+        "earliestVersionTime": "2026-09-12T07:48:26.506260Z",
+        "appEngineIntegrationMode": "DISABLED",
+        "pointInTimeRecoveryEnablement": "POINT_IN_TIME_RECOVERY_DISABLED",
+        "deleteProtectionState": "DELETE_PROTECTION_DISABLED",
+        "databaseEdition": "ENTERPRISE",
+        "freeTier": true,
+        "realtimeUpdatesMode": "REALTIME_UPDATES_MODE_ENABLED",
+        "firestoreDataAccessMode": "DATA_ACCESS_MODE_ENABLED",
+        "mongodbCompatibleDataAccessMode": "DATA_ACCESS_MODE_DISABLED",
+        "enhancedTextSearchQueryMode": "ENHANCED_QUERY_MODE_ENABLED",
+        "etag": "IN3EsZ3U6JYDMIPCl9GH55YD"
+      }
+    },
+    "parenthesizedDatabase": {
+      "http": 404,
+      "status": "NOT_FOUND",
+      "reasons": [],
+      "message": "Project 'mydesckpro' or database '(default)' does not exist."
+    },
+    "defaultBucket": {
+      "http": 403,
+      "status": "PERMISSION_DENIED",
+      "reasons": [
+        {
+          "reason": "SERVICE_DISABLED",
+          "service": "firebasestorage.googleapis.com"
+        }
+      ],
+      "message": "Cloud Storage for Firebase API has not been used in project mydesckpro before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/firebasestorage.googleapis.com/overview?project=mydesckpro then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."
+    },
+    "appCheck": {
+      "http": 200,
+      "data": {
+        "services": [
+          {
+            "name": "projects/816880250172/services/firebasedataconnect.googleapis.com",
+            "enforcementMode": "UNENFORCED",
+            "updateTime": "2026-09-09T08:07:12.993391Z",
+            "etag": "\"MiXPOBsMIK_Fzy4=\""
+          },
+          {
+            "name": "projects/816880250172/services/firestore.googleapis.com",
+            "enforcementMode": "UNENFORCED",
+            "updateTime": "2026-09-09T08:07:14.083807Z",
+            "etag": "\"PSo6VjJNDGmd1q4=\""
+          },
+          {
+            "name": "projects/816880250172/services/identitytoolkit.googleapis.com",
+            "enforcementMode": "UNENFORCED",
+            "updateTime": "2026-09-09T08:07:12.996927Z",
+            "etag": "\"HOYR2X-UnbB6z0Q=\""
+          }
+        ]
+      }
+    },
+    "services": {
+      "http": 200,
+      "data": {
+        "services": [
+          {
+            "name": "analyticshub.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "appengine.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "bigquery.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "bigqueryconnection.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "bigquerydatapolicy.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "bigquerydatatransfer.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "bigquerymigration.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "bigqueryreservation.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "bigquerystorage.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "cloudaicompanion.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "cloudapis.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "cloudresourcemanager.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "cloudtrace.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "dataform.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "dataplex.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "datastore.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "fcm.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "fcmregistrations.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "firebase.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "firebaseappcheck.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "firebaseappdistribution.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "firebasedatabase.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "firebasedataconnect.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "firebasehosting.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "firebaseinstallations.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "firebaseremoteconfig.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "firebaseremoteconfigrealtime.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "firebaserules.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "firestore.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "fpnv.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "iamcredentials.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "identitytoolkit.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "logging.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "monitoring.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "pubsub.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "runtimeconfig.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "securetoken.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "servicemanagement.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "serviceusage.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "sql-component.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "sqladmin.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "storage-api.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "storage-component.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "storage.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "telemetry.googleapis.com",
+            "state": "ENABLED"
+          },
+          {
+            "name": "testing.googleapis.com",
+            "state": "ENABLED"
+          }
+        ]
+      }
+    },
+    "buckets": {
+      "http": 200,
+      "data": {
+        "items": []
+      }
+    },
+    "firebaseBuckets": {
+      "http": 403,
+      "status": "PERMISSION_DENIED",
+      "reasons": [
+        {
+          "reason": "SERVICE_DISABLED",
+          "service": "firebasestorage.googleapis.com"
+        }
+      ],
+      "message": "Cloud Storage for Firebase API has not been used in project mydesckpro before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/firebasestorage.googleapis.com/overview?project=mydesckpro then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."
+    },
+    "indexes": {
+      "http": 200,
+      "data": {
+        "indexes": []
+      }
+    },
+    "releases": {
+      "http": 200,
+      "data": {
+        "releases": [
+          {
+            "name": "projects/mydesckpro/releases/cloud.firestore/default",
+            "rulesetName": "projects/mydesckpro/rulesets/c6fc85cd-4681-491c-bb7c-b879e5893a92",
+            "createTime": "2026-09-09T08:05:20.911440Z",
+            "updateTime": "2026-09-09T08:05:20.911440Z"
+          }
+        ]
+      }
+    },
+    "functions": {
+      "http": 403,
+      "status": "PERMISSION_DENIED",
+      "reasons": [
+        {
+          "reason": "SERVICE_DISABLED",
+          "service": "cloudfunctions.googleapis.com"
+        }
+      ],
+      "message": "Cloud Functions API has not been used in project mydesckpro before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/cloudfunctions.googleapis.com/overview?project=mydesckpro then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."
+    },
+    "serviceAccounts": {
+      "http": 200,
+      "data": {
+        "accounts": [
+          {
+            "email": "mydesck-migration@mydesckpro.iam.gserviceaccount.com",
+            "disabled": false
+          },
+          {
+            "email": "firebase-adminsdk-fbsvc@mydesckpro.iam.gserviceaccount.com",
+            "disabled": false
+          }
+        ]
+      }
+    },
+    "iamPolicy": {
+      "status": "PASS",
+      "version": 1,
+      "bindings": [
+        {
+          "role": "roles/firebase.managementServiceAgent",
+          "condition": null,
+          "serviceAccounts": [
+            "serviceAccount:service-816880250172@gcp-sa-firebase.iam.gserviceaccount.com"
+          ],
+          "humanCount": 0,
+          "groupCount": 0,
+          "publicMembers": []
+        },
+        {
+          "role": "roles/firebase.sdkAdminServiceAgent",
+          "condition": null,
+          "serviceAccounts": [
+            "serviceAccount:firebase-adminsdk-fbsvc@mydesckpro.iam.gserviceaccount.com"
+          ],
+          "humanCount": 0,
+          "groupCount": 0,
+          "publicMembers": []
+        },
+        {
+          "role": "roles/firebaseappcheck.admin",
+          "condition": null,
+          "serviceAccounts": [
+            "serviceAccount:firebase-adminsdk-fbsvc@mydesckpro.iam.gserviceaccount.com"
+          ],
+          "humanCount": 0,
+          "groupCount": 0,
+          "publicMembers": []
+        },
+        {
+          "role": "roles/firebaseauth.admin",
+          "condition": null,
+          "serviceAccounts": [
+            "serviceAccount:firebase-adminsdk-fbsvc@mydesckpro.iam.gserviceaccount.com",
+            "serviceAccount:mydesck-migration@mydesckpro.iam.gserviceaccount.com"
+          ],
+          "humanCount": 0,
+          "groupCount": 0,
+          "publicMembers": []
+        },
+        {
+          "role": "roles/firebasedatabase.admin",
+          "condition": null,
+          "serviceAccounts": [
+            "serviceAccount:firebase-adminsdk-fbsvc@mydesckpro.iam.gserviceaccount.com"
+          ],
+          "humanCount": 0,
+          "groupCount": 0,
+          "publicMembers": []
+        },
+        {
+          "role": "roles/firebaserules.system",
+          "condition": null,
+          "serviceAccounts": [
+            "serviceAccount:service-816880250172@firebase-rules.iam.gserviceaccount.com"
+          ],
+          "humanCount": 0,
+          "groupCount": 0,
+          "publicMembers": []
+        },
+        {
+          "role": "roles/firestore.serviceAgent",
+          "condition": null,
+          "serviceAccounts": [
+            "serviceAccount:service-816880250172@gcp-sa-firestore.iam.gserviceaccount.com"
+          ],
+          "humanCount": 0,
+          "groupCount": 0,
+          "publicMembers": []
+        },
+        {
+          "role": "roles/iam.serviceAccountTokenCreator",
+          "condition": null,
+          "serviceAccounts": [
+            "serviceAccount:firebase-adminsdk-fbsvc@mydesckpro.iam.gserviceaccount.com"
+          ],
+          "humanCount": 0,
+          "groupCount": 0,
+          "publicMembers": []
+        },
+        {
+          "role": "roles/owner",
+          "condition": null,
+          "serviceAccounts": [],
+          "humanCount": 1,
+          "groupCount": 0,
+          "publicMembers": []
+        }
+      ]
+    },
+    "migrationBoundRole": {
+      "http": 200,
+      "data": {
+        "name": "roles/firebaseauth.admin",
+        "title": "Firebase Authentication Admin",
+        "description": "Full read/write access to Firebase Authentication resources.",
+        "includedPermissions": [
+          "firebase.clients.get",
+          "firebase.clients.list",
+          "firebase.projects.get",
+          "firebaseauth.configs.create",
+          "firebaseauth.configs.get",
+          "firebaseauth.configs.getHashConfig",
+          "firebaseauth.configs.getSecret",
+          "firebaseauth.configs.update",
+          "firebaseauth.users.create",
+          "firebaseauth.users.createSession",
+          "firebaseauth.users.delete",
+          "firebaseauth.users.get",
+          "firebaseauth.users.sendEmail",
+          "firebaseauth.users.update",
+          "resourcemanager.projects.get",
+          "resourcemanager.projects.list"
+        ],
+        "stage": "GA",
+        "etag": "AA=="
+      }
+    },
+    "serviceAccountActAs": [
+      {
+        "resource": "mydesck-migration@mydesckpro.iam.gserviceaccount.com",
+        "result": {
+          "http": 403,
+          "status": "PERMISSION_DENIED",
+          "reasons": [
+            {
+              "reason": "SERVICE_DISABLED",
+              "service": "iam.googleapis.com"
+            }
+          ],
+          "message": "Identity and Access Management (IAM) API has not been used in project 816880250172 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/iam.googleapis.com/overview?project=816880250172 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."
+        }
+      },
+      {
+        "resource": "firebase-adminsdk-fbsvc@mydesckpro.iam.gserviceaccount.com",
+        "result": {
+          "http": 403,
+          "status": "PERMISSION_DENIED",
+          "reasons": [
+            {
+              "reason": "SERVICE_DISABLED",
+              "service": "iam.googleapis.com"
+            }
+          ],
+          "message": "Identity and Access Management (IAM) API has not been used in project 816880250172 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/iam.googleapis.com/overview?project=816880250172 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."
+        }
+      }
+    ],
+    "migrationProjectPermissions": {
+      "http": 200,
+      "data": {}
+    },
+    "migrationDatabasePermissions": {
+      "http": 500,
+      "status": "INTERNAL",
+      "reasons": [],
+      "message": "Internal error encountered."
+    },
+    "migrationRules": {
+      "http": 403,
+      "status": "PERMISSION_DENIED",
+      "reasons": [
+        {
+          "reason": "IAM_PERMISSION_DENIED",
+          "permission": "firebaserules.releases.get"
+        }
+      ],
+      "message": "The caller does not have permission"
+    },
+    "migrationSyntheticRead": {
+      "http": 403,
+      "status": "PERMISSION_DENIED",
+      "reasons": [],
+      "message": "Missing or insufficient permissions."
+    },
+    "troubleshooter": {
+      "http": 403,
+      "status": "PERMISSION_DENIED",
+      "reasons": [
+        {
+          "reason": "SERVICE_DISABLED",
+          "service": "policytroubleshooter.googleapis.com"
+        }
+      ],
+      "message": "Policy Troubleshooter API has not been used in project mydesckpro before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/policytroubleshooter.googleapis.com/overview?project=mydesckpro then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."
+    },
+    "currentRelease": {
+      "http": 200,
+      "data": {
+        "name": "projects/mydesckpro/releases/cloud.firestore/default",
+        "rulesetName": "projects/mydesckpro/rulesets/c6fc85cd-4681-491c-bb7c-b879e5893a92",
+        "createTime": "2026-09-09T08:05:20.911440Z",
+        "updateTime": "2026-09-09T08:05:20.911440Z"
+      }
+    },
+    "currentRules": {
+      "release": "projects/mydesckpro/releases/cloud.firestore/default",
+      "ruleset": "projects/mydesckpro/rulesets/c6fc85cd-4681-491c-bb7c-b879e5893a92",
+      "updateTime": "2026-09-09T08:05:20.911440Z",
+      "files": [
+        {
+          "name": "firestore.rules",
+          "path": "migration/firestore/release/current-production/c6fc85cd-4681-491c-bb7c-b879e5893a92/source-0.rules",
+          "sha256": "ecf30f940747dcc3c5ba4993093e9a11ac9fc5df7e14b2a1512d2446923d84eb"
+        }
+      ]
+    },
+    "rollbackRules": {
+      "release": "projects/mydesckpro/releases/cloud.firestore/default",
+      "ruleset": "projects/mydesckpro/rulesets/c6fc85cd-4681-491c-bb7c-b879e5893a92",
+      "updateTime": "2026-09-09T08:05:20.911440Z",
+      "files": [
+        {
+          "name": "firestore.rules",
+          "path": "migration/firestore/release/rollback-production/source-0.rules",
+          "sha256": "ecf30f940747dcc3c5ba4993093e9a11ac9fc5df7e14b2a1512d2446923d84eb"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "generatedAt": "2026-09-12T08:38:35.311Z",
+  "environment": "local disposable PostgreSQL and offline application/security",
+  "cloudSql": "NOT_USED",
+  "productionCustomerChanges": 0,
+  "results": [
+    {
+      "name": "migration-postgres-reconciliation",
+      "status": "PASS",
+      "exitCode": 0,
+      "log": "migration/env-blocker-closure.local/migration-postgres-reconciliation.log"
+    },
+    {
+      "name": "security-postgres",
+      "status": "PASS",
+      "exitCode": 0,
+      "log": "migration/env-blocker-closure.local/security-postgres.log"
+    },
+    {
+      "name": "test-canonical-trip-payments",
+      "status": "PASS",
+      "exitCode": 0,
+      "log": "migration/env-blocker-closure.local/test-canonical-trip-payments.log"
+    },
+    {
+      "name": "test-trip-smoke-suite",
+      "status": "PASS",
+      "exitCode": 0,
+      "log": "migration/env-blocker-closure.local/test-trip-smoke-suite.log"
+    },
+    {
+      "name": "test-currency-regression",
+      "status": "PASS",
+      "exitCode": 0,
+      "log": "migration/env-blocker-closure.local/test-currency-regression.log"
+    },
+    {
+      "name": "test-validation-ux-gate",
+      "status": "PASS",
+      "exitCode": 0,
+      "log": "migration/env-blocker-closure.local/test-validation-ux-gate.log"
+    },
+    {
+      "name": "test-analytics-suite",
+      "status": "PASS",
+      "exitCode": 0,
+      "log": "migration/env-blocker-closure.local/test-analytics-suite.log"
+    },
+    {
+      "name": "test-card-processing-disabled",
+      "status": "PASS",
+      "exitCode": 0,
+      "log": "migration/env-blocker-closure.local/test-card-processing-disabled.log"
+    },
+    {
+      "name": "test-whatsapp-disabled",
+      "status": "PASS",
+      "exitCode": 0,
+      "log": "migration/env-blocker-closure.local/test-whatsapp-disabled.log"
+    },
+    {
+      "name": "test-business-images",
+      "status": "PASS",
+      "exitCode": 0,
+      "log": "migration/env-blocker-closure.local/test-business-images.log"
+    },
+    {
+      "name": "test-database-grant-parser",
+      "status": "PASS",
+      "exitCode": 0,
+      "log": "migration/env-blocker-closure.local/test-database-grant-parser.log"
+    },
+    {
+      "name": "test-database-rpc-contracts",
+      "status": "PASS",
+      "exitCode": 0,
+      "log": "migration/env-blocker-closure.local/test-database-rpc-contracts.log"
+    },
+    {
+      "name": "test-migration-policy-idempotency",
+      "status": "PASS",
+      "exitCode": 0,
+      "log": "migration/env-blocker-closure.local/test-migration-policy-idempotency.log"
+    },
+    {
+      "name": "test-restaurant-security-reconciliation",
+      "status": "PASS",
+      "exitCode": 0,
+      "log": "migration/env-blocker-closure.local/test-restaurant-security-reconciliation.log"
+    },
+    {
+      "name": "check-database-compatibility",
+      "status": "PASS",
+      "exitCode": 0,
+      "log": "migration/env-blocker-closure.local/check-database-compatibility.log"
+    }
+  ],
+  "passed": 15,
+  "failed": 0,
+  "stagedReportWorktreesRestored": 6
+}

@@ -1,0 +1,11 @@
+{
+  "generatedAt": "2026-09-12T08:57:59.611Z",
+  "branch": "codex/firebase-migration",
+  "startingSha": "a242f5141c3526c8f06dc88b78d81e19fbbc2848",
+  "currentSha": "9bb74afbcfc8df1d2fcf5420f44d49e198b8f6ec",
+  "recoveryTag": "recovery/pre-firebase-env-blocker-closure-20260912-045538",
+  "baselineCount": 212,
+  "preserved": 212,
+  "overallStagedManifestSha256": "9a69caa8c65eec5f0d4b85a931b8463fc038290ae439f9f2b24929649b0c44d3",
+  "status": "PASS"
+}

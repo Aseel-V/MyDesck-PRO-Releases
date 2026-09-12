@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-12T04:47:27.115Z",
+  "generatedAt": "2026-09-12T08:50:42.288Z",
   "status": "PASS",
   "suites": [
     {
@@ -69,6 +69,18 @@
       "tests": 8
     },
     {
+      "label": "production environment and cleanup guards",
+      "file": "migration/firestore/tests/environment-readiness.test.mjs",
+      "outcome": "PASS",
+      "tests": 14
+    },
+    {
+      "label": "isolated readiness callable and rollback emulator",
+      "file": "migration/firestore/tests/readiness-smoke.test.mjs",
+      "outcome": "PASS",
+      "tests": 3
+    },
+    {
       "label": "production cutover controls",
       "file": "scripts/test-production-cutover-controls.ts",
       "outcome": "PASS",
@@ -112,11 +124,11 @@
     }
   ],
   "totals": {
-    "steps": 19,
-    "passed": 19,
+    "steps": 21,
+    "passed": 21,
     "failed": 0,
-    "nodeTestCases": 172,
-    "assertionCallSites": 528,
+    "nodeTestCases": 189,
+    "assertionCallSites": 607,
     "fullCorpusApplicationAssertions": 1023,
     "searchCorpusCases": 12,
     "fullCorpusSecurityChecks": 50,

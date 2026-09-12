@@ -1,0 +1,105 @@
+{
+  "generatedAt": "2026-09-12T08:53:04.088Z",
+  "project": "mydesckpro",
+  "database": "default",
+  "mode": "plan",
+  "productionMutations": 0,
+  "required": 3,
+  "ready": 0,
+  "creating": 0,
+  "missing": 3,
+  "error": 0,
+  "indexes": [
+    {
+      "collectionGroup": "trips",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "ownerUid",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "businessId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "isDeleted",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "startDate",
+          "order": "ASCENDING"
+        }
+      ],
+      "query": "FirestoreTravelRepository.listTripsForBusiness: tenant, deletion state, start-date cursor.",
+      "state": "MISSING",
+      "resource": null,
+      "productionState": null,
+      "id": "required-1",
+      "command": "gcloud 'firestore' 'indexes' 'composite' 'create' '--project=mydesckpro' '--database=default' '--collection-group=trips' '--query-scope=collection' '--field-config=field-path=ownerUid,order=ascending' '--field-config=field-path=businessId,order=ascending' '--field-config=field-path=isDeleted,order=ascending' '--field-config=field-path=startDate,order=ascending'"
+    },
+    {
+      "collectionGroup": "trips",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "ownerUid",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "businessId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "isDeleted",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "startDate",
+          "order": "ASCENDING"
+        }
+      ],
+      "query": "FirestoreTravelRepository.listTripsForBusiness with a status filter.",
+      "state": "MISSING",
+      "resource": null,
+      "productionState": null,
+      "id": "required-2",
+      "command": "gcloud 'firestore' 'indexes' 'composite' 'create' '--project=mydesckpro' '--database=default' '--collection-group=trips' '--query-scope=collection' '--field-config=field-path=ownerUid,order=ascending' '--field-config=field-path=businessId,order=ascending' '--field-config=field-path=isDeleted,order=ascending' '--field-config=field-path=status,order=ascending' '--field-config=field-path=startDate,order=ascending'"
+    },
+    {
+      "collectionGroup": "tripInstallments",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "ownerUid",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "businessId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "dueDate",
+          "order": "ASCENDING"
+        }
+      ],
+      "query": "FirestoreTravelRepository.listDueInstallments: tenant, active status set, due date.",
+      "state": "MISSING",
+      "resource": null,
+      "productionState": null,
+      "id": "required-3",
+      "command": "gcloud 'firestore' 'indexes' 'composite' 'create' '--project=mydesckpro' '--database=default' '--collection-group=tripInstallments' '--query-scope=collection' '--field-config=field-path=ownerUid,order=ascending' '--field-config=field-path=businessId,order=ascending' '--field-config=field-path=status,order=ascending' '--field-config=field-path=dueDate,order=ascending'"
+    }
+  ],
+  "verification": "gcloud firestore indexes composite list --project=mydesckpro --database=default --format=json",
+  "cleanup": "Delete only a specific index resource created by the approved operation: gcloud firestore indexes composite delete EXACT_CREATED_INDEX_RESOURCE --project=mydesckpro --database=default. Never delete preexisting indexes or use wildcard cleanup.",
+  "note": "Create only MISSING entries. CREATING is not READY. API/permission failures are ERROR, not empty lists. Field overrides in the broader config are not part of these three commands."
+}

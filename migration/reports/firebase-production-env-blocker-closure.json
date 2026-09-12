@@ -1,0 +1,612 @@
+{
+  "generatedAt": "2026-09-12T08:57:59.916Z",
+  "phase": "4B",
+  "startingSha": "a242f5141c3526c8f06dc88b78d81e19fbbc2848",
+  "evidenceHead": "9bb74afbcfc8df1d2fcf5420f44d49e198b8f6ec",
+  "recovery": {
+    "generatedAt": "2026-09-12T08:57:59.611Z",
+    "branch": "codex/firebase-migration",
+    "startingSha": "a242f5141c3526c8f06dc88b78d81e19fbbc2848",
+    "currentSha": "9bb74afbcfc8df1d2fcf5420f44d49e198b8f6ec",
+    "recoveryTag": "recovery/pre-firebase-env-blocker-closure-20260912-045538",
+    "baselineCount": 212,
+    "preserved": 212,
+    "overallStagedManifestSha256": "9a69caa8c65eec5f0d4b85a931b8463fc038290ae439f9f2b24929649b0c44d3",
+    "status": "PASS"
+  },
+  "previousGo": {
+    "gates": [
+      {
+        "name": "environment",
+        "status": "FAIL",
+        "evidence": [
+          "EXECUTABLE_COMMIT_MISMATCH"
+        ]
+      },
+      {
+        "name": "secret",
+        "status": "FAIL",
+        "evidence": "credential removed from source; owner revocation confirmation missing"
+      },
+      {
+        "name": "iam",
+        "status": "FAIL",
+        "evidence": "proposed identities/bindings not created; pre-existing human Owner remains"
+      },
+      {
+        "name": "rules",
+        "status": "NOT_RUN",
+        "evidence": "current real Rules read returned 403; candidate tests PASS"
+      },
+      {
+        "name": "indexes",
+        "status": "FAIL",
+        "evidence": "0/3 required indexes present"
+      },
+      {
+        "name": "functions",
+        "status": "FAIL",
+        "evidence": "DISABLED"
+      },
+      {
+        "name": "auth",
+        "status": "PASS",
+        "evidence": "10/10, unknown 0"
+      },
+      {
+        "name": "bulkData",
+        "status": "PASS",
+        "evidence": "streaming/checkpoint/retry writer and dry-run guard present"
+      },
+      {
+        "name": "delta",
+        "status": "PASS",
+        "evidence": "77/77, unknown 0"
+      },
+      {
+        "name": "financial",
+        "status": "PASS",
+        "evidence": "full rehearsal exact delta"
+      },
+      {
+        "name": "relationships",
+        "status": "PASS",
+        "evidence": "full rehearsal relationship gates"
+      },
+      {
+        "name": "events",
+        "status": "PASS",
+        "evidence": "full rehearsal event gates"
+      },
+      {
+        "name": "storage",
+        "status": "FAIL",
+        "evidence": "real buckets 0; rehearsal 3/3"
+      },
+      {
+        "name": "search",
+        "status": "PASS",
+        "evidence": "14/14 classified"
+      },
+      {
+        "name": "arabic",
+        "status": "PASS",
+        "evidence": "existing RTL suite"
+      },
+      {
+        "name": "hebrew",
+        "status": "PASS",
+        "evidence": "existing RTL suite"
+      },
+      {
+        "name": "english",
+        "status": "PASS",
+        "evidence": "existing LTR suite"
+      },
+      {
+        "name": "electron",
+        "status": "NOT_RUN",
+        "evidence": "real App Check packaged Electron proof pending"
+      },
+      {
+        "name": "writeFreeze",
+        "status": "PASS",
+        "evidence": "maintenance guard and localized failure behavior"
+      },
+      {
+        "name": "rollback",
+        "status": "PASS",
+        "evidence": "before/after write runbook and journal model"
+      },
+      {
+        "name": "observability",
+        "status": "PASS",
+        "evidence": "run-scoped safe metric schema"
+      },
+      {
+        "name": "backendSwitch",
+        "status": "PASS",
+        "evidence": "project/database/release/fallback-off selector gates"
+      }
+    ],
+    "pass": 14,
+    "fail": 6,
+    "notRun": 2,
+    "missing": 0,
+    "decision": "NO_GO",
+    "blockers": [
+      "environment",
+      "secret",
+      "iam",
+      "rules",
+      "indexes",
+      "functions",
+      "storage",
+      "electron"
+    ]
+  },
+  "currentGo": {
+    "gates": [
+      {
+        "name": "environment",
+        "status": "FAIL",
+        "evidence": [
+          "EXECUTABLE_COMMIT_MISMATCH"
+        ]
+      },
+      {
+        "name": "secret",
+        "status": "FAIL",
+        "evidence": "credential removed from source; owner revocation confirmation missing"
+      },
+      {
+        "name": "iam",
+        "status": "FAIL",
+        "evidence": {
+          "inventory": "migration/reports/firebase-production-environment-inventory.json",
+          "migrationIdentity": "mydesck-migration@mydesckpro.iam.gserviceaccount.com",
+          "projectPermissions": {
+            "http": 200,
+            "data": {}
+          },
+          "syntheticRead": {
+            "http": 403,
+            "status": "PERMISSION_DENIED",
+            "reasons": [],
+            "message": "Missing or insufficient permissions."
+          },
+          "conditionalGrantProof": "NOT_RUN_NO_OPERATOR_BINDING_APPLIED",
+          "effectiveResourceAnalysis": "NOT_RUN_TROUBLESHOOTER_DISABLED",
+          "note": "Human Owner remains; project-policy absence of prohibited grants is not a complete resource-level analysis."
+        }
+      },
+      {
+        "name": "rules",
+        "status": "PASS",
+        "evidence": {
+          "current": {
+            "release": "projects/mydesckpro/releases/cloud.firestore/default",
+            "ruleset": "projects/mydesckpro/rulesets/c6fc85cd-4681-491c-bb7c-b879e5893a92",
+            "updateTime": "2026-09-09T08:05:20.911440Z",
+            "files": [
+              {
+                "name": "firestore.rules",
+                "path": "migration/firestore/release/current-production/c6fc85cd-4681-491c-bb7c-b879e5893a92/source-0.rules",
+                "sha256": "ecf30f940747dcc3c5ba4993093e9a11ac9fc5df7e14b2a1512d2446923d84eb"
+              }
+            ]
+          },
+          "candidateSha256": "bfb3413ad1af01377b8e079dd4cfa9ea7813a2b18b61a70c43ac0f9c520cee90",
+          "rollbackAvailable": true,
+          "rollback": {
+            "release": "projects/mydesckpro/releases/cloud.firestore/default",
+            "ruleset": "projects/mydesckpro/rulesets/c6fc85cd-4681-491c-bb7c-b879e5893a92",
+            "updateTime": "2026-09-09T08:05:20.911440Z",
+            "files": [
+              {
+                "name": "firestore.rules",
+                "path": "migration/firestore/release/rollback-production/source-0.rules",
+                "sha256": "ecf30f940747dcc3c5ba4993093e9a11ac9fc5df7e14b2a1512d2446923d84eb"
+              }
+            ]
+          },
+          "emulator": "PASS",
+          "deployed": false,
+          "note": "READINESS only: captured current release, candidate tested, rollback source verified. Current deny-all Rules require separate approved deployment for client smoke."
+        }
+      },
+      {
+        "name": "indexes",
+        "status": "FAIL",
+        "evidence": [
+          {
+            "collectionGroup": "trips",
+            "queryScope": "COLLECTION",
+            "fields": [
+              {
+                "fieldPath": "ownerUid",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "businessId",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "isDeleted",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "startDate",
+                "order": "ASCENDING"
+              }
+            ],
+            "query": "FirestoreTravelRepository.listTripsForBusiness: tenant, deletion state, start-date cursor.",
+            "state": "MISSING",
+            "resource": null,
+            "productionState": null
+          },
+          {
+            "collectionGroup": "trips",
+            "queryScope": "COLLECTION",
+            "fields": [
+              {
+                "fieldPath": "ownerUid",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "businessId",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "isDeleted",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "status",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "startDate",
+                "order": "ASCENDING"
+              }
+            ],
+            "query": "FirestoreTravelRepository.listTripsForBusiness with a status filter.",
+            "state": "MISSING",
+            "resource": null,
+            "productionState": null
+          },
+          {
+            "collectionGroup": "tripInstallments",
+            "queryScope": "COLLECTION",
+            "fields": [
+              {
+                "fieldPath": "ownerUid",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "businessId",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "status",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "dueDate",
+                "order": "ASCENDING"
+              }
+            ],
+            "query": "FirestoreTravelRepository.listDueInstallments: tenant, active status set, due date.",
+            "state": "MISSING",
+            "resource": null,
+            "productionState": null
+          }
+        ]
+      },
+      {
+        "name": "functions",
+        "status": "FAIL",
+        "evidence": {
+          "billingEnabled": false,
+          "disabledRequiredApis": [
+            "cloudfunctions.googleapis.com",
+            "run.googleapis.com",
+            "cloudbuild.googleapis.com",
+            "artifactregistry.googleapis.com"
+          ],
+          "eventarc": "DISABLED_NOT_REQUIRED_FOR_CURRENT_CALLABLES",
+          "deployCapability": "NOT_RUN",
+          "realSmoke": "NOT_RUN",
+          "reason": "FUNCTIONS DEPLOYMENT BLOCKED BY BILLING"
+        }
+      },
+      {
+        "name": "auth",
+        "status": "PASS",
+        "evidence": "10/10, unknown 0"
+      },
+      {
+        "name": "bulkData",
+        "status": "PASS",
+        "evidence": "streaming/checkpoint/retry writer and dry-run guard present"
+      },
+      {
+        "name": "delta",
+        "status": "PASS",
+        "evidence": "77/77, unknown 0"
+      },
+      {
+        "name": "financial",
+        "status": "PASS",
+        "evidence": "full rehearsal exact delta"
+      },
+      {
+        "name": "relationships",
+        "status": "PASS",
+        "evidence": "full rehearsal relationship gates"
+      },
+      {
+        "name": "events",
+        "status": "PASS",
+        "evidence": "full rehearsal event gates"
+      },
+      {
+        "name": "storage",
+        "status": "FAIL",
+        "evidence": {
+          "buckets": [],
+          "target": null,
+          "bucketAvailable": false,
+          "firebaseStorageApi": "DISABLED",
+          "billingEnabled": false,
+          "privateRulesAndChecksumSmoke": "NOT_RUN"
+        }
+      },
+      {
+        "name": "search",
+        "status": "PASS",
+        "evidence": "14/14 classified"
+      },
+      {
+        "name": "arabic",
+        "status": "PASS",
+        "evidence": "existing RTL suite"
+      },
+      {
+        "name": "hebrew",
+        "status": "PASS",
+        "evidence": "existing RTL suite"
+      },
+      {
+        "name": "english",
+        "status": "PASS",
+        "evidence": "existing LTR suite"
+      },
+      {
+        "name": "electron",
+        "status": "NOT_RUN",
+        "evidence": {
+          "apiConfigurationRead": "PASS",
+          "packagedTokenProof": "NOT_RUN",
+          "reason": "Packaged Electron attestation provider registration/verification and authenticated callable proof pending; no debug-token substitution."
+        }
+      },
+      {
+        "name": "writeFreeze",
+        "status": "PASS",
+        "evidence": "maintenance guard and localized failure behavior"
+      },
+      {
+        "name": "rollback",
+        "status": "PASS",
+        "evidence": "before/after write runbook and journal model"
+      },
+      {
+        "name": "observability",
+        "status": "PASS",
+        "evidence": "run-scoped safe metric schema"
+      },
+      {
+        "name": "backendSwitch",
+        "status": "PASS",
+        "evidence": "project/database/release/fallback-off selector gates"
+      }
+    ],
+    "pass": 15,
+    "fail": 6,
+    "notRun": 1,
+    "missing": 0,
+    "decision": "NO_GO",
+    "blockers": [
+      "environment",
+      "secret",
+      "iam",
+      "indexes",
+      "functions",
+      "storage",
+      "electron"
+    ]
+  },
+  "matrix": [
+    {
+      "gateId": "environment",
+      "previousStatus": "FAIL",
+      "currentStatus": "FAIL",
+      "closureStatus": "OPERATOR_BLOCKED",
+      "transition": "FAIL -> FAIL",
+      "rootCause": "approvedPreparationCommit remains PENDING_POST_REVIEW_PIN; actual project/database identity is confirmed",
+      "canCodexSafelyFix": "Prepare reviewed commit; operator approval required for pin",
+      "requiresOperator": true,
+      "requiresBilling": false,
+      "requiresIAM": false,
+      "requiresDeployment": false,
+      "productionMutationInvolved": false,
+      "action": "Kept commit gate intact; no self-approval",
+      "closureEvidence": "config/production-migration.json; current GO identityFailures"
+    },
+    {
+      "gateId": "secret",
+      "previousStatus": "FAIL",
+      "currentStatus": "FAIL",
+      "closureStatus": "OPERATOR_BLOCKED",
+      "transition": "FAIL -> FAIL",
+      "rootCause": "Active source credential removed; provider revocation has not been confirmed",
+      "canCodexSafelyFix": "No; operator-only provider action",
+      "requiresOperator": true,
+      "requiresBilling": false,
+      "requiresIAM": false,
+      "requiresDeployment": false,
+      "productionMutationInvolved": true,
+      "action": "Safe scanner rerun; asked for confirmation without requesting token; no confirmation received",
+      "closureEvidence": "active-secret-regression.json; no revocation attestation"
+    },
+    {
+      "gateId": "iam",
+      "previousStatus": "FAIL",
+      "currentStatus": "FAIL",
+      "closureStatus": "OPERATOR_BLOCKED",
+      "transition": "FAIL -> FAIL",
+      "rootCause": "Migration account has firebaseauth.admin only; datastore permissions absent; runtime/deployer identities absent; human Owner remains; full resource analysis blocked by disabled Troubleshooter",
+      "canCodexSafelyFix": "Read-only analysis and exact plan/apply tooling completed; no grant authorized",
+      "requiresOperator": true,
+      "requiresBilling": false,
+      "requiresIAM": true,
+      "requiresDeployment": false,
+      "productionMutationInvolved": true,
+      "action": "Project policy, role permissions and permission probes inspected; separate named identities and conditional datastore.user planned",
+      "closureEvidence": "firebase-production-environment-inventory.json; PRODUCTION_ENV_IAM_ANALYSIS.md; production-iam.mjs"
+    },
+    {
+      "gateId": "rules",
+      "previousStatus": "NOT_RUN",
+      "currentStatus": "PASS",
+      "closureStatus": "CLOSED",
+      "transition": "NOT_RUN -> PASS",
+      "rootCause": "Human Rules API request lacked quota-project header; migration identity separately lacks firebaserules.releases.get",
+      "canCodexSafelyFix": "Yes, using already-authorized human read with quota project",
+      "requiresOperator": false,
+      "requiresBilling": false,
+      "requiresIAM": false,
+      "requiresDeployment": false,
+      "productionMutationInvolved": false,
+      "action": "Read release and source, captured deny-all rollback and source SHA-256; candidate emulator suite PASS; no deployment",
+      "closureEvidence": "release/current-production/manifest.json; source-0.rules; current GO rules evidence"
+    },
+    {
+      "gateId": "indexes",
+      "previousStatus": "FAIL",
+      "currentStatus": "FAIL",
+      "closureStatus": "OPERATOR_BLOCKED",
+      "transition": "FAIL -> FAIL",
+      "rootCause": "Authenticated index listing succeeds and returns zero composites; three ordered repository queries require exact composites",
+      "canCodexSafelyFix": "Verified queries and prepared three creation commands; apply requires operator",
+      "requiresOperator": true,
+      "requiresBilling": false,
+      "requiresIAM": true,
+      "requiresDeployment": true,
+      "productionMutationInvolved": true,
+      "action": "Exact specification/state matcher added; no count-only PASS and no unrelated field override deployment",
+      "closureEvidence": "firebase-production-index-readiness.json; src/data/FirestoreTravelRepository.ts:27,48"
+    },
+    {
+      "gateId": "functions",
+      "previousStatus": "FAIL",
+      "currentStatus": "FAIL",
+      "closureStatus": "OPERATOR_BLOCKED",
+      "transition": "FAIL -> FAIL",
+      "rootCause": "Billing disabled; Functions/Run/Build/Artifact Registry disabled; runtime identity absent; deployment and real Auth/App Check callable path unproven",
+      "canCodexSafelyFix": "Local v2 synthetic candidate and emulator proof prepared; capability actions require operator",
+      "requiresOperator": true,
+      "requiresBilling": true,
+      "requiresIAM": true,
+      "requiresDeployment": true,
+      "productionMutationInvolved": true,
+      "action": "Classified all callables, kept notifications quarantined; isolated synthetic candidate prepared; no API enablement/deployment",
+      "closureEvidence": "inventory APIs/billing; production-readiness-smoke.mjs; readiness-smoke.test.mjs; PRODUCTION_REAL_SMOKE_PLAN.md"
+    },
+    {
+      "gateId": "storage",
+      "previousStatus": "FAIL",
+      "currentStatus": "FAIL",
+      "closureStatus": "OPERATOR_BLOCKED",
+      "transition": "FAIL -> FAIL",
+      "rootCause": "No project buckets; Firebase Storage API disabled; billing disabled; candidate Rules references nonexistent (default) database while production uses default",
+      "canCodexSafelyFix": "Inventory, target guard and private-smoke plan completed; provider capability confirmation needed before secure integration changes",
+      "requiresOperator": true,
+      "requiresBilling": true,
+      "requiresIAM": true,
+      "requiresDeployment": true,
+      "productionMutationInvolved": true,
+      "action": "Bucket pin intentionally empty; flagged database-reference mismatch; no guessed bucket or weakened Rules",
+      "closureEvidence": "inventory buckets/defaultBucket; production-storage-target.json; rules/storage.rules:40; PRODUCTION_REAL_SMOKE_PLAN.md"
+    },
+    {
+      "gateId": "electron",
+      "previousStatus": "NOT_RUN",
+      "currentStatus": "NOT_RUN",
+      "closureStatus": "OPERATOR_BLOCKED",
+      "transition": "NOT_RUN -> NOT_RUN",
+      "rootCause": "Packaged Electron attestation provider and real token proof absent; production client has no initialized App Check provider",
+      "canCodexSafelyFix": "Proof design prepared; approved provider/configuration required before client integration",
+      "requiresOperator": true,
+      "requiresBilling": true,
+      "requiresIAM": true,
+      "requiresDeployment": true,
+      "productionMutationInvolved": true,
+      "action": "Read real App Check service configuration; documented provider-dependent integration; no debug-token or enforcement bypass",
+      "closureEvidence": "inventory appCheck; src/data/firebaseClient.ts; APP_CHECK_PLAN.md; PRODUCTION_REAL_SMOKE_PLAN.md"
+    }
+  ],
+  "billing": {
+    "billingEnabled": false,
+    "accountLinked": false,
+    "pricingPlan": "SPARK_DERIVED_FROM_BILLING"
+  },
+  "indexes": {
+    "required": 3,
+    "ready": 0,
+    "creating": 0,
+    "missing": 3,
+    "error": 0
+  },
+  "realProof": {
+    "firestore": "NOT_RUN",
+    "auth": "NOT_RUN",
+    "function": "NOT_RUN",
+    "storage": "NOT_RUN",
+    "rollback": "NOT_RUN",
+    "reason": "Prerequisite billing, IAM, indexes, Functions, Storage, App Check and secret gates unresolved",
+    "realResourcesCreated": 0,
+    "cleanup": "NOT_APPLICABLE_ZERO_CREATED",
+    "localSyntheticCallableAndRollback": "PASS_EMULATOR_ONLY"
+  },
+  "harness": {
+    "steps": 21,
+    "passed": 21,
+    "failed": 0,
+    "nodeTestCases": 189,
+    "assertionCallSites": 607,
+    "fullCorpusApplicationAssertions": 1023,
+    "searchCorpusCases": 12,
+    "fullCorpusSecurityChecks": 50,
+    "corruptionControls": 18
+  },
+  "supplementary": {
+    "passed": 15,
+    "failed": 0
+  },
+  "productionChanges": {
+    "supabaseCustomerWrites": 0,
+    "firebaseCustomerFirestoreWrites": 0,
+    "firebaseCustomerAuthImports": 0,
+    "customerStorageMigration": 0,
+    "backendCutover": "NOT_STARTED",
+    "writeFreeze": "NOT_STARTED",
+    "supabaseDeletion": "NOT_STARTED",
+    "cloudSql": "NOT_USED",
+    "environmentMutations": 0
+  },
+  "softwareReadiness": "Closure tooling and regression PASS; provider-dependent App Check integration and Storage database compatibility remain blocked",
+  "projectCapability": "BLOCKED",
+  "decision": "BLOCKED — FIX BEFORE PRODUCTION MIGRATION DRY-RUN"
+}

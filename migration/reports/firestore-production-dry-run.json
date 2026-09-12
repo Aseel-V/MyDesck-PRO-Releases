@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-12T04:46:31.550Z",
-  "migrationRunId": "harness-production-prep",
+  "generatedAt": "2026-09-12T08:57:59.827Z",
+  "migrationRunId": "phase4b-environment-closure",
   "mode": "dry-run",
   "productionWrites": 0,
   "environmentIdentity": {
@@ -15,7 +15,7 @@
     "firestoreDatabaseId": "default"
   },
   "approvedCommitSha": "PENDING_POST_REVIEW_PIN",
-  "executableCommitSha": "6cd86d95a855fd1b2fd6e930b6cc88b5ebf839fe",
+  "executableCommitSha": "9bb74afbcfc8df1d2fcf5420f44d49e198b8f6ec",
   "identityFailures": [
     "EXECUTABLE_COMMIT_MISMATCH"
   ],
@@ -48,22 +48,163 @@
       {
         "name": "iam",
         "status": "FAIL",
-        "evidence": "proposed identities/bindings not created; pre-existing human Owner remains"
+        "evidence": {
+          "inventory": "migration/reports/firebase-production-environment-inventory.json",
+          "migrationIdentity": "mydesck-migration@mydesckpro.iam.gserviceaccount.com",
+          "projectPermissions": {
+            "http": 200,
+            "data": {}
+          },
+          "syntheticRead": {
+            "http": 403,
+            "status": "PERMISSION_DENIED",
+            "reasons": [],
+            "message": "Missing or insufficient permissions."
+          },
+          "conditionalGrantProof": "NOT_RUN_NO_OPERATOR_BINDING_APPLIED",
+          "effectiveResourceAnalysis": "NOT_RUN_TROUBLESHOOTER_DISABLED",
+          "note": "Human Owner remains; project-policy absence of prohibited grants is not a complete resource-level analysis."
+        }
       },
       {
         "name": "rules",
-        "status": "NOT_RUN",
-        "evidence": "current real Rules read returned 403; candidate tests PASS"
+        "status": "PASS",
+        "evidence": {
+          "current": {
+            "release": "projects/mydesckpro/releases/cloud.firestore/default",
+            "ruleset": "projects/mydesckpro/rulesets/c6fc85cd-4681-491c-bb7c-b879e5893a92",
+            "updateTime": "2026-09-09T08:05:20.911440Z",
+            "files": [
+              {
+                "name": "firestore.rules",
+                "path": "migration/firestore/release/current-production/c6fc85cd-4681-491c-bb7c-b879e5893a92/source-0.rules",
+                "sha256": "ecf30f940747dcc3c5ba4993093e9a11ac9fc5df7e14b2a1512d2446923d84eb"
+              }
+            ]
+          },
+          "candidateSha256": "bfb3413ad1af01377b8e079dd4cfa9ea7813a2b18b61a70c43ac0f9c520cee90",
+          "rollbackAvailable": true,
+          "rollback": {
+            "release": "projects/mydesckpro/releases/cloud.firestore/default",
+            "ruleset": "projects/mydesckpro/rulesets/c6fc85cd-4681-491c-bb7c-b879e5893a92",
+            "updateTime": "2026-09-09T08:05:20.911440Z",
+            "files": [
+              {
+                "name": "firestore.rules",
+                "path": "migration/firestore/release/rollback-production/source-0.rules",
+                "sha256": "ecf30f940747dcc3c5ba4993093e9a11ac9fc5df7e14b2a1512d2446923d84eb"
+              }
+            ]
+          },
+          "emulator": "PASS",
+          "deployed": false,
+          "note": "READINESS only: captured current release, candidate tested, rollback source verified. Current deny-all Rules require separate approved deployment for client smoke."
+        }
       },
       {
         "name": "indexes",
         "status": "FAIL",
-        "evidence": "0/3 required indexes present"
+        "evidence": [
+          {
+            "collectionGroup": "trips",
+            "queryScope": "COLLECTION",
+            "fields": [
+              {
+                "fieldPath": "ownerUid",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "businessId",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "isDeleted",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "startDate",
+                "order": "ASCENDING"
+              }
+            ],
+            "query": "FirestoreTravelRepository.listTripsForBusiness: tenant, deletion state, start-date cursor.",
+            "state": "MISSING",
+            "resource": null,
+            "productionState": null
+          },
+          {
+            "collectionGroup": "trips",
+            "queryScope": "COLLECTION",
+            "fields": [
+              {
+                "fieldPath": "ownerUid",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "businessId",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "isDeleted",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "status",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "startDate",
+                "order": "ASCENDING"
+              }
+            ],
+            "query": "FirestoreTravelRepository.listTripsForBusiness with a status filter.",
+            "state": "MISSING",
+            "resource": null,
+            "productionState": null
+          },
+          {
+            "collectionGroup": "tripInstallments",
+            "queryScope": "COLLECTION",
+            "fields": [
+              {
+                "fieldPath": "ownerUid",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "businessId",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "status",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "dueDate",
+                "order": "ASCENDING"
+              }
+            ],
+            "query": "FirestoreTravelRepository.listDueInstallments: tenant, active status set, due date.",
+            "state": "MISSING",
+            "resource": null,
+            "productionState": null
+          }
+        ]
       },
       {
         "name": "functions",
         "status": "FAIL",
-        "evidence": "DISABLED"
+        "evidence": {
+          "billingEnabled": false,
+          "disabledRequiredApis": [
+            "cloudfunctions.googleapis.com",
+            "run.googleapis.com",
+            "cloudbuild.googleapis.com",
+            "artifactregistry.googleapis.com"
+          ],
+          "eventarc": "DISABLED_NOT_REQUIRED_FOR_CURRENT_CALLABLES",
+          "deployCapability": "NOT_RUN",
+          "realSmoke": "NOT_RUN",
+          "reason": "FUNCTIONS DEPLOYMENT BLOCKED BY BILLING"
+        }
       },
       {
         "name": "auth",
@@ -98,7 +239,14 @@
       {
         "name": "storage",
         "status": "FAIL",
-        "evidence": "real buckets 0; rehearsal 3/3"
+        "evidence": {
+          "buckets": [],
+          "target": null,
+          "bucketAvailable": false,
+          "firebaseStorageApi": "DISABLED",
+          "billingEnabled": false,
+          "privateRulesAndChecksumSmoke": "NOT_RUN"
+        }
       },
       {
         "name": "search",
@@ -123,7 +271,11 @@
       {
         "name": "electron",
         "status": "NOT_RUN",
-        "evidence": "real App Check packaged Electron proof pending"
+        "evidence": {
+          "apiConfigurationRead": "PASS",
+          "packagedTokenProof": "NOT_RUN",
+          "reason": "Packaged Electron attestation provider registration/verification and authenticated callable proof pending; no debug-token substitution."
+        }
       },
       {
         "name": "writeFreeze",
@@ -146,16 +298,15 @@
         "evidence": "project/database/release/fallback-off selector gates"
       }
     ],
-    "pass": 14,
+    "pass": 15,
     "fail": 6,
-    "notRun": 2,
+    "notRun": 1,
     "missing": 0,
     "decision": "NO_GO",
     "blockers": [
       "environment",
       "secret",
       "iam",
-      "rules",
       "indexes",
       "functions",
       "storage",
@@ -166,7 +317,6 @@
     "environment",
     "secret",
     "iam",
-    "rules",
     "indexes",
     "functions",
     "storage",
