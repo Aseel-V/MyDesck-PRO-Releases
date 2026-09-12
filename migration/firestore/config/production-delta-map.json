@@ -1,0 +1,707 @@
+{
+  "generatedAt": "2026-09-11T17:51:16.014Z",
+  "tables": 77,
+  "unknown": 0,
+  "counts": {
+    "APPEND_ONLY_EVENT": 16,
+    "FREEZE_REQUIRED": 1,
+    "FULL_RECOPY_REQUIRED": 50,
+    "RELIABLE_CREATED_AT": 5,
+    "RELIABLE_UPDATED_AT": 5
+  },
+  "rows": [
+    {
+      "table": "allocation_numbers_log",
+      "domain": "retail_auto",
+      "classification": "APPEND_ONLY_EVENT",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Replay stable primary keys above the checkpoint, then compare the complete ordered PK/hash set during freeze."
+    },
+    {
+      "table": "audit_logs",
+      "domain": "identity",
+      "classification": "APPEND_ONLY_EVENT",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Replay stable primary keys above the checkpoint, then compare the complete ordered PK/hash set during freeze."
+    },
+    {
+      "table": "business_profiles",
+      "domain": "identity",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": true,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "business_settings",
+      "domain": "identity",
+      "classification": "RELIABLE_UPDATED_AT",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": true,
+      "updatedAtTrigger": true,
+      "strategy": "Read updated_at above the T0 watermark inside the final read-only snapshot, then perform full PK/hash reconciliation."
+    },
+    {
+      "table": "car_parts",
+      "domain": "retail_auto",
+      "classification": "RELIABLE_UPDATED_AT",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": true,
+      "updatedAtTrigger": true,
+      "strategy": "Read updated_at above the T0 watermark inside the final read-only snapshot, then perform full PK/hash reconciliation."
+    },
+    {
+      "table": "cash_shifts",
+      "domain": "retail_auto",
+      "classification": "RELIABLE_UPDATED_AT",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": true,
+      "updatedAtTrigger": true,
+      "strategy": "Read updated_at above the T0 watermark inside the final read-only snapshot, then perform full PK/hash reconciliation."
+    },
+    {
+      "table": "customer_vehicles",
+      "domain": "retail_auto",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": true,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "customers_ledger",
+      "domain": "retail_auto",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "fiscal_counters",
+      "domain": "fiscal",
+      "classification": "APPEND_ONLY_EVENT",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": true,
+      "updatedAtTrigger": true,
+      "strategy": "Replay stable primary keys above the checkpoint, then compare the complete ordered PK/hash set during freeze."
+    },
+    {
+      "table": "fiscal_document_items",
+      "domain": "fiscal",
+      "classification": "APPEND_ONLY_EVENT",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Replay stable primary keys above the checkpoint, then compare the complete ordered PK/hash set during freeze."
+    },
+    {
+      "table": "fiscal_documents",
+      "domain": "fiscal",
+      "classification": "APPEND_ONLY_EVENT",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": true,
+      "updatedAtTrigger": true,
+      "strategy": "Replay stable primary keys above the checkpoint, then compare the complete ordered PK/hash set during freeze."
+    },
+    {
+      "table": "inventory_batches",
+      "domain": "retail_auto",
+      "classification": "RELIABLE_UPDATED_AT",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": true,
+      "updatedAtTrigger": true,
+      "strategy": "Read updated_at above the T0 watermark inside the final read-only snapshot, then perform full PK/hash reconciliation."
+    },
+    {
+      "table": "market_transactions",
+      "domain": "retail_auto",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "repair_order_items",
+      "domain": "retail_auto",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "repair_orders",
+      "domain": "retail_auto",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": true,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "restaurant_audit_logs",
+      "domain": "restaurant",
+      "classification": "APPEND_ONLY_EVENT",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Replay stable primary keys above the checkpoint, then compare the complete ordered PK/hash set during freeze."
+    },
+    {
+      "table": "restaurant_cash_drawers",
+      "domain": "restaurant",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": false,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "restaurant_cash_transactions",
+      "domain": "restaurant",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "restaurant_daily_reports",
+      "domain": "restaurant",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "restaurant_demand_forecasts",
+      "domain": "restaurant",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "restaurant_floor_plans",
+      "domain": "restaurant",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": true,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "restaurant_guest_profiles",
+      "domain": "restaurant",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": true,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "restaurant_historical_data",
+      "domain": "restaurant",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "restaurant_ingredients",
+      "domain": "restaurant",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": true,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "restaurant_item_modifier_groups",
+      "domain": "restaurant",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": false,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "restaurant_kitchen_tickets",
+      "domain": "restaurant",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "restaurant_menu_categories",
+      "domain": "restaurant",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "restaurant_menu_items",
+      "domain": "restaurant",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "restaurant_modifier_groups",
+      "domain": "restaurant",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "restaurant_modifiers",
+      "domain": "restaurant",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "restaurant_notifications",
+      "domain": "restaurant",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "restaurant_order_item_modifiers",
+      "domain": "restaurant",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "restaurant_order_items",
+      "domain": "restaurant",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "restaurant_orders",
+      "domain": "restaurant",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "restaurant_payments",
+      "domain": "restaurant",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "restaurant_recipes",
+      "domain": "restaurant",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "restaurant_reservations",
+      "domain": "restaurant",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "restaurant_settings",
+      "domain": "restaurant",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": true,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "restaurant_staff",
+      "domain": "restaurant",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "restaurant_table_sessions",
+      "domain": "restaurant",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": false,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "restaurant_tables",
+      "domain": "restaurant",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "restaurant_ticket_items",
+      "domain": "restaurant",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "restaurant_void_logs",
+      "domain": "restaurant",
+      "classification": "APPEND_ONLY_EVENT",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Replay stable primary keys above the checkpoint, then compare the complete ordered PK/hash set during freeze."
+    },
+    {
+      "table": "restaurant_waitlist",
+      "domain": "restaurant",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": false,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "restaurant_whatsapp_messages",
+      "domain": "restaurant",
+      "classification": "RELIABLE_CREATED_AT",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Copy new immutable history by created_at plus PK; validate immutability and full PK/hash set under freeze."
+    },
+    {
+      "table": "restaurant_whatsapp_settings",
+      "domain": "restaurant",
+      "classification": "RELIABLE_CREATED_AT",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": true,
+      "updatedAtTrigger": false,
+      "strategy": "Copy new immutable history by created_at plus PK; validate immutability and full PK/hash set under freeze."
+    },
+    {
+      "table": "shift_transactions",
+      "domain": "retail_auto",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "shrinkage_records",
+      "domain": "retail_auto",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "staff_shifts",
+      "domain": "retail_auto",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "stock_take_items",
+      "domain": "retail_auto",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "stock_takes",
+      "domain": "retail_auto",
+      "classification": "RELIABLE_UPDATED_AT",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": true,
+      "updatedAtTrigger": true,
+      "strategy": "Read updated_at above the T0 watermark inside the final read-only snapshot, then perform full PK/hash reconciliation."
+    },
+    {
+      "table": "travel_payment_feature_rollouts",
+      "domain": "travel",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": false,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "trip_activity_log",
+      "domain": "travel",
+      "classification": "APPEND_ONLY_EVENT",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Replay stable primary keys above the checkpoint, then compare the complete ordered PK/hash set during freeze."
+    },
+    {
+      "table": "trip_attachment_cleanup_queue",
+      "domain": "travel",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "trip_financial_audit",
+      "domain": "travel",
+      "classification": "APPEND_ONLY_EVENT",
+      "hasCreatedAt": false,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Replay stable primary keys above the checkpoint, then compare the complete ordered PK/hash set during freeze."
+    },
+    {
+      "table": "trip_installment_events",
+      "domain": "travel",
+      "classification": "APPEND_ONLY_EVENT",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Replay stable primary keys above the checkpoint, then compare the complete ordered PK/hash set during freeze."
+    },
+    {
+      "table": "trip_installments",
+      "domain": "travel",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": true,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "trip_notification_settings",
+      "domain": "travel",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": false,
+      "hasUpdatedAt": true,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "trip_notifications",
+      "domain": "travel",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "trip_packing_lists",
+      "domain": "travel",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": true,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "trip_payment_events",
+      "domain": "travel",
+      "classification": "APPEND_ONLY_EVENT",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Replay stable primary keys above the checkpoint, then compare the complete ordered PK/hash set during freeze."
+    },
+    {
+      "table": "trip_payment_plans",
+      "domain": "travel",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": true,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "trip_pdf_rate_limits",
+      "domain": "travel",
+      "classification": "FREEZE_REQUIRED",
+      "hasCreatedAt": false,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Freeze the owning workflow before the final read and perform a complete PK/hash reconciliation."
+    },
+    {
+      "table": "trip_pricing_preferences",
+      "domain": "travel",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": false,
+      "hasUpdatedAt": true,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "trip_templates",
+      "domain": "travel",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": true,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "trip_whatsapp_templates",
+      "domain": "travel",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": true,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "trip_write_requests",
+      "domain": "travel",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "trips",
+      "domain": "travel",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": true,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "user_profiles",
+      "domain": "identity",
+      "classification": "FULL_RECOPY_REQUIRED",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": true,
+      "updatedAtTrigger": false,
+      "strategy": "Do not trust timestamps; re-stream the complete table during freeze and converge by deterministic ID and canonical hash."
+    },
+    {
+      "table": "whatsapp_contact_consents",
+      "domain": "whatsapp",
+      "classification": "RELIABLE_CREATED_AT",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": true,
+      "updatedAtTrigger": false,
+      "strategy": "Copy new immutable history by created_at plus PK; validate immutability and full PK/hash set under freeze."
+    },
+    {
+      "table": "whatsapp_message_log",
+      "domain": "whatsapp",
+      "classification": "APPEND_ONLY_EVENT",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": true,
+      "updatedAtTrigger": false,
+      "strategy": "Replay stable primary keys above the checkpoint, then compare the complete ordered PK/hash set during freeze."
+    },
+    {
+      "table": "whatsapp_reminders",
+      "domain": "whatsapp",
+      "classification": "RELIABLE_CREATED_AT",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": true,
+      "updatedAtTrigger": false,
+      "strategy": "Copy new immutable history by created_at plus PK; validate immutability and full PK/hash set under freeze."
+    },
+    {
+      "table": "whatsapp_server_templates",
+      "domain": "whatsapp",
+      "classification": "RELIABLE_CREATED_AT",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": true,
+      "updatedAtTrigger": false,
+      "strategy": "Copy new immutable history by created_at plus PK; validate immutability and full PK/hash set under freeze."
+    },
+    {
+      "table": "whatsapp_webhook_events",
+      "domain": "whatsapp",
+      "classification": "APPEND_ONLY_EVENT",
+      "hasCreatedAt": false,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Replay stable primary keys above the checkpoint, then compare the complete ordered PK/hash set during freeze."
+    },
+    {
+      "table": "x_reports",
+      "domain": "fiscal",
+      "classification": "APPEND_ONLY_EVENT",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Replay stable primary keys above the checkpoint, then compare the complete ordered PK/hash set during freeze."
+    },
+    {
+      "table": "z_report_counters",
+      "domain": "fiscal",
+      "classification": "APPEND_ONLY_EVENT",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": true,
+      "updatedAtTrigger": false,
+      "strategy": "Replay stable primary keys above the checkpoint, then compare the complete ordered PK/hash set during freeze."
+    },
+    {
+      "table": "z_reports",
+      "domain": "fiscal",
+      "classification": "APPEND_ONLY_EVENT",
+      "hasCreatedAt": true,
+      "hasUpdatedAt": false,
+      "updatedAtTrigger": false,
+      "strategy": "Replay stable primary keys above the checkpoint, then compare the complete ordered PK/hash set during freeze."
+    }
+  ]
+}

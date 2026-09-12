@@ -1,0 +1,13 @@
+{
+  "functions": {
+    "source": "../production-prep.local/functions-package",
+    "runtime": "nodejs22"
+  },
+  "firestore": {
+    "rules": "rules/firestore.rules",
+    "indexes": "rules/firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "rules/storage.rules"
+  }
+}

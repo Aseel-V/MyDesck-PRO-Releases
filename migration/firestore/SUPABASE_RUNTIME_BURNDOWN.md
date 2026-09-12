@@ -42,3 +42,17 @@ The currently selected legacy production travel routes still contain 77 explaine
 5. Remove comparison adapters only after the separately approved Supabase read-only rollback window.
 
 The current root selector still points to Supabase. No dual-write path was added, no production configuration was switched, and no production customer data was written.
+
+## Post-cutover fate
+
+| Fate | Calls |
+| --- | ---: |
+| `REMOVED_BEFORE_CUTOVER` | 111 |
+| `UNREACHABLE_AFTER_SELECTOR` | 135 |
+| `ROLLBACK_ONLY` | 8 |
+| `MIGRATION_ONLY` | 0 |
+| `TEST_ONLY` | 0 |
+| `LEGACY_VERTICAL` without selector isolation | 0 |
+| `BLOCKED` / unexplained | 0 |
+
+The production composition root dynamically loads `production-main` only in Supabase mode and loads the Firebase-native travel bundle only in Firestore mode. The static guard verifies the Firestore production bundle has zero direct Supabase calls and requires `VITE_SUPABASE_FALLBACK_DISABLED=true`. Expected production-active Supabase references reachable after the reviewed selector switch: **0**. Current production remains on Supabase, so this is a prepared reachability result rather than an executed cutover.

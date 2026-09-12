@@ -1,0 +1,25 @@
+{
+  "firebaseProject": "mydesckpro",
+  "firestoreDatabaseId": "default",
+  "supabaseProject": "pubugnfaqqukelvgckdr",
+  "schemaVersion": 1,
+  "transformVersion": "1.full.1",
+  "approvedPreparationCommit": "PENDING_POST_REVIEW_PIN",
+  "defaultModes": {
+    "auth": "dry-run",
+    "data": "dry-run",
+    "storage": "manifest-only"
+  },
+  "productionAcknowledgement": "I_ACKNOWLEDGE_MYDESCK_FIRESTORE_PRODUCTION_COPY",
+  "expectedSource": {
+    "tables": 77,
+    "rowsAtLastRehearsal": 1444,
+    "usersAtLastInventory": 10,
+    "storageObjectsAtLastRehearsal": 3
+  },
+  "sourceSnapshot": {
+    "isolationLevel": "REPEATABLE READ",
+    "readOnly": true,
+    "negativeWriteSqlState": "25006"
+  }
+}

@@ -52,7 +52,7 @@ assert.equal(app.parity.search, 'BLOCKED');
 assert.equal(oracle.result, 'PASS');
 assert.equal(oracle.migrations.failed, 0);
 assert.equal(harness.status, 'PASS');
-assert.ok(harness.totals.assertionCallSites >= 480);
+assert.ok(harness.totals.assertionCallSites >= 528);
 assert.equal(burn.total, 254);
 assert.equal(Object.values(burn.classes).reduce((sum, value) => sum + value, 0), burn.total);
 assert.ok(indexes.fieldOverrides.length >= 10);

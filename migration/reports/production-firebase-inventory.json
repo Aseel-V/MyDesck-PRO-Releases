@@ -1,0 +1,37 @@
+{
+  "generatedAt": "2026-09-11T20:45:00+03:00",
+  "readOnly": true,
+  "project": { "id": "mydesckpro", "number": "816880250172", "displayName": "MyDesckPRO", "state": "ACTIVE" },
+  "firestore": {
+    "databases": [
+      { "id": "default", "resource": "projects/mydesckpro/databases/default", "location": "nam5", "type": "FIRESTORE_NATIVE", "edition": "ENTERPRISE", "freeTier": true, "deleteProtection": "DISABLED", "pointInTimeRecovery": "DISABLED" }
+    ],
+    "verifiedDatabaseId": "default",
+    "parenthesizedDefaultExists": false,
+    "rootCollections": [],
+    "rootCollectionListing": "PASS_EMPTY",
+    "compositeIndexes": 0,
+    "fieldOverrides": 0
+  },
+  "auth": { "userCount": 5, "countMethod": "Firebase Admin listUsers with keyless impersonated ADC; values not persisted", "configuration": "NOT_RUN_PERMISSION_403" },
+  "storage": { "buckets": [], "capability": "BLOCKED_NO_BUCKET" },
+  "functions": { "deployed": [], "api": "DISABLED", "capability": "BLOCKED_API_AND_BILLING" },
+  "rules": { "firestoreCurrent": "NOT_RUN_PERMISSION_403", "storageCurrent": "NOT_RUN_PERMISSION_403" },
+  "indexes": { "existingComposite": 0, "existingFieldOverrides": 0 },
+  "hosting": { "sites": [{ "id": "mydesckpro", "type": "DEFAULT_SITE" }], "appHosting": "BLOCKED_BLAZE_REQUIRED" },
+  "apps": [{ "platform": "WEB", "state": "ACTIVE", "appId": "1:816880250172:web:c69406a2f00be8bb1a0239" }],
+  "appCheck": { "apiEnabled": true, "configuration": "NOT_RUN_PERMISSION_403" },
+  "billing": { "enabled": false, "accountAttached": false },
+  "iam": {
+    "migrationIdentity": "mydesck-migration@mydesckpro.iam.gserviceaccount.com",
+    "migrationIdentityRoles": ["roles/firebaseauth.admin"],
+    "firestoreMigrationRolePresent": false,
+    "storageMigrationRolePresent": false,
+    "functionsRuntimeIdentityPresent": false,
+    "preExistingHumanBroadRoles": [{ "role": "roles/owner", "principalCount": 1 }],
+    "rolesGrantedByThisMilestone": []
+  },
+  "enabledRelevantApis": ["datastore.googleapis.com", "firebase.googleapis.com", "firebaseappcheck.googleapis.com", "firebasehosting.googleapis.com", "firebaserules.googleapis.com", "firestore.googleapis.com", "identitytoolkit.googleapis.com", "storage.googleapis.com"],
+  "disabledRequiredApis": ["cloudfunctions.googleapis.com", "run.googleapis.com", "cloudbuild.googleapis.com", "artifactregistry.googleapis.com"],
+  "productionWrites": 0
+}

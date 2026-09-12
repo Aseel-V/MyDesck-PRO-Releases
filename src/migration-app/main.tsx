@@ -1,6 +1,11 @@
 import { createRoot } from 'react-dom/client';
-import { createEmulatorClient } from '../data/firebaseClient';
+import { createEmulatorClient, createProductionClient } from '../data/firebaseClient';
+import { selectBackend } from '../data/backendMode';
 import { FirestoreTravelRepository } from '../data/FirestoreTravelRepository';
 import { TravelWorkspace } from './TravelWorkspace';
-const repository = new FirestoreTravelRepository(createEmulatorClient(import.meta.env, location.hostname));
+const mode = selectBackend(import.meta.env, location.hostname);
+const client = mode === 'firestore'
+  ? createProductionClient(import.meta.env, location.hostname)
+  : createEmulatorClient(import.meta.env, location.hostname);
+const repository = new FirestoreTravelRepository(client);
 createRoot(document.getElementById('root')!).render(<TravelWorkspace repository={repository}/>);

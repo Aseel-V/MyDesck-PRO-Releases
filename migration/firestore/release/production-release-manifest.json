@@ -1,0 +1,27 @@
+{
+  "firebaseProject": "mydesckpro",
+  "firestoreDatabaseId": "default",
+  "schemaVersion": 1,
+  "transformVersion": "1.full.1",
+  "candidateHashes": {
+    "firestoreRules": "bfb3413ad1af01377b8e079dd4cfa9ea7813a2b18b61a70c43ac0f9c520cee90",
+    "storageRules": "5ccf1d426c4fbe75133e0bdc31562888523ac7d7bce8ba4d11e5be6e09af73bb",
+    "firestoreIndexes": "b145d250a7f5238a6092761217efff7122409253f2ce34846b2d9393e9ef1832",
+    "productionFunctionsEntrypoint": "1b3ddfa817edd08f880381846e20f31f9890c3705bcc23632d04e4dc668c0c80"
+  },
+  "expectedCurrentProductionHashes": {
+    "firestoreRules": "UNREADABLE_403",
+    "storageRules": "UNREADABLE_403"
+  },
+  "rollbackArtifacts": {
+    "firestoreRules": "PENDING_READ_ACCESS",
+    "storageRules": "PENDING_READ_ACCESS"
+  },
+  "deployment": {
+    "packageCommand": "node migration/firestore/tools/build-production-functions-package.mjs",
+    "command": "firebase deploy --config migration/firestore/firebase.production.json --project mydesckpro --only firestore:rules,firestore:indexes,storage,functions",
+    "allowedOnlyAfterGo": true,
+    "hashDriftBehavior": "REFUSE"
+  },
+  "readiness": "NO_GO_CURRENT_RULES_BASELINE_UNAVAILABLE"
+}

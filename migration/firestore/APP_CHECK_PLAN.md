@@ -1,5 +1,11 @@
 # App Check plan
 
+## Production preparation status
+
+The App Check API is enabled in `mydesckpro`, but the read-only configuration request returned 403 and no enforcement state was inferred. The registered client is a Firebase web app. Real enforcement remains `NOT RUN` until an approved principal can read configuration and the project has the Functions/Storage capability required for end-to-end verification.
+
+The candidate production callables set `enforceAppCheck: true`. They must be deployed dormant and exercised with synthetic identities before the backend selector can switch. Firestore and Storage enforcement must be enabled only after browser and packaged Electron clients both obtain valid tokens; otherwise a working desktop release would be locked out.
+
 Status: **EVALUATED — NOT ENFORCED OR DEPLOYED IN PHASE 2**
 
 App Check is an abuse-control signal. Firebase Auth, Rules, and server-side tenant authorization remain mandatory even after enforcement.
@@ -21,4 +27,3 @@ After web and desktop token acquisition pass, change callable declarations to `o
 Enable enforcement only after both client types produce valid tokens. Rules continue to enforce UID, tenant, immutable ownership, and protected financial/audit fields. Storage remains private by path and Rules; App Check does not make a public URL private.
 
 Sources: [web App Check with reCAPTCHA](https://firebase.google.com/docs/app-check/web/recaptcha-provider), [Cloud Functions enforcement](https://firebase.google.com/docs/app-check/cloud-functions), [service enforcement](https://firebase.google.com/docs/app-check/enable-enforcement), and [custom providers for desktop or unsupported platforms](https://firebase.google.com/docs/app-check/custom-provider).
-

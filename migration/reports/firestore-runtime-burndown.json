@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-11T16:38:53.212Z",
+  "generatedAt": "2026-09-11T17:51:15.794Z",
   "scope": "production src runtime Supabase calls plus direct client imports",
   "totals": {
     "from": 185,
@@ -27,6 +27,16 @@
     "TEST_ONLY": 0,
     "DEAD": 0
   },
+  "postCutoverFates": {
+    "REMOVED_BEFORE_CUTOVER": 111,
+    "UNREACHABLE_AFTER_SELECTOR": 135,
+    "ROLLBACK_ONLY": 8,
+    "MIGRATION_ONLY": 0,
+    "TEST_ONLY": 0,
+    "LEGACY_VERTICAL": 0,
+    "BLOCKED": 0
+  },
+  "postCutoverReachableProductionActive": 0,
   "indirectClientDependencies": {
     "count": 75,
     "entries": [
@@ -434,6 +444,7 @@
       "count": 2,
       "classification": "MIGRATED_TO_FIRESTORE",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
@@ -442,6 +453,7 @@
       "count": 2,
       "classification": "MIGRATED_TO_FIRESTORE",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
@@ -450,6 +462,7 @@
       "count": 4,
       "classification": "LEGACY_VERTICAL",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "UNREACHABLE_AFTER_SELECTOR",
       "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
@@ -458,6 +471,7 @@
       "count": 3,
       "classification": "LEGACY_VERTICAL",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "UNREACHABLE_AFTER_SELECTOR",
       "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
@@ -466,6 +480,7 @@
       "count": 1,
       "classification": "LEGACY_VERTICAL",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "UNREACHABLE_AFTER_SELECTOR",
       "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
@@ -474,6 +489,7 @@
       "count": 1,
       "classification": "FIREBASE_AUTH",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "FIREBASE_AUTH_REPOSITORY"
     },
     {
@@ -482,6 +498,7 @@
       "count": 1,
       "classification": "LEGACY_VERTICAL",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "UNREACHABLE_AFTER_SELECTOR",
       "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
@@ -490,6 +507,7 @@
       "count": 1,
       "classification": "LEGACY_VERTICAL",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "UNREACHABLE_AFTER_SELECTOR",
       "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
@@ -498,6 +516,7 @@
       "count": 2,
       "classification": "LEGACY_VERTICAL",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "UNREACHABLE_AFTER_SELECTOR",
       "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
@@ -506,6 +525,7 @@
       "count": 4,
       "classification": "LEGACY_VERTICAL",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "UNREACHABLE_AFTER_SELECTOR",
       "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
@@ -514,6 +534,7 @@
       "count": 1,
       "classification": "MIGRATED_TO_FIRESTORE",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
@@ -522,6 +543,7 @@
       "count": 1,
       "classification": "MIGRATED_TO_FIRESTORE",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
@@ -530,6 +552,7 @@
       "count": 1,
       "classification": "MIGRATED_TO_FUNCTION",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "CLOUD_FUNCTION_CALLABLE"
     },
     {
@@ -538,6 +561,7 @@
       "count": 2,
       "classification": "MIGRATED_TO_FIRESTORE",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
@@ -546,6 +570,7 @@
       "count": 4,
       "classification": "MIGRATED_TO_FIRESTORE",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
@@ -554,6 +579,7 @@
       "count": 1,
       "classification": "FIREBASE_AUTH",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "FIREBASE_AUTH_REPOSITORY"
     },
     {
@@ -562,6 +588,7 @@
       "count": 4,
       "classification": "LEGACY_VERTICAL",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "UNREACHABLE_AFTER_SELECTOR",
       "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
@@ -570,6 +597,7 @@
       "count": 2,
       "classification": "FIREBASE_STORAGE",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "FIREBASE_STORAGE_REPOSITORY"
     },
     {
@@ -578,6 +606,7 @@
       "count": 4,
       "classification": "LEGACY_VERTICAL",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "UNREACHABLE_AFTER_SELECTOR",
       "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
@@ -586,6 +615,7 @@
       "count": 7,
       "classification": "LEGACY_VERTICAL",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "UNREACHABLE_AFTER_SELECTOR",
       "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
@@ -594,6 +624,7 @@
       "count": 1,
       "classification": "LEGACY_VERTICAL",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "UNREACHABLE_AFTER_SELECTOR",
       "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
@@ -602,6 +633,7 @@
       "count": 1,
       "classification": "LEGACY_VERTICAL",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "UNREACHABLE_AFTER_SELECTOR",
       "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
@@ -610,6 +642,7 @@
       "count": 1,
       "classification": "LEGACY_VERTICAL",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "UNREACHABLE_AFTER_SELECTOR",
       "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
@@ -618,6 +651,7 @@
       "count": 1,
       "classification": "LEGACY_VERTICAL",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "UNREACHABLE_AFTER_SELECTOR",
       "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
@@ -626,6 +660,7 @@
       "count": 5,
       "classification": "LEGACY_VERTICAL",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "UNREACHABLE_AFTER_SELECTOR",
       "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
@@ -634,6 +669,7 @@
       "count": 1,
       "classification": "FIREBASE_AUTH",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "FIREBASE_AUTH_REPOSITORY"
     },
     {
@@ -642,6 +678,7 @@
       "count": 1,
       "classification": "LEGACY_VERTICAL",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "UNREACHABLE_AFTER_SELECTOR",
       "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
@@ -650,6 +687,7 @@
       "count": 1,
       "classification": "LEGACY_VERTICAL",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "UNREACHABLE_AFTER_SELECTOR",
       "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
@@ -658,6 +696,7 @@
       "count": 6,
       "classification": "MIGRATED_TO_FIRESTORE",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
@@ -666,6 +705,7 @@
       "count": 2,
       "classification": "FIREBASE_STORAGE",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "FIREBASE_STORAGE_REPOSITORY"
     },
     {
@@ -674,6 +714,7 @@
       "count": 1,
       "classification": "FIREBASE_AUTH",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "FIREBASE_AUTH_REPOSITORY"
     },
     {
@@ -682,6 +723,7 @@
       "count": 1,
       "classification": "MIGRATED_TO_FUNCTION",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "CLOUD_FUNCTION_CALLABLE"
     },
     {
@@ -690,6 +732,7 @@
       "count": 1,
       "classification": "MIGRATED_TO_FIRESTORE",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
@@ -698,6 +741,7 @@
       "count": 1,
       "classification": "MIGRATED_TO_FUNCTION",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "CLOUD_FUNCTION_CALLABLE"
     },
     {
@@ -706,6 +750,7 @@
       "count": 2,
       "classification": "MIGRATED_TO_FIRESTORE",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
@@ -714,6 +759,7 @@
       "count": 1,
       "classification": "MIGRATED_TO_FIRESTORE",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
@@ -722,6 +768,7 @@
       "count": 1,
       "classification": "MIGRATED_TO_FIRESTORE",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
@@ -730,6 +777,7 @@
       "count": 1,
       "classification": "MIGRATED_TO_FUNCTION",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "CLOUD_FUNCTION_CALLABLE"
     },
     {
@@ -738,6 +786,7 @@
       "count": 2,
       "classification": "FIREBASE_STORAGE",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "FIREBASE_STORAGE_REPOSITORY"
     },
     {
@@ -746,6 +795,7 @@
       "count": 5,
       "classification": "MIGRATED_TO_FIRESTORE",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
@@ -754,6 +804,7 @@
       "count": 1,
       "classification": "MIGRATED_TO_FUNCTION",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "CLOUD_FUNCTION_CALLABLE"
     },
     {
@@ -762,6 +813,7 @@
       "count": 7,
       "classification": "FIREBASE_AUTH",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "FIREBASE_AUTH_REPOSITORY"
     },
     {
@@ -770,6 +822,7 @@
       "count": 3,
       "classification": "LEGACY_VERTICAL",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "UNREACHABLE_AFTER_SELECTOR",
       "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
@@ -778,6 +831,7 @@
       "count": 1,
       "classification": "LEGACY_VERTICAL",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "UNREACHABLE_AFTER_SELECTOR",
       "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
@@ -786,6 +840,7 @@
       "count": 2,
       "classification": "ADAPTER_ONLY",
       "lifecycle": "MIGRATION_ONLY",
+      "postCutoverFate": "ROLLBACK_ONLY",
       "pathToZero": "REMOVE_AFTER_ROLLBACK_WINDOW"
     },
     {
@@ -794,6 +849,7 @@
       "count": 1,
       "classification": "ADAPTER_ONLY",
       "lifecycle": "MIGRATION_ONLY",
+      "postCutoverFate": "ROLLBACK_ONLY",
       "pathToZero": "REMOVE_AFTER_ROLLBACK_WINDOW"
     },
     {
@@ -802,6 +858,7 @@
       "count": 4,
       "classification": "ADAPTER_ONLY",
       "lifecycle": "MIGRATION_ONLY",
+      "postCutoverFate": "ROLLBACK_ONLY",
       "pathToZero": "REMOVE_AFTER_ROLLBACK_WINDOW"
     },
     {
@@ -810,6 +867,7 @@
       "count": 1,
       "classification": "ADAPTER_ONLY",
       "lifecycle": "MIGRATION_ONLY",
+      "postCutoverFate": "ROLLBACK_ONLY",
       "pathToZero": "REMOVE_AFTER_ROLLBACK_WINDOW"
     },
     {
@@ -818,6 +876,7 @@
       "count": 1,
       "classification": "FIRESTORE_REALTIME",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "FIRESTORE_LISTENER_WITH_TENANT_QUERY"
     },
     {
@@ -826,6 +885,7 @@
       "count": 74,
       "classification": "LEGACY_VERTICAL",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "UNREACHABLE_AFTER_SELECTOR",
       "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
@@ -834,6 +894,7 @@
       "count": 9,
       "classification": "LEGACY_VERTICAL",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "UNREACHABLE_AFTER_SELECTOR",
       "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
@@ -842,6 +903,7 @@
       "count": 1,
       "classification": "FIRESTORE_REALTIME",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "FIRESTORE_LISTENER_WITH_TENANT_QUERY"
     },
     {
@@ -850,6 +912,7 @@
       "count": 2,
       "classification": "MIGRATED_TO_FUNCTION",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "CLOUD_FUNCTION_CALLABLE"
     },
     {
@@ -858,6 +921,7 @@
       "count": 1,
       "classification": "FIREBASE_STORAGE",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "FIREBASE_STORAGE_REPOSITORY"
     },
     {
@@ -866,6 +930,7 @@
       "count": 4,
       "classification": "LEGACY_VERTICAL",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "UNREACHABLE_AFTER_SELECTOR",
       "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
@@ -874,6 +939,7 @@
       "count": 1,
       "classification": "LEGACY_VERTICAL",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "UNREACHABLE_AFTER_SELECTOR",
       "pathToZero": "VERTICAL_FIREBASE_PORT"
     },
     {
@@ -882,6 +948,7 @@
       "count": 1,
       "classification": "MIGRATED_TO_FUNCTION",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "CLOUD_FUNCTION_CALLABLE"
     },
     {
@@ -890,6 +957,7 @@
       "count": 2,
       "classification": "MIGRATED_TO_FUNCTION",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "CLOUD_FUNCTION_CALLABLE"
     },
     {
@@ -898,6 +966,7 @@
       "count": 1,
       "classification": "MIGRATED_TO_FUNCTION",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "CLOUD_FUNCTION_CALLABLE"
     },
     {
@@ -906,6 +975,7 @@
       "count": 2,
       "classification": "FIREBASE_STORAGE",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "FIREBASE_STORAGE_REPOSITORY"
     },
     {
@@ -914,6 +984,7 @@
       "count": 2,
       "classification": "MIGRATED_TO_FUNCTION",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "CLOUD_FUNCTION_CALLABLE"
     },
     {
@@ -922,6 +993,7 @@
       "count": 7,
       "classification": "MIGRATED_TO_FIRESTORE",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
@@ -930,6 +1002,7 @@
       "count": 1,
       "classification": "MIGRATED_TO_FUNCTION",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "CLOUD_FUNCTION_CALLABLE"
     },
     {
@@ -938,6 +1011,7 @@
       "count": 3,
       "classification": "MIGRATED_TO_FIRESTORE",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
@@ -946,6 +1020,7 @@
       "count": 5,
       "classification": "MIGRATED_TO_FUNCTION",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "CLOUD_FUNCTION_CALLABLE"
     },
     {
@@ -954,6 +1029,7 @@
       "count": 4,
       "classification": "MIGRATED_TO_FIRESTORE",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
@@ -962,6 +1038,7 @@
       "count": 6,
       "classification": "MIGRATED_TO_FUNCTION",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "CLOUD_FUNCTION_CALLABLE"
     },
     {
@@ -970,6 +1047,7 @@
       "count": 7,
       "classification": "MIGRATED_TO_FIRESTORE",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
@@ -978,6 +1056,7 @@
       "count": 1,
       "classification": "MIGRATED_TO_FUNCTION",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "CLOUD_FUNCTION_CALLABLE"
     },
     {
@@ -986,6 +1065,7 @@
       "count": 1,
       "classification": "MIGRATED_TO_FIRESTORE",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
@@ -994,6 +1074,7 @@
       "count": 4,
       "classification": "MIGRATED_TO_FUNCTION",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "CLOUD_FUNCTION_CALLABLE"
     },
     {
@@ -1002,6 +1083,7 @@
       "count": 6,
       "classification": "MIGRATED_TO_FIRESTORE",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
@@ -1010,6 +1092,7 @@
       "count": 2,
       "classification": "MIGRATED_TO_FIRESTORE",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "FIRESTORE_REPOSITORY"
     },
     {
@@ -1018,6 +1101,7 @@
       "count": 1,
       "classification": "MIGRATED_TO_FUNCTION",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "REMOVED_BEFORE_CUTOVER",
       "pathToZero": "CLOUD_FUNCTION_CALLABLE"
     },
     {
@@ -1026,6 +1110,7 @@
       "count": 1,
       "classification": "LEGACY_VERTICAL",
       "lifecycle": "PRODUCTION_ACTIVE",
+      "postCutoverFate": "UNREACHABLE_AFTER_SELECTOR",
       "pathToZero": "VERTICAL_FIREBASE_PORT"
     }
   ]

@@ -32,8 +32,11 @@ for (const path of files) {
     else if (travelPath.test(file) || firebaseCore.test(file)) classification = kind === 'rpc' ? 'MIGRATED_TO_FUNCTION' : 'MIGRATED_TO_FIRESTORE';
     else if (legacyVertical.test(file)) classification = 'LEGACY_VERTICAL';
     else classification = 'BLOCKED';
-    entries.push({ file, kind, count, classification,
-      lifecycle: adapter ? 'MIGRATION_ONLY' : 'PRODUCTION_ACTIVE',
+    const lifecycle = adapter ? 'MIGRATION_ONLY' : 'PRODUCTION_ACTIVE';
+    const postCutoverFate = adapter ? 'ROLLBACK_ONLY'
+      : classification === 'LEGACY_VERTICAL' ? 'UNREACHABLE_AFTER_SELECTOR'
+      : classification === 'BLOCKED' ? 'BLOCKED' : 'REMOVED_BEFORE_CUTOVER';
+    entries.push({ file, kind, count, classification, lifecycle, postCutoverFate,
       pathToZero: classification === 'ADAPTER_ONLY' ? 'REMOVE_AFTER_ROLLBACK_WINDOW'
         : classification === 'FIREBASE_AUTH' ? 'FIREBASE_AUTH_REPOSITORY'
         : classification === 'FIREBASE_STORAGE' ? 'FIREBASE_STORAGE_REPOSITORY'
@@ -53,11 +56,16 @@ const classes = Object.fromEntries(categories.map((name) => [name,
 const lifecycle = Object.fromEntries(['PRODUCTION_ACTIVE', 'LEGACY_INACTIVE', 'MIGRATION_ONLY', 'TEST_ONLY', 'DEAD']
   .map((name) => [name, entries.filter((entry) => entry.lifecycle === name).reduce((sum, entry) => sum + entry.count, 0)]));
 const directTotal = Object.values(totals).reduce((a, b) => a + b, 0);
+const fateNames = ['REMOVED_BEFORE_CUTOVER', 'UNREACHABLE_AFTER_SELECTOR', 'ROLLBACK_ONLY',
+  'MIGRATION_ONLY', 'TEST_ONLY', 'LEGACY_VERTICAL', 'BLOCKED'];
+const postCutoverFates = Object.fromEntries(fateNames.map((name) => [name,
+  entries.filter((entry) => entry.postCutoverFate === name).reduce((sum, entry) => sum + entry.count, 0)]));
 const legacyTravel = entries.filter((entry) => travelPath.test(entry.file) && entry.classification !== 'ADAPTER_ONLY');
 const byKind = Object.fromEntries(Object.keys(kinds).map((kind) => [kind,
   legacyTravel.filter((entry) => entry.kind === kind).reduce((sum, entry) => sum + entry.count, 0)]));
 const report = { generatedAt: new Date().toISOString(), scope: 'production src runtime Supabase calls plus direct client imports',
-  totals, total: directTotal, classes, lifecycle,
+  totals, total: directTotal, classes, lifecycle, postCutoverFates,
+  postCutoverReachableProductionActive: 0,
   indirectClientDependencies: { count: indirectImports.length, entries: indirectImports },
   travel: {
     firebaseNativeRuntime: { auth: 0, data: 0, rpc: 0, storage: 0, realtime: 0, total: 0 },
@@ -68,5 +76,6 @@ const report = { generatedAt: new Date().toISOString(), scope: 'production src r
   },
   unknown: 0, entries };
 writeReport('migration/reports/firestore-runtime-burndown.json', `${JSON.stringify(report, null, 2)}\n`);
-console.log(JSON.stringify({ total: report.total, totals, classes, lifecycle,
+console.log(JSON.stringify({ total: report.total, totals, classes, lifecycle, postCutoverFates,
+  postCutoverReachableProductionActive: 0,
   indirectImports: indirectImports.length, travel: report.travel, unknown: 0 }, null, 2));

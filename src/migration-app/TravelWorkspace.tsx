@@ -8,6 +8,11 @@ const labels = {
   he: { title:'נסיעות', login:'כניסה', logout:'יציאה', next:'הבא', save:'שמירה', pay:'רישום תשלום', pending:'ממתין לאישור שרת', confirmed:'אושר', search:'חיפוש בעמוד', create:'נסיעה חדשה' },
   ar: { title:'السفر', login:'دخول', logout:'خروج', next:'التالي', save:'حفظ', pay:'تسجيل دفعة', pending:'بانتظار تأكيد الخادم', confirmed:'تم التأكيد', search:'بحث في الصفحة', create:'رحلة جديدة' },
 };
+const maintenanceMessages = {
+  en: 'Migration maintenance is active. Changes are temporarily unavailable.',
+  he: '\u05d4\u05de\u05e2\u05e8\u05db\u05ea \u05d1\u05ea\u05d7\u05d6\u05d5\u05e7\u05ea \u05d4\u05d2\u05d9\u05e8\u05d4. \u05e9\u05d9\u05e0\u05d5\u05d9\u05d9\u05dd \u05d0\u05d9\u05e0\u05dd \u05d6\u05de\u05d9\u05e0\u05d9\u05dd \u05d6\u05de\u05e0\u05d9\u05ea.',
+  ar: '\u0627\u0644\u0646\u0638\u0627\u0645 \u0641\u064a \u0635\u064a\u0627\u0646\u0629 \u0627\u0644\u062a\u0631\u062d\u064a\u0644. \u0627\u0644\u062a\u0639\u062f\u064a\u0644\u0627\u062a \u063a\u064a\u0631 \u0645\u062a\u0627\u062d\u0629 \u0645\u0624\u0642\u062a\u0627\u064b.',
+};
 export function TravelWorkspace({repository}:{repository:TravelRepositories&AuthRepository}) {
   const [language,setLanguage]=useState<'en'|'he'|'ar'>('en'),[identity,setIdentity]=useState<string|null>(null);
   const [email,setEmail]=useState(''),[password,setPassword]=useState(''),[business,setBusiness]=useState('');
@@ -19,7 +24,7 @@ export function TravelWorkspace({repository}:{repository:TravelRepositories&Auth
   const [from,setFrom]=useState(''),[to,setTo]=useState('');
   const [editor,setEditor]=useState<SaveTrip>();
   const text=labels[language],service=new TripService(repository);
-  const run=async(operation:()=>Promise<void>)=>{setError('');setPending(true);setStatus(text.pending);try{await operation();setStatus(text.confirmed);}catch(error){console.error('Travel operation failed',error instanceof Error?error.message:'UNKNOWN');setError('Operation failed. No server confirmation.');setStatus('');}finally{setPending(false);}};
+  const run=async(operation:()=>Promise<void>)=>{setError('');setPending(true);setStatus(text.pending);try{await operation();setStatus(text.confirmed);}catch(error){const message=error instanceof Error?error.message:'UNKNOWN';console.error('Travel operation failed',message);setError(message.includes('MIGRATION_MAINTENANCE_WRITE_BLOCKED')?maintenanceMessages[language]:'Operation failed. No server confirmation.');setStatus('');}finally{setPending(false);}};
   const load=async(cursor?:Cursor)=>{const result=await service.list({pageSize:2,cursor,status:filter&&filter!=='deleted'?filter:undefined,deleted:filter==='deleted',from:from||undefined,to:to||undefined});setTrips(result.items);setNext(result.next);};
   const signedIn=async()=>{const current=await repository.currentIdentity();setIdentity(current?.uid??null);if(current){setBusiness((await repository.getCurrentBusiness()).businessName);await load();}};
   // The repository is fixed by the composition root; initialization intentionally runs once.

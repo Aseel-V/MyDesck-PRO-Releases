@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-11T16:44:35.702Z",
+  "generatedAt": "2026-09-12T04:47:27.115Z",
   "status": "PASS",
   "suites": [
     {
@@ -63,6 +63,24 @@
       "tests": 0
     },
     {
+      "label": "production preparation guards",
+      "file": "migration/firestore/tests/production-preparation.test.mjs",
+      "outcome": "PASS",
+      "tests": 8
+    },
+    {
+      "label": "production cutover controls",
+      "file": "scripts/test-production-cutover-controls.ts",
+      "outcome": "PASS",
+      "tests": 0
+    },
+    {
+      "label": "production dry-run orchestrator",
+      "file": "migration/firestore/tools/production-dry-run.mjs",
+      "outcome": "PASS",
+      "tests": 0
+    },
+    {
       "label": "Firestore Rules",
       "file": "migration/firestore/tests/rules.test.mjs",
       "outcome": "PASS",
@@ -94,11 +112,11 @@
     }
   ],
   "totals": {
-    "steps": 16,
-    "passed": 16,
+    "steps": 19,
+    "passed": 19,
     "failed": 0,
-    "nodeTestCases": 164,
-    "assertionCallSites": 480,
+    "nodeTestCases": 172,
+    "assertionCallSites": 528,
     "fullCorpusApplicationAssertions": 1023,
     "searchCorpusCases": 12,
     "fullCorpusSecurityChecks": 50,

@@ -1,5 +1,35 @@
 # Firestore production cutover plan
 
+## Operational sequence and commands
+
+Every command uses a unique reviewed `migrationRunId`. Commands shown here are inert until the later approved milestone; production-writing modes also require the exact acknowledgement and a signed GO manifest.
+
+1. Run `node migration/firestore/tools/production-dry-run.mjs --run-id=<id>` and require a complete evidence file.
+2. Confirm the GitHub credential revocation evidence and rerun the secret scanner.
+3. Verify project `mydesckpro`, database ID `default`, source ref `pubugnfaqqukelvgckdr`, approved rules hash, schema/transform versions, and pinned release commit.
+4. Run IAM Policy Troubleshooter for every required and prohibited permission under each proposed identity.
+5. Deploy the three required indexes from `rules/firestore.indexes.json`; poll operations until READY and compare the deployed spec hash.
+6. Deploy `functions/production-index.mjs` dormant under `mydesck-functions`; verify callable authentication/App Check and confirm there are no Firestore triggers or external side effects.
+7. Capture current Rules hashes, refuse drift, deploy candidate Firestore and Storage Rules, and run the full real-project synthetic Rules smoke. Preserve rollback rulesets.
+8. Run `production-auth-import.mjs --mode=dry-run`; require 10/10 conservation, zero unknowns/collisions, and completed actions for the three unlinked accounts.
+9. Run `production-data-migration.mjs --mode=dry-run`, then the later approved `--mode=production-copy`; retain Supabase as the active backend.
+10. Run `production-storage-migration.mjs --mode=manifest-only`, then the later approved `--mode=production-copy` to the private bucket.
+11. Reconcile the full bulk copy: IDs, PK sets, canonical hashes, exact finance, relationships, events, timestamps, ledgers, Storage paths/hashes, and unexpected target documents.
+12. Announce maintenance, deploy/verify the maintenance flag, stop scheduled jobs/webhooks, drain in-flight writes, and prove all listed mutations fail without fake success.
+13. Start one final `REPEATABLE READ READ ONLY` source snapshot; record the source marker and prove a write attempt fails with SQLSTATE `25006`.
+14. Run `production-data-migration.mjs --mode=final-delta` using `config/production-delta-map.json`.
+15. Run `production-storage-migration.mjs --mode=final-delta` from a fresh complete object listing.
+16. Complete final Auth operator actions and the later approved Auth import; verify UID and account conservation before enabling access.
+17. Run the GO engine again. Any non-PASS gate remains `NO_GO`.
+18. Set the single reviewed backend release tuple: Firestore mode, project `mydesckpro`, database `default`, release `mydesck-firestore-v1`, and Supabase fallback disabled.
+19. Smoke test Auth, tenant reads, trip create/edit, payment, installment, archive/restore, search, analytics, private files, Rules denials, Electron, and all three languages.
+20. Disable maintenance only after smoke and journal verification.
+21. Observe Functions/Firestore/Rules/Storage errors, retry counts, financial events, and the post-cutover journal.
+22. Retain Supabase read-only for the approved rollback window.
+23. If a gate fails after writes begin, use `FIRESTORE_ROLLBACK_PLAN.md`; never flip back without journal and reverse reconciliation.
+
+The production Rules deployment package uses candidate Firestore SHA-256 `bfb3413ad1af01377b8e079dd4cfa9ea7813a2b18b61a70c43ac0f9c520cee90` and Storage SHA-256 `5ccf1d426c4fbe75133e0bdc31562888523ac7d7bce8ba4d11e5be6e09af73bb`. Current real Rules hashes are not yet readable (403), so deployment is locked until the expected-current hashes and rollback rulesets are captured.
+
 Status: **DESIGN ONLY — NOT EXECUTED**. The source remains authoritative. Cloud SQL is not part of this design.
 
 ## Entry gates

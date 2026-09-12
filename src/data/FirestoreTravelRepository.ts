@@ -5,11 +5,12 @@ import { getBlob, ref, uploadBytes } from 'firebase/storage';
 import type { FirebaseClient } from './firebaseClient';
 import type { AuthRepository, TravelRepositories, StorageRepository, TripFilter, TripPage, SaveTrip, PaymentCommand } from './contracts';
 import { businessSchema, userSchema, tripSchema, installmentSchema, planSchema, eventSchema, auditEventSchema, metadataSchema, travelerSchema } from './schemas';
+import { assertWriteAllowed } from './maintenanceMode';
 
 export class FirestoreTravelRepository implements TravelRepositories, AuthRepository, StorageRepository {
   constructor(private readonly client: FirebaseClient) {}
-  async currentIdentity() { await this.client.ready; await this.client.auth.authStateReady(); const u=this.client.auth.currentUser; if (!u) return null; if (!u.email?.startsWith('migration-test--')) { await this.logout(); throw Error('SYNTHETIC_IDENTITY_REQUIRED'); } return { uid:u.uid, email:u.email }; }
-  async login(email:string,password:string) { if(!email.startsWith('migration-test--')) throw Error('SYNTHETIC_IDENTITY_REQUIRED'); await this.client.ready; await signInWithEmailAndPassword(this.client.auth,email,password); return (await this.currentIdentity())!; }
+  async currentIdentity() { await this.client.ready; await this.client.auth.authStateReady(); const u=this.client.auth.currentUser; if (!u) return null; if (this.client.mode==='firestore-emulator'&&!u.email?.startsWith('migration-test--')) { await this.logout(); throw Error('SYNTHETIC_IDENTITY_REQUIRED'); } return { uid:u.uid, email:u.email??'' }; }
+  async login(email:string,password:string) { if(this.client.mode==='firestore-emulator'&&!email.startsWith('migration-test--')) throw Error('SYNTHETIC_IDENTITY_REQUIRED'); await this.client.ready; await signInWithEmailAndPassword(this.client.auth,email,password); return (await this.currentIdentity())!; }
   async logout() { await signOut(this.client.auth); }
   async refreshToken() { if(!await this.currentIdentity()) throw Error('UNAUTHENTICATED'); await this.client.auth.currentUser!.getIdToken(true); }
   private async scope() {
@@ -50,12 +51,12 @@ export class FirestoreTravelRepository implements TravelRepositories, AuthReposi
   async listAttachments(id:string) { const trip=await this.getTripDetails(id); const raw=typeof trip.attachments==='string'?JSON.parse(trip.attachments):trip.attachments; return metadataSchema.array().parse(raw??[]); }
   async listDocuments(id:string) { return (await this.listAttachments(id)).filter(v=>v.mime==='application/pdf'); }
   private async call<T>(name:string,data:unknown):Promise<T> { await this.scope(); if(typeof navigator!=='undefined'&&!navigator.onLine) throw Error('SERVER_CONFIRMATION_REQUIRED'); return (await httpsCallable<unknown,T>(this.client.functions,name)(data)).data; }
-  async saveTrip(data:SaveTrip) { return this.call<{id:string}>('saveTrip',data); }
-  async recordPayment(data:PaymentCommand) { return this.call('recordPayment',data); }
-  async recordInstallmentPayment(data:PaymentCommand&{installmentId:string}) { return this.call('recordInstallmentPayment',data); }
-  async setTripState(id:string,state:'archive'|'restore'|'delete'|'unarchive',clientRequestId:string) { await this.call('setTripState',{tripId:id,state,clientRequestId}); }
+  async saveTrip(data:SaveTrip) { assertWriteAllowed(data.trip.id?'trip.edit':'trip.create',this.client.maintenanceEnabled); return this.call<{id:string}>('saveTrip',data); }
+  async recordPayment(data:PaymentCommand) { assertWriteAllowed('payment.record',this.client.maintenanceEnabled); return this.call('recordPayment',data); }
+  async recordInstallmentPayment(data:PaymentCommand&{installmentId:string}) { assertWriteAllowed('installment.record',this.client.maintenanceEnabled); return this.call('recordInstallmentPayment',data); }
+  async setTripState(id:string,state:'archive'|'restore'|'delete'|'unarchive',clientRequestId:string) { assertWriteAllowed('trip.edit',this.client.maintenanceEnabled); await this.call('setTripState',{tripId:id,state,clientRequestId}); }
   async getTravelAnalytics() { return this.call('travelAnalytics',{}); }
   private async privatePath(path:string) { const {business}=await this.scope(); const prefix=`businesses/${business.id}/`; if(!path.startsWith(prefix)||path.includes('..')||path.includes('%')||!/^businesses\/[^/]+\/(signatures\/[^/]+|trips\/[^/]+\/attachments\/[^/]+)$/.test(path)) throw Error('PRIVATE_PATH_DENIED'); return path; }
   async readPrivateFile(path:string) { return getBlob(ref(this.client.storage,await this.privatePath(path)),25*1024*1024); }
-  async uploadPrivateFile(path:string,file:Blob) { await uploadBytes(ref(this.client.storage,await this.privatePath(path)),file); return path; }
+  async uploadPrivateFile(path:string,file:Blob) { assertWriteAllowed('attachment.write',this.client.maintenanceEnabled); await uploadBytes(ref(this.client.storage,await this.privatePath(path)),file); return path; }
 }

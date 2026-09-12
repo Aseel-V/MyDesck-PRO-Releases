@@ -1,0 +1,42 @@
+#!/usr/bin/env node
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+
+const read = (name) => JSON.parse(readFileSync(name, 'utf8'));
+const prep = read('migration/reports/firestore-production-migration-preparation.json');
+const inventory = read('migration/reports/production-firebase-inventory.json');
+const dry = read('migration/reports/firestore-production-dry-run.json');
+const delta = read('migration/firestore/config/production-delta-map.json');
+const burn = read('migration/reports/firestore-runtime-burndown.json');
+const harness = read('migration/reports/firestore-full-harness.json');
+const auth = read('migration/reports/firestore-auth-production-readiness.json');
+
+assert.equal(inventory.project.id, 'mydesckpro');
+assert.equal(inventory.firestore.verifiedDatabaseId, 'default');
+assert.equal(inventory.productionWrites, 0);
+assert.equal(delta.tables, 77);
+assert.equal(delta.unknown, 0);
+assert.equal(auth.totalUsers, auth.accounted);
+assert.equal(auth.unknown, 0);
+assert.equal(burn.unknown, 0);
+assert.equal(burn.travel.unexplained, 0);
+assert.equal(burn.postCutoverReachableProductionActive, 0);
+assert.equal(dry.productionWrites, 0);
+assert.equal(dry.go.missing, 0);
+assert.equal(dry.decision, 'NO_GO');
+assert.ok(dry.knownBlockers.includes('secret'));
+assert.ok(dry.knownBlockers.includes('iam'));
+assert.ok(dry.knownBlockers.includes('rules'));
+assert.ok(dry.knownBlockers.includes('indexes'));
+assert.ok(dry.knownBlockers.includes('functions'));
+assert.ok(dry.knownBlockers.includes('storage'));
+assert.ok(dry.knownBlockers.includes('electron'));
+assert.equal(harness.status, 'PASS');
+assert.equal(harness.totals.steps, 19);
+assert.equal(harness.totals.nodeTestCases, 172);
+assert.equal(harness.totals.assertionCallSites, 528);
+assert.equal(prep.productionChanges.supabaseWrites, 0);
+assert.equal(prep.productionChanges.firebaseFirestoreCustomerWrites, 0);
+assert.equal(prep.productionChanges.firebaseAuthImports, 0);
+assert.equal(prep.decision, 'BLOCKED — FIX BEFORE PRODUCTION MIGRATION DRY-RUN');
+console.log('Firestore production migration preparation evidence: PASS (current production GO remains NO_GO)');

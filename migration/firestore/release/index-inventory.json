@@ -1,0 +1,14 @@
+{
+  "realExistingCompositeIndexes": 0,
+  "requiredBeforeCutover": 3,
+  "indexes": [
+    { "classification": "REQUIRED_BEFORE_CUTOVER", "collection": "trips", "query": "ownerUid + businessId + isDeleted ordered by startDate", "fields": ["ownerUid ASC", "businessId ASC", "isDeleted ASC", "startDate ASC"], "impactIfUnavailable": "trip list fails" },
+    { "classification": "REQUIRED_BEFORE_CUTOVER", "collection": "trips", "query": "tenant/deletion/status ordered by startDate", "fields": ["ownerUid ASC", "businessId ASC", "isDeleted ASC", "status ASC", "startDate ASC"], "impactIfUnavailable": "status-filtered trip list fails" },
+    { "classification": "REQUIRED_BEFORE_CUTOVER", "collection": "tripInstallments", "query": "tenant/status due-date range", "fields": ["ownerUid ASC", "businessId ASC", "status ASC", "dueDate ASC"], "impactIfUnavailable": "receivable/due-installment screen fails" }
+  ],
+  "optional": 0,
+  "legacy": 0,
+  "deferred": 0,
+  "removeLater": 0,
+  "readiness": "FAIL_NOT_DEPLOYED"
+}

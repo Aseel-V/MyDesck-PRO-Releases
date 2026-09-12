@@ -9,7 +9,9 @@ assert.throws(() => selectBackend({ PROD: false, DEV: true, VITE_DATA_BACKEND: '
 assert.throws(() => selectBackend({ PROD: true, DEV: false, VITE_DATA_BACKEND: 'firestore-emulator' }, 'localhost'), /PRODUCTION_BACKEND_LOCKED/);
 assert.throws(() => selectBackend({ PROD: false, DEV: true, VITE_DATA_BACKEND: 'firestore-emulator', VITE_FIREBASE_PROJECT_ID: 'mydesck-migration-proof' }, 'example.com'), /MIGRATION_REQUIRES_LOOPBACK/);
 assert.throws(() => selectBackend({ PROD: false, DEV: true, VITE_DATA_BACKEND: 'firestore-emulator', VITE_FIREBASE_PROJECT_ID: 'mydesckpro' }, 'localhost'), /EMULATOR_PROJECT_REQUIRED/);
-assert.throws(() => selectBackend({ PROD: false, DEV: true, VITE_DATA_BACKEND: 'firestore', VITE_FIREBASE_PROJECT_ID: 'mydesck-migration-proof' }, 'localhost'), /REAL_FIRESTORE_APPLICATION_NOT_APPROVED/);
+assert.throws(() => selectBackend({ PROD: false, DEV: true, VITE_DATA_BACKEND: 'firestore', VITE_FIREBASE_PROJECT_ID: 'mydesckpro', VITE_FIRESTORE_DATABASE_ID:'default' }, 'localhost'), /REAL_FIRESTORE_REQUIRES_PRODUCTION_BUILD/);
+assert.throws(() => selectBackend({ PROD: true, DEV: false, VITE_DATA_BACKEND: 'firestore', VITE_FIREBASE_PROJECT_ID: 'mydesckpro', VITE_FIRESTORE_DATABASE_ID:'default', VITE_FIRESTORE_PRODUCTION_RELEASE:'mydesck-firestore-v1' }, 'app.example.com'), /SUPABASE_FALLBACK_MUST_BE_DISABLED/);
+assert.equal(selectBackend({ PROD: true, DEV: false, VITE_DATA_BACKEND: 'firestore', VITE_FIREBASE_PROJECT_ID: 'mydesckpro', VITE_FIRESTORE_DATABASE_ID:'default', VITE_FIRESTORE_PRODUCTION_RELEASE:'mydesck-firestore-v1', VITE_SUPABASE_FALLBACK_DISABLED:'true' }, 'app.example.com'), 'firestore');
 assert.equal(selectBackend({ PROD: false, DEV: true, VITE_DATA_BACKEND: 'firestore-emulator', VITE_FIREBASE_PROJECT_ID: 'mydesck-migration-proof' }, '127.0.0.1'), 'firestore-emulator');
 assert.equal(moneyText({ unitsText: '900719925474099312345', scale: 2 }), '9007199254740993123.45');
 assert.equal(tripSchema.safeParse({ schemaVersion: 2 }).success, false, 'unknown schema versions fail closed');
@@ -18,7 +20,7 @@ const workspace = readFileSync('src/migration-app/TravelWorkspace.tsx', 'utf8');
 assert.doesNotMatch(workspace, /firebase\/(firestore|functions|storage)|supabase[.]/,
   'UI may only use domain repositories');
 const migratedFiles = ['src/data/FirestoreTravelRepository.ts', 'src/data/TripService.ts',
-  'src/data/SearchRepository.ts', 'src/data/contracts.ts'];
+  'src/data/SearchRepository.ts', 'src/data/productionBackend.ts', 'src/data/maintenanceMode.ts', 'src/data/contracts.ts'];
 const collect = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
   const path = join(dir, entry.name); return entry.isDirectory() ? collect(path) : [path];
 });
@@ -42,5 +44,9 @@ assert.match(server, /where\('ownerUid'/);
 assert.match(server, /where\('businessId'/);
 const entry = readFileSync('migration/firestore/functions/index.mjs', 'utf8');
 assert.match(entry, /EMULATOR_FUNCTIONS_ONLY/);
+const compositionRoot = readFileSync('src/main.tsx', 'utf8');
+assert.match(compositionRoot, /mode === 'supabase'.*production-main/s,
+  'Supabase production bundle is selected only by the explicit selector');
+assert.match(readFileSync('src/data/backendMode.ts', 'utf8'), /SUPABASE_FALLBACK_MUST_BE_DISABLED/);
 
 console.log('Firestore application-layer static and fail-closed controls: PASS');

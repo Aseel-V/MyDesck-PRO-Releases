@@ -1,0 +1,32 @@
+{
+  "startingSha": "6cd86d95a855fd1b2fd6e930b6cc88b5ebf839fe",
+  "endingSha": "COMMIT_CONTAINING_THIS_EVIDENCE",
+  "recoveryTag": "recovery/pre-firestore-production-migration-preparation-20260911-203130",
+  "staged": { "baseline": 212, "preserved": 212, "manifestSha256": "9a69caa8c65eec5f0d4b85a931b8463fc038290ae439f9f2b24929649b0c44d3" },
+  "firebase": {
+    "inventory": "READ_ONLY_COMPLETE_WITH_EXPLICIT_NOT_RUN_FIELDS",
+    "project": "mydesckpro",
+    "databaseId": "default",
+    "rootCollections": 0,
+    "targetAuthUsers": 5,
+    "storageBuckets": 0,
+    "functionsApi": "DISABLED",
+    "billingEnabled": false
+  },
+  "iam": { "readiness": "FAIL", "broadRolesGrantedByMilestone": 0, "preExistingHumanOwnerBindings": 1 },
+  "release": { "rules": "NOT_RUN_CURRENT_BASELINE_403", "indexes": "FAIL_0_OF_3", "functions": "FAIL_API_DISABLED", "triggerSafety": "PASS_NO_FIRESTORE_TRIGGERS" },
+  "auth": { "users": 10, "transparent": 7, "reauth": 0, "reset": 0, "manual": 3, "excluded": 0, "unknown": 0, "importer": "DRY_RUN_READY_PRODUCTION_LOCKED", "productionImport": "NOT_STARTED" },
+  "data": { "tooling": "DRY_RUN_AND_STREAMING_WRITER_READY_PRODUCTION_LOCKED", "snapshot": "REPEATABLE_READ_READ_ONLY_SQLSTATE_25006", "streaming": true, "resume": true, "idempotency": true, "ledger": true, "transformVersion": "1.full.1" },
+  "delta": { "domains": 77, "unknown": 0, "counts": { "APPEND_ONLY_EVENT": 16, "FREEZE_REQUIRED": 1, "FULL_RECOPY_REQUIRED": 50, "RELIABLE_CREATED_AT": 5, "RELIABLE_UPDATED_AT": 5 } },
+  "storage": { "plan": "READY", "realCapability": "FAIL_NO_BUCKET", "productionCopy": "NOT_STARTED" },
+  "supabase": { "currentTotal": 254, "productionActive": 246, "travelCurrentLegacy": 77, "postCutoverReachable": 0, "unexplained": 0 },
+  "maintenance": { "ready": true, "businessWritesBlocked": true, "financialWritesBlocked": true },
+  "backend": { "selector": "READY_LOCKED", "silentFallbackPrevented": true },
+  "rollback": { "plan": "OPERATIONALLY_DEFINED", "journalModel": "READY", "productionRehearsal": "NOT_RUN" },
+  "secret": { "activeSource": false, "revokedOrRotated": false, "productionBlocker": true },
+  "goEngine": { "pass": 14, "fail": 6, "notRun": 2, "missing": 0, "decision": "NO_GO" },
+  "dryRun": { "implemented": true, "productionWrites": 0, "decision": "NO_GO" },
+  "harness": { "steps": 19, "tests": 172, "assertionCallSites": 528, "failures": 0 },
+  "productionChanges": { "supabaseWrites": 0, "firebaseFirestoreCustomerWrites": 0, "firebaseAuthImports": 0, "storageMigration": "NOT_STARTED", "backendCutover": "NOT_STARTED", "supabaseDeletion": "NOT_STARTED", "cloudSql": "NOT_USED" },
+  "decision": "BLOCKED — FIX BEFORE PRODUCTION MIGRATION DRY-RUN"
+}
