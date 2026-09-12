@@ -1,275 +1,366 @@
 rules_version = '2';
 
-// MyDesck PRO — Firestore Security Rules (migration milestone 1)
-//
-// These rules translate the SECURITY INTENT of the source PostgreSQL RLS, not
-// its SQL text. The source intent is uniform and strict:
-//
-//   * every tenant row is reachable only by its owner (auth.uid() = user_id)
-//   * a global admin may read, never write, across tenants (is_admin())
-//   * audit and event tables have SELECT policies only, so clients cannot write
-//     them at all — those rows come from SECURITY DEFINER code
-//   * payment plans and installments additionally verify the PARENT TRIP is
-//     owned by the caller before a write is allowed
-//
-// Two deliberate hardenings go beyond the source, because Firestore has no
-// generated columns and no triggers to fall back on:
-//
-//   1. Money is never client-writable. In PostgreSQL `profit`, `amount_due` and
-//      `profit_percentage` are GENERATED columns and `amount_paid` is
-//      synchronised by save_trip_transaction. Firestore would happily let a
-//      client write any number into those fields, so they are server-only here
-//      and the callable function is the only write path for them.
-//   2. Ownership and privilege fields are immutable to clients. The source
-//      relies on a BEFORE UPDATE trigger to stop financial-permission
-//      escalation; rules enforce the equivalent without a trigger.
-//
-// Rules are NOT filters. `read` is evaluated per document, so a query that is
-// not already constrained to the caller's own data FAILS rather than silently
-// returning a subset. Every client query must carry its ownerUid constraint.
-//
-// Anything not matched here is denied by the final catch-all, including the
-// migration_test_v1_* proof namespace: proof data is never client-readable.
-
+// MyDesck PRO Spark-only rules. Firebase Auth identity plus these rules are the
+// production authority. No client, Electron process, Function, or Admin SDK is
+// trusted by the normal runtime.
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // -- identity ---------------------------------------------------------
-
-    function signedIn() {
-      return request.auth != null && request.auth.uid != null;
+    function signedIn() { return request.auth != null && request.auth.uid != null; }
+    function adminReadOnly() {
+      return signedIn() && request.auth.token.get('admin', false) == true;
     }
+    function userPath(uid) { return /databases/$(database)/documents/users/$(uid); }
+    function businessPath(id) { return /databases/$(database)/documents/businesses/$(id); }
+    function operationPath(id) { return /databases/$(database)/documents/sparkOperations/$(id); }
+    function tripPath(id) { return /databases/$(database)/documents/trips/$(id); }
+    function planPath(id) { return /databases/$(database)/documents/tripPaymentPlans/$(id); }
+    function installmentPath(id) { return /databases/$(database)/documents/tripInstallments/$(id); }
 
-    // Global admin is a custom claim, not a document field. The role changes
-    // rarely and applies across tenants, which is the case claims are actually
-    // good for; membership-style authorization stays in documents where it can
-    // be changed without waiting for a token refresh.
-    function isAdmin() {
-      return signedIn() && request.auth.token.admin == true;
+    function profile() { return get(userPath(request.auth.uid)).data; }
+    function activeTenant(businessId) {
+      return signedIn()
+        && exists(userPath(request.auth.uid))
+        && profile().isSuspended == false
+        && exists(businessPath(businessId))
+        && get(businessPath(businessId)).data.get('isSuspended', false) != true
+        && (get(businessPath(businessId)).data.ownerUid == request.auth.uid
+          || profile().businessId == businessId);
     }
-
-    function isOwner(uid) {
-      return signedIn() && request.auth.uid == uid;
+    function owns(data) {
+      return activeTenant(data.businessId)
+        && data.ownerUid == get(businessPath(data.businessId)).data.ownerUid;
     }
-
-    // -- field-level helpers ----------------------------------------------
-
-    function incoming() { return request.resource.data; }
-    function existing() { return resource.data; }
-
-    function unchanged(field) {
-      return field in existing()
-        ? (field in incoming()) && incoming()[field] == existing()[field]
-        : !(field in incoming());
+    function op(id) { return getAfter(operationPath(id)).data; }
+    function operationMatches(id, types, businessId, tripId) {
+      let operation = getAfter(operationPath(id)).data;
+      return existsAfter(operationPath(id))
+        && operation.operationId == id
+        && operation.actorUid == request.auth.uid
+        && operation.businessId == businessId
+        && operation.tripId == tripId
+        && operation.type in types;
     }
-
-    function allUnchanged(fields) {
-      return fields.toSet().difference(
-        incoming().diff(existing()).affectedKeys()).size() == fields.size();
+    function changedOnly(fields) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
     }
-
-    function noneOf(fields) {
-      return incoming().diff(existing()).affectedKeys().hasAny(fields.toSet()) == false;
+    function exactMoney(value, units, currency) {
+      return value is map && value.units is int && value.units == units
+        && value.unitsText is string && value.unitsText == string(units)
+        && value.scale == 2
+        && (!('currency' in value) || value.currency == currency);
     }
-
-    // A document may only carry fields the model knows about. Firestore is
-    // schemaless; the application must not be, or an unvalidated field becomes
-    // the next place authorization state hides.
-    function onlyFields(allowed) {
-      return incoming().keys().hasOnly(allowed);
+    function validTripMoney(data) {
+      return data.moneyScale == 2
+        && data.salePriceMinor is int && data.salePriceMinor >= 0
+        && data.wholesaleCostMinor is int && data.wholesaleCostMinor >= 0
+        && data.amountPaidMinor is int && data.amountPaidMinor >= 0
+        && data.amountPaidMinor <= data.salePriceMinor
+        && data.amountDueMinor == data.salePriceMinor - data.amountPaidMinor
+        && data.profitMinor == data.salePriceMinor - data.wholesaleCostMinor
+        && exactMoney(data.salePrice, data.salePriceMinor, data.currency)
+        && exactMoney(data.wholesaleCost, data.wholesaleCostMinor, data.currency)
+        && exactMoney(data.amountPaid, data.amountPaidMinor, data.currency)
+        && exactMoney(data.amountDue, data.amountDueMinor, data.currency)
+        && exactMoney(data.profit, data.profitMinor, data.currency)
+        && data.paymentStatus == (data.amountPaidMinor == 0 ? 'unpaid'
+          : (data.amountPaidMinor == data.salePriceMinor ? 'paid' : 'partial'));
     }
-
-    function requiresFields(required) {
-      return incoming().keys().hasAll(required);
+    function validTripUpdate(tripId) {
+      let operation = getAfter(operationPath(request.resource.data.lastOperationId)).data;
+      let structural = request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.businessId == resource.data.businessId
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.schemaVersion == resource.data.schemaVersion
+        && request.resource.data.revision == resource.data.revision + 1
+        && operation.operationId == request.resource.data.lastOperationId
+        && operation.actorUid == request.auth.uid
+        && operation.businessId == resource.data.businessId
+        && operation.tripId == tripId
+        && operation.type in ['trip-edit','payment','installment-payment','trip-state']
+        && operation.beforeRevision == resource.data.revision
+        && operation.afterRevision == request.resource.data.revision
+        && validTripMoney(request.resource.data);
+      return structural && (
+        (operation.type == 'trip-edit'
+          && request.resource.data.amountPaidMinor == resource.data.amountPaidMinor
+          && request.resource.data.isDeleted == resource.data.isDeleted)
+        || (operation.type in ['payment','installment-payment']
+          && operation.currency == resource.data.currency
+          && operation.amountMinor is int && operation.amountMinor > 0
+          && request.resource.data.salePriceMinor == resource.data.salePriceMinor
+          && request.resource.data.wholesaleCostMinor == resource.data.wholesaleCostMinor
+          && request.resource.data.currency == resource.data.currency
+          && request.resource.data.amountPaidMinor
+            == resource.data.amountPaidMinor + operation.amountMinor
+          && request.resource.data.isDeleted == resource.data.isDeleted)
+        || (operation.type == 'trip-state'
+          && request.resource.data.salePriceMinor == resource.data.salePriceMinor
+          && request.resource.data.wholesaleCostMinor == resource.data.wholesaleCostMinor
+          && request.resource.data.amountPaidMinor == resource.data.amountPaidMinor
+          && changedOnly(['status','isDeleted','deletedAt','deletedBy','revision',
+            'lastOperationId','updatedAt','updatedAtMicros']))
+      );
     }
-
-    // Money is stored as an exact scaled integer, never a float. A client that
-    // could write a bare number into a money field would reintroduce exactly
-    // the precision loss the migration exists to prevent.
-    function isExactAmount(value) {
-      return value is map
-        && value.keys().hasAll(['unitsText', 'scale'])
-        && value.unitsText is string
-        && value.scale is int;
-    }
-
-    // -- users ------------------------------------------------------------
-    // Document id IS the Firebase UID, which is the preserved Supabase UID.
 
     match /users/{uid} {
-      // Privilege state a client must never write to its own profile. This is
-      // the Phase 1 self-escalation fix, restated where Firestore can enforce it.
-      function privilegedFields() {
-        return ['uid', 'role', 'isSuspended', 'canViewFinancials', 'businessId',
-                'ownerUid', 'userId', 'legacyProfileId', 'schemaVersion', 'createdAt'];
+      function protectedFields() {
+        return ['uid','userId','ownerUid','role','isSuspended','canViewFinancials',
+          'businessId','schemaVersion','createdAt'];
       }
-
-      allow get: if isOwner(uid) || isAdmin();
-      // A list over /users is never legitimate for a normal client: there is no
-      // owner-constrained shape of it, so only an admin may enumerate.
-      allow list: if isAdmin();
-
-      allow create: if isOwner(uid)
-        && incoming().uid == uid
-        && incoming().role == 'user'
-        && incoming().isSuspended == false
-        && incoming().canViewFinancials == false
-        && (!('businessId' in incoming()) || incoming().businessId == null)
-        && requiresFields(['uid', 'role', 'isSuspended', 'fullName'])
-        && onlyFields(['uid', 'role', 'isSuspended', 'canViewFinancials', 'businessId',
-                       'fullName', 'phoneNumber', 'legacyProfileId', 'schemaVersion',
-                       'createdAt', 'createdAtMicros', 'updatedAt', 'updatedAtMicros']);
-
-      // A user may edit their own display details and nothing else. Granting
-      // themselves admin, lifting their own suspension, unlocking financial
-      // visibility or moving to another tenant are all blocked by one rule.
-      allow update: if isOwner(uid) && noneOf(privilegedFields())
-        && incoming().diff(existing()).affectedKeys().hasOnly(['fullName', 'phoneNumber', 'updatedAt', 'updatedAtMicros']);
-
-      // Deleting an identity is an administrative act with downstream effects
-      // on every owned record; it does not happen from a client.
+      allow get: if (signedIn() && request.auth.uid == uid) || adminReadOnly();
+      allow list: if adminReadOnly();
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['uid','userId','role','isSuspended',
+          'canViewFinancials','businessId','fullName','phoneNumber','schemaVersion',
+          'createdAt','createdAtMicros','updatedAt','updatedAtMicros'])
+        && request.resource.data.uid == uid
+        && request.resource.data.userId == uid
+        && request.resource.data.role == 'user'
+        && request.resource.data.isSuspended == false
+        && request.resource.data.canViewFinancials == false
+        && request.resource.data.businessId == null;
+      allow update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasAny(protectedFields()) == false
+        && changedOnly(['fullName','phoneNumber','updatedAt','updatedAtMicros']);
       allow delete: if false;
     }
 
-    // -- businesses -------------------------------------------------------
-
     match /businesses/{businessId} {
-      allow get: if isAdmin()
-        || (signedIn() && existing().ownerUid == request.auth.uid);
-      allow list: if isAdmin()
-        || (signedIn() && existing().ownerUid == request.auth.uid);
-
-      allow create: if signedIn()
-        && incoming().ownerUid == request.auth.uid
-        && requiresFields(['ownerUid', 'businessName'])
-        && onlyFields(['ownerUid', 'businessName']);
-
-      // ownerUid is the security field for this document and every child of it.
-      // If a client could change it, it could hand its own tenant to someone
-      // else — or take someone else's.
-      allow update: if signedIn()
-        && existing().ownerUid == request.auth.uid
-        && noneOf(['ownerUid', 'businessId', 'id', 'userId', 'isSuspended', 'subscriptionStatus', 'schemaVersion']);
-
-      allow delete: if signedIn() && existing().ownerUid == request.auth.uid;
-
+      allow get, list: if adminReadOnly()
+        || (signedIn() && exists(userPath(request.auth.uid))
+          && profile().get('isSuspended', false) == false
+          && (resource.data.ownerUid == request.auth.uid
+            || (profile().businessId != null && profile().businessId == businessId)));
+      allow create: if false;
+      allow update: if owns(resource.data)
+        && changedOnly(['businessName','phoneNumber','email','address','updatedAt','updatedAtMicros']);
+      allow delete: if false;
       match /settings/{settingsId} {
-        function business() {
-          return get(/databases/$(database)/documents/businesses/$(businessId)).data;
-        }
-        allow read: if signedIn() && business().ownerUid == request.auth.uid;
-        allow write: if signedIn() && business().ownerUid == request.auth.uid
-          && incoming().ownerUid == request.auth.uid;
+        allow read: if activeTenant(businessId);
+        allow create, update: if activeTenant(businessId)
+          && request.resource.data.businessId == businessId
+          && request.resource.data.ownerUid == get(businessPath(businessId)).data.ownerUid;
+        allow delete: if false;
       }
     }
 
-    // -- trips ------------------------------------------------------------
+    match /sparkOperations/{operationId} {
+      allow get: if signedIn()
+        && (!exists(operationPath(operationId)) || resource.data.actorUid == request.auth.uid);
+      allow list: if false;
+      allow create: if activeTenant(request.resource.data.businessId)
+        && request.resource.data.keys().hasAll(['schemaVersion','operationId','type',
+          'actorUid','ownerUid','businessId','tripId','beforeRevision',
+          'afterRevision','fingerprint','createdAt'])
+        && request.resource.data.schemaVersion == 1
+        && request.resource.data.operationId == operationId
+        && request.resource.data.actorUid == request.auth.uid
+        && request.resource.data.ownerUid == get(businessPath(request.resource.data.businessId)).data.ownerUid
+        && request.resource.data.type in ['trip-create','trip-edit','payment',
+          'installment-payment','trip-state']
+        && request.resource.data.beforeRevision is int
+        && request.resource.data.afterRevision == request.resource.data.beforeRevision + 1
+        && request.resource.data.fingerprint is string
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
 
     match /trips/{tripId} {
-      // Server-authoritative money. `profit`, `profitPercentage` and `amountDue`
-      // are GENERATED in PostgreSQL and `amountPaid` is synchronised from the
-      // native ledger; none of them is a client's to assert.
-      function serverOwnedFields() {
-        return ['ownerUid', 'businessId', 'userId', 'isDeleted', 'salePrice', 'wholesaleCost', 'currency', 'revision', 'eventSequence', 'amountPaid', 'amountDue', 'profit', 'profitPercentage',
-                'cashPaidAmount', 'cardPaidAmount', 'paymentStatus',
-                'searchDocument', 'schemaVersion', 'createdAt', 'createdAtMicros',
-                'deletedAt', 'deletedAtMicros', 'deletedBy'];
-      }
-
-      allow get: if isAdmin() || (signedIn() && existing().ownerUid == request.auth.uid);
-      // Per-document evaluation means an unconstrained list fails outright.
-      allow list: if isAdmin() || (signedIn() && existing().ownerUid == request.auth.uid);
-
-      // Creating a trip goes through the callable function, which computes the
-      // derived financial fields inside a transaction. Allowing a client create
-      // here would mean trusting client-supplied totals.
-      allow create: if false;
-      allow update: if signedIn()
-        && existing().ownerUid == request.auth.uid
-        && noneOf(serverOwnedFields());
-      allow delete: if false; // soft delete only, via the server
+      allow get: if adminReadOnly()
+        || (signedIn() && (!exists(tripPath(tripId)) || owns(resource.data)));
+      allow list: if adminReadOnly() || owns(resource.data);
+      allow create: if request.resource.data.ownerUid
+          == op(request.resource.data.lastOperationId).ownerUid
+        && request.resource.data.id == tripId
+        && request.resource.data.userId == request.resource.data.ownerUid
+        && request.resource.data.businessId != null
+        && request.resource.data.schemaVersion == 1
+        && request.resource.data.revision == 1
+        && request.resource.data.isDeleted == false
+        && validTripMoney(request.resource.data)
+        && operationMatches(request.resource.data.lastOperationId, ['trip-create'],
+          request.resource.data.businessId, tripId)
+        && op(request.resource.data.lastOperationId).beforeRevision == 0
+        && op(request.resource.data.lastOperationId).afterRevision == 1;
+      allow update: if validTripUpdate(tripId);
+      allow delete: if false;
     }
 
-    // -- payment plans and installments -----------------------------------
-    // The source policy checks the PARENT TRIP is owned before allowing a
-    // write. Money moves here, so the client gets read access only and every
-    // write goes through the server-authoritative function.
+    function scheduleComplete(plan) {
+      return (plan.installmentCount < 1 || existsAfter(installmentPath(plan.scheduleIds[0])))
+        && (plan.installmentCount < 2 || existsAfter(installmentPath(plan.scheduleIds[1])))
+        && (plan.installmentCount < 3 || existsAfter(installmentPath(plan.scheduleIds[2])))
+        && (plan.installmentCount < 4 || existsAfter(installmentPath(plan.scheduleIds[3])))
+        && (plan.installmentCount < 5 || existsAfter(installmentPath(plan.scheduleIds[4])))
+        && (plan.installmentCount < 6 || existsAfter(installmentPath(plan.scheduleIds[5])))
+        && (plan.installmentCount < 7 || existsAfter(installmentPath(plan.scheduleIds[6])))
+        && (plan.installmentCount < 8 || existsAfter(installmentPath(plan.scheduleIds[7])));
+    }
+    function validPlan(data) {
+      return data.schemaVersion == 1 && data.status == 'active' && data.isDeleted == false
+        && data.currency == getAfter(tripPath(data.tripId)).data.currency
+        && data.cardTotalMinor is int && data.cashTotalMinor is int
+        && data.cardPaidMinor is int && data.cashPaidMinor is int
+        && data.cardTotalMinor >= 0 && data.cashTotalMinor >= 0
+        && data.cardPaidMinor >= 0 && data.cardPaidMinor <= data.cardTotalMinor
+        && data.cashPaidMinor >= 0 && data.cashPaidMinor <= data.cashTotalMinor
+        && data.cardTotalMinor + data.cashTotalMinor
+          == getAfter(tripPath(data.tripId)).data.salePriceMinor
+        && data.installmentCount is int
+        && data.installmentCount >= 0 && data.installmentCount <= 8
+        && data.scheduleIds is list && data.scheduleIds.size() == data.installmentCount
+        && data.scheduleIds.toSet().size() == data.installmentCount
+        && data.installmentBaseMinor is int && data.installmentRemainderMinor is int
+        && data.installmentBaseMinor >= 0 && data.installmentRemainderMinor >= 0
+        && (data.installmentCount == 0
+          ? data.cardTotalMinor == 0
+            && data.installmentBaseMinor == 0
+            && data.installmentRemainderMinor == 0
+          : data.installmentBaseMinor * data.installmentCount
+              + data.installmentRemainderMinor == data.cardTotalMinor
+            && data.installmentRemainderMinor < data.installmentCount);
+    }
+    function validPlanUpdate() {
+      let operation = getAfter(operationPath(request.resource.data.lastOperationId)).data;
+      return request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.businessId == resource.data.businessId
+        && request.resource.data.tripId == resource.data.tripId
+        && request.resource.data.id == resource.data.id
+        && operation.operationId == request.resource.data.lastOperationId
+        && operation.actorUid == request.auth.uid
+        && operation.businessId == resource.data.businessId
+        && operation.tripId == resource.data.tripId
+        && operation.type in ['payment','installment-payment']
+        && request.resource.data.cardTotalMinor == resource.data.cardTotalMinor
+        && request.resource.data.cashTotalMinor == resource.data.cashTotalMinor
+        && request.resource.data.currency == resource.data.currency
+        && (operation.type == 'payment'
+          ? request.resource.data.cashPaidMinor == resource.data.cashPaidMinor + operation.amountMinor
+            && request.resource.data.cardPaidMinor == resource.data.cardPaidMinor
+          : request.resource.data.cardPaidMinor == resource.data.cardPaidMinor + operation.amountMinor
+            && request.resource.data.cashPaidMinor == resource.data.cashPaidMinor)
+        && request.resource.data.cardPaidMinor <= resource.data.cardTotalMinor
+        && request.resource.data.cashPaidMinor <= resource.data.cashTotalMinor
+        && changedOnly(['cardPaidMinor','cashPaidMinor','lastOperationId','updatedAt']);
+    }
 
     match /tripPaymentPlans/{planId} {
-      allow get, list: if isAdmin()
-        || (signedIn() && existing().ownerUid == request.auth.uid);
-      allow create, update, delete: if false;
+      allow get, list: if adminReadOnly() || owns(resource.data);
+      allow create: if request.resource.data.ownerUid
+          == op(request.resource.data.lastOperationId).ownerUid
+        && request.resource.data.id == planId
+        && operationMatches(request.resource.data.lastOperationId, ['trip-create'],
+          request.resource.data.businessId, request.resource.data.tripId)
+        && validPlan(request.resource.data)
+        && scheduleComplete(request.resource.data);
+      allow update: if validPlanUpdate();
+      allow delete: if false;
     }
 
     match /tripInstallments/{installmentId} {
-      allow get, list: if isAdmin()
-        || (signedIn() && existing().ownerUid == request.auth.uid);
-      allow create, update, delete: if false;
+      allow get, list: if adminReadOnly() || owns(resource.data);
+      allow create: if request.resource.data.ownerUid
+          == op(request.resource.data.lastOperationId).ownerUid
+        && request.resource.data.id == installmentId
+        && operationMatches(request.resource.data.lastOperationId, ['trip-create'],
+          request.resource.data.businessId, request.resource.data.tripId)
+        && existsAfter(planPath(request.resource.data.paymentPlanId))
+        && request.resource.data.paymentPlanId
+          == getAfter(planPath(request.resource.data.paymentPlanId)).data.id
+        && request.resource.data.installmentNumber is int
+        && request.resource.data.installmentNumber >= 1
+        && request.resource.data.installmentNumber
+          <= getAfter(planPath(request.resource.data.paymentPlanId)).data.installmentCount
+        && getAfter(planPath(request.resource.data.paymentPlanId))
+          .data.scheduleIds[request.resource.data.installmentNumber - 1] == installmentId
+        && request.resource.data.expectedAmountMinor
+          == getAfter(planPath(request.resource.data.paymentPlanId)).data.installmentBaseMinor
+            + (request.resource.data.installmentNumber
+                == getAfter(planPath(request.resource.data.paymentPlanId)).data.installmentCount
+              ? getAfter(planPath(request.resource.data.paymentPlanId)).data.installmentRemainderMinor
+              : 0)
+        && request.resource.data.paidAmountMinor == 0
+        && request.resource.data.status == 'scheduled';
+      allow update: if request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.businessId == resource.data.businessId
+        && request.resource.data.tripId == resource.data.tripId
+        && request.resource.data.paymentPlanId == resource.data.paymentPlanId
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.expectedAmountMinor == resource.data.expectedAmountMinor
+        && operationMatches(request.resource.data.lastOperationId,
+          ['installment-payment'], resource.data.businessId, resource.data.tripId)
+        && op(request.resource.data.lastOperationId).installmentId == installmentId
+        && request.resource.data.paidAmountMinor
+          == resource.data.paidAmountMinor + op(request.resource.data.lastOperationId).amountMinor
+        && request.resource.data.paidAmountMinor <= resource.data.expectedAmountMinor
+        && request.resource.data.status
+          == (request.resource.data.paidAmountMinor == resource.data.expectedAmountMinor
+            ? 'paid' : 'partial')
+        && changedOnly(['paidAmountMinor','status','paidAt','lastOperationId','updatedAt']);
+      allow delete: if false;
     }
 
-    // -- append-only history ----------------------------------------------
-    // The source grants SELECT and nothing else on these tables. Backdating,
-    // rewriting or deleting history is not a client capability.
-
+    function validImmutableEvent(data, eventId) {
+      let operation = getAfter(operationPath(eventId)).data;
+      return operation.operationId == eventId
+        && operation.actorUid == request.auth.uid
+        && operation.type in ['payment','installment-payment']
+        && data.ownerUid == operation.ownerUid
+        && data.businessId == operation.businessId
+        && data.operationId == eventId && data.lastOperationId == eventId
+        && data.actorUserId == request.auth.uid
+        && data.tripId == operation.tripId
+        && data.amountMinor == operation.amountMinor
+        && data.currency == operation.currency
+        && (operation.type != 'installment-payment'
+          || data.installmentId == operation.installmentId);
+    }
+    function validActivity(data) {
+      let operation = getAfter(operationPath(data.lastOperationId)).data;
+      return operation.operationId == data.lastOperationId
+        && operation.actorUid == request.auth.uid
+        && operation.type in ['trip-create','trip-edit','payment','installment-payment','trip-state']
+        && data.ownerUid == operation.ownerUid
+        && data.businessId == operation.businessId
+        && data.tripId == operation.tripId
+        && data.actorUserId == request.auth.uid;
+    }
     match /tripPaymentEvents/{eventId} {
-      allow get, list: if isAdmin()
-        || (signedIn() && existing().ownerUid == request.auth.uid);
-      allow write: if false;
+      allow get, list: if adminReadOnly() || owns(resource.data);
+      allow create: if validImmutableEvent(request.resource.data, eventId);
+      allow update, delete: if false;
     }
-
     match /tripInstallmentEvents/{eventId} {
-      allow get, list: if isAdmin()
-        || (signedIn() && existing().ownerUid == request.auth.uid);
-      allow write: if false;
+      allow get, list: if adminReadOnly() || owns(resource.data);
+      allow create: if validImmutableEvent(request.resource.data, eventId)
+        && request.resource.data.eventType == 'installment';
+      allow update, delete: if false;
     }
-
-    match /tripFinancialAudit/{auditId} {
-      allow get, list: if isAdmin()
-        || (signedIn() && existing().ownerUid == request.auth.uid);
-      allow write: if false;
+    match /tripFinancialAudit/{eventId} {
+      allow get, list: if adminReadOnly() || owns(resource.data);
+      allow create: if validImmutableEvent(request.resource.data, eventId)
+        && request.resource.data.afterMinor
+          == request.resource.data.beforeMinor + request.resource.data.amountMinor;
+      allow update, delete: if false;
     }
-
-    match /tripActivityLog/{activityId} {
-      allow get, list: if isAdmin()
-        || (signedIn() && existing().ownerUid == request.auth.uid);
-      allow write: if false;
+    match /tripActivityLog/{eventId} {
+      allow get, list: if adminReadOnly() || owns(resource.data);
+      allow create: if validActivity(request.resource.data);
+      allow update, delete: if false;
     }
-
     match /auditEvents/{eventId} {
-      allow get, list: if isAdmin()
-        || (signedIn() && existing().ownerUid == request.auth.uid);
+      allow get, list: if adminReadOnly() || owns(resource.data);
       allow write: if false;
     }
 
-    // -- server-only ------------------------------------------------------
-    // The idempotency ledger decides whether a financial write already
-    // happened. A client that could read or forge it could replay or suppress
-    // a payment, so it is invisible from the client entirely.
-
-    match /idempotency/{key} {
-      allow read, write: if false;
-    }
-
-    match /storageCleanupQueue/{queueId} {
-      allow read, write: if false;
-    }
-
-    match /rateLimits/{key} {
-      allow read, write: if false;
-    }
-
-    match /featureRollouts/{rolloutId} {
+    match /idempotency/{id} { allow read, write: if false; }
+    match /storageCleanupQueue/{id} { allow read, write: if false; }
+    match /rateLimits/{id} { allow read, write: if false; }
+    match /featureRollouts/{id} {
       allow get, list: if signedIn();
       allow write: if false;
     }
-
-    // -- default deny ------------------------------------------------------
-    // Everything not named above, including the migration_test_v1_* proof
-    // namespace, is denied to every client. Migration tooling reaches those
-    // paths with the Admin SDK, which bypasses these rules by design — which
-    // is exactly why the functions that use it do their own authorization.
-    match /{document=**} {
-      allow read, write: if false;
-    }
+    match /{document=**} { allow read, write: if false; }
   }
 }

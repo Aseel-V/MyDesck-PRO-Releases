@@ -1,0 +1,168 @@
+{
+  "generatedAt": "2026-09-12T14:25:17.819Z",
+  "architecture": {
+    "plan": "SPARK",
+    "billingExpected": false,
+    "functions": "NOT_USED_IN_SPARK_ARCHITECTURE",
+    "storage": "NOT_USED_IN_SPARK_ARCHITECTURE",
+    "cloudRun": "NOT_USED",
+    "cloudSql": "NOT_USED"
+  },
+  "runtime": {
+    "entry": "src/migration-app/main.tsx",
+    "reachableFiles": 10,
+    "files": [
+      "src/data/FirestoreTravelRepository.ts",
+      "src/data/SparkTransactionService.ts",
+      "src/data/TripService.ts",
+      "src/data/backendMode.ts",
+      "src/data/contracts.ts",
+      "src/data/firebaseClient.ts",
+      "src/data/maintenanceMode.ts",
+      "src/data/schemas.ts",
+      "src/migration-app/TravelWorkspace.tsx",
+      "src/migration-app/main.tsx"
+    ],
+    "evidence": {
+      "functionsImports": [],
+      "storageImports": [],
+      "supabaseImports": [],
+      "privilegedRuntime": [],
+      "fileInputs": []
+    },
+    "activeCallableFunctionCalls": 0,
+    "activeStorageCalls": 0,
+    "activeSupabaseCalls": 0,
+    "activePrivilegedCredentials": 0,
+    "activeFileUploadUi": 0
+  },
+  "historicalSourceReferences": {
+    "supabase": 338,
+    "functions": 0,
+    "storage": 11
+  },
+  "storageArchive": {
+    "objects": 3,
+    "bytes": 438670,
+    "signatures": 1,
+    "manifestComplete": true,
+    "action": "PRESERVE_IN_SUPABASE_READ_ONLY_ARCHIVE_DURING_ROLLBACK_WINDOW"
+  },
+  "quota": {
+    "databaseEdition": "ENTERPRISE",
+    "documents": 1439,
+    "maximumDocumentBytes": 4835,
+    "conservativeDocumentBytes": 6957565,
+    "indexedUpperBoundBytes": 27830260,
+    "storedQuotaUtilizationPercent": 2.592,
+    "quotas": {
+      "storedBytes": 1073741824,
+      "readUnitsPerDay": 50000,
+      "writeUnitsPerDay": 40000,
+      "realtimeUpdateUnitsPerDay": 50000,
+      "outboundBytesPerMonth": 10737418240
+    },
+    "workflows": {
+      "loginBusinessLoad": {
+        "reads": 2,
+        "writes": 0
+      },
+      "tripListPage25": {
+        "reads": 25,
+        "writes": 0
+      },
+      "tripDetailTypical": {
+        "reads": 8,
+        "writes": 0
+      },
+      "createTripThreeInstallments": {
+        "reads": 19,
+        "writes": 10
+      },
+      "editTrip": {
+        "reads": 6,
+        "writes": 3
+      },
+      "payment": {
+        "reads": 10,
+        "writes": 6
+      },
+      "installmentPayment": {
+        "reads": 13,
+        "writes": 8
+      },
+      "analyticsWorstBound": {
+        "reads": 250,
+        "writes": 0
+      },
+      "searchBoundedPage": {
+        "reads": 100,
+        "writes": 0
+      },
+      "archiveOrRestore": {
+        "reads": 7,
+        "writes": 3
+      }
+    },
+    "breakEven": {
+      "loginBusinessLoad": 25000,
+      "tripListPage25": 2000,
+      "tripDetailTypical": 6250,
+      "createTripThreeInstallments": 2631,
+      "editTrip": 8333,
+      "payment": 5000,
+      "installmentPayment": 3846,
+      "analyticsWorstBound": 200,
+      "searchBoundedPage": 500,
+      "archiveOrRestore": 7142
+    },
+    "usageRateKnown": false,
+    "conclusion": "SAFE_AT_CURRENT_CORPUS_WITH_BREAK_EVEN_MONITORING"
+  },
+  "rulesAccessBudget": {
+    "tripCreateThreeInstallments": {
+      "writes": 7,
+      "perWriteMax": 7,
+      "totalUnique": 7,
+      "limitPerWrite": 10,
+      "limitAtomic": 20
+    },
+    "tripCreateEightInstallments": {
+      "writes": 12,
+      "perWriteMax": 10,
+      "totalUnique": 12,
+      "limitPerWrite": 10,
+      "limitAtomic": 20
+    },
+    "tripEdit": {
+      "writes": 3,
+      "perWriteMax": 3,
+      "totalUnique": 4,
+      "limitPerWrite": 10,
+      "limitAtomic": 20
+    },
+    "payment": {
+      "writes": 6,
+      "perWriteMax": 5,
+      "totalUnique": 4,
+      "limitPerWrite": 10,
+      "limitAtomic": 20
+    },
+    "installmentPayment": {
+      "writes": 8,
+      "perWriteMax": 5,
+      "totalUnique": 5,
+      "limitPerWrite": 10,
+      "limitAtomic": 20
+    },
+    "archiveRestore": {
+      "writes": 3,
+      "perWriteMax": 5,
+      "totalUnique": 4,
+      "limitPerWrite": 10,
+      "limitAtomic": 20
+    }
+  },
+  "rulesAccessBudgetPass": true,
+  "status": "PASS"
+}

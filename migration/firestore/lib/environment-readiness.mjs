@@ -22,10 +22,10 @@ export function indexReadiness(required, response) {
       query: spec['//'], state, resource: existing?.name ?? null, productionState: existing?.state ?? null };
   });
 }
-export function capabilityBlockers({ billingEnabled, indexes, iam, rules, functions, storage, secret, electron }) {
-  return [!billingEnabled && 'BILLING', (indexes.length !== 3 || indexes.some(i => i.state !== 'READY')) && 'INDEXES',
-    iam !== 'PASS' && 'IAM', rules !== 'PASS' && 'RULES', functions !== 'PASS' && 'FUNCTIONS',
-    storage !== 'PASS' && 'STORAGE', secret !== 'PASS' && 'SECRET', electron !== 'PASS' && 'ELECTRON_APP_CHECK'].filter(Boolean);
+export function capabilityBlockers({ billingEnabled, indexes, iam, rules, secret, sparkPlan, quota }) {
+  return [billingEnabled !== false && 'BILLING_MUST_REMAIN_DISABLED', sparkPlan !== 'PASS' && 'SPARK_PLAN',
+    (indexes.length !== 3 || indexes.some(i => i.state !== 'READY')) && 'INDEXES', iam !== 'PASS' && 'IAM',
+    rules !== 'PASS' && 'RULES', quota !== 'PASS' && 'QUOTA', secret !== 'PASS' && 'SECRET'].filter(Boolean);
 }
 export function assertSyntheticPreflight(input) {
   if (input.project !== PROJECT || input.database !== DATABASE) throw Error('SYNTHETIC_TARGET_MISMATCH');
@@ -57,7 +57,6 @@ export function cleanupPlan(manifest, actualResources) {
 export const DB_CONDITION = 'expression=resource.name=="projects/mydesckpro/databases/default",title=mydesck-default-only';
 export const IAM_BINDINGS = Object.freeze({
   'migration-writer': { member: 'serviceAccount:mydesck-migration@mydesckpro.iam.gserviceaccount.com', role: 'roles/datastore.user', condition: DB_CONDITION },
-  'functions-runtime': { member: 'serviceAccount:mydesck-functions@mydesckpro.iam.gserviceaccount.com', role: 'roles/datastore.user', condition: DB_CONDITION },
   'rules-reader': { member: 'serviceAccount:mydesck-rules-reader@mydesckpro.iam.gserviceaccount.com', role: 'roles/firebaserules.viewer', condition: 'None' },
   'index-deployer': { member: 'serviceAccount:mydesck-deployer@mydesckpro.iam.gserviceaccount.com', role: 'roles/datastore.indexAdmin', condition: 'None' },
 });

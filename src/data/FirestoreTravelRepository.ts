@@ -1,14 +1,14 @@
 import { collection, doc, getDoc, getDocs, limit, orderBy, query, startAfter, where, documentId, type QueryConstraint } from 'firebase/firestore';
-import { httpsCallable } from 'firebase/functions';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { getBlob, ref, uploadBytes } from 'firebase/storage';
 import type { FirebaseClient } from './firebaseClient';
-import type { AuthRepository, TravelRepositories, StorageRepository, TripFilter, TripPage, SaveTrip, PaymentCommand } from './contracts';
+import type { AuthRepository, TravelRepositories, TripFilter, TripPage, SaveTrip, PaymentCommand } from './contracts';
 import { businessSchema, userSchema, tripSchema, installmentSchema, planSchema, eventSchema, auditEventSchema, metadataSchema, travelerSchema } from './schemas';
 import { assertWriteAllowed } from './maintenanceMode';
+import { SparkTransactionService } from './SparkTransactionService';
 
-export class FirestoreTravelRepository implements TravelRepositories, AuthRepository, StorageRepository {
-  constructor(private readonly client: FirebaseClient) {}
+export class FirestoreTravelRepository implements TravelRepositories, AuthRepository {
+  private readonly transactions: SparkTransactionService;
+  constructor(private readonly client: FirebaseClient) { this.transactions = new SparkTransactionService(client.db); }
   async currentIdentity() { await this.client.ready; await this.client.auth.authStateReady(); const u=this.client.auth.currentUser; if (!u) return null; if (this.client.mode==='firestore-emulator'&&!u.email?.startsWith('migration-test--')) { await this.logout(); throw Error('SYNTHETIC_IDENTITY_REQUIRED'); } return { uid:u.uid, email:u.email??'' }; }
   async login(email:string,password:string) { if(this.client.mode==='firestore-emulator'&&!email.startsWith('migration-test--')) throw Error('SYNTHETIC_IDENTITY_REQUIRED'); await this.client.ready; await signInWithEmailAndPassword(this.client.auth,email,password); return (await this.currentIdentity())!; }
   async logout() { await signOut(this.client.auth); }
@@ -21,7 +21,7 @@ export class FirestoreTravelRepository implements TravelRepositories, AuthReposi
     if(businesses.size!==1) throw Error('BUSINESS_NOT_UNIQUE');
     const business=businessSchema.parse(businesses.docs[0].data());
     if(business.isSuspended || (user.businessId && user.businessId!==business.id)) throw Error('BUSINESS_ACCESS_DENIED');
-    return {uid:identity.uid,business};
+    return {uid:identity.uid,business,businessId:business.id};
   }
   async getCurrentBusiness() { return (await this.scope()).business; }
   async listTripsForBusiness(filter:TripFilter={}):Promise<TripPage> {
@@ -50,13 +50,17 @@ export class FirestoreTravelRepository implements TravelRepositories, AuthReposi
   async listAuditHistory(id:string) { return (await Promise.all(['tripFinancialAudit','tripActivityLog'].map(n=>this.related(n,id)))).flat().map(v=>auditEventSchema.parse(v)).sort((a,b)=>a.sequence-b.sequence); }
   async listAttachments(id:string) { const trip=await this.getTripDetails(id); const raw=typeof trip.attachments==='string'?JSON.parse(trip.attachments):trip.attachments; return metadataSchema.array().parse(raw??[]); }
   async listDocuments(id:string) { return (await this.listAttachments(id)).filter(v=>v.mime==='application/pdf'); }
-  private async call<T>(name:string,data:unknown):Promise<T> { await this.scope(); if(typeof navigator!=='undefined'&&!navigator.onLine) throw Error('SERVER_CONFIRMATION_REQUIRED'); return (await httpsCallable<unknown,T>(this.client.functions,name)(data)).data; }
-  async saveTrip(data:SaveTrip) { assertWriteAllowed(data.trip.id?'trip.edit':'trip.create',this.client.maintenanceEnabled); return this.call<{id:string}>('saveTrip',data); }
-  async recordPayment(data:PaymentCommand) { assertWriteAllowed('payment.record',this.client.maintenanceEnabled); return this.call('recordPayment',data); }
-  async recordInstallmentPayment(data:PaymentCommand&{installmentId:string}) { assertWriteAllowed('installment.record',this.client.maintenanceEnabled); return this.call('recordInstallmentPayment',data); }
-  async setTripState(id:string,state:'archive'|'restore'|'delete'|'unarchive',clientRequestId:string) { assertWriteAllowed('trip.edit',this.client.maintenanceEnabled); await this.call('setTripState',{tripId:id,state,clientRequestId}); }
-  async getTravelAnalytics() { return this.call('travelAnalytics',{}); }
-  private async privatePath(path:string) { const {business}=await this.scope(); const prefix=`businesses/${business.id}/`; if(!path.startsWith(prefix)||path.includes('..')||path.includes('%')||!/^businesses\/[^/]+\/(signatures\/[^/]+|trips\/[^/]+\/attachments\/[^/]+)$/.test(path)) throw Error('PRIVATE_PATH_DENIED'); return path; }
-  async readPrivateFile(path:string) { return getBlob(ref(this.client.storage,await this.privatePath(path)),25*1024*1024); }
-  async uploadPrivateFile(path:string,file:Blob) { assertWriteAllowed('attachment.write',this.client.maintenanceEnabled); await uploadBytes(ref(this.client.storage,await this.privatePath(path)),file); return path; }
+  private async writeScope() { const {uid,businessId}=await this.scope(); if(typeof navigator!=='undefined'&&!navigator.onLine) throw Error('SERVER_CONFIRMATION_REQUIRED'); return {uid,businessId}; }
+  async saveTrip(data:SaveTrip) { assertWriteAllowed(data.trip.id?'trip.edit':'trip.create',this.client.maintenanceEnabled); return this.transactions.saveTrip(await this.writeScope(),data); }
+  async recordPayment(data:PaymentCommand) { assertWriteAllowed('payment.record',this.client.maintenanceEnabled); return this.transactions.recordPayment(await this.writeScope(),data,false); }
+  async recordInstallmentPayment(data:PaymentCommand&{installmentId:string}) { assertWriteAllowed('installment.record',this.client.maintenanceEnabled); return this.transactions.recordPayment(await this.writeScope(),data,true); }
+  async setTripState(id:string,state:'archive'|'restore'|'delete'|'unarchive',clientRequestId:string) { assertWriteAllowed('trip.edit',this.client.maintenanceEnabled); await this.transactions.setTripState(await this.writeScope(),id,state,clientRequestId); }
+  async getTravelAnalytics() {
+    const {uid,business}=await this.scope();
+    const rows=await getDocs(query(collection(this.client.db,'trips'),where('ownerUid','==',uid),where('businessId','==',business.id),where('isDeleted','==',false),limit(251)));
+    if(rows.size>250) throw Error('ANALYTICS_SUMMARY_REQUIRED');
+    const result:Record<string,{currency:string;tripCount:number;salePriceMinor:number;wholesaleCostMinor:number;amountPaidMinor:number;marginMinor:number;receivableMinor:number}>={};
+    for(const item of rows.docs){const trip=tripSchema.parse(item.data());const bucket=result[trip.currency]??={currency:trip.currency,tripCount:0,salePriceMinor:0,wholesaleCostMinor:0,amountPaidMinor:0,marginMinor:0,receivableMinor:0};bucket.tripCount+=1;bucket.salePriceMinor+=trip.salePriceMinor;bucket.wholesaleCostMinor+=trip.wholesaleCostMinor;bucket.amountPaidMinor+=trip.amountPaidMinor;bucket.marginMinor+=trip.profitMinor;bucket.receivableMinor+=trip.amountDueMinor;for(const value of Object.values(bucket))if(typeof value==='number'&&!Number.isSafeInteger(value))throw Error('ANALYTICS_INTEGER_OVERFLOW');result[trip.currency]=bucket;}
+    return result;
+  }
 }

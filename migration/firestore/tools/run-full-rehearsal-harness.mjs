@@ -15,24 +15,26 @@ const suites = [
   ['search repository parity', 'scripts/test-search-repository.ts',
     ['scripts/run-typescript-source-test.mjs', 'scripts/test-search-repository.ts']],
   ['application boundary', 'scripts/test-firestore-app-layer.mjs', ['scripts/run-typescript-source-test.mjs', 'scripts/test-firestore-app-layer.mjs']],
+  ['Spark architecture guards', 'migration/firestore/tests/spark-architecture.test.mjs'],
   ['production preparation guards', 'migration/firestore/tests/production-preparation.test.mjs'],
   ['production environment and cleanup guards', 'migration/firestore/tests/environment-readiness.test.mjs'],
   ['isolated readiness callable and rollback emulator', 'migration/firestore/tests/readiness-smoke.test.mjs'],
   ['production cutover controls', 'scripts/test-production-cutover-controls.ts',
     ['scripts/run-typescript-source-test.mjs', 'scripts/test-production-cutover-controls.ts']],
-  ['production dry-run orchestrator', 'migration/firestore/tools/production-dry-run.mjs',
-    ['migration/firestore/tools/production-dry-run.mjs', '--run-id=harness-production-prep']],
   ['Firestore Rules', 'migration/firestore/tests/rules.test.mjs'],
   ['trip transaction', 'migration/firestore/tests/save-trip-transaction.test.mjs'],
   ['payment/installment/state transactions', 'migration/firestore/tests/travel-operations.test.mjs'],
   ['Storage Rules', 'migration/firestore/tests/storage-rules.test.mjs'],
   ['Auth emulator lifecycle', 'migration/firestore/tests/client-auth-emulator.test.mjs'],
+  ['Spark client SDK transactions', 'scripts/test-spark-client-transactions.mjs', ['scripts/run-typescript-source-test.mjs', 'scripts/test-spark-client-transactions.mjs']],
+  ['production dry-run orchestrator', 'migration/firestore/tools/production-dry-run.mjs',
+    ['migration/firestore/tools/production-dry-run.mjs', '--run-id=harness-production-prep']],
 ];
 
 const results = [];
 for (const [label, file, args = ['--test', file]] of suites) {
   console.log(`\n${'='.repeat(72)}\n  ${label}\n${'='.repeat(72)}`);
-  if (file.endsWith('client-auth-emulator.test.mjs')) {
+  if (file.endsWith('client-auth-emulator.test.mjs') || file.endsWith('test-spark-client-transactions.mjs')) {
     const seed = spawnSync(process.execPath, ['migration/firestore/tools/seed-app-emulator.mjs'],
       { encoding: 'utf8', env: process.env });
     if (seed.status !== 0) {

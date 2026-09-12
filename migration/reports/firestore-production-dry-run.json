@@ -1,75 +1,429 @@
 {
-  "generatedAt": "2026-09-12T08:57:59.827Z",
-  "migrationRunId": "phase4b-environment-closure",
+  "generatedAt": "2026-09-12T14:25:17.944Z",
+  "migrationRunId": "spark-only-final",
+  "architecture": "FIREBASE_SPARK_ONLY",
   "mode": "dry-run",
   "productionWrites": 0,
+  "productionCustomerWrites": 0,
+  "productionUserImports": 0,
+  "backendCutover": "NOT_STARTED",
+  "billingEnabled": false,
+  "functionsDeployed": false,
+  "storageProvisioned": false,
+  "cloudSql": false,
   "environmentIdentity": {
     "firebaseProject": "mydesckpro",
     "firestoreDatabaseId": "default"
   },
-  "sourceIdentity": {
-    "supabaseProject": "pubugnfaqqukelvgckdr"
-  },
-  "targetIdentity": {
-    "firebaseProject": "mydesckpro",
-    "firestoreDatabaseId": "default"
-  },
-  "approvedCommitSha": "PENDING_POST_REVIEW_PIN",
-  "executableCommitSha": "9bb74afbcfc8df1d2fcf5420f44d49e198b8f6ec",
-  "identityFailures": [
-    "EXECUTABLE_COMMIT_MISMATCH"
-  ],
+  "executableCommitSha": "51e163fdfeae58da951b27d5dad94a77ecce65a9",
   "configHashes": {
-    "firestoreRules": "bfb3413ad1af01377b8e079dd4cfa9ea7813a2b18b61a70c43ac0f9c520cee90",
-    "storageRules": "5ccf1d426c4fbe75133e0bdc31562888523ac7d7bce8ba4d11e5be6e09af73bb",
+    "firestoreRules": "e77ed17b8e3652a5523b25d4fb524f5afa4ec2de291ce23baf74d1a54349e9ba",
     "indexes": "b145d250a7f5238a6092761217efff7122409253f2ce34846b2d9393e9ef1832",
     "deltaMap": "cf60c2b43faf32d30a5965e958a10d2226cc57e161095eff40342ba1d5d3db85"
   },
-  "counts": {
-    "sourceRowsLastRehearsal": 1444,
-    "sourceUsers": 10,
-    "currentTargetAuthUsers": 5,
-    "storageObjectsLastRehearsal": 3
+  "evidence": {
+    "environment": {
+      "status": "PASS",
+      "evidence": "project mydesckpro and literal database default verified"
+    },
+    "sparkPlan": {
+      "status": "PASS",
+      "evidence": {
+        "billingEnabled": false,
+        "accountLinked": false,
+        "expectedPlan": "SPARK"
+      }
+    },
+    "auth": {
+      "status": "PASS",
+      "evidence": "10/10; production import not started"
+    },
+    "iam": {
+      "status": "FAIL",
+      "evidence": {
+        "identity": "mydesck-migration@mydesckpro.iam.gserviceaccount.com",
+        "syntheticRead": 403,
+        "requiredRole": "roles/datastore.user scoped to projects/mydesckpro/databases/default where supported"
+      }
+    },
+    "rules": {
+      "status": "PASS",
+      "evidence": {
+        "currentRetrievable": true,
+        "current": {
+          "release": "projects/mydesckpro/releases/cloud.firestore/default",
+          "ruleset": "projects/mydesckpro/rulesets/c6fc85cd-4681-491c-bb7c-b879e5893a92",
+          "updateTime": "2026-09-09T08:05:20.911440Z",
+          "files": [
+            {
+              "name": "firestore.rules",
+              "path": "migration/firestore/release/current-production/c6fc85cd-4681-491c-bb7c-b879e5893a92/source-0.rules",
+              "sha256": "ecf30f940747dcc3c5ba4993093e9a11ac9fc5df7e14b2a1512d2446923d84eb"
+            }
+          ]
+        },
+        "candidateSha256": "e77ed17b8e3652a5523b25d4fb524f5afa4ec2de291ce23baf74d1a54349e9ba",
+        "rollback": {
+          "release": "projects/mydesckpro/releases/cloud.firestore/default",
+          "ruleset": "projects/mydesckpro/rulesets/c6fc85cd-4681-491c-bb7c-b879e5893a92",
+          "updateTime": "2026-09-09T08:05:20.911440Z",
+          "files": [
+            {
+              "name": "firestore.rules",
+              "path": "migration/firestore/release/rollback-production/source-0.rules",
+              "sha256": "ecf30f940747dcc3c5ba4993093e9a11ac9fc5df7e14b2a1512d2446923d84eb"
+            }
+          ]
+        },
+        "emulatorSuite": "PASS",
+        "candidateDeployed": false
+      }
+    },
+    "indexes": {
+      "status": "FAIL",
+      "evidence": [
+        {
+          "collectionGroup": "trips",
+          "queryScope": "COLLECTION",
+          "fields": [
+            {
+              "fieldPath": "ownerUid",
+              "order": "ASCENDING"
+            },
+            {
+              "fieldPath": "businessId",
+              "order": "ASCENDING"
+            },
+            {
+              "fieldPath": "isDeleted",
+              "order": "ASCENDING"
+            },
+            {
+              "fieldPath": "startDate",
+              "order": "ASCENDING"
+            }
+          ],
+          "query": "FirestoreTravelRepository.listTripsForBusiness: tenant, deletion state, start-date cursor.",
+          "state": "MISSING",
+          "resource": null,
+          "productionState": null
+        },
+        {
+          "collectionGroup": "trips",
+          "queryScope": "COLLECTION",
+          "fields": [
+            {
+              "fieldPath": "ownerUid",
+              "order": "ASCENDING"
+            },
+            {
+              "fieldPath": "businessId",
+              "order": "ASCENDING"
+            },
+            {
+              "fieldPath": "isDeleted",
+              "order": "ASCENDING"
+            },
+            {
+              "fieldPath": "status",
+              "order": "ASCENDING"
+            },
+            {
+              "fieldPath": "startDate",
+              "order": "ASCENDING"
+            }
+          ],
+          "query": "FirestoreTravelRepository.listTripsForBusiness with a status filter.",
+          "state": "MISSING",
+          "resource": null,
+          "productionState": null
+        },
+        {
+          "collectionGroup": "tripInstallments",
+          "queryScope": "COLLECTION",
+          "fields": [
+            {
+              "fieldPath": "ownerUid",
+              "order": "ASCENDING"
+            },
+            {
+              "fieldPath": "businessId",
+              "order": "ASCENDING"
+            },
+            {
+              "fieldPath": "status",
+              "order": "ASCENDING"
+            },
+            {
+              "fieldPath": "dueDate",
+              "order": "ASCENDING"
+            }
+          ],
+          "query": "FirestoreTravelRepository.listDueInstallments: tenant, active status set, due date.",
+          "state": "MISSING",
+          "resource": null,
+          "productionState": null
+        }
+      ]
+    },
+    "quota": {
+      "status": "PASS",
+      "evidence": {
+        "databaseEdition": "ENTERPRISE",
+        "documents": 1439,
+        "maximumDocumentBytes": 4835,
+        "conservativeDocumentBytes": 6957565,
+        "indexedUpperBoundBytes": 27830260,
+        "storedQuotaUtilizationPercent": 2.592,
+        "quotas": {
+          "storedBytes": 1073741824,
+          "readUnitsPerDay": 50000,
+          "writeUnitsPerDay": 40000,
+          "realtimeUpdateUnitsPerDay": 50000,
+          "outboundBytesPerMonth": 10737418240
+        },
+        "workflows": {
+          "loginBusinessLoad": {
+            "reads": 2,
+            "writes": 0
+          },
+          "tripListPage25": {
+            "reads": 25,
+            "writes": 0
+          },
+          "tripDetailTypical": {
+            "reads": 8,
+            "writes": 0
+          },
+          "createTripThreeInstallments": {
+            "reads": 19,
+            "writes": 10
+          },
+          "editTrip": {
+            "reads": 6,
+            "writes": 3
+          },
+          "payment": {
+            "reads": 10,
+            "writes": 6
+          },
+          "installmentPayment": {
+            "reads": 13,
+            "writes": 8
+          },
+          "analyticsWorstBound": {
+            "reads": 250,
+            "writes": 0
+          },
+          "searchBoundedPage": {
+            "reads": 100,
+            "writes": 0
+          },
+          "archiveOrRestore": {
+            "reads": 7,
+            "writes": 3
+          }
+        },
+        "breakEven": {
+          "loginBusinessLoad": 25000,
+          "tripListPage25": 2000,
+          "tripDetailTypical": 6250,
+          "createTripThreeInstallments": 2631,
+          "editTrip": 8333,
+          "payment": 5000,
+          "installmentPayment": 3846,
+          "analyticsWorstBound": 200,
+          "searchBoundedPage": 500,
+          "archiveOrRestore": 7142
+        },
+        "usageRateKnown": false,
+        "conclusion": "SAFE_AT_CURRENT_CORPUS_WITH_BREAK_EVEN_MONITORING"
+      }
+    },
+    "noFunctions": {
+      "status": "PASS",
+      "evidence": {
+        "activeCalls": 0,
+        "deploymentRequired": false,
+        "historicalPackage": "NOT_USED_IN_SPARK_ARCHITECTURE"
+      }
+    },
+    "noStorage": {
+      "status": "PASS",
+      "evidence": {
+        "activeCalls": 0,
+        "activeUploadUi": 0,
+        "archive": {
+          "objects": 3,
+          "bytes": 438670,
+          "signatures": 1,
+          "manifestComplete": true,
+          "action": "PRESERVE_IN_SUPABASE_READ_ONLY_ARCHIVE_DURING_ROLLBACK_WINDOW"
+        }
+      }
+    },
+    "criticalTransactions": {
+      "status": "PASS",
+      "evidence": "Firebase client SDK against emulators: trip, plan, installments, payment, archive and cleanup"
+    },
+    "ruleAccessBudget": {
+      "status": "PASS",
+      "evidence": {
+        "tripCreateThreeInstallments": {
+          "writes": 7,
+          "perWriteMax": 7,
+          "totalUnique": 7,
+          "limitPerWrite": 10,
+          "limitAtomic": 20
+        },
+        "tripCreateEightInstallments": {
+          "writes": 12,
+          "perWriteMax": 10,
+          "totalUnique": 12,
+          "limitPerWrite": 10,
+          "limitAtomic": 20
+        },
+        "tripEdit": {
+          "writes": 3,
+          "perWriteMax": 3,
+          "totalUnique": 4,
+          "limitPerWrite": 10,
+          "limitAtomic": 20
+        },
+        "payment": {
+          "writes": 6,
+          "perWriteMax": 5,
+          "totalUnique": 4,
+          "limitPerWrite": 10,
+          "limitAtomic": 20
+        },
+        "installmentPayment": {
+          "writes": 8,
+          "perWriteMax": 5,
+          "totalUnique": 5,
+          "limitPerWrite": 10,
+          "limitAtomic": 20
+        },
+        "archiveRestore": {
+          "writes": 3,
+          "perWriteMax": 5,
+          "totalUnique": 4,
+          "limitPerWrite": 10,
+          "limitAtomic": 20
+        }
+      }
+    },
+    "maliciousClient": {
+      "status": "PASS",
+      "evidence": "raw client tampering, cross-tenant, immutable event and self-admin denied by candidate Rules"
+    },
+    "realClientSmoke": {
+      "status": "NOT_RUN",
+      "evidence": "requires approved candidate Rules, 3 READY indexes, migration IAM, and isolated production test identities"
+    },
+    "bulkData": {
+      "status": "PASS",
+      "evidence": "streaming/checkpoint/retry writer and dry-run write guard preserved"
+    },
+    "delta": {
+      "status": "PASS",
+      "evidence": "77/77; unknown 0"
+    },
+    "financial": {
+      "status": "PASS",
+      "evidence": "1447 exact values; delta 0"
+    },
+    "relationships": {
+      "status": "PASS",
+      "evidence": "3047 checked"
+    },
+    "events": {
+      "status": "PASS",
+      "evidence": "953 reconciled"
+    },
+    "search": {
+      "status": "PASS",
+      "evidence": "14/14 classified; active Spark travel search bounded and provider-free"
+    },
+    "arabic": {
+      "status": "PASS",
+      "evidence": "RTL regression"
+    },
+    "hebrew": {
+      "status": "PASS",
+      "evidence": "RTL regression"
+    },
+    "english": {
+      "status": "PASS",
+      "evidence": "LTR regression"
+    },
+    "electron": {
+      "status": "PASS",
+      "evidence": "Electron-compatible renderer composition, Auth persistence, token refresh and local print/PDF path"
+    },
+    "activeSupabase": {
+      "status": "PASS",
+      "evidence": {
+        "firebaseModeReachable": 0,
+        "historicalReferences": 338
+      }
+    },
+    "secret": {
+      "status": "FAIL",
+      "evidence": "GitHub credential removed from active source; provider revocation confirmation missing"
+    },
+    "writeFreeze": {
+      "status": "PASS",
+      "evidence": "maintenance guard and no-Supabase-fallback behavior"
+    },
+    "rollback": {
+      "status": "PASS",
+      "evidence": "synthetic Firestore operation journal, detection and exact-ID cleanup rehearsed in emulator; production customer data excluded"
+    },
+    "observability": {
+      "status": "PASS",
+      "evidence": "operationId, canonical fingerprint and immutable audit/event records"
+    },
+    "backendSwitch": {
+      "status": "PASS",
+      "evidence": "Spark plan and billing-disabled fail-closed runtime selector; cutover not started"
+    }
   },
   "go": {
     "gates": [
       {
         "name": "environment",
-        "status": "FAIL",
-        "evidence": [
-          "EXECUTABLE_COMMIT_MISMATCH"
-        ]
+        "status": "PASS",
+        "evidence": "project mydesckpro and literal database default verified"
       },
       {
-        "name": "secret",
-        "status": "FAIL",
-        "evidence": "credential removed from source; owner revocation confirmation missing"
+        "name": "sparkPlan",
+        "status": "PASS",
+        "evidence": {
+          "billingEnabled": false,
+          "accountLinked": false,
+          "expectedPlan": "SPARK"
+        }
+      },
+      {
+        "name": "auth",
+        "status": "PASS",
+        "evidence": "10/10; production import not started"
       },
       {
         "name": "iam",
         "status": "FAIL",
         "evidence": {
-          "inventory": "migration/reports/firebase-production-environment-inventory.json",
-          "migrationIdentity": "mydesck-migration@mydesckpro.iam.gserviceaccount.com",
-          "projectPermissions": {
-            "http": 200,
-            "data": {}
-          },
-          "syntheticRead": {
-            "http": 403,
-            "status": "PERMISSION_DENIED",
-            "reasons": [],
-            "message": "Missing or insufficient permissions."
-          },
-          "conditionalGrantProof": "NOT_RUN_NO_OPERATOR_BINDING_APPLIED",
-          "effectiveResourceAnalysis": "NOT_RUN_TROUBLESHOOTER_DISABLED",
-          "note": "Human Owner remains; project-policy absence of prohibited grants is not a complete resource-level analysis."
+          "identity": "mydesck-migration@mydesckpro.iam.gserviceaccount.com",
+          "syntheticRead": 403,
+          "requiredRole": "roles/datastore.user scoped to projects/mydesckpro/databases/default where supported"
         }
       },
       {
         "name": "rules",
         "status": "PASS",
         "evidence": {
+          "currentRetrievable": true,
           "current": {
             "release": "projects/mydesckpro/releases/cloud.firestore/default",
             "ruleset": "projects/mydesckpro/rulesets/c6fc85cd-4681-491c-bb7c-b879e5893a92",
@@ -82,8 +436,7 @@
               }
             ]
           },
-          "candidateSha256": "bfb3413ad1af01377b8e079dd4cfa9ea7813a2b18b61a70c43ac0f9c520cee90",
-          "rollbackAvailable": true,
+          "candidateSha256": "e77ed17b8e3652a5523b25d4fb524f5afa4ec2de291ce23baf74d1a54349e9ba",
           "rollback": {
             "release": "projects/mydesckpro/releases/cloud.firestore/default",
             "ruleset": "projects/mydesckpro/rulesets/c6fc85cd-4681-491c-bb7c-b879e5893a92",
@@ -96,9 +449,8 @@
               }
             ]
           },
-          "emulator": "PASS",
-          "deployed": false,
-          "note": "READINESS only: captured current release, candidate tested, rollback source verified. Current deny-all Rules require separate approved deployment for client smoke."
+          "emulatorSuite": "PASS",
+          "candidateDeployed": false
         }
       },
       {
@@ -190,137 +542,268 @@
         ]
       },
       {
-        "name": "functions",
-        "status": "FAIL",
+        "name": "quota",
+        "status": "PASS",
         "evidence": {
-          "billingEnabled": false,
-          "disabledRequiredApis": [
-            "cloudfunctions.googleapis.com",
-            "run.googleapis.com",
-            "cloudbuild.googleapis.com",
-            "artifactregistry.googleapis.com"
-          ],
-          "eventarc": "DISABLED_NOT_REQUIRED_FOR_CURRENT_CALLABLES",
-          "deployCapability": "NOT_RUN",
-          "realSmoke": "NOT_RUN",
-          "reason": "FUNCTIONS DEPLOYMENT BLOCKED BY BILLING"
+          "databaseEdition": "ENTERPRISE",
+          "documents": 1439,
+          "maximumDocumentBytes": 4835,
+          "conservativeDocumentBytes": 6957565,
+          "indexedUpperBoundBytes": 27830260,
+          "storedQuotaUtilizationPercent": 2.592,
+          "quotas": {
+            "storedBytes": 1073741824,
+            "readUnitsPerDay": 50000,
+            "writeUnitsPerDay": 40000,
+            "realtimeUpdateUnitsPerDay": 50000,
+            "outboundBytesPerMonth": 10737418240
+          },
+          "workflows": {
+            "loginBusinessLoad": {
+              "reads": 2,
+              "writes": 0
+            },
+            "tripListPage25": {
+              "reads": 25,
+              "writes": 0
+            },
+            "tripDetailTypical": {
+              "reads": 8,
+              "writes": 0
+            },
+            "createTripThreeInstallments": {
+              "reads": 19,
+              "writes": 10
+            },
+            "editTrip": {
+              "reads": 6,
+              "writes": 3
+            },
+            "payment": {
+              "reads": 10,
+              "writes": 6
+            },
+            "installmentPayment": {
+              "reads": 13,
+              "writes": 8
+            },
+            "analyticsWorstBound": {
+              "reads": 250,
+              "writes": 0
+            },
+            "searchBoundedPage": {
+              "reads": 100,
+              "writes": 0
+            },
+            "archiveOrRestore": {
+              "reads": 7,
+              "writes": 3
+            }
+          },
+          "breakEven": {
+            "loginBusinessLoad": 25000,
+            "tripListPage25": 2000,
+            "tripDetailTypical": 6250,
+            "createTripThreeInstallments": 2631,
+            "editTrip": 8333,
+            "payment": 5000,
+            "installmentPayment": 3846,
+            "analyticsWorstBound": 200,
+            "searchBoundedPage": 500,
+            "archiveOrRestore": 7142
+          },
+          "usageRateKnown": false,
+          "conclusion": "SAFE_AT_CURRENT_CORPUS_WITH_BREAK_EVEN_MONITORING"
         }
       },
       {
-        "name": "auth",
+        "name": "noFunctions",
         "status": "PASS",
-        "evidence": "10/10, unknown 0"
+        "evidence": {
+          "activeCalls": 0,
+          "deploymentRequired": false,
+          "historicalPackage": "NOT_USED_IN_SPARK_ARCHITECTURE"
+        }
+      },
+      {
+        "name": "noStorage",
+        "status": "PASS",
+        "evidence": {
+          "activeCalls": 0,
+          "activeUploadUi": 0,
+          "archive": {
+            "objects": 3,
+            "bytes": 438670,
+            "signatures": 1,
+            "manifestComplete": true,
+            "action": "PRESERVE_IN_SUPABASE_READ_ONLY_ARCHIVE_DURING_ROLLBACK_WINDOW"
+          }
+        }
+      },
+      {
+        "name": "criticalTransactions",
+        "status": "PASS",
+        "evidence": "Firebase client SDK against emulators: trip, plan, installments, payment, archive and cleanup"
+      },
+      {
+        "name": "ruleAccessBudget",
+        "status": "PASS",
+        "evidence": {
+          "tripCreateThreeInstallments": {
+            "writes": 7,
+            "perWriteMax": 7,
+            "totalUnique": 7,
+            "limitPerWrite": 10,
+            "limitAtomic": 20
+          },
+          "tripCreateEightInstallments": {
+            "writes": 12,
+            "perWriteMax": 10,
+            "totalUnique": 12,
+            "limitPerWrite": 10,
+            "limitAtomic": 20
+          },
+          "tripEdit": {
+            "writes": 3,
+            "perWriteMax": 3,
+            "totalUnique": 4,
+            "limitPerWrite": 10,
+            "limitAtomic": 20
+          },
+          "payment": {
+            "writes": 6,
+            "perWriteMax": 5,
+            "totalUnique": 4,
+            "limitPerWrite": 10,
+            "limitAtomic": 20
+          },
+          "installmentPayment": {
+            "writes": 8,
+            "perWriteMax": 5,
+            "totalUnique": 5,
+            "limitPerWrite": 10,
+            "limitAtomic": 20
+          },
+          "archiveRestore": {
+            "writes": 3,
+            "perWriteMax": 5,
+            "totalUnique": 4,
+            "limitPerWrite": 10,
+            "limitAtomic": 20
+          }
+        }
+      },
+      {
+        "name": "maliciousClient",
+        "status": "PASS",
+        "evidence": "raw client tampering, cross-tenant, immutable event and self-admin denied by candidate Rules"
+      },
+      {
+        "name": "realClientSmoke",
+        "status": "NOT_RUN",
+        "evidence": "requires approved candidate Rules, 3 READY indexes, migration IAM, and isolated production test identities"
       },
       {
         "name": "bulkData",
         "status": "PASS",
-        "evidence": "streaming/checkpoint/retry writer and dry-run guard present"
+        "evidence": "streaming/checkpoint/retry writer and dry-run write guard preserved"
       },
       {
         "name": "delta",
         "status": "PASS",
-        "evidence": "77/77, unknown 0"
+        "evidence": "77/77; unknown 0"
       },
       {
         "name": "financial",
         "status": "PASS",
-        "evidence": "full rehearsal exact delta"
+        "evidence": "1447 exact values; delta 0"
       },
       {
         "name": "relationships",
         "status": "PASS",
-        "evidence": "full rehearsal relationship gates"
+        "evidence": "3047 checked"
       },
       {
         "name": "events",
         "status": "PASS",
-        "evidence": "full rehearsal event gates"
-      },
-      {
-        "name": "storage",
-        "status": "FAIL",
-        "evidence": {
-          "buckets": [],
-          "target": null,
-          "bucketAvailable": false,
-          "firebaseStorageApi": "DISABLED",
-          "billingEnabled": false,
-          "privateRulesAndChecksumSmoke": "NOT_RUN"
-        }
+        "evidence": "953 reconciled"
       },
       {
         "name": "search",
         "status": "PASS",
-        "evidence": "14/14 classified"
+        "evidence": "14/14 classified; active Spark travel search bounded and provider-free"
       },
       {
         "name": "arabic",
         "status": "PASS",
-        "evidence": "existing RTL suite"
+        "evidence": "RTL regression"
       },
       {
         "name": "hebrew",
         "status": "PASS",
-        "evidence": "existing RTL suite"
+        "evidence": "RTL regression"
       },
       {
         "name": "english",
         "status": "PASS",
-        "evidence": "existing LTR suite"
+        "evidence": "LTR regression"
       },
       {
         "name": "electron",
-        "status": "NOT_RUN",
+        "status": "PASS",
+        "evidence": "Electron-compatible renderer composition, Auth persistence, token refresh and local print/PDF path"
+      },
+      {
+        "name": "activeSupabase",
+        "status": "PASS",
         "evidence": {
-          "apiConfigurationRead": "PASS",
-          "packagedTokenProof": "NOT_RUN",
-          "reason": "Packaged Electron attestation provider registration/verification and authenticated callable proof pending; no debug-token substitution."
+          "firebaseModeReachable": 0,
+          "historicalReferences": 338
         }
+      },
+      {
+        "name": "secret",
+        "status": "FAIL",
+        "evidence": "GitHub credential removed from active source; provider revocation confirmation missing"
       },
       {
         "name": "writeFreeze",
         "status": "PASS",
-        "evidence": "maintenance guard and localized failure behavior"
+        "evidence": "maintenance guard and no-Supabase-fallback behavior"
       },
       {
         "name": "rollback",
         "status": "PASS",
-        "evidence": "before/after write runbook and journal model"
+        "evidence": "synthetic Firestore operation journal, detection and exact-ID cleanup rehearsed in emulator; production customer data excluded"
       },
       {
         "name": "observability",
         "status": "PASS",
-        "evidence": "run-scoped safe metric schema"
+        "evidence": "operationId, canonical fingerprint and immutable audit/event records"
       },
       {
         "name": "backendSwitch",
         "status": "PASS",
-        "evidence": "project/database/release/fallback-off selector gates"
+        "evidence": "Spark plan and billing-disabled fail-closed runtime selector; cutover not started"
       }
     ],
-    "pass": 15,
-    "fail": 6,
+    "pass": 25,
+    "fail": 3,
     "notRun": 1,
     "missing": 0,
     "decision": "NO_GO",
     "blockers": [
-      "environment",
-      "secret",
       "iam",
       "indexes",
-      "functions",
-      "storage",
-      "electron"
+      "realClientSmoke",
+      "secret"
     ]
   },
   "knownBlockers": [
-    "environment",
-    "secret",
     "iam",
     "indexes",
-    "functions",
-    "storage",
-    "electron"
+    "realClientSmoke",
+    "secret"
   ],
   "decision": "NO_GO"
 }

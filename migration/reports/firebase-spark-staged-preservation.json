@@ -1,0 +1,10 @@
+{
+  "recordedAt": "2026-09-12T16:34:31+03:00",
+  "branch": "codex/firebase-migration",
+  "startingHead": "51e163fdfeae58da951b27d5dad94a77ecce65a9",
+  "recoveryTag": "recovery/pre-firebase-spark-only-20260912-163431",
+  "stagedPathCount": 212,
+  "stagedEntriesChanged": 0,
+  "overallManifestSha256": "9a69caa8c65eec5f0d4b85a931b8463fc038290ae439f9f2b24929649b0c44d3",
+  "preservedByteForByte": true
+}

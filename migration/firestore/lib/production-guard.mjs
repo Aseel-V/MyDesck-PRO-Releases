@@ -70,9 +70,11 @@ export function assertNoSilentFallback(result) {
 }
 
 export function evaluateGo(evidence) {
-  const required = ['environment', 'secret', 'iam', 'rules', 'indexes', 'functions', 'auth', 'bulkData', 'delta',
-    'financial', 'relationships', 'events', 'storage', 'search', 'arabic', 'hebrew', 'english',
-    'electron', 'writeFreeze', 'rollback', 'observability', 'backendSwitch'];
+  const required = ['environment', 'sparkPlan', 'auth', 'iam', 'rules', 'indexes', 'quota',
+    'noFunctions', 'noStorage', 'criticalTransactions', 'ruleAccessBudget', 'maliciousClient',
+    'realClientSmoke', 'bulkData', 'delta', 'financial', 'relationships', 'events', 'search',
+    'arabic', 'hebrew', 'english', 'electron', 'activeSupabase', 'secret', 'writeFreeze',
+    'rollback', 'observability', 'backendSwitch'];
   const gates = required.map((name) => ({ name, status: evidence[name]?.status ?? 'MISSING',
     evidence: evidence[name]?.evidence ?? null }));
   const fail = gates.filter((gate) => gate.status !== 'PASS');

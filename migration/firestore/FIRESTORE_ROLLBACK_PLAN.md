@@ -1,26 +1,16 @@
-# Firestore production rollback plan
+# Firestore Spark rollback plan
 
-## Before Firestore receives production writes
+Before cutover, Supabase remains authoritative. A failed dry-run or synthetic smoke removes only exact resources in that run's cleanup manifest after confirming their `migrationRunId`; wildcard deletion is forbidden.
 
-Keep the selector on Supabase. A failed bulk copy or reconciliation deletes only documents and objects recorded by the reviewed `migrationRunId`; production UI traffic never saw them. Auth accounts created during a later import remain disabled or are deleted only when their ledger proves they were created by that run. Supabase remains authoritative.
+After Firestore begins receiving production writes, the application transaction layer writes an immutable operation/event journal in the same atomic commit. Each record carries operationId, businessId, entityId, type, actor, timestamp, result, revision, and canonical hash without secrets or unnecessary customer payload.
 
-## After Firestore receives production writes
+Rollback sequence:
 
-A config flip alone is forbidden. Enable `_postCutoverJournal` before the selector switch. Every critical Function writes the journal in the same Firestore transaction as the business mutation, using the command idempotency key. The entry contains operation ID, business ID, caller UID, entity type/ID, idempotency key, timestamp, status, before/after canonical hashes, and Storage path/hash references; it contains no customer payload, password, token, or passport plaintext.
+1. Enable maintenance and stop new financial/business commits.
+2. Capture the last Firestore journal marker and verify no pending client operation is acknowledged.
+3. Reconcile new trips, payments, installments, archive/restore, and permitted user changes from immutable events and canonical hashes.
+4. Apply a reviewed idempotent reverse adapter to Supabase in journal order.
+5. Require exact finance, event, relationship, ID, and account parity.
+6. Switch back only after rollback GO passes; otherwise remain frozen.
 
-Rollback after writes follows this sequence:
-
-1. Enable maintenance and reject new business/financial writes.
-2. Capture the final Firestore journal marker and verify no pending callable is executing.
-3. Reconcile journal entries since cutover against Firestore canonical records and immutable events.
-4. Apply an idempotent, reviewed reverse adapter to Supabase in journal order. Financial events are inserted by original stable ID; duplicate IDs/idempotency keys are treated as already applied only after canonical hash equality.
-5. Reconcile new Firebase Storage objects to Supabase Storage by path and SHA-256 before restoring any attachment-visible flow.
-6. Reconcile Auth changes. Never change UIDs; reset/disable state is applied deliberately, and Supabase Auth remains present throughout the observation window.
-7. Require exact finance, event, relationship, ID, timestamp, and Storage parity.
-8. Switch the selector back only after the rollback GO engine returns GO, then disable maintenance.
-
-Any missing journal entry, hash disagreement, ambiguous external side effect, or financial mismatch keeps the system frozen. WhatsApp, email, payment providers, and webhooks remain quarantined during migration, preventing irreversible effects from bulk writes.
-
-## Journal retention and access
-
-Clients have no access. The Functions runtime may create/read entries; migration reconciliation may list them. Update/delete is denied until the rollback window closes. Retention ends only after Supabase read-only retirement is separately approved.
+Historical Storage bytes are unchanged in Supabase and need no reverse copy. Functions have no runtime queue or external side effect to drain. Synthetic emulator rehearsal proves Firestore-only detection and exact-ID cleanup; real-project rehearsal remains dependent on the environment gates.

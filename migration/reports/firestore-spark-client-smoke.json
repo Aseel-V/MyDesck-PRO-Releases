@@ -1,0 +1,16 @@
+{
+  "generatedAt": "2026-09-12T14:25:12.268Z",
+  "target": "EMULATOR",
+  "status": "PASS",
+  "clientSdk": true,
+  "auth": "PASS",
+  "trip": "PASS",
+  "payment": "PASS",
+  "installment": "PASS",
+  "idempotency": "PASS",
+  "crossTenant": "DENIED",
+  "financialTamper": "DENIED",
+  "selfAdmin": "DENIED",
+  "cleanup": "PASS",
+  "productionCustomerWrites": 0
+}

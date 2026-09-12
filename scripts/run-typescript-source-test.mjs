@@ -1,6 +1,5 @@
 import { existsSync } from 'node:fs';
 import { mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { build } from 'esbuild';
@@ -8,7 +7,9 @@ import { build } from 'esbuild';
 const entryPoint = process.argv[2];
 if (!entryPoint) throw new Error('Usage: node scripts/run-typescript-source-test.mjs <test-entry.mjs>');
 
-const directory = await mkdtemp(join(tmpdir(), 'mydesck-source-test-'));
+// Keep the temporary bundle under the repository so Node can resolve externalized
+// packages from this project's node_modules while the directory is removed in finally.
+const directory = await mkdtemp(join(resolve('.'), '.source-test-'));
 const outfile = join(directory, 'test.mjs');
 
 try {
@@ -16,6 +17,7 @@ try {
     entryPoints: [entryPoint],
     outfile,
     bundle: true,
+    packages: 'external',
     platform: 'node',
     format: 'esm',
     target: 'node20',

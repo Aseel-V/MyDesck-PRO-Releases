@@ -8,6 +8,8 @@ export function selectBackend(env: Record<string, unknown>, host: string): Backe
     if (env.VITE_FIREBASE_PROJECT_ID !== 'mydesckpro' || env.VITE_FIRESTORE_DATABASE_ID !== 'default') throw Error('REAL_FIRESTORE_TARGET_MISMATCH');
     if (env.VITE_FIRESTORE_PRODUCTION_RELEASE !== 'mydesck-firestore-v1') throw Error('REAL_FIRESTORE_RELEASE_NOT_APPROVED');
     if (env.VITE_SUPABASE_FALLBACK_DISABLED !== 'true') throw Error('SUPABASE_FALLBACK_MUST_BE_DISABLED');
+    if (env.VITE_FIREBASE_EXPECTED_PLAN !== 'SPARK') throw Error('FIREBASE_SPARK_PLAN_REQUIRED');
+    if (env.VITE_FIREBASE_BILLING_ENABLED !== 'false') throw Error('FIREBASE_BILLING_MUST_REMAIN_DISABLED');
     return 'firestore';
   }
   // Emulator mode is never accepted by a production build.

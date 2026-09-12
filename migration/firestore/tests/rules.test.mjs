@@ -53,26 +53,30 @@ async function loadRules(content) {
 
 const PRODUCTION_RULES = readFileSync(RULES_PATH, 'utf8');
 
-const amount = (unitsText, scale = 2) => ({ unitsText, scale, units: Number(unitsText) });
+const amount = (unitsText, scale = 2) => ({ unitsText, scale, units: Number(unitsText), currency: 'ILS' });
 
 /** Fixtures are seeded with the admin bypass, never through the rules. */
 const FIXTURES = [
-  ['users', UID_A, { uid: UID_A, role: 'user', isSuspended: false, canViewFinancials: false,
+  ['users', UID_A, { uid: UID_A, userId: UID_A, role: 'user', isSuspended: false, canViewFinancials: false,
     fullName: 'Alice', businessId: BUSINESS_A, schemaVersion: 1 }],
-  ['users', UID_B, { uid: UID_B, role: 'user', isSuspended: false, canViewFinancials: false,
+  ['users', UID_B, { uid: UID_B, userId: UID_B, role: 'user', isSuspended: false, canViewFinancials: false,
     fullName: 'Bob', businessId: BUSINESS_B, schemaVersion: 1 }],
-  ['businesses', BUSINESS_A, { ownerUid: UID_A, businessName: 'Alice Travel', isSuspended: false }],
-  ['businesses', BUSINESS_B, { ownerUid: UID_B, businessName: 'Bob Travel', isSuspended: false }],
+  ['businesses', BUSINESS_A, { ownerUid: UID_A, businessId: BUSINESS_A, businessName: 'Alice Travel', isSuspended: false }],
+  ['businesses', BUSINESS_B, { ownerUid: UID_B, businessId: BUSINESS_B, businessName: 'Bob Travel', isSuspended: false }],
   ['trips', TRIP_A, { ownerUid: UID_A, businessId: BUSINESS_A, clientName: 'Client',
     destination: 'Paris', isDeleted: false, status: 'active', paymentStatus: 'unpaid',
-    salePrice: amount('91843'), amountPaid: amount('0'), schemaVersion: 1 }],
-  ['tripPaymentPlans', PLAN_A, { ownerUid: UID_A, tripId: TRIP_A, currency: 'ILS',
+    id: TRIP_A, userId: UID_A, currency: 'ILS', revision: 1, moneyScale: 2,
+    salePriceMinor: 91843, wholesaleCostMinor: 70000, amountPaidMinor: 0,
+    amountDueMinor: 91843, profitMinor: 21843,
+    salePrice: amount('91843'), wholesaleCost: amount('70000'), amountPaid: amount('0'),
+    amountDue: amount('91843'), profit: amount('21843'), schemaVersion: 1 }],
+  ['tripPaymentPlans', PLAN_A, { id: PLAN_A, ownerUid: UID_A, businessId: BUSINESS_A, tripId: TRIP_A, currency: 'ILS',
     cardTotalMinor: 91843, cashTotalMinor: 0 }],
-  ['tripInstallments', INSTALLMENT_A, { ownerUid: UID_A, tripId: TRIP_A,
+  ['tripInstallments', INSTALLMENT_A, { id: INSTALLMENT_A, ownerUid: UID_A, businessId: BUSINESS_A, tripId: TRIP_A,
     paymentPlanId: PLAN_A, installmentNumber: 1, expectedAmountMinor: 91843 }],
-  ['tripFinancialAudit', AUDIT_A, { ownerUid: UID_A, tripId: TRIP_A, sequence: 1,
+  ['tripFinancialAudit', AUDIT_A, { ownerUid: UID_A, businessId: BUSINESS_A, tripId: TRIP_A, sequence: 1,
     changedField: 'salePrice' }],
-  ['tripPaymentEvents', EVENT_A, { ownerUid: UID_A, tripId: TRIP_A, paymentPlanId: PLAN_A,
+  ['tripPaymentEvents', EVENT_A, { ownerUid: UID_A, businessId: BUSINESS_A, tripId: TRIP_A, paymentPlanId: PLAN_A,
     sequence: 1, eventType: 'created' }],
   ['idempotency', `${UID_A}__req-1`, { ownerUid: UID_A, tripId: TRIP_A }],
 ];
@@ -133,7 +137,9 @@ test('a query that is not owner-constrained fails rather than returning a subset
   // must be refused outright, and the constrained form must succeed.
   assert.equal(isDenied(await alice.query('trips')), true,
     'an unconstrained trips query must fail');
-  const constrained = await alice.query('trips', [['ownerUid', 'EQUAL', UID_A]]);
+  const constrained = await alice.query('trips', [
+    ['ownerUid', 'EQUAL', UID_A], ['businessId', 'EQUAL', BUSINESS_A],
+  ]);
   assert.equal(isAllowed(constrained), true, 'the owner-constrained query must succeed');
   assert.ok(constrained.documents >= 1);
   // Constraining to someone else's uid is denied, not silently empty.
@@ -173,24 +179,24 @@ test('privilege escalation is denied in every shape', async () => {
 test('a new user cannot be created already privileged', async () => {
   const newUser = RulesClient.asUser('rules-test-new-user', options);
   assert.equal(isDenied(await newUser.create('users', 'rules-test-new-user',
-    { uid: 'rules-test-new-user', role: 'admin', isSuspended: false,
-      canViewFinancials: false, fullName: 'X' })), true, 'created as admin');
+    { uid: 'rules-test-new-user', userId: 'rules-test-new-user', role: 'admin', isSuspended: false,
+      canViewFinancials: false, businessId: null, fullName: 'X' })), true, 'created as admin');
   assert.equal(isDenied(await newUser.create('users', 'rules-test-new-user',
-    { uid: 'rules-test-new-user', role: 'user', isSuspended: false,
-      canViewFinancials: true, fullName: 'X' })), true, 'created with financial visibility');
+    { uid: 'rules-test-new-user', userId: 'rules-test-new-user', role: 'user', isSuspended: false,
+      canViewFinancials: true, businessId: null, fullName: 'X' })), true, 'created with financial visibility');
   assert.equal(isDenied(await newUser.create('users', UID_A,
-    { uid: UID_A, role: 'user', isSuspended: false, canViewFinancials: false,
-      fullName: 'X' })), true, 'created under another identity');
+    { uid: UID_A, userId: UID_A, role: 'user', isSuspended: false, canViewFinancials: false,
+      businessId: null, fullName: 'X' })), true, 'created under another identity');
   assert.equal(isAllowed(await newUser.create('users', 'rules-test-new-user',
-    { uid: 'rules-test-new-user', role: 'user', isSuspended: false,
-      canViewFinancials: false, fullName: 'X' })), true, 'the legitimate signup shape');
+    { uid: 'rules-test-new-user', userId: 'rules-test-new-user', role: 'user', isSuspended: false,
+      canViewFinancials: false, businessId: null, fullName: 'X' })), true, 'the legitimate signup shape');
 });
 
 test('an unknown field cannot be smuggled onto a user document', async () => {
   const newUser = RulesClient.asUser('rules-test-new-user-2', options);
   assert.equal(isDenied(await newUser.create('users', 'rules-test-new-user-2',
-    { uid: 'rules-test-new-user-2', role: 'user', isSuspended: false,
-      canViewFinancials: false, fullName: 'X', isSuperuser: true })), true);
+    { uid: 'rules-test-new-user-2', userId: 'rules-test-new-user-2', role: 'user', isSuspended: false,
+      canViewFinancials: false, businessId: null, fullName: 'X', isSuperuser: true })), true);
 });
 
 test('money on a trip is not client-writable', async () => {
@@ -201,8 +207,9 @@ test('money on a trip is not client-writable', async () => {
     assert.equal(isDenied(await alice.update(`trips/${TRIP_A}`, patch)), true,
       `${field} must be server-owned`);
   }
-  // A non-financial edit by the owner is still allowed.
-  assert.equal(isAllowed(await alice.update(`trips/${TRIP_A}`, { destination: 'Rome' })), true);
+  // A detached edit is denied too: legitimate edits carry an immutable
+  // sparkOperations document in the same atomic request.
+  assert.equal(isDenied(await alice.update(`trips/${TRIP_A}`, { destination: 'Rome' })), true);
 });
 
 test('payment plans and installments are read-only to clients', async () => {

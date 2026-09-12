@@ -55,7 +55,7 @@ test('fallback, triggers and operational evidence fail closed', () => {
 
 test('missing evidence and unresolved secret always produce NO_GO', () => {
   assert.equal(evaluateGo({}).decision, 'NO_GO');
-  const all = Object.fromEntries(['environment','secret','iam','rules','indexes','functions','auth','bulkData','delta','financial','relationships','events','storage','search','arabic','hebrew','english','electron','writeFreeze','rollback','observability','backendSwitch'].map((x) => [x,{status:'PASS'}]));
+  const all = Object.fromEntries(['environment','sparkPlan','auth','iam','rules','indexes','quota','noFunctions','noStorage','criticalTransactions','ruleAccessBudget','maliciousClient','realClientSmoke','bulkData','delta','financial','relationships','events','search','arabic','hebrew','english','electron','activeSupabase','secret','writeFreeze','rollback','observability','backendSwitch'].map((x) => [x,{status:'PASS'}]));
   assert.equal(evaluateGo(all).decision, 'GO');
   all.secret = { status: 'FAIL' };
   assert.equal(evaluateGo(all).decision, 'NO_GO');

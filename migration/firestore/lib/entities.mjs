@@ -13,6 +13,7 @@
  */
 
 import { SCHEMA_VERSION, TRANSFORM_VERSION } from './table-map.mjs';
+import { decimalStringToScaledInteger } from './exact-decimal.mjs';
 
 export { SCHEMA_VERSION, TRANSFORM_VERSION };
 
@@ -60,6 +61,14 @@ const common = (row) => ({
   ownerUid: row.user_id,
   isDeleted: row.deleted_at !== null && row.deleted_at !== undefined,
 });
+
+const minor = (value, field) => {
+  const units = decimalStringToScaledInteger(String(value ?? '0'), 2);
+  if (units > BigInt(Number.MAX_SAFE_INTEGER) || units < BigInt(Number.MIN_SAFE_INTEGER)) {
+    throw new Error(`SPARK_TRANSACTIONAL_MONEY_OUT_OF_RANGE: ${field}`);
+  }
+  return Number(units);
+};
 
 export const ENTITIES = {
   user_profiles: {
@@ -140,6 +149,13 @@ export const ENTITIES = {
     extra: (row, ctx) => ({
       ...common(row),
       businessId: ctx.businessByOwner.get(row.user_id) ?? null,
+      moneyScale: 2,
+      salePriceMinor: minor(row.sale_price, 'trips.sale_price'),
+      wholesaleCostMinor: minor(row.wholesale_cost, 'trips.wholesale_cost'),
+      amountPaidMinor: minor(row.amount_paid, 'trips.amount_paid'),
+      amountDueMinor: minor(row.amount_due, 'trips.amount_due'),
+      profitMinor: minor(row.profit, 'trips.profit'),
+      revision: 0,
     }),
     references: [{ field: 'deleted_by', collection: 'users', required: false }],
     ownerField: 'user_id',

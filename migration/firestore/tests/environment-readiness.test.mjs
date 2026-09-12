@@ -10,8 +10,8 @@ const live = required.map((s,i) => ({ ...s, name: `${DATABASE}/collectionGroups/
 const response = indexes => ({ http: 200, data: { indexes } });
 const run = 'migration-test--production-readiness-12345678-1234-1234-1234-123456789abc';
 const ready = () => ({ project: PROJECT, database: DATABASE, backend: 'supabase', migrationRunId: run,
-  billingEnabled: true, indexes: indexReadiness(required,response(live)), iam: 'PASS', rules: 'PASS',
-  functions: 'PASS', storage: 'PASS', secret: 'PASS', electron: 'PASS' });
+  billingEnabled: false, sparkPlan: 'PASS', quota: 'PASS', indexes: indexReadiness(required,response(live)),
+  iam: 'PASS', rules: 'PASS', secret: 'PASS' });
 const entry = () => ({ kind: 'firestore', path: `migration-test/${run}--trip`, migrationRunId: run,
   createdByThisRun: true, creationReceipt: 'create-succeeded-1', version: 'update-time-1' });
 const manifest = resource => ({ project: PROJECT, database: DATABASE, migrationRunId: run, resources: [resource] });
@@ -34,13 +34,13 @@ test('implicit document-name ordering is normalized without accepting reversed c
   indexes[0].fields.at(-1).order='DESCENDING';
   assert.equal(indexReadiness(required,response(indexes))[0].state,'MISSING');
 });
-test('every capability and secret is required before synthetic network writes', () => {
+test('every Spark capability and secret is required before synthetic network writes', () => {
   assert.doesNotThrow(()=>assertSyntheticPreflight(ready()));
-  for (const key of ['iam','rules','functions','storage','secret','electron']) {
+  for (const key of ['iam','rules','secret','sparkPlan','quota']) {
     assert.throws(()=>assertSyntheticPreflight({...ready(),[key]:'NOT_RUN'}),/CAPABILITY_BLOCKED/);
     assert.throws(()=>assertSyntheticPreflight({...ready(),[key]:undefined}),/CAPABILITY_BLOCKED/);
   }
-  assert.throws(()=>assertSyntheticPreflight({...ready(),billingEnabled:false}),/BILLING/);
+  assert.throws(()=>assertSyntheticPreflight({...ready(),billingEnabled:true}),/BILLING/);
   assert.throws(()=>assertSyntheticPreflight({...ready(),indexes:[]}),/INDEXES/);
 });
 test('production identity and backend are fixed for the smoke', () => {
@@ -88,17 +88,17 @@ test('IAM defaults to plan and exact binding approval is mandatory', () => {
   const p=iamPlan('migration-writer');
   assert.equal(assertIamApply({},p),false);
   assert.throws(()=>assertIamApply({mode:'apply'},p),/APPROVAL/);
-  assert.throws(()=>assertIamApply({mode:'apply',approval:iamPlan('functions-runtime').approvalSha256},p),/APPROVAL/);
+  assert.throws(()=>assertIamApply({mode:'apply',approval:iamPlan('index-deployer').approvalSha256},p),/APPROVAL/);
   assert.equal(assertIamApply({mode:'apply',approval:p.approvalSha256},p),true);
   assert.throws(()=>assertIamApply({mode:'force'},p),/MODE/);
   assert.throws(()=>iamPlan('owner'),/UNREVIEWED/);
 });
-test('IAM writer and runtime use separate identities and exact named database conditions', () => {
-  const writer=iamPlan('migration-writer'), runtime=iamPlan('functions-runtime');
-  assert.notEqual(writer.binding.member,runtime.binding.member);
+test('IAM writer and deployment identities remain separate', () => {
+  const writer=iamPlan('migration-writer'), deployer=iamPlan('index-deployer');
+  assert.notEqual(writer.binding.member,deployer.binding.member);
   assert.equal(writer.binding.role,'roles/datastore.user');
   assert.ok(writer.binding.condition.includes(`resource.name=="${DATABASE}"`));
-  assert.equal(runtime.binding.condition,writer.binding.condition);
+  assert.equal(deployer.binding.role,'roles/datastore.indexAdmin');
   assert.ok(writer.remove.includes('remove-iam-policy-binding'));
   assert.ok(!writer.remove.includes('--all'));
 });

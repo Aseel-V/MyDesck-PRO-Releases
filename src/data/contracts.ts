@@ -25,5 +25,6 @@ export interface DocumentRepository { listDocuments(tripId: string): Promise<Met
 export interface AttachmentRepository { listAttachments(tripId: string): Promise<Metadata[]> }
 export interface AuditRepository { listAuditHistory(tripId: string): Promise<AuditEvent[]> }
 export interface AnalyticsRepository { getTravelAnalytics(): Promise<unknown> }
+/** Legacy rollback adapter only. The Firebase Spark runtime does not implement this interface. */
 export interface StorageRepository { readPrivateFile(path: string): Promise<Blob>; uploadPrivateFile(path: string, file: Blob): Promise<string> }
 export type TravelRepositories = BusinessRepository & TripRepository & TravelerRepository & PaymentRepository & PaymentPlanRepository & InstallmentRepository & FinancialEventRepository & DocumentRepository & AttachmentRepository & AuditRepository & AnalyticsRepository;

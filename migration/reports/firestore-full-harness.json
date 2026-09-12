@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-12T08:50:42.288Z",
+  "generatedAt": "2026-09-12T14:25:12.427Z",
   "status": "PASS",
   "suites": [
     {
@@ -63,6 +63,12 @@
       "tests": 0
     },
     {
+      "label": "Spark architecture guards",
+      "file": "migration/firestore/tests/spark-architecture.test.mjs",
+      "outcome": "PASS",
+      "tests": 5
+    },
+    {
       "label": "production preparation guards",
       "file": "migration/firestore/tests/production-preparation.test.mjs",
       "outcome": "PASS",
@@ -83,12 +89,6 @@
     {
       "label": "production cutover controls",
       "file": "scripts/test-production-cutover-controls.ts",
-      "outcome": "PASS",
-      "tests": 0
-    },
-    {
-      "label": "production dry-run orchestrator",
-      "file": "migration/firestore/tools/production-dry-run.mjs",
       "outcome": "PASS",
       "tests": 0
     },
@@ -121,14 +121,26 @@
       "file": "migration/firestore/tests/client-auth-emulator.test.mjs",
       "outcome": "PASS",
       "tests": 1
+    },
+    {
+      "label": "Spark client SDK transactions",
+      "file": "scripts/test-spark-client-transactions.mjs",
+      "outcome": "PASS",
+      "tests": 0
+    },
+    {
+      "label": "production dry-run orchestrator",
+      "file": "migration/firestore/tools/production-dry-run.mjs",
+      "outcome": "PASS",
+      "tests": 0
     }
   ],
   "totals": {
-    "steps": 21,
-    "passed": 21,
+    "steps": 23,
+    "passed": 23,
     "failed": 0,
-    "nodeTestCases": 189,
-    "assertionCallSites": 607,
+    "nodeTestCases": 194,
+    "assertionCallSites": 649,
     "fullCorpusApplicationAssertions": 1023,
     "searchCorpusCases": 12,
     "fullCorpusSecurityChecks": 50,
