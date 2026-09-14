@@ -147,16 +147,39 @@ export const STAGE_GATES = Object.freeze({
   POST_CUTOVER_HEALTHY: ['productionSmoke', 'postCutoverFinancialCheck', 'rollbackJournal'],
 });
 
-const STAGE_ORDER = ['HYBRID_STORAGE_AUTH_GO', 'STORAGE_ISOLATION_GO',
-  'RESTAURANT_STAFF_AUTH_MODEL_GO', 'PRODUCT_PARITY_GO', 'DRY_RUN_GO', 'BULK_COPY_GO',
-  'CUTOVER_GO', 'POST_CUTOVER_HEALTHY'];
+/**
+ * Which stages each stage depends on.
+ *
+ * The three architecture blockers are peers, not a chain: Storage isolation is a property of
+ * the code, staff identity is unrelated to Storage, and neither waits on third-party auth.
+ * Chaining them would hide a gate that genuinely passes behind an unrelated failure. Everything
+ * from PRODUCT_PARITY_GO onward does depend on all three, and on its own predecessors.
+ */
+const STAGE_DEPENDENCIES = Object.freeze({
+  HYBRID_STORAGE_AUTH_GO: [],
+  STORAGE_ISOLATION_GO: [],
+  RESTAURANT_STAFF_AUTH_MODEL_GO: [],
+  PRODUCT_PARITY_GO: ['HYBRID_STORAGE_AUTH_GO', 'STORAGE_ISOLATION_GO', 'RESTAURANT_STAFF_AUTH_MODEL_GO'],
+  DRY_RUN_GO: ['PRODUCT_PARITY_GO'],
+  BULK_COPY_GO: ['DRY_RUN_GO'],
+  CUTOVER_GO: ['BULK_COPY_GO'],
+  POST_CUTOVER_HEALTHY: ['CUTOVER_GO'],
+});
+
+const STAGE_ORDER = Object.keys(STAGE_DEPENDENCIES);
 
 export function evaluateStagedGo(evidence) {
   const stages = {};
-  let inherited = [];
+  const resolved = {};
+  const gatesFor = (stage) => {
+    if (resolved[stage]) return resolved[stage];
+    const inherited = STAGE_DEPENDENCIES[stage].flatMap(gatesFor);
+    resolved[stage] = [...new Set([...inherited, ...STAGE_GATES[stage]])];
+    return resolved[stage];
+  };
   for (const stage of STAGE_ORDER) {
     const owned = STAGE_GATES[stage];
-    const names = [...new Set([...inherited, ...owned])];
+    const names = gatesFor(stage);
     const gates = names.map((name) => ({ name, status: evidence[name]?.status ?? 'MISSING' }));
     const unmet = gates.filter((gate) => gate.status !== 'PASS');
     stages[stage] = {
@@ -168,8 +191,8 @@ export function evaluateStagedGo(evidence) {
       missing: unmet.filter((gate) => gate.status === 'MISSING').length,
       decision: unmet.length ? 'NO_GO' : 'GO',
       blockers: unmet.map((gate) => gate.name + ':' + gate.status),
+      dependsOn: STAGE_DEPENDENCIES[stage],
     };
-    inherited = names;
   }
   return stages;
 }

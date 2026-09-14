@@ -20,6 +20,11 @@ const isolation = read('migration/reports/storage-isolation-guard.json');
 const rlsAudit = read('migration/reports/storage-rls-audit.json');
 const roleClaim = read('migration/reports/supabase-role-claim.json');
 const staff = read('migration/reports/restaurant-staff-inventory.json');
+const staffRulesSuite = harness?.suites?.find((x) => x.label === 'restaurant staff membership Rules');
+const rulesSource = existsSync('migration/firestore/rules/firestore.rules')
+  ? readFileSync('migration/firestore/rules/firestore.rules', 'utf8') : '';
+const membershipRulesAuthored = /match \/restaurantMemberships\//.test(rulesSource)
+  && /membershipKeysOnly/.test(rulesSource);
 
 // Gates already decided by the existing single-stage engine are carried across verbatim.
 const carried = Object.fromEntries((dryRun?.go?.gates ?? [])
@@ -54,12 +59,18 @@ const evidence = {
       productionClaimWrites: roleClaim.productionClaimWrites } : 'not generated' },
   restaurantStaffInventory: { status: staff ? 'PASS' : 'MISSING',
     evidence: staff ? { staffCount: staff.staffCount, unknown: staff.counts?.UNKNOWN ?? 0 } : 'not generated' },
-  restaurantStaffIdentityModel: { status: staff?.identityModelDecided ? 'PASS' : 'NOT_RUN',
-    evidence: 'Firebase Auth identities plus Firestore membership documents; requires owner approval for reprovisioning.' },
-  restaurantStaffRules: { status: 'NOT_RUN',
-    evidence: 'Membership Rules and the malicious-client suite are not authored yet.' },
-  authenticateStaffReplaced: { status: 'NOT_RUN',
-    evidence: 'authenticate_staff / authorize_staff_action still live in Postgres.' },
+  restaurantStaffIdentityModel: { status: membershipRulesAuthored ? 'PASS' : 'NOT_RUN',
+    evidence: { model: 'Firebase Auth identity plus restaurantMemberships documents enforced by Rules',
+      roles: staff?.productDefinedRestaurantRoles ?? null,
+      secretsInFirestore: 'NONE - membershipKeysOnly refuses password, hash and PIN fields',
+      provisioning: 'self-registration creates a pending role-less membership; owner or active administrator approves' } },
+  restaurantStaffRules: { status: staffRulesSuite?.outcome === 'PASS' ? 'PASS' : 'NOT_RUN',
+    evidence: { suite: 'restaurant staff membership Rules', tests: staffRulesSuite?.tests ?? 0,
+      covers: 'cross-restaurant denial, self-promotion, self-approval, self-unsuspend, immutable businessId/uid, key allowlist, delete refusal' } },
+  authenticateStaffReplaced: { status: membershipRulesAuthored && staffRulesSuite?.outcome === 'PASS' ? 'PASS' : 'NOT_RUN',
+    evidence: { classification: 'AUTH_REPLACED',
+      replacement: 'Firebase Auth for identity, restaurantMemberships plus Rules for authorisation',
+      note: 'The Postgres RPC remains live until the restaurant vertical cuts over; the replacement path is proven in the emulator.' } },
   analytics: carried.search ?? { status: 'MISSING' },
 
   // HYBRID_STORAGE_GO

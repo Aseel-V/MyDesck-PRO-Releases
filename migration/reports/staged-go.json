@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-09-14T08:33:05.335Z",
+  "generatedAt": "2026-09-14T09:17:25.115Z",
   "readOnly": true,
   "productionMutations": 0,
   "architecture": "FIREBASE_AUTH_FIRESTORE_PLUS_SUPABASE_STORAGE_ONLY",
   "inputs": {
-    "activeProductParity": "2026-09-14T08:07:37.190Z",
+    "activeProductParity": "2026-09-14T09:10:51.741Z",
     "hybridStorageAuthProbe": "2026-09-14T08:05:39.785Z",
     "liveVerticalInventory": "2026-09-14T08:06:56.073Z",
-    "dryRun": "2026-09-14T07:49:04.477Z",
-    "harness": "PASS 24/24"
+    "dryRun": "2026-09-14T09:16:52.402Z",
+    "harness": "PASS 25/25"
   },
   "verticals": [
     {
@@ -72,9 +72,9 @@
     "shippedProduct": {
       "database": 167,
       "rpc": 42,
-      "auth": 12,
+      "auth": 13,
       "databaseRealtime": 2,
-      "storage": 11
+      "storage": 9
     },
     "firebaseRoot": {
       "supabaseDatabase": 0,
@@ -105,125 +105,114 @@
         "hybridStorageAuth:FAIL",
         "storageRlsAudit:FAIL",
         "storageTenantIsolation:NOT_RUN"
-      ]
+      ],
+      "dependsOn": []
     },
     "STORAGE_ISOLATION_GO": {
       "ownedGates": 1,
-      "evaluatedGates": 6,
-      "pass": 2,
-      "fail": 3,
-      "notRun": 1,
+      "evaluatedGates": 1,
+      "pass": 1,
+      "fail": 0,
+      "notRun": 0,
       "missing": 0,
-      "decision": "NO_GO",
-      "blockers": [
-        "hybridStorageAuth:FAIL",
-        "storageRlsAudit:FAIL",
-        "storageTenantIsolation:NOT_RUN",
-        "storageIsolation:FAIL"
-      ]
+      "decision": "GO",
+      "blockers": [],
+      "dependsOn": []
     },
     "RESTAURANT_STAFF_AUTH_MODEL_GO": {
       "ownedGates": 4,
-      "evaluatedGates": 10,
-      "pass": 3,
-      "fail": 3,
-      "notRun": 4,
+      "evaluatedGates": 4,
+      "pass": 4,
+      "fail": 0,
+      "notRun": 0,
       "missing": 0,
-      "decision": "NO_GO",
-      "blockers": [
-        "hybridStorageAuth:FAIL",
-        "storageRlsAudit:FAIL",
-        "storageTenantIsolation:NOT_RUN",
-        "storageIsolation:FAIL",
-        "restaurantStaffIdentityModel:NOT_RUN",
-        "restaurantStaffRules:NOT_RUN",
-        "authenticateStaffReplaced:NOT_RUN"
-      ]
+      "decision": "GO",
+      "blockers": [],
+      "dependsOn": []
     },
     "PRODUCT_PARITY_GO": {
       "ownedGates": 23,
       "evaluatedGates": 33,
-      "pass": 25,
-      "fail": 4,
-      "notRun": 4,
+      "pass": 28,
+      "fail": 3,
+      "notRun": 2,
       "missing": 0,
       "decision": "NO_GO",
       "blockers": [
         "hybridStorageAuth:FAIL",
         "storageRlsAudit:FAIL",
         "storageTenantIsolation:NOT_RUN",
-        "storageIsolation:FAIL",
-        "restaurantStaffIdentityModel:NOT_RUN",
-        "restaurantStaffRules:NOT_RUN",
-        "authenticateStaffReplaced:NOT_RUN",
-        "activeProductParity:FAIL"
+        "activeProductParity:FAIL",
+        "electron:NOT_RUN"
+      ],
+      "dependsOn": [
+        "HYBRID_STORAGE_AUTH_GO",
+        "STORAGE_ISOLATION_GO",
+        "RESTAURANT_STAFF_AUTH_MODEL_GO"
       ]
     },
     "DRY_RUN_GO": {
       "ownedGates": 8,
       "evaluatedGates": 41,
-      "pass": 29,
-      "fail": 7,
-      "notRun": 5,
+      "pass": 32,
+      "fail": 6,
+      "notRun": 3,
       "missing": 0,
       "decision": "NO_GO",
       "blockers": [
         "hybridStorageAuth:FAIL",
         "storageRlsAudit:FAIL",
         "storageTenantIsolation:NOT_RUN",
-        "storageIsolation:FAIL",
-        "restaurantStaffIdentityModel:NOT_RUN",
-        "restaurantStaffRules:NOT_RUN",
-        "authenticateStaffReplaced:NOT_RUN",
         "activeProductParity:FAIL",
+        "electron:NOT_RUN",
         "iam:FAIL",
         "indexes:FAIL",
         "realClientSmoke:NOT_RUN",
         "secret:FAIL"
+      ],
+      "dependsOn": [
+        "PRODUCT_PARITY_GO"
       ]
     },
     "BULK_COPY_GO": {
       "ownedGates": 2,
       "evaluatedGates": 43,
-      "pass": 29,
-      "fail": 7,
-      "notRun": 5,
+      "pass": 32,
+      "fail": 6,
+      "notRun": 3,
       "missing": 2,
       "decision": "NO_GO",
       "blockers": [
         "hybridStorageAuth:FAIL",
         "storageRlsAudit:FAIL",
         "storageTenantIsolation:NOT_RUN",
-        "storageIsolation:FAIL",
-        "restaurantStaffIdentityModel:NOT_RUN",
-        "restaurantStaffRules:NOT_RUN",
-        "authenticateStaffReplaced:NOT_RUN",
         "activeProductParity:FAIL",
+        "electron:NOT_RUN",
         "iam:FAIL",
         "indexes:FAIL",
         "realClientSmoke:NOT_RUN",
         "secret:FAIL",
         "productionSourceSnapshot:MISSING",
         "productionReconciliation:MISSING"
+      ],
+      "dependsOn": [
+        "DRY_RUN_GO"
       ]
     },
     "CUTOVER_GO": {
       "ownedGates": 3,
       "evaluatedGates": 46,
-      "pass": 29,
-      "fail": 7,
-      "notRun": 5,
+      "pass": 32,
+      "fail": 6,
+      "notRun": 3,
       "missing": 5,
       "decision": "NO_GO",
       "blockers": [
         "hybridStorageAuth:FAIL",
         "storageRlsAudit:FAIL",
         "storageTenantIsolation:NOT_RUN",
-        "storageIsolation:FAIL",
-        "restaurantStaffIdentityModel:NOT_RUN",
-        "restaurantStaffRules:NOT_RUN",
-        "authenticateStaffReplaced:NOT_RUN",
         "activeProductParity:FAIL",
+        "electron:NOT_RUN",
         "iam:FAIL",
         "indexes:FAIL",
         "realClientSmoke:NOT_RUN",
@@ -233,25 +222,25 @@
         "productionAuthImport:MISSING",
         "finalDelta:MISSING",
         "finalReconciliation:MISSING"
+      ],
+      "dependsOn": [
+        "BULK_COPY_GO"
       ]
     },
     "POST_CUTOVER_HEALTHY": {
       "ownedGates": 3,
       "evaluatedGates": 49,
-      "pass": 29,
-      "fail": 7,
-      "notRun": 5,
+      "pass": 32,
+      "fail": 6,
+      "notRun": 3,
       "missing": 8,
       "decision": "NO_GO",
       "blockers": [
         "hybridStorageAuth:FAIL",
         "storageRlsAudit:FAIL",
         "storageTenantIsolation:NOT_RUN",
-        "storageIsolation:FAIL",
-        "restaurantStaffIdentityModel:NOT_RUN",
-        "restaurantStaffRules:NOT_RUN",
-        "authenticateStaffReplaced:NOT_RUN",
         "activeProductParity:FAIL",
+        "electron:NOT_RUN",
         "iam:FAIL",
         "indexes:FAIL",
         "realClientSmoke:NOT_RUN",
@@ -264,6 +253,9 @@
         "productionSmoke:MISSING",
         "postCutoverFinancialCheck:MISSING",
         "rollbackJournal:MISSING"
+      ],
+      "dependsOn": [
+        "CUTOVER_GO"
       ]
     }
   },
