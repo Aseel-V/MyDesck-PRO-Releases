@@ -1,0 +1,45 @@
+{
+  "generatedAt": "2026-09-14T08:05:39.785Z",
+  "readOnly": true,
+  "productionMutations": 0,
+  "bytesRead": 0,
+  "projectHostPrefix": "pubugnfa…",
+  "privateBucket": "business-signatures",
+  "algorithms": {
+    "RS256": {
+      "http": 400,
+      "message": "\"alg\" (Algorithm) Header Parameter value not allowed",
+      "algorithmAccepted": false
+    },
+    "HS256": {
+      "http": 400,
+      "message": "signature verification failed",
+      "algorithmAccepted": true
+    },
+    "ES256": {
+      "http": 400,
+      "message": "\"alg\" (Algorithm) Header Parameter value not allowed",
+      "algorithmAccepted": false
+    },
+    "none": {
+      "http": 400,
+      "message": "\"alg\" (Algorithm) Header Parameter value not allowed",
+      "algorithmAccepted": false
+    }
+  },
+  "acceptedAlgorithms": [
+    "HS256"
+  ],
+  "gotrueExternalProviders": [
+    "email"
+  ],
+  "anonymousPrivateRead": {
+    "http": 400,
+    "denied": true
+  },
+  "firebaseThirdPartyAuthEnabled": false,
+  "clientPassesFirebaseToken": false,
+  "storageRepositoryUsesSupabaseAuth": true,
+  "decision": "HYBRID_STORAGE_AUTH_BLOCKED",
+  "reason": "The Storage service accepts HS256 only, so it validates against the project JWT secret rather than a third-party JWKS. Firebase ID tokens are RS256 and are rejected at the algorithm header. Minting an HS256 token requires the project JWT secret, which cannot ship inside Electron, and the Spark constraint forbids a server to mint one."
+}
