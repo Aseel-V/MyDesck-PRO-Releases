@@ -23,6 +23,7 @@ const suites = [
   ['production cutover controls', 'scripts/test-production-cutover-controls.ts',
     ['scripts/run-typescript-source-test.mjs', 'scripts/test-production-cutover-controls.ts']],
   ['Firestore Rules', 'migration/firestore/tests/rules.test.mjs'],
+  ['restaurant staff membership Rules', 'migration/firestore/tests/restaurant-staff-rules.test.mjs'],
   ['trip transaction', 'migration/firestore/tests/save-trip-transaction.test.mjs'],
   ['payment/installment/state transactions', 'migration/firestore/tests/travel-operations.test.mjs'],
   ['Storage Rules', 'migration/firestore/tests/storage-rules.test.mjs'],

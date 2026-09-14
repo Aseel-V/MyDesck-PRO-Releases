@@ -354,6 +354,79 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Restaurant staff identity.
+    //
+    // Staff authenticate with Firebase Auth; authorisation lives here. No password, hash or PIN
+    // is ever stored in Firestore, which is what retires the SECURITY DEFINER authenticate_staff
+    // RPC. A self-registrant may create only a pending, role-less membership for their own uid;
+    // everything that grants power requires an approver who already holds one.
+    function membershipPath(id) { return /databases/$(database)/documents/restaurantMemberships/$(id); }
+    function membershipOf(businessId) {
+      return get(membershipPath(businessId + '__' + request.auth.uid)).data;
+    }
+    function hasActiveMembership(businessId) {
+      return signedIn()
+        && exists(membershipPath(businessId + '__' + request.auth.uid))
+        && membershipOf(businessId).enabled == true
+        && membershipOf(businessId).status == 'active';
+    }
+    function staffRole(businessId) { return membershipOf(businessId).role; }
+    function isRestaurantAdmin(businessId) {
+      return hasActiveMembership(businessId)
+        && staffRole(businessId) in ['super_admin', 'branch_manager'];
+    }
+    // The business owner administers staff without needing a membership of their own.
+    function ownsBusiness(businessId) {
+      return signedIn() && exists(businessPath(businessId))
+        && get(businessPath(businessId)).data.ownerUid == request.auth.uid;
+    }
+    function canAdministerStaff(businessId) {
+      return ownsBusiness(businessId) || isRestaurantAdmin(businessId);
+    }
+    function validStaffRole(role) {
+      return role in ['super_admin', 'branch_manager', 'kitchen_staff', 'waiter'];
+    }
+    // An exhaustive key list is what keeps a password, hash or PIN from ever being smuggled
+    // onto a membership document. Anything outside this set is refused.
+    function membershipKeysOnly(data) {
+      return data.keys().hasOnly(['uid', 'businessId', 'staffId', 'role', 'status', 'enabled',
+        'approvedBy', 'createdAt', 'updatedAt', 'schemaVersion']);
+    }
+
+    match /restaurantMemberships/{membershipId} {
+      // A member reads their own membership; an administrator reads the whole roster.
+      allow get, list: if signedIn() && (
+        resource.data.uid == request.auth.uid || canAdministerStaff(resource.data.businessId));
+
+      // Self-registration: own uid, pending, disabled, no role. The id is bound to the pair so
+      // a second membership for the same business cannot be forged under another key.
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && membershipId == request.resource.data.businessId + '__' + request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.enabled == false
+        && !('role' in request.resource.data)
+        && !('approvedBy' in request.resource.data)
+        && membershipKeysOnly(request.resource.data)
+        && request.resource.data.schemaVersion == 1;
+
+      // Administration. businessId and uid are immutable, the approver is never the subject,
+      // and the role must be one the product defines.
+      allow update: if canAdministerStaff(resource.data.businessId)
+        && membershipKeysOnly(request.resource.data)
+        && request.resource.data.businessId == resource.data.businessId
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.schemaVersion == resource.data.schemaVersion
+        && resource.data.uid != request.auth.uid
+        && validStaffRole(request.resource.data.role)
+        && request.resource.data.status in ['pending', 'active', 'suspended']
+        && (request.resource.data.status == 'active') == (request.resource.data.enabled == true)
+        && request.resource.data.approvedBy == request.auth.uid;
+
+      // Memberships are disabled, never deleted, so the audit trail survives.
+      allow delete: if false;
+    }
+
     match /idempotency/{id} { allow read, write: if false; }
     match /storageCleanupQueue/{id} { allow read, write: if false; }
     match /rateLimits/{id} { allow read, write: if false; }

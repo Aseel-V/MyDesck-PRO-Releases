@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-14T07:49:04.537Z",
+  "generatedAt": "2026-09-14T09:16:52.431Z",
   "status": "PASS",
   "suites": [
     {
@@ -105,6 +105,12 @@
       "tests": 25
     },
     {
+      "label": "restaurant staff membership Rules",
+      "file": "migration/firestore/tests/restaurant-staff-rules.test.mjs",
+      "outcome": "PASS",
+      "tests": 14
+    },
+    {
       "label": "trip transaction",
       "file": "migration/firestore/tests/save-trip-transaction.test.mjs",
       "outcome": "PASS",
@@ -142,11 +148,11 @@
     }
   ],
   "totals": {
-    "steps": 24,
-    "passed": 24,
+    "steps": 25,
+    "passed": 25,
     "failed": 0,
-    "nodeTestCases": 199,
-    "assertionCallSites": 688,
+    "nodeTestCases": 213,
+    "assertionCallSites": 717,
     "fullCorpusApplicationAssertions": 1023,
     "searchCorpusCases": 12,
     "fullCorpusSecurityChecks": 50,
