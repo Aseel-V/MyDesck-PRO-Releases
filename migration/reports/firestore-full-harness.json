@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-14T17:47:13.135Z",
+  "generatedAt": "2026-09-14T18:16:15.341Z",
   "status": "PASS",
   "suites": [
     {
@@ -65,6 +65,12 @@
     {
       "label": "Spark architecture guards",
       "file": "migration/firestore/tests/spark-architecture.test.mjs",
+      "outcome": "PASS",
+      "tests": 5
+    },
+    {
+      "label": "storage identity wiring",
+      "file": "migration/firestore/tests/storage-identity.test.mjs",
       "outcome": "PASS",
       "tests": 5
     },
@@ -148,11 +154,11 @@
     }
   ],
   "totals": {
-    "steps": 25,
-    "passed": 25,
+    "steps": 26,
+    "passed": 26,
     "failed": 0,
-    "nodeTestCases": 213,
-    "assertionCallSites": 717,
+    "nodeTestCases": 218,
+    "assertionCallSites": 733,
     "fullCorpusApplicationAssertions": 1023,
     "searchCorpusCases": 12,
     "fullCorpusSecurityChecks": 50,

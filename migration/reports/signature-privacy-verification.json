@@ -1,0 +1,54 @@
+{
+  "generatedAt": "2026-09-14T18:11:25.568Z",
+  "migrationRunId": "migration-test--privacy-5c0b30f2-45c5-4fce-963e-ed5fe82bfa87",
+  "bucket": "business-signatures",
+  "targetPathHash": "fa42ad9eaf61",
+  "targetFirstSegmentEqualsOwner": true,
+  "policyAllowsOwner": true,
+  "deniedChecks": [
+    {
+      "label": "anonymous, no key",
+      "http": 400,
+      "served": false
+    },
+    {
+      "label": "anonymous + anon key",
+      "http": 400,
+      "served": false
+    },
+    {
+      "label": "anonymous via public CDN path",
+      "http": 400,
+      "served": false
+    },
+    {
+      "label": "wrong Firebase user (read)",
+      "http": 400,
+      "served": false
+    },
+    {
+      "label": "wrong Firebase user (delete)",
+      "http": 400,
+      "served": false
+    },
+    {
+      "label": "wrong tenant listing the owner folder",
+      "http": 400,
+      "served": false
+    }
+  ],
+  "allDenied": true,
+  "publicSource": {
+    "label": "public source still served",
+    "http": 200,
+    "served": true
+  },
+  "syntheticIdentitiesRemaining": 0,
+  "productionCustomerObjectsModified": 0,
+  "bytesRead": 0,
+  "ownerReadProof": {
+    "status": "NOT_RUN_BY_DESIGN",
+    "reason": "No Firebase identity exists for the owner UID; production Auth import has not run. Creating one bearing a real customer UID to read their signature would be impersonation. Owner access is established by the policy predicate evaluating true for this exact object and by the synthetic hybrid smoke proving owner-folder reads succeed."
+  },
+  "decision": "SIGNATURE_PRIVACY_VERIFIED"
+}

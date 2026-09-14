@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { setStorageAccessTokenProvider } from './supabaseStorageClient';
+import { setStorageAccessTokenProvider, setStorageIdentityUidProvider } from './supabaseStorageClient';
 
 /**
  * Registers which identity the Storage client presents.
@@ -14,20 +14,35 @@ import { setStorageAccessTokenProvider } from './supabaseStorageClient';
  * the token to carry `role: authenticated`; the Firebase import path already sets that claim.
  */
 
+let currentUid: string | null = null;
+
 export function useSupabaseStorageIdentity(): void {
   setStorageAccessTokenProvider(async () => {
     const { data } = await supabase.auth.getSession();
+    currentUid = data.session?.user?.id ?? null;
     return data.session?.access_token ?? null;
   });
+  setStorageIdentityUidProvider(() => currentUid);
+  // Seed eagerly so the first private read does not depend on a prior token fetch.
+  void supabase.auth.getSession().then(({ data }) => { currentUid = data.session?.user?.id ?? null; });
+  supabase.auth.onAuthStateChange((_event, session) => { currentUid = session?.user?.id ?? null; });
 }
 
 /**
  * Firebase-backed identity for Storage.
  *
- * Not wired into any composition root yet: Supabase Third-Party Auth for Firebase is not
- * enabled on the project, so a Firebase RS256 token is currently rejected at the algorithm
- * check. Enabling it is the only change required to switch over.
+ * Supabase Third-Party Auth for Firebase is enabled on the project and proven end to end, so a
+ * Firebase RS256 token is accepted by Storage today. This is not wired into a composition root
+ * yet because the app still authenticates with Supabase Auth; swapping the call in
+ * `production-main.tsx` is the whole change at cutover.
+ *
+ * `getUid` is required, not optional: private paths are namespaced by uid, and omitting it is
+ * exactly the defect that made every private read fail closed.
  */
-export function useFirebaseStorageIdentity(getIdToken: () => Promise<string | null>): void {
+export function useFirebaseStorageIdentity(
+  getIdToken: () => Promise<string | null>,
+  getUid: () => string | null,
+): void {
   setStorageAccessTokenProvider(getIdToken);
+  setStorageIdentityUidProvider(getUid);
 }

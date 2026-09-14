@@ -23,12 +23,15 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
  */
 
 export type AccessTokenProvider = () => Promise<string | null>;
+/** The uid the presented token belongs to. Private paths are namespaced by it. */
+export type IdentityUidProvider = () => string | null;
 
 /** The only capability this module hands out. No `from`, `rpc`, `auth` or `channel`. */
 export type StorageBackend = SupabaseClient['storage'];
 
 /** Anonymous until a provider is registered: public reads work, private access fails closed. */
 let provider: AccessTokenProvider = async () => null;
+let identity: IdentityUidProvider = () => null;
 let client: SupabaseClient | null = null;
 
 /**
@@ -40,6 +43,21 @@ let client: SupabaseClient | null = null;
  */
 export function setStorageAccessTokenProvider(next: AccessTokenProvider): void {
   provider = next;
+}
+
+/**
+ * Registers the uid that private Storage paths are namespaced by.
+ *
+ * Kept beside the token provider rather than read from a session, so the Storage layer never
+ * imports an auth client. Today it yields the Supabase user id; after cutover it yields the
+ * Firebase uid, which is the same value because UIDs are preserved.
+ */
+export function setStorageIdentityUidProvider(next: IdentityUidProvider): void {
+  identity = next;
+}
+
+export function getStorageIdentityUid(): string | null {
+  return identity();
 }
 
 function ensureClient(): SupabaseClient {
@@ -65,4 +83,5 @@ export function getStorageBackend(): StorageBackend {
 export function resetStorageBackendForTests(): void {
   client = null;
   provider = async () => null;
+  identity = () => null;
 }

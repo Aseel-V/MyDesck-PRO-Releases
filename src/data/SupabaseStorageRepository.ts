@@ -1,4 +1,4 @@
-import { getStorageBackend } from './supabaseStorageClient';
+import { getStorageBackend, getStorageIdentityUid } from './supabaseStorageClient';
 import type { StorageRepository, StorageUploadOptions } from './contracts';
 
 /** The private bucket that holds business signatures. Never served over a public URL. */
@@ -12,14 +12,20 @@ export const SIGNATURE_BUCKET = 'business-signatures';
  * comes from the registered access-token provider: the Supabase session today, the Firebase ID
  * token after Third-Party Auth is enabled.
  *
- * `uid` is supplied by the caller rather than read from a Supabase session. That is deliberate:
- * reading `supabase.auth.getUser()` here would both reintroduce the Auth surface and break the
- * moment Supabase Auth is removed. The caller passes whichever identity is currently
- * authoritative, and because UIDs are preserved across the migration the `{uid}/...` path model
- * is unchanged on either side of the cutover.
+ * `uid` comes from the identity registered at the composition root, not from a Supabase
+ * session: reading `supabase.auth.getUser()` here would reintroduce the Auth surface and break
+ * the moment Supabase Auth is removed. A caller may still pass one explicitly. Because UIDs are
+ * preserved across the migration, the `{uid}/...` path model is unchanged on either side of the
+ * cutover.
  */
 export class SupabaseStorageRepository implements StorageRepository {
-  constructor(private readonly uid: string | null = null) {}
+  private readonly uid: string | null;
+
+  // Defaults to the registered identity. An earlier revision defaulted to null, which made
+  // every private read and upload throw PRIVATE_PATH_DENIED at call sites that pass nothing.
+  constructor(uid?: string | null) {
+    this.uid = uid === undefined ? getStorageIdentityUid() : uid;
+  }
 
   /**
    * Private paths are namespaced by owner. Rejecting traversal here is defence in depth: the
