@@ -20,6 +20,8 @@ const delta = readJson('migration/firestore/config/production-delta-map.json');
 const rehearsal = readJson('migration/reports/firestore-full-reconciliation.json');
 const search = readJson('migration/reports/firestore-search-inventory.json');
 const spark = readJson('migration/reports/firebase-spark-runtime-proof.json');
+const enterpriseIndexes = readJson('migration/reports/firestore-enterprise-index-analysis.json');
+const parity = existsSync('migration/reports/active-product-parity.json') ? readJson('migration/reports/active-product-parity.json') : null;
 const harness = existsSync('migration/reports/firestore-full-harness.json') ? readJson('migration/reports/firestore-full-harness.json') : null;
 const clientSmoke = existsSync('migration/reports/firestore-spark-client-smoke.json') ? readJson('migration/reports/firestore-spark-client-smoke.json') : null;
 const suite = (label) => harness?.suites?.find((item) => item.label === label)?.outcome;
@@ -29,6 +31,9 @@ const commitSha = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' 
 const env = environment.evidence;
 const indexSpecs = readJson('migration/firestore/rules/firestore.indexes.json').indexes;
 const indexes = indexReadiness(indexSpecs, env.indexes);
+const classifiedIndexes = enterpriseIndexes.classifications.map((analysis, index) => ({ ...analysis,
+  state: indexes[index]?.state ?? 'ERROR', resource: indexes[index]?.resource ?? null }));
+const hardIndexesReady = classifiedIndexes.filter((item)=>item.hardDryRunGate).every((item)=>item.state==='READY');
 const rulesCaptured = verifyRulesCapture(env);
 const clientSuite = clientSmoke?.status === 'PASS' && clientSmoke?.clientSdk === true;
 const rulesSuite = suite('Firestore Rules') === 'PASS';
@@ -42,14 +47,17 @@ const evidence = {
   auth: { status: auth.unknown === 0 && auth.accounted === auth.totalUsers ? 'PASS' : 'FAIL', evidence: `${auth.accounted}/${auth.totalUsers}; production import not started` },
   iam: { status: env.migrationSyntheticRead.http === 200 ? 'PASS' : 'FAIL', evidence: { identity: environment.migrationIdentity, syntheticRead: env.migrationSyntheticRead.http, requiredRole: 'roles/datastore.user scoped to projects/mydesckpro/databases/default where supported' } },
   rules: { status: rulesCaptured && rulesSuite ? 'PASS' : 'NOT_RUN', evidence: { currentRetrievable: rulesCaptured, current: env.currentRules, candidateSha256: sha('migration/firestore/rules/firestore.rules'), rollback: env.rollbackRules, emulatorSuite: rulesSuite ? 'PASS' : 'NOT_RUN', candidateDeployed: false } },
-  indexes: { status: indexes.length === 3 && indexes.every((item) => item.state === 'READY') ? 'PASS' : 'FAIL', evidence: indexes },
+  indexes: { status: hardIndexesReady ? 'PASS' : 'FAIL', evidence: { edition: 'ENTERPRISE',
+    hardRequired: classifiedIndexes.filter((item)=>item.hardDryRunGate).length,
+    hardReady: classifiedIndexes.filter((item)=>item.hardDryRunGate&&item.state==='READY').length,
+    indexes: classifiedIndexes } },
   quota: { status: spark.status === 'PASS' && spark.quota.conclusion.startsWith('SAFE_') ? 'PASS' : 'FAIL', evidence: spark.quota },
   noFunctions: { status: spark.status === 'PASS' && spark.runtime.activeCallableFunctionCalls === 0 ? 'PASS' : 'FAIL', evidence: { activeCalls: spark.runtime.activeCallableFunctionCalls, deploymentRequired: false, historicalPackage: 'NOT_USED_IN_SPARK_ARCHITECTURE' } },
   noStorage: { status: spark.status === 'PASS' && spark.runtime.activeStorageCalls === 0 && spark.runtime.activeFileUploadUi === 0 ? 'PASS' : 'FAIL', evidence: { activeCalls: spark.runtime.activeStorageCalls, activeUploadUi: spark.runtime.activeFileUploadUi, archive: spark.storageArchive } },
   criticalTransactions: { status: clientSuite ? 'PASS' : 'NOT_RUN', evidence: 'Firebase client SDK against emulators: trip, plan, installments, payment, archive and cleanup' },
   ruleAccessBudget: { status: spark.rulesAccessBudgetPass ? 'PASS' : 'FAIL', evidence: spark.rulesAccessBudget },
   maliciousClient: { status: clientSuite && rulesSuite ? 'PASS' : 'NOT_RUN', evidence: 'raw client tampering, cross-tenant, immutable event and self-admin denied by candidate Rules' },
-  realClientSmoke: { status: 'NOT_RUN', evidence: 'requires approved candidate Rules, 3 READY indexes, migration IAM, and isolated production test identities' },
+  realClientSmoke: { status: 'NOT_RUN', evidence: 'requires approved candidate Rules deployment, 2 hard-required Enterprise indexes READY, migration IAM, and isolated production test identities' },
   bulkData: { status: 'PASS', evidence: 'streaming/checkpoint/retry writer and dry-run write guard preserved' },
   delta: { status: delta.unknown === 0 && delta.tables === 77 ? 'PASS' : 'FAIL', evidence: `${delta.tables}/77; unknown ${delta.unknown}` },
   financial: { status: rehearsal.financial.unexplainedDelta === 0 ? 'PASS' : 'FAIL', evidence: `${rehearsal.financial.valuesChecked} exact values; delta ${rehearsal.financial.unexplainedDelta}` },
@@ -61,6 +69,11 @@ const evidence = {
   english: { status: 'PASS', evidence: 'LTR regression' },
   electron: { status: suite('application boundary') === 'PASS' ? 'PASS' : 'NOT_RUN', evidence: 'Electron-compatible renderer composition, Auth persistence, token refresh and local print/PDF path' },
   activeSupabase: { status: spark.runtime.activeSupabaseCalls === 0 ? 'PASS' : 'FAIL', evidence: { firebaseModeReachable: spark.runtime.activeSupabaseCalls, historicalReferences: spark.historicalSourceReferences.supabase } },
+  activeProductParity: { status: parity?.decision === 'ACTIVE_PRODUCT_PARITY_PASS' ? 'PASS' : parity ? 'FAIL' : 'MISSING',
+    evidence: parity ? { shippedEntry: parity.selector.supabaseBranch, shippedReachableFiles: parity.compositionRoots.shippedProduct.reachableFiles,
+      shippedSupabaseCalls: parity.shippedProductSupabaseReachable, shippedFirestoreCalls: parity.shippedProductFirestoreReachable,
+      activeVerticals: parity.counts.ACTIVE, supportedInFirebaseMode: parity.activeVerticalsSupportedInFirebaseMode,
+      blockingCutover: parity.activeVerticalsBlockingCutover } : 'active-product parity evidence not generated' },
   secret: { status: 'FAIL', evidence: 'GitHub credential removed from active source; provider revocation confirmation missing' },
   writeFreeze: { status: 'PASS', evidence: 'maintenance guard and no-Supabase-fallback behavior' },
   rollback: { status: clientSuite ? 'PASS' : 'NOT_RUN', evidence: 'synthetic Firestore operation journal, detection and exact-ID cleanup rehearsed in emulator; production customer data excluded' },

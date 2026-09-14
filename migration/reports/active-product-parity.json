@@ -1,0 +1,131 @@
+{
+  "generatedAt": "2026-09-14T07:46:46.403Z",
+  "readOnly": true,
+  "productionMutations": 0,
+  "selector": {
+    "entry": "src/main.tsx",
+    "supabaseBranch": "src/production-main.tsx",
+    "firebaseBranch": "src/migration-app/main.tsx",
+    "defaultMode": "supabase"
+  },
+  "compositionRoots": {
+    "firebaseMode": {
+      "entry": "src/migration-app/main.tsx",
+      "reachableFiles": 10,
+      "supabase": 0,
+      "functions": 0,
+      "storage": 0,
+      "firestore": 6,
+      "supabaseFiles": 0,
+      "storageFiles": 0,
+      "functionsFiles": 0
+    },
+    "shippedProduct": {
+      "entry": "src/production-main.tsx",
+      "reachableFiles": 199,
+      "supabase": 297,
+      "functions": 0,
+      "storage": 11,
+      "firestore": 0,
+      "supabaseFiles": 56,
+      "storageFiles": 6,
+      "functionsFiles": 0
+    }
+  },
+  "verticals": [
+    {
+      "vertical": "auto_repair",
+      "classification": "ACTIVE",
+      "reachableFromShippedDashboard": true,
+      "productionRowsInReconciledCorpus": 1,
+      "firestoreApplicationLayer": "ABSENT",
+      "firebaseModeSupported": false,
+      "blocksCutover": true,
+      "reason": "No Firestore application layer exists. Selecting Firebase mode removes this vertical from the product entirely."
+    },
+    {
+      "vertical": "car_parts",
+      "classification": "ACTIVE",
+      "reachableFromShippedDashboard": true,
+      "productionRowsInReconciledCorpus": 1,
+      "firestoreApplicationLayer": "ABSENT",
+      "firebaseModeSupported": false,
+      "blocksCutover": true,
+      "reason": "No Firestore application layer exists. Selecting Firebase mode removes this vertical from the product entirely."
+    },
+    {
+      "vertical": "clothes_shop",
+      "classification": "ACTIVE",
+      "reachableFromShippedDashboard": true,
+      "productionRowsInReconciledCorpus": 0,
+      "firestoreApplicationLayer": "ABSENT",
+      "firebaseModeSupported": false,
+      "blocksCutover": true,
+      "reason": "No Firestore application layer exists. Selecting Firebase mode removes this vertical from the product entirely."
+    },
+    {
+      "vertical": "furniture_store",
+      "classification": "ACTIVE",
+      "reachableFromShippedDashboard": true,
+      "productionRowsInReconciledCorpus": 0,
+      "firestoreApplicationLayer": "ABSENT",
+      "firebaseModeSupported": false,
+      "blocksCutover": true,
+      "reason": "No Firestore application layer exists. Selecting Firebase mode removes this vertical from the product entirely."
+    },
+    {
+      "vertical": "phone_shop",
+      "classification": "ACTIVE",
+      "reachableFromShippedDashboard": true,
+      "productionRowsInReconciledCorpus": 0,
+      "firestoreApplicationLayer": "ABSENT",
+      "firebaseModeSupported": false,
+      "blocksCutover": true,
+      "reason": "No Firestore application layer exists. Selecting Firebase mode removes this vertical from the product entirely."
+    },
+    {
+      "vertical": "restaurant",
+      "classification": "ACTIVE",
+      "reachableFromShippedDashboard": true,
+      "productionRowsInReconciledCorpus": 94,
+      "firestoreApplicationLayer": "ABSENT",
+      "firebaseModeSupported": false,
+      "blocksCutover": true,
+      "reason": "No Firestore application layer exists. Selecting Firebase mode removes this vertical from the product entirely."
+    },
+    {
+      "vertical": "supermarket",
+      "classification": "ACTIVE",
+      "reachableFromShippedDashboard": true,
+      "productionRowsInReconciledCorpus": 1,
+      "firestoreApplicationLayer": "ABSENT",
+      "firebaseModeSupported": false,
+      "blocksCutover": true,
+      "reason": "No Firestore application layer exists. Selecting Firebase mode removes this vertical from the product entirely."
+    },
+    {
+      "vertical": "tourism",
+      "classification": "ACTIVE",
+      "reachableFromShippedDashboard": true,
+      "productionRowsInReconciledCorpus": 1301,
+      "firestoreApplicationLayer": "PRESENT_TRAVEL_WORKSPACE_ONLY",
+      "firebaseModeSupported": false,
+      "blocksCutover": true,
+      "reason": "The Firebase-mode workspace implements a reduced travel surface; the shipped tourism product is the Supabase-backed dashboard and is not reachable in Firebase mode."
+    }
+  ],
+  "counts": {
+    "ACTIVE": 8,
+    "LEGACY_UNREACHABLE": 0,
+    "MIGRATION_ONLY": 0,
+    "ROLLBACK_ONLY": 0,
+    "DEAD": 0,
+    "unknown": 0
+  },
+  "activeVerticalsSupportedInFirebaseMode": 0,
+  "activeVerticalsBlockingCutover": 8,
+  "shippedProductSupabaseReachable": 297,
+  "shippedProductFirestoreReachable": 0,
+  "decision": "ACTIVE_PRODUCT_PARITY_BLOCKED",
+  "note": "The Spark runtime proof measures the Firebase-mode root only. It remains true for that root and is not evidence about the shipped product."
+}

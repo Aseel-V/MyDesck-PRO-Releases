@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-12T14:25:17.944Z",
-  "migrationRunId": "spark-only-final",
+  "generatedAt": "2026-09-14T07:49:04.477Z",
+  "migrationRunId": "harness-production-prep",
   "architecture": "FIREBASE_SPARK_ONLY",
   "mode": "dry-run",
   "productionWrites": 0,
@@ -15,10 +15,10 @@
     "firebaseProject": "mydesckpro",
     "firestoreDatabaseId": "default"
   },
-  "executableCommitSha": "51e163fdfeae58da951b27d5dad94a77ecce65a9",
+  "executableCommitSha": "dbd76031e28c2f72b301cb3b80706e6806789e74",
   "configHashes": {
     "firestoreRules": "e77ed17b8e3652a5523b25d4fb524f5afa4ec2de291ce23baf74d1a54349e9ba",
-    "indexes": "b145d250a7f5238a6092761217efff7122409253f2ce34846b2d9393e9ef1832",
+    "indexes": "c516b73728401cd577c3214efaf5a839b2a8cde65dc714c6a39d70300ee2bc39",
     "deltaMap": "cf60c2b43faf32d30a5965e958a10d2226cc57e161095eff40342ba1d5d3db85"
   },
   "evidence": {
@@ -81,90 +81,130 @@
     },
     "indexes": {
       "status": "FAIL",
-      "evidence": [
-        {
-          "collectionGroup": "trips",
-          "queryScope": "COLLECTION",
-          "fields": [
-            {
-              "fieldPath": "ownerUid",
-              "order": "ASCENDING"
+      "evidence": {
+        "edition": "ENTERPRISE",
+        "hardRequired": 2,
+        "hardReady": 0,
+        "indexes": [
+          {
+            "index": 1,
+            "collectionGroup": "trips",
+            "fields": [
+              {
+                "fieldPath": "ownerUid",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "businessId",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "isDeleted",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "startDate",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "__name__",
+                "order": "ASCENDING"
+              }
+            ],
+            "query": "FirestoreTravelRepository.listTripsForBusiness: tenant, deletion state, start-date cursor.",
+            "state": "MISSING",
+            "plan": {
+              "http": 400,
+              "status": "INVALID_ARGUMENT",
+              "message": "Explain options are not supported in RunQuery API for Enterprise edition. Please use the ExecutePipeline API instead."
             },
-            {
-              "fieldPath": "businessId",
-              "order": "ASCENDING"
+            "corpusDocuments": 99,
+            "conservativeUnindexedReadUnits": 117,
+            "classification": "REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE",
+            "hardDryRunGate": true,
+            "rationale": "Common list query; full scans scale with the tenant collection and consume materially more read units than the 25-result page.",
+            "resource": null
+          },
+          {
+            "index": 2,
+            "collectionGroup": "trips",
+            "fields": [
+              {
+                "fieldPath": "ownerUid",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "businessId",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "isDeleted",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "status",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "startDate",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "__name__",
+                "order": "ASCENDING"
+              }
+            ],
+            "query": "FirestoreTravelRepository.listTripsForBusiness with a status filter.",
+            "state": "MISSING",
+            "plan": {
+              "http": 400,
+              "status": "INVALID_ARGUMENT",
+              "message": "Explain options are not supported in RunQuery API for Enterprise edition. Please use the ExecutePipeline API instead."
             },
-            {
-              "fieldPath": "isDeleted",
-              "order": "ASCENDING"
+            "corpusDocuments": 99,
+            "conservativeUnindexedReadUnits": 117,
+            "classification": "REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE",
+            "hardDryRunGate": true,
+            "rationale": "Common list query; full scans scale with the tenant collection and consume materially more read units than the 25-result page.",
+            "resource": null
+          },
+          {
+            "index": 3,
+            "collectionGroup": "tripInstallments",
+            "fields": [
+              {
+                "fieldPath": "ownerUid",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "businessId",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "status",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "dueDate",
+                "order": "ASCENDING"
+              }
+            ],
+            "query": "FirestoreTravelRepository.listDueInstallments: tenant, active status set, due date.",
+            "state": "MISSING",
+            "plan": {
+              "http": 400,
+              "status": "INVALID_ARGUMENT",
+              "message": "Explain options are not supported in RunQuery API for Enterprise edition. Please use the ExecutePipeline API instead."
             },
-            {
-              "fieldPath": "startDate",
-              "order": "ASCENDING"
-            }
-          ],
-          "query": "FirestoreTravelRepository.listTripsForBusiness: tenant, deletion state, start-date cursor.",
-          "state": "MISSING",
-          "resource": null,
-          "productionState": null
-        },
-        {
-          "collectionGroup": "trips",
-          "queryScope": "COLLECTION",
-          "fields": [
-            {
-              "fieldPath": "ownerUid",
-              "order": "ASCENDING"
-            },
-            {
-              "fieldPath": "businessId",
-              "order": "ASCENDING"
-            },
-            {
-              "fieldPath": "isDeleted",
-              "order": "ASCENDING"
-            },
-            {
-              "fieldPath": "status",
-              "order": "ASCENDING"
-            },
-            {
-              "fieldPath": "startDate",
-              "order": "ASCENDING"
-            }
-          ],
-          "query": "FirestoreTravelRepository.listTripsForBusiness with a status filter.",
-          "state": "MISSING",
-          "resource": null,
-          "productionState": null
-        },
-        {
-          "collectionGroup": "tripInstallments",
-          "queryScope": "COLLECTION",
-          "fields": [
-            {
-              "fieldPath": "ownerUid",
-              "order": "ASCENDING"
-            },
-            {
-              "fieldPath": "businessId",
-              "order": "ASCENDING"
-            },
-            {
-              "fieldPath": "status",
-              "order": "ASCENDING"
-            },
-            {
-              "fieldPath": "dueDate",
-              "order": "ASCENDING"
-            }
-          ],
-          "query": "FirestoreTravelRepository.listDueInstallments: tenant, active status set, due date.",
-          "state": "MISSING",
-          "resource": null,
-          "productionState": null
-        }
-      ]
+            "corpusDocuments": 37,
+            "conservativeUnindexedReadUnits": 44,
+            "classification": "COST_OPTIMIZATION",
+            "hardDryRunGate": false,
+            "rationale": "Current 37-row collection remains bounded; index reduces scan cost but its absence does not block a no-customer-write dry-run.",
+            "resource": null
+          }
+        ]
+      }
     },
     "quota": {
       "status": "PASS",
@@ -319,7 +359,7 @@
     },
     "realClientSmoke": {
       "status": "NOT_RUN",
-      "evidence": "requires approved candidate Rules, 3 READY indexes, migration IAM, and isolated production test identities"
+      "evidence": "requires approved candidate Rules deployment, 2 hard-required Enterprise indexes READY, migration IAM, and isolated production test identities"
     },
     "bulkData": {
       "status": "PASS",
@@ -366,6 +406,18 @@
       "evidence": {
         "firebaseModeReachable": 0,
         "historicalReferences": 338
+      }
+    },
+    "activeProductParity": {
+      "status": "FAIL",
+      "evidence": {
+        "shippedEntry": "src/production-main.tsx",
+        "shippedReachableFiles": 199,
+        "shippedSupabaseCalls": 297,
+        "shippedFirestoreCalls": 0,
+        "activeVerticals": 8,
+        "supportedInFirebaseMode": 0,
+        "blockingCutover": 8
       }
     },
     "secret": {
@@ -456,90 +508,130 @@
       {
         "name": "indexes",
         "status": "FAIL",
-        "evidence": [
-          {
-            "collectionGroup": "trips",
-            "queryScope": "COLLECTION",
-            "fields": [
-              {
-                "fieldPath": "ownerUid",
-                "order": "ASCENDING"
+        "evidence": {
+          "edition": "ENTERPRISE",
+          "hardRequired": 2,
+          "hardReady": 0,
+          "indexes": [
+            {
+              "index": 1,
+              "collectionGroup": "trips",
+              "fields": [
+                {
+                  "fieldPath": "ownerUid",
+                  "order": "ASCENDING"
+                },
+                {
+                  "fieldPath": "businessId",
+                  "order": "ASCENDING"
+                },
+                {
+                  "fieldPath": "isDeleted",
+                  "order": "ASCENDING"
+                },
+                {
+                  "fieldPath": "startDate",
+                  "order": "ASCENDING"
+                },
+                {
+                  "fieldPath": "__name__",
+                  "order": "ASCENDING"
+                }
+              ],
+              "query": "FirestoreTravelRepository.listTripsForBusiness: tenant, deletion state, start-date cursor.",
+              "state": "MISSING",
+              "plan": {
+                "http": 400,
+                "status": "INVALID_ARGUMENT",
+                "message": "Explain options are not supported in RunQuery API for Enterprise edition. Please use the ExecutePipeline API instead."
               },
-              {
-                "fieldPath": "businessId",
-                "order": "ASCENDING"
+              "corpusDocuments": 99,
+              "conservativeUnindexedReadUnits": 117,
+              "classification": "REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE",
+              "hardDryRunGate": true,
+              "rationale": "Common list query; full scans scale with the tenant collection and consume materially more read units than the 25-result page.",
+              "resource": null
+            },
+            {
+              "index": 2,
+              "collectionGroup": "trips",
+              "fields": [
+                {
+                  "fieldPath": "ownerUid",
+                  "order": "ASCENDING"
+                },
+                {
+                  "fieldPath": "businessId",
+                  "order": "ASCENDING"
+                },
+                {
+                  "fieldPath": "isDeleted",
+                  "order": "ASCENDING"
+                },
+                {
+                  "fieldPath": "status",
+                  "order": "ASCENDING"
+                },
+                {
+                  "fieldPath": "startDate",
+                  "order": "ASCENDING"
+                },
+                {
+                  "fieldPath": "__name__",
+                  "order": "ASCENDING"
+                }
+              ],
+              "query": "FirestoreTravelRepository.listTripsForBusiness with a status filter.",
+              "state": "MISSING",
+              "plan": {
+                "http": 400,
+                "status": "INVALID_ARGUMENT",
+                "message": "Explain options are not supported in RunQuery API for Enterprise edition. Please use the ExecutePipeline API instead."
               },
-              {
-                "fieldPath": "isDeleted",
-                "order": "ASCENDING"
+              "corpusDocuments": 99,
+              "conservativeUnindexedReadUnits": 117,
+              "classification": "REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE",
+              "hardDryRunGate": true,
+              "rationale": "Common list query; full scans scale with the tenant collection and consume materially more read units than the 25-result page.",
+              "resource": null
+            },
+            {
+              "index": 3,
+              "collectionGroup": "tripInstallments",
+              "fields": [
+                {
+                  "fieldPath": "ownerUid",
+                  "order": "ASCENDING"
+                },
+                {
+                  "fieldPath": "businessId",
+                  "order": "ASCENDING"
+                },
+                {
+                  "fieldPath": "status",
+                  "order": "ASCENDING"
+                },
+                {
+                  "fieldPath": "dueDate",
+                  "order": "ASCENDING"
+                }
+              ],
+              "query": "FirestoreTravelRepository.listDueInstallments: tenant, active status set, due date.",
+              "state": "MISSING",
+              "plan": {
+                "http": 400,
+                "status": "INVALID_ARGUMENT",
+                "message": "Explain options are not supported in RunQuery API for Enterprise edition. Please use the ExecutePipeline API instead."
               },
-              {
-                "fieldPath": "startDate",
-                "order": "ASCENDING"
-              }
-            ],
-            "query": "FirestoreTravelRepository.listTripsForBusiness: tenant, deletion state, start-date cursor.",
-            "state": "MISSING",
-            "resource": null,
-            "productionState": null
-          },
-          {
-            "collectionGroup": "trips",
-            "queryScope": "COLLECTION",
-            "fields": [
-              {
-                "fieldPath": "ownerUid",
-                "order": "ASCENDING"
-              },
-              {
-                "fieldPath": "businessId",
-                "order": "ASCENDING"
-              },
-              {
-                "fieldPath": "isDeleted",
-                "order": "ASCENDING"
-              },
-              {
-                "fieldPath": "status",
-                "order": "ASCENDING"
-              },
-              {
-                "fieldPath": "startDate",
-                "order": "ASCENDING"
-              }
-            ],
-            "query": "FirestoreTravelRepository.listTripsForBusiness with a status filter.",
-            "state": "MISSING",
-            "resource": null,
-            "productionState": null
-          },
-          {
-            "collectionGroup": "tripInstallments",
-            "queryScope": "COLLECTION",
-            "fields": [
-              {
-                "fieldPath": "ownerUid",
-                "order": "ASCENDING"
-              },
-              {
-                "fieldPath": "businessId",
-                "order": "ASCENDING"
-              },
-              {
-                "fieldPath": "status",
-                "order": "ASCENDING"
-              },
-              {
-                "fieldPath": "dueDate",
-                "order": "ASCENDING"
-              }
-            ],
-            "query": "FirestoreTravelRepository.listDueInstallments: tenant, active status set, due date.",
-            "state": "MISSING",
-            "resource": null,
-            "productionState": null
-          }
-        ]
+              "corpusDocuments": 37,
+              "conservativeUnindexedReadUnits": 44,
+              "classification": "COST_OPTIMIZATION",
+              "hardDryRunGate": false,
+              "rationale": "Current 37-row collection remains bounded; index reduces scan cost but its absence does not block a no-customer-write dry-run.",
+              "resource": null
+            }
+          ]
+        }
       },
       {
         "name": "quota",
@@ -701,7 +793,7 @@
       {
         "name": "realClientSmoke",
         "status": "NOT_RUN",
-        "evidence": "requires approved candidate Rules, 3 READY indexes, migration IAM, and isolated production test identities"
+        "evidence": "requires approved candidate Rules deployment, 2 hard-required Enterprise indexes READY, migration IAM, and isolated production test identities"
       },
       {
         "name": "bulkData",
@@ -762,6 +854,19 @@
         }
       },
       {
+        "name": "activeProductParity",
+        "status": "FAIL",
+        "evidence": {
+          "shippedEntry": "src/production-main.tsx",
+          "shippedReachableFiles": 199,
+          "shippedSupabaseCalls": 297,
+          "shippedFirestoreCalls": 0,
+          "activeVerticals": 8,
+          "supportedInFirebaseMode": 0,
+          "blockingCutover": 8
+        }
+      },
+      {
         "name": "secret",
         "status": "FAIL",
         "evidence": "GitHub credential removed from active source; provider revocation confirmation missing"
@@ -788,7 +893,7 @@
       }
     ],
     "pass": 25,
-    "fail": 3,
+    "fail": 4,
     "notRun": 1,
     "missing": 0,
     "decision": "NO_GO",
@@ -796,6 +901,7 @@
       "iam",
       "indexes",
       "realClientSmoke",
+      "activeProductParity",
       "secret"
     ]
   },
@@ -803,6 +909,7 @@
     "iam",
     "indexes",
     "realClientSmoke",
+    "activeProductParity",
     "secret"
   ],
   "decision": "NO_GO"
