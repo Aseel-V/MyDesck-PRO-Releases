@@ -16,6 +16,10 @@ const storageAuth = read('migration/reports/hybrid-storage-auth-probe.json');
 const inventory = read('migration/reports/live-vertical-inventory.json');
 const dryRun = read('migration/reports/firestore-production-dry-run.json');
 const harness = read('migration/reports/firestore-full-harness.json');
+const isolation = read('migration/reports/storage-isolation-guard.json');
+const rlsAudit = read('migration/reports/storage-rls-audit.json');
+const roleClaim = read('migration/reports/supabase-role-claim.json');
+const staff = read('migration/reports/restaurant-staff-inventory.json');
 
 // Gates already decided by the existing single-stage engine are carried across verbatim.
 const carried = Object.fromEntries((dryRun?.go?.gates ?? [])
@@ -36,9 +40,26 @@ const evidence = {
   supabaseDatabaseRuntimeZero: { status: databaseRuntimeZero ? 'PASS' : 'FAIL',
     evidence: firebaseRoot ?? 'not generated',
     note: 'Measured on the Firebase production root. Supabase Storage is excluded by policy.' },
-  storageIsolation: { status: parity?.compositionRoots?.shippedProduct?.storageIsolated ? 'PASS' : 'FAIL',
-    evidence: { outsideAllowlist: parity?.compositionRoots?.shippedProduct?.storageOutsideAllowlist ?? null,
-      requirement: 'every Supabase Storage call must sit behind StorageRepository' } },
+  storageIsolation: { status: isolation?.decision === 'STORAGE_ISOLATION_GO' ? 'PASS' : 'FAIL',
+    evidence: isolation ? { outsideAllowlist: isolation.storageCallsOutsideAllowlist,
+      violations: isolation.violations, rules: isolation.rules } : 'not generated' },
+  storageRlsAudit: { status: rlsAudit?.decision === 'STORAGE_SECURITY_OK' ? 'PASS' : 'FAIL',
+    evidence: rlsAudit ? { findings: rlsAudit.findings,
+      publiclyReadablePrivateObjects: rlsAudit.publiclyReadablePrivateObjects,
+      restrictivePolicyCount: rlsAudit.restrictivePolicyCount,
+      bucketsReferencedInCodeButMissing: rlsAudit.bucketsReferencedInCodeButMissing } : 'not generated' },
+  supabaseRoleClaim: { status: roleClaim?.decision === 'ROLE_CLAIM_READY' ? 'PASS' : 'FAIL',
+    evidence: roleClaim ? { totalUsers: roleClaim.totalUsers, byScope: roleClaim.byScope,
+      withRequiredClaim: roleClaim.withRequiredClaimAfter,
+      productionClaimWrites: roleClaim.productionClaimWrites } : 'not generated' },
+  restaurantStaffInventory: { status: staff ? 'PASS' : 'MISSING',
+    evidence: staff ? { staffCount: staff.staffCount, unknown: staff.counts?.UNKNOWN ?? 0 } : 'not generated' },
+  restaurantStaffIdentityModel: { status: staff?.identityModelDecided ? 'PASS' : 'NOT_RUN',
+    evidence: 'Firebase Auth identities plus Firestore membership documents; requires owner approval for reprovisioning.' },
+  restaurantStaffRules: { status: 'NOT_RUN',
+    evidence: 'Membership Rules and the malicious-client suite are not authored yet.' },
+  authenticateStaffReplaced: { status: 'NOT_RUN',
+    evidence: 'authenticate_staff / authorize_staff_action still live in Postgres.' },
   analytics: carried.search ?? { status: 'MISSING' },
 
   // HYBRID_STORAGE_GO

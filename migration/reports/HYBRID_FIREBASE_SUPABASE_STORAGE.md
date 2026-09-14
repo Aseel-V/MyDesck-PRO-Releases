@@ -116,3 +116,125 @@ Supabase Storage is an intentional, permitted dependency. But **a Firebase-authe
 cannot currently reach it at all**, and no secure no-server workaround exists. Until an operator
 enables third-party Firebase auth on the Supabase project and the probe shows RS256 accepted,
 the hybrid architecture is unproven and `HYBRID_STORAGE_GO` stays `NO_GO`.
+
+
+---
+
+# UPDATE 2026-09-14 — operator access, config hazard, and a live exposure
+
+## 1. The operator DOES have Supabase management access
+
+The Supabase CLI is authenticated and `MyDesckPRO` (`pubugnfaqqukelvgckdr`, ACTIVE_HEALTHY) is
+linked. So third-party auth is configurable without a dashboard visit in principle.
+
+## 2. But `supabase config push` must NOT be used for it
+
+`supabase config diff` reports **10 differences** between local `config.toml` and live
+production. `config push` applies the whole local config, so enabling third-party auth that way
+would also apply every one of these:
+
+| Setting | Local | **Live production** | Effect of a push |
+| --- | --- | --- | --- |
+| `auth.mfa.totp.enroll_enabled` | `false` | **`true`** | **disables MFA enrollment** |
+| `auth.mfa.totp.verify_enabled` | `false` | **`true`** | **disables MFA verification** |
+| `auth.sms.twilio.enabled` | `false` | **`true`** | disables SMS |
+| `auth.email.max_frequency` | `1s` | `1m0s` | weakens rate limiting |
+| `auth.email.otp_expiry` | 3600 | 86400 | changes OTP lifetime |
+| `auth.site_url` | `http://127.0.0.1:5173` | `http://localhost:3000` | points production at a dev URL |
+| `auth.additional_redirect_urls` | `["https://127.0.0.1:3000"]` | `[]` | adds a redirect target |
+| `db.pooler.default_pool_size` | 20 | 15 | changes pooling |
+| `db.pooler.max_client_conn` | 100 | 200 | halves client connections |
+| `storage.vector.enabled` | `true` | `false` | enables a storage feature |
+
+**Enable third-party auth surgically instead** — Dashboard, or a Management API PATCH of that
+field alone. Exact steps:
+
+> Supabase Dashboard → project **MyDesckPRO** → **Authentication** → **Third-Party Auth** →
+> **Add provider** → **Firebase** → Firebase project ID **`mydesckpro`** → Save.
+
+The Firebase project ID is verified against the live project inventory
+(`projects/mydesckpro/databases/default`), not assumed.
+
+Afterwards re-run `node migration/firestore/tools/hybrid-storage-auth-probe.mjs`.
+**RS256 must move from rejected to accepted.** Until it does, the gate stays NO_GO.
+
+## 3. The role claim is already satisfied
+
+`node migration/firestore/tools/supabase-role-claim.mjs --mode=verify` →
+**`ROLE_CLAIM_READY`**. All 5 Firebase users carry `{"role":"authenticated"}`, and
+`migration/tools/lib/auth-classify.mjs` already builds every import record with that claim, so
+future imports inherit it. `supabase-role-claim.mjs --mode=apply` exists for repair: it merges
+rather than overwrites custom claims, and refuses non-synthetic accounts without an exact
+approval string. **Production claim writes so far: 0.**
+
+Note for the synthetic test: a custom claim reaches a client only on the next ID-token refresh,
+so the test must force a refresh before asserting.
+
+## 4. HIGH — a signature image is publicly readable in production, right now
+
+`node migration/firestore/tools/storage-rls-audit.mjs` → **`STORAGE_SECURITY_BLOCKED`**.
+
+| Bucket | Public | Objects | Bytes | Classification |
+| --- | --- | ---: | ---: | --- |
+| `logos` | **true** | 2 | 438,670 | **PRIVATE_USER_EXPOSED_IN_PUBLIC_BUCKET** |
+| `restaurant-assets` | **true** | 1 | 0 | PUBLIC_INTENTIONAL |
+
+Anonymous `HEAD` requests — no apikey, no `Authorization` — return **HTTP 200** for all three
+objects, including a **146,338-byte signature image** (`image/jpeg`) stored under the
+`business-signatures/` prefix inside the **public** `logos` bucket.
+
+Three HIGH findings:
+
+- **`PRIVATE_OBJECT_PUBLICLY_READABLE`** — the signature is anonymously downloadable.
+- **`NO_RESTRICTIVE_POLICY_IN_PRODUCTION`** — production has **0** RESTRICTIVE policies. The
+  repo migration `20260908092000_private_business_signatures.sql`, which creates the private
+  buckets and the `Business image boundary` RESTRICTIVE policy, has **never been applied**.
+- **`CODE_TARGETS_NONEXISTENT_BUCKET`** — `SupabaseStorageRepository` targets
+  `business-signatures`, which **does not exist**. `Settings.tsx` likewise uploads to
+  `business-logos`, also absent. Both are only path prefixes inside `logos`.
+
+A `public: true` bucket serves objects over the CDN path and **bypasses RLS entirely**, so the
+carefully written `auth.uid()` policies never engage for these objects.
+
+**Not remediated here.** Making `logos` private would immediately break logo rendering in the
+shipped app, which builds public URLs. Suggested order, for owner approval: create a private
+`business-signatures` bucket → copy the signature object → repoint `businessImages.ts` and
+`Settings.tsx` at authenticated/signed reads → delete the public copy → apply the RESTRICTIVE
+policy. Logos may remain public if that is intended.
+
+This also **invalidates a planning assumption**: the hybrid Storage design cannot be proven
+against a private bucket that does not exist. Bucket layout must be settled before the
+end-to-end Firebase→Storage test is meaningful.
+
+## 5. Storage isolation — enforced statically, currently failing
+
+`node migration/firestore/tools/storage-isolation-guard.mjs` → **`STORAGE_ISOLATION_NO_GO`**.
+
+- Storage call sites total **11**; inside the allowlist **2**; **outside 9**:
+  `Settings.tsx` 2 · `market/AddProductModal.tsx` 2 · `ui/FileUpload.tsx` 2 ·
+  `lib/tripAttachments.ts` 2 · `lib/businessImages.ts` 1
+- `SupabaseStorageRepository.ts` still imports the shared general-purpose client, inheriting
+  `.from()`, `.rpc()` and `.auth`.
+
+New infrastructure landed for this: `src/data/supabaseStorageClient.ts` creates the client with
+an injected `accessToken` provider and exports **only** `StorageBackend` — the `storage` handle.
+The `SupabaseClient` itself is never exported, so business code cannot widen it back into a
+database client. During the Supabase-Auth era the provider yields the Supabase token; after
+cutover it yields `firebaseUser.getIdToken()`.
+
+The remaining 9 call sites were **deliberately not rewired yet**: they upload to
+`business-logos` / `business-signatures`, and the correct target buckets are unresolved pending
+the exposure remediation in §4. Rewiring now would bake in the wrong bucket layout.
+
+## 6. Current gate status
+
+| Gate | Status |
+| --- | --- |
+| `hybridStorageAuth` | **FAIL** — HS256 only; third-party Firebase auth not enabled |
+| `supabaseRoleClaim` | **PASS** — `ROLE_CLAIM_READY`, 5/5 |
+| `storageRlsAudit` | **FAIL** — 3 HIGH findings |
+| `storageAnonymousDenied` | PASS (private-bucket API path) |
+| `storageTenantIsolation` | NOT_RUN — blocked by `hybridStorageAuth` |
+| `storageIsolation` | **FAIL** — 9 call sites outside the allowlist |
+
+`HYBRID_STORAGE_AUTH_GO` = **NO_GO**. `STORAGE_ISOLATION_GO` = **NO_GO**.

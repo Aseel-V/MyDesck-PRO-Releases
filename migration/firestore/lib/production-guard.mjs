@@ -128,13 +128,18 @@ export function reserveRunId(runId, existingIds) {
  * blocker. Supabase database, RPC, Auth and database realtime remain forbidden at runtime.
  */
 export const STAGE_GATES = Object.freeze({
+  // Architecture blockers. Nothing downstream is meaningful until these hold.
+  HYBRID_STORAGE_AUTH_GO: ['hybridStorageAuth', 'supabaseRoleClaim', 'storageRlsAudit',
+    'storageTenantIsolation', 'storageAnonymousDenied'],
+  STORAGE_ISOLATION_GO: ['storageIsolation'],
+  RESTAURANT_STAFF_AUTH_MODEL_GO: ['restaurantStaffInventory', 'restaurantStaffIdentityModel',
+    'restaurantStaffRules', 'authenticateStaffReplaced'],
+  // Product work. Only begins once the three blockers above are GO.
   PRODUCT_PARITY_GO: ['environment', 'sparkPlan', 'auth', 'activeProductParity',
-    'supabaseDatabaseRuntimeZero', 'storageIsolation', 'rules', 'ruleAccessBudget',
-    'maliciousClient', 'criticalTransactions', 'search', 'analytics', 'arabic', 'hebrew',
-    'english', 'electron', 'quota', 'noFunctions', 'noStorage', 'bulkData', 'delta',
-    'financial', 'relationships', 'events'],
-  HYBRID_STORAGE_GO: ['hybridStorageAuth', 'storageIsolation', 'storageTenantIsolation',
-    'storageAnonymousDenied'],
+    'supabaseDatabaseRuntimeZero', 'rules', 'ruleAccessBudget', 'maliciousClient',
+    'criticalTransactions', 'search', 'analytics', 'arabic', 'hebrew', 'english', 'electron',
+    'quota', 'noFunctions', 'noStorage', 'bulkData', 'delta', 'financial', 'relationships',
+    'events'],
   DRY_RUN_GO: ['iam', 'indexes', 'realClientSmoke', 'secret', 'writeFreeze', 'rollback',
     'observability', 'backendSwitch'],
   BULK_COPY_GO: ['productionSourceSnapshot', 'productionReconciliation'],
@@ -142,7 +147,8 @@ export const STAGE_GATES = Object.freeze({
   POST_CUTOVER_HEALTHY: ['productionSmoke', 'postCutoverFinancialCheck', 'rollbackJournal'],
 });
 
-const STAGE_ORDER = ['PRODUCT_PARITY_GO', 'HYBRID_STORAGE_GO', 'DRY_RUN_GO', 'BULK_COPY_GO',
+const STAGE_ORDER = ['HYBRID_STORAGE_AUTH_GO', 'STORAGE_ISOLATION_GO',
+  'RESTAURANT_STAFF_AUTH_MODEL_GO', 'PRODUCT_PARITY_GO', 'DRY_RUN_GO', 'BULK_COPY_GO',
   'CUTOVER_GO', 'POST_CUTOVER_HEALTHY'];
 
 export function evaluateStagedGo(evidence) {
