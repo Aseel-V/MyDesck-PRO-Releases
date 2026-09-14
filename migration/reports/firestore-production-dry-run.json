@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-14T17:47:13.080Z",
+  "generatedAt": "2026-09-14T18:16:15.256Z",
   "migrationRunId": "harness-production-prep",
   "architecture": "FIREBASE_SPARK_ONLY",
   "mode": "dry-run",
@@ -15,7 +15,7 @@
     "firebaseProject": "mydesckpro",
     "firestoreDatabaseId": "default"
   },
-  "executableCommitSha": "85c538efd8e4559d809021efd5c5bda0f31678d8",
+  "executableCommitSha": "59c5d3c774aa4c0226a96da99642bc82cf924b8d",
   "configHashes": {
     "firestoreRules": "6e28ddf7a98487799505699a2e8fbcb3159ee47d99cbcca1873b962bd82a0172",
     "indexes": "c516b73728401cd577c3214efaf5a839b2a8cde65dc714c6a39d70300ee2bc39",
@@ -47,7 +47,7 @@
       }
     },
     "rules": {
-      "status": "NOT_RUN",
+      "status": "PASS",
       "evidence": {
         "currentRetrievable": true,
         "current": {
@@ -75,7 +75,7 @@
             }
           ]
         },
-        "emulatorSuite": "NOT_RUN",
+        "emulatorSuite": "PASS",
         "candidateDeployed": false
       }
     },
@@ -354,7 +354,7 @@
       }
     },
     "maliciousClient": {
-      "status": "NOT_RUN",
+      "status": "PASS",
       "evidence": "raw client tampering, cross-tenant, immutable event and self-admin denied by candidate Rules"
     },
     "realClientSmoke": {
@@ -468,7 +468,7 @@
       },
       {
         "name": "rules",
-        "status": "NOT_RUN",
+        "status": "PASS",
         "evidence": {
           "currentRetrievable": true,
           "current": {
@@ -496,7 +496,7 @@
               }
             ]
           },
-          "emulatorSuite": "NOT_RUN",
+          "emulatorSuite": "PASS",
           "candidateDeployed": false
         }
       },
@@ -782,7 +782,7 @@
       },
       {
         "name": "maliciousClient",
-        "status": "NOT_RUN",
+        "status": "PASS",
         "evidence": "raw client tampering, cross-tenant, immutable event and self-admin denied by candidate Rules"
       },
       {
@@ -882,16 +882,14 @@
         "evidence": "Spark plan and billing-disabled fail-closed runtime selector; cutover not started"
       }
     ],
-    "pass": 23,
+    "pass": 25,
     "fail": 4,
-    "notRun": 3,
+    "notRun": 1,
     "missing": 0,
     "decision": "NO_GO",
     "blockers": [
       "iam",
-      "rules",
       "indexes",
-      "maliciousClient",
       "realClientSmoke",
       "activeProductParity",
       "secret"
@@ -899,9 +897,7 @@
   },
   "knownBlockers": [
     "iam",
-    "rules",
     "indexes",
-    "maliciousClient",
     "realClientSmoke",
     "activeProductParity",
     "secret"
