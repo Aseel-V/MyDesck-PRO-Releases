@@ -1,0 +1,66 @@
+{
+  "generatedAt": "2026-09-14T08:29:39.037Z",
+  "readOnly": true,
+  "productionMutations": 0,
+  "allowlist": [
+    "src/data/supabaseStorageClient.ts",
+    "src/data/SupabaseStorageRepository.ts",
+    "src/data/contracts.ts"
+  ],
+  "scannedFiles": 261,
+  "storageCallsTotal": 13,
+  "storageCallsInsideAllowlist": 4,
+  "storageCallsOutsideAllowlist": 9,
+  "violations": {
+    "storageOutsideAllowlist": [
+      {
+        "file": "src/components/market/AddProductModal.tsx",
+        "calls": 2
+      },
+      {
+        "file": "src/components/Settings.tsx",
+        "calls": 2
+      },
+      {
+        "file": "src/components/ui/FileUpload.tsx",
+        "calls": 2
+      },
+      {
+        "file": "src/lib/businessImages.ts",
+        "calls": 1
+      },
+      {
+        "file": "src/lib/tripAttachments.ts",
+        "calls": 2
+      }
+    ],
+    "forbiddenInsideStorageLayer": [
+      {
+        "file": "src/data/supabaseStorageClient.ts",
+        "kind": "rpc",
+        "count": 1
+      },
+      {
+        "file": "src/data/supabaseStorageClient.ts",
+        "kind": "realtime",
+        "count": 1
+      },
+      {
+        "file": "src/data/SupabaseStorageRepository.ts",
+        "kind": "auth",
+        "count": 1
+      }
+    ],
+    "generalClientInStorageLayer": [
+      {
+        "file": "src/data/SupabaseStorageRepository.ts"
+      }
+    ]
+  },
+  "rules": {
+    "storageOnlyInsideAllowlist": false,
+    "noDatabaseRpcAuthRealtimeInStorageLayer": false,
+    "noGeneralClientImportInStorageLayer": false
+  },
+  "decision": "STORAGE_ISOLATION_NO_GO"
+}

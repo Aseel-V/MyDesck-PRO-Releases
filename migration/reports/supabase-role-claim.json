@@ -1,0 +1,18 @@
+{
+  "generatedAt": "2026-09-14T08:30:22.862Z",
+  "project": "mydesckpro",
+  "mode": "verify",
+  "includeProduction": false,
+  "totalUsers": 5,
+  "byScope": {
+    "SYNTHETIC": 5
+  },
+  "withRequiredClaimBefore": 5,
+  "withRequiredClaimAfter": 5,
+  "missingClaim": [],
+  "applied": [],
+  "productionClaimWrites": 0,
+  "customerRecordsModified": 0,
+  "note": "Firebase custom claims reach a client only on the next ID-token refresh; synthetic tests must force a refresh before asserting.",
+  "decision": "ROLE_CLAIM_READY"
+}

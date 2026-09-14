@@ -1,0 +1,173 @@
+{
+  "generatedAt": "2026-09-14T08:27:17.179Z",
+  "readOnly": true,
+  "productionMutations": 0,
+  "bytesDownloaded": 0,
+  "buckets": [
+    {
+      "bucket": "logos",
+      "public": true,
+      "objects": 2,
+      "bytes": 438670,
+      "classification": "PRIVATE_USER_EXPOSED_IN_PUBLIC_BUCKET",
+      "kinds": [
+        "LOGO",
+        "SIGNATURE_IMAGE"
+      ]
+    },
+    {
+      "bucket": "restaurant-assets",
+      "public": true,
+      "objects": 1,
+      "bytes": 0,
+      "classification": "PUBLIC_INTENTIONAL",
+      "kinds": [
+        "OTHER"
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "bucket": "logos",
+      "pathPrefix": "business-logos",
+      "nameHash": "5c8365802e95",
+      "kind": "LOGO",
+      "mime": "image/png",
+      "sizeBytes": 292332,
+      "ownerPresent": true,
+      "createdAt": "2025-11-21T12:17:22.174Z",
+      "anonymousHttp": 200,
+      "publiclyReadable": true
+    },
+    {
+      "bucket": "logos",
+      "pathPrefix": "business-signatures",
+      "nameHash": "e6cad920e366",
+      "kind": "SIGNATURE_IMAGE",
+      "mime": "image/jpeg",
+      "sizeBytes": 146338,
+      "ownerPresent": true,
+      "createdAt": "2025-12-22T11:31:16.067Z",
+      "anonymousHttp": 200,
+      "publiclyReadable": true
+    },
+    {
+      "bucket": "restaurant-assets",
+      "pathPrefix": "market-items",
+      "nameHash": "3a64b14421ff",
+      "kind": "OTHER",
+      "mime": "application/octet-stream",
+      "sizeBytes": 0,
+      "ownerPresent": false,
+      "createdAt": "2026-03-21T14:22:05.365Z",
+      "anonymousHttp": 200,
+      "publiclyReadable": true
+    }
+  ],
+  "policies": [
+    {
+      "name": "Allow authenticated uploads",
+      "cmd": "a",
+      "permissive": true,
+      "usesAuthUid": false,
+      "usesJwtClaim": false
+    },
+    {
+      "name": "Allow users to delete their own files",
+      "cmd": "d",
+      "permissive": true,
+      "usesAuthUid": true,
+      "usesJwtClaim": false
+    },
+    {
+      "name": "Allow users to update their own files",
+      "cmd": "w",
+      "permissive": true,
+      "usesAuthUid": true,
+      "usesJwtClaim": false
+    },
+    {
+      "name": "Authenticated Deletes",
+      "cmd": "d",
+      "permissive": true,
+      "usesAuthUid": false,
+      "usesJwtClaim": false
+    },
+    {
+      "name": "Authenticated Updates",
+      "cmd": "w",
+      "permissive": true,
+      "usesAuthUid": false,
+      "usesJwtClaim": false
+    },
+    {
+      "name": "Authenticated Uploads",
+      "cmd": "a",
+      "permissive": true,
+      "usesAuthUid": false,
+      "usesJwtClaim": false
+    },
+    {
+      "name": "Give public access to logos",
+      "cmd": "r",
+      "permissive": true,
+      "usesAuthUid": false,
+      "usesJwtClaim": false
+    },
+    {
+      "name": "Public Read Access",
+      "cmd": "r",
+      "permissive": true,
+      "usesAuthUid": false,
+      "usesJwtClaim": false
+    },
+    {
+      "name": "logos authenticated insert",
+      "cmd": "a",
+      "permissive": true,
+      "usesAuthUid": false,
+      "usesJwtClaim": false
+    },
+    {
+      "name": "logos authenticated update",
+      "cmd": "w",
+      "permissive": true,
+      "usesAuthUid": false,
+      "usesJwtClaim": false
+    },
+    {
+      "name": "logos public read",
+      "cmd": "r",
+      "permissive": true,
+      "usesAuthUid": false,
+      "usesJwtClaim": false
+    }
+  ],
+  "restrictivePolicyCount": 0,
+  "bucketsReferencedInCode": [
+    "business-signatures"
+  ],
+  "bucketsReferencedInCodeButMissing": [
+    "business-signatures"
+  ],
+  "unknownClassifications": 0,
+  "publiclyReadablePrivateObjects": 1,
+  "findings": [
+    {
+      "severity": "HIGH",
+      "id": "PRIVATE_OBJECT_PUBLICLY_READABLE",
+      "detail": "1 signature image(s) are anonymously readable over the public CDN path."
+    },
+    {
+      "severity": "HIGH",
+      "id": "NO_RESTRICTIVE_POLICY_IN_PRODUCTION",
+      "detail": "The private-signature RESTRICTIVE policy in supabase/migrations has never been applied to production."
+    },
+    {
+      "severity": "HIGH",
+      "id": "CODE_TARGETS_NONEXISTENT_BUCKET",
+      "detail": "SupabaseStorageRepository targets business-signatures, which do not exist in production."
+    }
+  ],
+  "decision": "STORAGE_SECURITY_BLOCKED"
+}
