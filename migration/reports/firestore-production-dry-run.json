@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-14T07:49:04.477Z",
+  "generatedAt": "2026-09-14T09:16:52.402Z",
   "migrationRunId": "harness-production-prep",
   "architecture": "FIREBASE_SPARK_ONLY",
   "mode": "dry-run",
@@ -15,9 +15,9 @@
     "firebaseProject": "mydesckpro",
     "firestoreDatabaseId": "default"
   },
-  "executableCommitSha": "dbd76031e28c2f72b301cb3b80706e6806789e74",
+  "executableCommitSha": "8c3ccdc6bfe0784ae94474fd27752a65650cd8f7",
   "configHashes": {
-    "firestoreRules": "e77ed17b8e3652a5523b25d4fb524f5afa4ec2de291ce23baf74d1a54349e9ba",
+    "firestoreRules": "6e28ddf7a98487799505699a2e8fbcb3159ee47d99cbcca1873b962bd82a0172",
     "indexes": "c516b73728401cd577c3214efaf5a839b2a8cde65dc714c6a39d70300ee2bc39",
     "deltaMap": "cf60c2b43faf32d30a5965e958a10d2226cc57e161095eff40342ba1d5d3db85"
   },
@@ -62,7 +62,7 @@
             }
           ]
         },
-        "candidateSha256": "e77ed17b8e3652a5523b25d4fb524f5afa4ec2de291ce23baf74d1a54349e9ba",
+        "candidateSha256": "6e28ddf7a98487799505699a2e8fbcb3159ee47d99cbcca1873b962bd82a0172",
         "rollback": {
           "release": "projects/mydesckpro/releases/cloud.firestore/default",
           "ruleset": "projects/mydesckpro/rulesets/c6fc85cd-4681-491c-bb7c-b879e5893a92",
@@ -398,7 +398,7 @@
       "evidence": "LTR regression"
     },
     "electron": {
-      "status": "PASS",
+      "status": "NOT_RUN",
       "evidence": "Electron-compatible renderer composition, Auth persistence, token refresh and local print/PDF path"
     },
     "activeSupabase": {
@@ -412,12 +412,7 @@
       "status": "FAIL",
       "evidence": {
         "shippedEntry": "src/production-main.tsx",
-        "shippedReachableFiles": 199,
-        "shippedSupabaseCalls": 297,
-        "shippedFirestoreCalls": 0,
-        "activeVerticals": 8,
-        "supportedInFirebaseMode": 0,
-        "blockingCutover": 8
+        "shippedReachableFiles": 201
       }
     },
     "secret": {
@@ -488,7 +483,7 @@
               }
             ]
           },
-          "candidateSha256": "e77ed17b8e3652a5523b25d4fb524f5afa4ec2de291ce23baf74d1a54349e9ba",
+          "candidateSha256": "6e28ddf7a98487799505699a2e8fbcb3159ee47d99cbcca1873b962bd82a0172",
           "rollback": {
             "release": "projects/mydesckpro/releases/cloud.firestore/default",
             "ruleset": "projects/mydesckpro/rulesets/c6fc85cd-4681-491c-bb7c-b879e5893a92",
@@ -842,7 +837,7 @@
       },
       {
         "name": "electron",
-        "status": "PASS",
+        "status": "NOT_RUN",
         "evidence": "Electron-compatible renderer composition, Auth persistence, token refresh and local print/PDF path"
       },
       {
@@ -858,12 +853,7 @@
         "status": "FAIL",
         "evidence": {
           "shippedEntry": "src/production-main.tsx",
-          "shippedReachableFiles": 199,
-          "shippedSupabaseCalls": 297,
-          "shippedFirestoreCalls": 0,
-          "activeVerticals": 8,
-          "supportedInFirebaseMode": 0,
-          "blockingCutover": 8
+          "shippedReachableFiles": 201
         }
       },
       {
@@ -892,15 +882,16 @@
         "evidence": "Spark plan and billing-disabled fail-closed runtime selector; cutover not started"
       }
     ],
-    "pass": 25,
+    "pass": 24,
     "fail": 4,
-    "notRun": 1,
+    "notRun": 2,
     "missing": 0,
     "decision": "NO_GO",
     "blockers": [
       "iam",
       "indexes",
       "realClientSmoke",
+      "electron",
       "activeProductParity",
       "secret"
     ]
@@ -909,6 +900,7 @@
     "iam",
     "indexes",
     "realClientSmoke",
+    "electron",
     "activeProductParity",
     "secret"
   ],
