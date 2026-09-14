@@ -1,131 +1,446 @@
 {
-  "generatedAt": "2026-09-14T07:46:46.403Z",
+  "generatedAt": "2026-09-14T08:07:37.190Z",
   "readOnly": true,
   "productionMutations": 0,
+  "policy": {
+    "supabaseStorage": "ALLOWED_INTENTIONAL_PRODUCTION_DEPENDENCY",
+    "supabaseDatabase": "FORBIDDEN_AFTER_CUTOVER",
+    "supabaseRpc": "FORBIDDEN_AFTER_CUTOVER",
+    "supabaseAuth": "FORBIDDEN_AFTER_CUTOVER",
+    "supabaseDatabaseRealtime": "FORBIDDEN_AFTER_CUTOVER"
+  },
   "selector": {
     "entry": "src/main.tsx",
     "supabaseBranch": "src/production-main.tsx",
     "firebaseBranch": "src/migration-app/main.tsx",
-    "defaultMode": "supabase"
+    "defaultMode": "supabase",
+    "dedicatedFirebaseProductionRootExists": false
   },
   "compositionRoots": {
-    "firebaseMode": {
-      "entry": "src/migration-app/main.tsx",
-      "reachableFiles": 10,
-      "supabase": 0,
-      "functions": 0,
-      "storage": 0,
-      "firestore": 6,
-      "supabaseFiles": 0,
-      "storageFiles": 0,
-      "functionsFiles": 0
-    },
     "shippedProduct": {
       "entry": "src/production-main.tsx",
+      "present": true,
       "reachableFiles": 199,
-      "supabase": 297,
-      "functions": 0,
-      "storage": 11,
+      "supabaseDatabase": 167,
+      "supabaseRpc": 42,
+      "supabaseAuth": 12,
+      "supabaseRealtime": 2,
+      "supabaseStorage": 11,
       "firestore": 0,
-      "supabaseFiles": 56,
-      "storageFiles": 6,
-      "functionsFiles": 0
+      "carriers": {
+        "supabaseDatabase": [
+          {
+            "file": "src/components/CommandPalette.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/Dashboard.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/Settings.tsx",
+            "count": 6
+          },
+          {
+            "file": "src/components/admin/AdminDashboard.tsx",
+            "count": 2
+          },
+          {
+            "file": "src/components/admin/EditUserModal.tsx",
+            "count": 2
+          },
+          {
+            "file": "src/components/analytics/EditRestaurantOrderModal.tsx",
+            "count": 4
+          },
+          {
+            "file": "src/components/analytics/RestaurantAnalytics.tsx",
+            "count": 3
+          },
+          {
+            "file": "src/components/analytics/RestaurantOrderModal.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/cars/AddServiceModal.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/cars/Cars.tsx",
+            "count": 2
+          },
+          {
+            "file": "src/components/cars/NewCarForm.tsx",
+            "count": 4
+          },
+          {
+            "file": "src/components/dashboards/SupermarketDashboard.tsx",
+            "count": 4
+          },
+          {
+            "file": "src/components/market/AddProductModal.tsx",
+            "count": 4
+          },
+          {
+            "file": "src/components/parts/CarPartsInventory.tsx",
+            "count": 4
+          },
+          {
+            "file": "src/components/restaurant/OrderEntry.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/restaurant/OrderHistoryModal.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/restaurant/OrderModal.tsx",
+            "count": 5
+          },
+          {
+            "file": "src/components/trips/NewTripForm.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/trips/TripSmartToolsDialog.tsx",
+            "count": 2
+          },
+          {
+            "file": "src/components/trips/TripTrash.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/trips/TripWhatsappDialog.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/contexts/AuthContext.tsx",
+            "count": 5
+          },
+          {
+            "file": "src/contexts/RestaurantRoleContext.tsx",
+            "count": 3
+          },
+          {
+            "file": "src/data/SupabaseTripRepository.ts",
+            "count": 4
+          },
+          {
+            "file": "src/hooks/useRestaurant.ts",
+            "count": 74
+          },
+          {
+            "file": "src/lib/tripNotifications.ts",
+            "count": 7
+          },
+          {
+            "file": "src/lib/tripPayments.ts",
+            "count": 3
+          },
+          {
+            "file": "src/lib/tripQueries.ts",
+            "count": 4
+          },
+          {
+            "file": "src/lib/tripTemplates.ts",
+            "count": 7
+          },
+          {
+            "file": "src/lib/tripTrashQueries.ts",
+            "count": 1
+          },
+          {
+            "file": "src/lib/tripWhatsapp.ts",
+            "count": 6
+          },
+          {
+            "file": "src/lib/visaPaymentArrivals.ts",
+            "count": 2
+          }
+        ],
+        "supabaseRpc": [
+          {
+            "file": "src/components/Dashboard.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/cars/AddServiceModal.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/trips/DuplicateTripDialog.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/trips/TripWhatsappDialog.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/trips/Trips.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/contexts/AuthContext.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/data/SupabaseTripRepository.ts",
+            "count": 1
+          },
+          {
+            "file": "src/hooks/useRestaurant.ts",
+            "count": 9
+          },
+          {
+            "file": "src/lib/analyticsQueries.ts",
+            "count": 2
+          },
+          {
+            "file": "src/lib/paymentContractCompatibility.ts",
+            "count": 1
+          },
+          {
+            "file": "src/lib/pdfGenerator.ts",
+            "count": 2
+          },
+          {
+            "file": "src/lib/travelReports.ts",
+            "count": 1
+          },
+          {
+            "file": "src/lib/tripAuditQueries.ts",
+            "count": 2
+          },
+          {
+            "file": "src/lib/tripNotifications.ts",
+            "count": 1
+          },
+          {
+            "file": "src/lib/tripPayments.ts",
+            "count": 5
+          },
+          {
+            "file": "src/lib/tripQueries.ts",
+            "count": 6
+          },
+          {
+            "file": "src/lib/tripTemplates.ts",
+            "count": 1
+          },
+          {
+            "file": "src/lib/tripTrashQueries.ts",
+            "count": 4
+          },
+          {
+            "file": "src/lib/visaPaymentArrivals.ts",
+            "count": 1
+          }
+        ],
+        "supabaseAuth": [
+          {
+            "file": "src/components/ForgotPassword.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/Settings.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/auth/ResetPassword.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/restaurant/ReservationsBoard.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/contexts/AuthContext.tsx",
+            "count": 7
+          },
+          {
+            "file": "src/data/SupabaseStorageRepository.ts",
+            "count": 1
+          }
+        ],
+        "supabaseRealtime": [
+          {
+            "file": "src/hooks/useRestaurant.ts",
+            "count": 2
+          }
+        ],
+        "supabaseStorage": [
+          {
+            "file": "src/components/Settings.tsx",
+            "count": 2
+          },
+          {
+            "file": "src/components/market/AddProductModal.tsx",
+            "count": 2
+          },
+          {
+            "file": "src/components/ui/FileUpload.tsx",
+            "count": 2
+          },
+          {
+            "file": "src/data/SupabaseStorageRepository.ts",
+            "count": 2
+          },
+          {
+            "file": "src/lib/businessImages.ts",
+            "count": 1
+          },
+          {
+            "file": "src/lib/tripAttachments.ts",
+            "count": 2
+          }
+        ]
+      },
+      "storageIsolated": false,
+      "storageOutsideAllowlist": [
+        {
+          "file": "src/components/Settings.tsx",
+          "count": 2
+        },
+        {
+          "file": "src/components/market/AddProductModal.tsx",
+          "count": 2
+        },
+        {
+          "file": "src/components/ui/FileUpload.tsx",
+          "count": 2
+        },
+        {
+          "file": "src/lib/businessImages.ts",
+          "count": 1
+        },
+        {
+          "file": "src/lib/tripAttachments.ts",
+          "count": 2
+        }
+      ]
+    },
+    "firebaseRoot": {
+      "entry": "src/migration-app/main.tsx",
+      "present": true,
+      "reachableFiles": 10,
+      "supabaseDatabase": 0,
+      "supabaseRpc": 0,
+      "supabaseAuth": 0,
+      "supabaseRealtime": 0,
+      "supabaseStorage": 0,
+      "firestore": 6,
+      "carriers": {
+        "supabaseDatabase": [],
+        "supabaseRpc": [],
+        "supabaseAuth": [],
+        "supabaseRealtime": [],
+        "supabaseStorage": []
+      },
+      "storageIsolated": true,
+      "storageOutsideAllowlist": []
     }
   },
   "verticals": [
     {
       "vertical": "auto_repair",
-      "classification": "ACTIVE",
-      "reachableFromShippedDashboard": true,
-      "productionRowsInReconciledCorpus": 1,
-      "firestoreApplicationLayer": "ABSENT",
-      "firebaseModeSupported": false,
-      "blocksCutover": true,
-      "reason": "No Firestore application layer exists. Selecting Firebase mode removes this vertical from the product entirely."
+      "classification": "ACTIVE_WITH_DATA",
+      "tenants": 1,
+      "rows": 2,
+      "firestoreMigrated": false,
+      "reachableInFirebaseRoot": false,
+      "blocksParity": true
     },
     {
       "vertical": "car_parts",
-      "classification": "ACTIVE",
-      "reachableFromShippedDashboard": true,
-      "productionRowsInReconciledCorpus": 1,
-      "firestoreApplicationLayer": "ABSENT",
-      "firebaseModeSupported": false,
-      "blocksCutover": true,
-      "reason": "No Firestore application layer exists. Selecting Firebase mode removes this vertical from the product entirely."
+      "classification": "ACTIVE_EMPTY",
+      "tenants": 0,
+      "rows": 1,
+      "firestoreMigrated": false,
+      "reachableInFirebaseRoot": false,
+      "blocksParity": true
     },
     {
       "vertical": "clothes_shop",
-      "classification": "ACTIVE",
-      "reachableFromShippedDashboard": true,
-      "productionRowsInReconciledCorpus": 0,
-      "firestoreApplicationLayer": "ABSENT",
-      "firebaseModeSupported": false,
-      "blocksCutover": true,
-      "reason": "No Firestore application layer exists. Selecting Firebase mode removes this vertical from the product entirely."
+      "classification": "ACTIVE_EMPTY",
+      "tenants": 0,
+      "rows": 0,
+      "firestoreMigrated": false,
+      "reachableInFirebaseRoot": false,
+      "blocksParity": true
     },
     {
       "vertical": "furniture_store",
-      "classification": "ACTIVE",
-      "reachableFromShippedDashboard": true,
-      "productionRowsInReconciledCorpus": 0,
-      "firestoreApplicationLayer": "ABSENT",
-      "firebaseModeSupported": false,
-      "blocksCutover": true,
-      "reason": "No Firestore application layer exists. Selecting Firebase mode removes this vertical from the product entirely."
+      "classification": "ACTIVE_EMPTY",
+      "tenants": 0,
+      "rows": 0,
+      "firestoreMigrated": false,
+      "reachableInFirebaseRoot": false,
+      "blocksParity": true
     },
     {
       "vertical": "phone_shop",
-      "classification": "ACTIVE",
-      "reachableFromShippedDashboard": true,
-      "productionRowsInReconciledCorpus": 0,
-      "firestoreApplicationLayer": "ABSENT",
-      "firebaseModeSupported": false,
-      "blocksCutover": true,
-      "reason": "No Firestore application layer exists. Selecting Firebase mode removes this vertical from the product entirely."
+      "classification": "ACTIVE_EMPTY",
+      "tenants": 0,
+      "rows": 0,
+      "firestoreMigrated": false,
+      "reachableInFirebaseRoot": false,
+      "blocksParity": true
     },
     {
       "vertical": "restaurant",
-      "classification": "ACTIVE",
-      "reachableFromShippedDashboard": true,
-      "productionRowsInReconciledCorpus": 94,
-      "firestoreApplicationLayer": "ABSENT",
-      "firebaseModeSupported": false,
-      "blocksCutover": true,
-      "reason": "No Firestore application layer exists. Selecting Firebase mode removes this vertical from the product entirely."
+      "classification": "ACTIVE_WITH_DATA",
+      "tenants": 1,
+      "rows": 94,
+      "firestoreMigrated": false,
+      "reachableInFirebaseRoot": false,
+      "blocksParity": true
     },
     {
       "vertical": "supermarket",
-      "classification": "ACTIVE",
-      "reachableFromShippedDashboard": true,
-      "productionRowsInReconciledCorpus": 1,
-      "firestoreApplicationLayer": "ABSENT",
-      "firebaseModeSupported": false,
-      "blocksCutover": true,
-      "reason": "No Firestore application layer exists. Selecting Firebase mode removes this vertical from the product entirely."
+      "classification": "ACTIVE_WITH_DATA",
+      "tenants": 1,
+      "rows": 1,
+      "firestoreMigrated": false,
+      "reachableInFirebaseRoot": false,
+      "blocksParity": true
     },
     {
       "vertical": "tourism",
-      "classification": "ACTIVE",
-      "reachableFromShippedDashboard": true,
-      "productionRowsInReconciledCorpus": 1301,
-      "firestoreApplicationLayer": "PRESENT_TRAVEL_WORKSPACE_ONLY",
-      "firebaseModeSupported": false,
-      "blocksCutover": true,
-      "reason": "The Firebase-mode workspace implements a reduced travel surface; the shipped tourism product is the Supabase-backed dashboard and is not reachable in Firebase mode."
+      "classification": "ACTIVE_WITH_DATA",
+      "tenants": 3,
+      "rows": 1339,
+      "firestoreMigrated": false,
+      "reachableInFirebaseRoot": false,
+      "blocksParity": true
     }
   ],
   "counts": {
-    "ACTIVE": 8,
+    "ACTIVE_WITH_DATA": 4,
+    "ACTIVE_EMPTY": 4,
+    "LEGACY_REACHABLE": 0,
     "LEGACY_UNREACHABLE": 0,
-    "MIGRATION_ONLY": 0,
-    "ROLLBACK_ONLY": 0,
     "DEAD": 0,
+    "MIGRATION_ONLY": 0,
     "unknown": 0
   },
-  "activeVerticalsSupportedInFirebaseMode": 0,
-  "activeVerticalsBlockingCutover": 8,
-  "shippedProductSupabaseReachable": 297,
-  "shippedProductFirestoreReachable": 0,
-  "decision": "ACTIVE_PRODUCT_PARITY_BLOCKED",
-  "note": "The Spark runtime proof measures the Firebase-mode root only. It remains true for that root and is not evidence about the shipped product."
+  "targets": {
+    "supabaseDatabase": 0,
+    "supabaseRpc": 0,
+    "supabaseAuth": 0,
+    "supabaseRealtime": 0,
+    "supabaseStorage": "INTENTIONAL_COUNT_BEHIND_StorageRepository"
+  },
+  "firebaseRootActual": {
+    "supabaseDatabase": 0,
+    "supabaseRpc": 0,
+    "supabaseAuth": 0,
+    "supabaseRealtime": 0,
+    "supabaseStorage": 0,
+    "firestore": 6
+  },
+  "verticalsSupported": 0,
+  "verticalsBlocking": 8,
+  "databaseRuntimeZeroInFirebaseRoot": true,
+  "decision": "PRODUCT_PARITY_NO_GO",
+  "note": "The Firebase root currently measured is the reduced travel workspace. No dedicated Firebase production root containing every active vertical exists yet."
 }

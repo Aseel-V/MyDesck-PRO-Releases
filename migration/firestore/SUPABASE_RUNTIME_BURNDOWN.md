@@ -1,73 +1,95 @@
-# Supabase runtime burn-down for Spark
+# Supabase runtime burn-down
+
+## Policy (updated 2026-09-14)
+
+Supabase **Storage** is an intentional, permitted production dependency in the final
+architecture. Supabase **database, RPC, Auth and database realtime** are not. These are counted
+and gated separately so that a retained Storage call is never mistaken for a database
+dependency, and a database call can never hide behind "Supabase is allowed now".
+
+| Category | After cutover | Target |
+| --- | --- | ---: |
+| `supabase.from(...)` — database | **FORBIDDEN** | 0 |
+| `supabase.rpc(...)` | **FORBIDDEN** | 0 |
+| `supabase.auth.*` | **FORBIDDEN** | 0 |
+| `supabase.channel(...)` — database realtime | **FORBIDDEN** | 0 |
+| `supabase.storage.*` | **ALLOWED, intentional** | behind `StorageRepository` |
 
 ## Two composition roots — measure the right one
 
 `src/main.tsx` is a selector, not an application. It branches on `selectBackend()`:
 
-| Mode | Loads | Reachable files | Supabase calls | Storage calls | Firestore calls |
-| --- | --- | ---: | ---: | ---: | ---: |
-| `supabase` (**current default, the shipped product**) | `src/production-main.tsx` | **199** | **297** | **11** | **0** |
-| `firestore` / `firestore-emulator` | `src/migration-app/main.tsx` | 10 | **0** | 0 | 6 |
+| Mode | Loads | Files | DB | RPC | Auth | DB realtime | Storage | Firestore |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `supabase` (**default, shipped**) | `src/production-main.tsx` | **199** | **167** | **42** | **12** | **2** | 11 | **0** |
+| `firestore` | `src/migration-app/main.tsx` | 10 | 0 | 0 | 0 | 0 | 0 | 6 |
 
-Both rows are produced by the same import-graph walker in
+Both rows come from the same import-graph walker in
 `migration/firestore/tools/active-product-parity.mjs` → `migration/reports/active-product-parity.json`.
 
-**The "zero reachable Supabase" result is true for the Firebase-mode root and is not a
-statement about the shipped product.** Quoting it as product-wide readiness is the single
-easiest way to authorize a destructive cutover, so the GO engine now carries a separate
-`activeProductParity` gate that measures `src/production-main.tsx` directly.
+**223 forbidden call sites** (167 + 42 + 12 + 2) must reach zero. The "zero reachable Supabase"
+result applies only to the reduced travel root and is not a statement about the shipped product.
 
-## Active product surfaces
+## Per-vertical burn-down
 
-`src/components/Dashboard.tsx` dispatches on `profile.business_type`. Every branch below is
-reachable by a logged-in customer today:
+Live, read-only source inventory (`migration/reports/live-vertical-inventory.json`).
 
-| Vertical | Firestore application layer | Production rows in the reconciled corpus | Blocks cutover |
-| --- | --- | ---: | --- |
-| `tourism` | Reduced travel workspace only | 1,292 | **YES** |
-| `restaurant` | **None** | 94 | **YES** |
-| `supermarket` | **None** | 1 | **YES** |
-| `auto_repair` | **None** | 1 | **YES** |
-| `car_parts` | **None** | 1 | **YES** |
-| `phone_shop` | **None** | 0 | **YES** |
-| `clothes_shop` | **None** | 0 | **YES** |
-| `furniture_store` | **None** | 0 | **YES** |
+| Vertical | Tenants | Rows | Files | DB | RPC | DB realtime | Classification | Migrated |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
+| tourism | 3 | 1,339 | 63 | 39 | 25 | 0 | ACTIVE_WITH_DATA | Partial — reduced travel workspace only |
+| restaurant | 1 | 94 | 35 | 95 | 8 | 2 | ACTIVE_WITH_DATA | **No** |
+| supermarket | 1 | 1 | 15 | 9 | 0 | 0 | ACTIVE_WITH_DATA | **No** |
+| auto_repair | 1 | 2 | 11 | 16 | 1 | 0 | ACTIVE_WITH_DATA | **No** |
+| car_parts | 0 | 1 | 4 | 4 | 0 | 0 | ACTIVE_EMPTY | **No** |
+| phone_shop | 0 | 0 | 1 | 0 | 0 | 0 | ACTIVE_EMPTY | **No** |
+| clothes_shop | 0 | 0 | 1 | 0 | 0 | 0 | ACTIVE_EMPTY | **No** |
+| furniture_store | 0 | 0 | 1 | 0 | 0 | 0 | ACTIVE_EMPTY | **No** |
 
-ACTIVE: **8**. LEGACY_UNREACHABLE: 0. MIGRATION_ONLY: 0. ROLLBACK_ONLY: 0. DEAD: 0. Unknown: **0**.
-Active verticals supported in Firebase mode: **0 of 8**.
+ACTIVE_WITH_DATA 4 · ACTIVE_EMPTY 4 · LEGACY_REACHABLE 0 · LEGACY_UNREACHABLE 0 · DEAD 0 ·
+MIGRATION_ONLY 0 · **unknown 0**.
 
-Even `tourism` blocks: the Firebase-mode workspace is a reduced travel surface, not the shipped
-tourism dashboard. Verticals with zero rows are still classified ACTIVE because the code path is
-reachable and a customer could adopt that business type at any time; absence of rows today is not
-proof of disuse.
+No vertical is proven unreachable, so none may be dropped without an explicit owner decision.
 
-## Classification of the historical reference count
+## Server-side logic still to be replaced
 
-The global lexical scan reports 338 Supabase references across `src/`. The earlier runtime-call
-inventory counted 254. Neither is the cutover authority.
+**35 RPCs.** Roughly 25 belong to tourism, 8 to restaurant, 1 to auto_repair, and
+`log_business_activity_v2` is shared. These are Postgres functions holding business
+invariants; each must become a Firestore transaction plus Rules. `SECURITY DEFINER` functions
+needing particular care: `authenticate_staff`, `authorize_staff_action`, `apply_discount_secure`,
+`void_order_item_secure`, `close_business_day_secure`, `delete_staff_secure`,
+`delete_menu_item_secure`.
 
-| Classification | Current disposition |
-| --- | --- |
-| ACTIVE_BLOCKER | **297 reachable calls across 56 files from `src/production-main.tsx`.** Previously reported as 0 by measuring the wrong root. |
-| MIGRATION_ONLY | Extraction, reconciliation and Auth/data migration tooling retained. |
-| TEST_ONLY | Compatibility and historical regression fixtures retained. |
-| ROLLBACK_ONLY | Supabase adapters and archive access retained through the rollback window. |
-| LEGACY_UNREACHABLE | **0.** No vertical was shown to be unreachable; all eight dispatch branches are live. |
-| REMOVE_NOW | 0 reachable Firebase-mode sites. |
+## Storage isolation — currently FAIL
 
-The shipped product also reaches **11 Supabase Storage calls across 6 files**. The Spark
-architecture provisions no Storage, so those workflows have no Firebase-mode equivalent.
+Retaining Storage must not retain a generic Supabase client. **9 of 11** Storage call sites are
+outside `SupabaseStorageRepository`:
 
-## What this means for cutover
+| File | Storage calls |
+| --- | ---: |
+| `src/components/Settings.tsx` | 2 |
+| `src/components/market/AddProductModal.tsx` | 2 |
+| `src/components/ui/FileUpload.tsx` | 2 |
+| `src/lib/tripAttachments.ts` | 2 |
+| `src/lib/businessImages.ts` | 1 |
+| `src/data/SupabaseStorageRepository.ts` *(allowed)* | 2 |
 
-Switching the selector to `firestore` today would replace a 199-file product with a 10-file
-travel workspace. That is silent feature loss for seven verticals plus a reduced eighth, against
-live production data. **Backend cutover is blocked on architecture, not on configuration.**
+Every one imports `src/lib/supabase.ts`, which also exposes `.from()`, `.rpc()` and `.auth`.
+Required: a dedicated `supabaseStorageClient` confined to the Storage module, and a static
+import-graph rule that fails if business code can reach a Supabase DB/RPC/Auth API.
 
-Closing it requires either migrating the remaining verticals to a Firestore application layer, or
-an explicit, owner-approved decision to narrow MyDesck's supported product to travel and formally
-retire the other business types with a customer-communication and data-retention plan.
+## Storage authorisation — HARD BLOCKER
 
-Current production still runs Supabase because cutover is not started. During any later cutover the
-Spark selector requires `VITE_SUPABASE_FALLBACK_DISABLED=true`; any Firestore failure remains a
-failure and never silently writes to Supabase. Supabase deletion remains a separate future task.
+See `migration/reports/HYBRID_FIREBASE_SUPABASE_STORAGE.md`. Supabase Storage accepts **HS256
+only**; Firebase ID tokens are RS256 and are rejected at the algorithm header. Third-party
+Firebase auth is not enabled on the project. Until an operator enables it, a Firebase-authenticated
+client cannot reach private Storage at all, and there is no secure no-server workaround.
+
+## After cutover
+
+Supabase database and Auth become **rollback-only / read-only**. Supabase Storage remains a
+live, writable production dependency. "Supabase read-only" must therefore be defined precisely:
+it means no application business-table writes, **not** a project-wide freeze — Storage's own
+platform-internal bookkeeping must keep working or uploads break. Any Storage metadata that
+lives in application business tables must be identified and included in the freeze/delta design.
+
+The Supabase project is **not** scheduled for deletion at any point: Storage remains required.

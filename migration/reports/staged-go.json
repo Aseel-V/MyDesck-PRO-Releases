@@ -1,0 +1,217 @@
+{
+  "generatedAt": "2026-09-14T08:09:51.665Z",
+  "readOnly": true,
+  "productionMutations": 0,
+  "architecture": "FIREBASE_AUTH_FIRESTORE_PLUS_SUPABASE_STORAGE_ONLY",
+  "inputs": {
+    "activeProductParity": "2026-09-14T08:07:37.190Z",
+    "hybridStorageAuthProbe": "2026-09-14T08:05:39.785Z",
+    "liveVerticalInventory": "2026-09-14T08:06:56.073Z",
+    "dryRun": "2026-09-14T07:49:04.477Z",
+    "harness": "PASS 24/24"
+  },
+  "verticals": [
+    {
+      "vertical": "auto_repair",
+      "classification": "ACTIVE_WITH_DATA",
+      "tenants": 1,
+      "rows": 2,
+      "firestoreMigrated": false
+    },
+    {
+      "vertical": "car_parts",
+      "classification": "ACTIVE_EMPTY",
+      "tenants": 0,
+      "rows": 1,
+      "firestoreMigrated": false
+    },
+    {
+      "vertical": "clothes_shop",
+      "classification": "ACTIVE_EMPTY",
+      "tenants": 0,
+      "rows": 0,
+      "firestoreMigrated": false
+    },
+    {
+      "vertical": "furniture_store",
+      "classification": "ACTIVE_EMPTY",
+      "tenants": 0,
+      "rows": 0,
+      "firestoreMigrated": false
+    },
+    {
+      "vertical": "phone_shop",
+      "classification": "ACTIVE_EMPTY",
+      "tenants": 0,
+      "rows": 0,
+      "firestoreMigrated": false
+    },
+    {
+      "vertical": "restaurant",
+      "classification": "ACTIVE_WITH_DATA",
+      "tenants": 1,
+      "rows": 94,
+      "firestoreMigrated": false
+    },
+    {
+      "vertical": "supermarket",
+      "classification": "ACTIVE_WITH_DATA",
+      "tenants": 1,
+      "rows": 1,
+      "firestoreMigrated": false
+    },
+    {
+      "vertical": "tourism",
+      "classification": "ACTIVE_WITH_DATA",
+      "tenants": 3,
+      "rows": 1339,
+      "firestoreMigrated": false
+    }
+  ],
+  "supabaseRuntime": {
+    "shippedProduct": {
+      "database": 167,
+      "rpc": 42,
+      "auth": 12,
+      "databaseRealtime": 2,
+      "storage": 11
+    },
+    "firebaseRoot": {
+      "supabaseDatabase": 0,
+      "supabaseRpc": 0,
+      "supabaseAuth": 0,
+      "supabaseRealtime": 0,
+      "supabaseStorage": 0,
+      "firestore": 6
+    },
+    "targets": {
+      "database": 0,
+      "rpc": 0,
+      "auth": 0,
+      "databaseRealtime": 0,
+      "storage": "INTENTIONAL"
+    }
+  },
+  "stages": {
+    "PRODUCT_PARITY_GO": {
+      "ownedGates": 24,
+      "evaluatedGates": 24,
+      "pass": 22,
+      "fail": 2,
+      "notRun": 0,
+      "missing": 0,
+      "decision": "NO_GO",
+      "blockers": [
+        "activeProductParity:FAIL",
+        "storageIsolation:FAIL"
+      ]
+    },
+    "HYBRID_STORAGE_GO": {
+      "ownedGates": 4,
+      "evaluatedGates": 27,
+      "pass": 23,
+      "fail": 3,
+      "notRun": 1,
+      "missing": 0,
+      "decision": "NO_GO",
+      "blockers": [
+        "activeProductParity:FAIL",
+        "storageIsolation:FAIL",
+        "hybridStorageAuth:FAIL",
+        "storageTenantIsolation:NOT_RUN"
+      ]
+    },
+    "DRY_RUN_GO": {
+      "ownedGates": 8,
+      "evaluatedGates": 35,
+      "pass": 27,
+      "fail": 6,
+      "notRun": 2,
+      "missing": 0,
+      "decision": "NO_GO",
+      "blockers": [
+        "activeProductParity:FAIL",
+        "storageIsolation:FAIL",
+        "hybridStorageAuth:FAIL",
+        "storageTenantIsolation:NOT_RUN",
+        "iam:FAIL",
+        "indexes:FAIL",
+        "realClientSmoke:NOT_RUN",
+        "secret:FAIL"
+      ]
+    },
+    "BULK_COPY_GO": {
+      "ownedGates": 2,
+      "evaluatedGates": 37,
+      "pass": 27,
+      "fail": 6,
+      "notRun": 2,
+      "missing": 2,
+      "decision": "NO_GO",
+      "blockers": [
+        "activeProductParity:FAIL",
+        "storageIsolation:FAIL",
+        "hybridStorageAuth:FAIL",
+        "storageTenantIsolation:NOT_RUN",
+        "iam:FAIL",
+        "indexes:FAIL",
+        "realClientSmoke:NOT_RUN",
+        "secret:FAIL",
+        "productionSourceSnapshot:MISSING",
+        "productionReconciliation:MISSING"
+      ]
+    },
+    "CUTOVER_GO": {
+      "ownedGates": 3,
+      "evaluatedGates": 40,
+      "pass": 27,
+      "fail": 6,
+      "notRun": 2,
+      "missing": 5,
+      "decision": "NO_GO",
+      "blockers": [
+        "activeProductParity:FAIL",
+        "storageIsolation:FAIL",
+        "hybridStorageAuth:FAIL",
+        "storageTenantIsolation:NOT_RUN",
+        "iam:FAIL",
+        "indexes:FAIL",
+        "realClientSmoke:NOT_RUN",
+        "secret:FAIL",
+        "productionSourceSnapshot:MISSING",
+        "productionReconciliation:MISSING",
+        "productionAuthImport:MISSING",
+        "finalDelta:MISSING",
+        "finalReconciliation:MISSING"
+      ]
+    },
+    "POST_CUTOVER_HEALTHY": {
+      "ownedGates": 3,
+      "evaluatedGates": 43,
+      "pass": 27,
+      "fail": 6,
+      "notRun": 2,
+      "missing": 8,
+      "decision": "NO_GO",
+      "blockers": [
+        "activeProductParity:FAIL",
+        "storageIsolation:FAIL",
+        "hybridStorageAuth:FAIL",
+        "storageTenantIsolation:NOT_RUN",
+        "iam:FAIL",
+        "indexes:FAIL",
+        "realClientSmoke:NOT_RUN",
+        "secret:FAIL",
+        "productionSourceSnapshot:MISSING",
+        "productionReconciliation:MISSING",
+        "productionAuthImport:MISSING",
+        "finalDelta:MISSING",
+        "finalReconciliation:MISSING",
+        "productionSmoke:MISSING",
+        "postCutoverFinancialCheck:MISSING",
+        "rollbackJournal:MISSING"
+      ]
+    }
+  },
+  "overallDecision": "NO_GO"
+}

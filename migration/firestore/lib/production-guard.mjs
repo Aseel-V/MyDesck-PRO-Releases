@@ -116,3 +116,54 @@ export function reserveRunId(runId, existingIds) {
   existingIds.add(runId);
   return runId;
 }
+
+/**
+ * Staged release decisions.
+ *
+ * A PASS at one stage never implies the next. Each stage evaluates the gates it owns plus
+ * every gate its predecessors owned, so a later stage cannot go green over an earlier
+ * regression. Missing evidence is MISSING, never an implicit PASS.
+ *
+ * Supabase Storage is an intentional production dependency and is therefore NOT a parity
+ * blocker. Supabase database, RPC, Auth and database realtime remain forbidden at runtime.
+ */
+export const STAGE_GATES = Object.freeze({
+  PRODUCT_PARITY_GO: ['environment', 'sparkPlan', 'auth', 'activeProductParity',
+    'supabaseDatabaseRuntimeZero', 'storageIsolation', 'rules', 'ruleAccessBudget',
+    'maliciousClient', 'criticalTransactions', 'search', 'analytics', 'arabic', 'hebrew',
+    'english', 'electron', 'quota', 'noFunctions', 'noStorage', 'bulkData', 'delta',
+    'financial', 'relationships', 'events'],
+  HYBRID_STORAGE_GO: ['hybridStorageAuth', 'storageIsolation', 'storageTenantIsolation',
+    'storageAnonymousDenied'],
+  DRY_RUN_GO: ['iam', 'indexes', 'realClientSmoke', 'secret', 'writeFreeze', 'rollback',
+    'observability', 'backendSwitch'],
+  BULK_COPY_GO: ['productionSourceSnapshot', 'productionReconciliation'],
+  CUTOVER_GO: ['productionAuthImport', 'finalDelta', 'finalReconciliation'],
+  POST_CUTOVER_HEALTHY: ['productionSmoke', 'postCutoverFinancialCheck', 'rollbackJournal'],
+});
+
+const STAGE_ORDER = ['PRODUCT_PARITY_GO', 'HYBRID_STORAGE_GO', 'DRY_RUN_GO', 'BULK_COPY_GO',
+  'CUTOVER_GO', 'POST_CUTOVER_HEALTHY'];
+
+export function evaluateStagedGo(evidence) {
+  const stages = {};
+  let inherited = [];
+  for (const stage of STAGE_ORDER) {
+    const owned = STAGE_GATES[stage];
+    const names = [...new Set([...inherited, ...owned])];
+    const gates = names.map((name) => ({ name, status: evidence[name]?.status ?? 'MISSING' }));
+    const unmet = gates.filter((gate) => gate.status !== 'PASS');
+    stages[stage] = {
+      ownedGates: owned.length,
+      evaluatedGates: gates.length,
+      pass: gates.length - unmet.length,
+      fail: unmet.filter((gate) => gate.status === 'FAIL').length,
+      notRun: unmet.filter((gate) => gate.status === 'NOT_RUN').length,
+      missing: unmet.filter((gate) => gate.status === 'MISSING').length,
+      decision: unmet.length ? 'NO_GO' : 'GO',
+      blockers: unmet.map((gate) => gate.name + ':' + gate.status),
+    };
+    inherited = names;
+  }
+  return stages;
+}
