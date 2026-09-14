@@ -41,12 +41,21 @@ const walk = (dir) => readdirSync(dir, { withFileTypes: true }).forEach((entry) 
 walk('src');
 
 const count = (text, pattern) => (text.match(pattern) ?? []).length;
+
+/**
+ * Strips comments before matching. A guard that flags the prose describing the rule it
+ * enforces is a broken guard, and allowlisting those hits would blunt the real check.
+ */
+const stripComments = (text) => text
+  .replace(/\/\*[\s\S]*?\*\//g, ' ')
+  .replace(/(^|[^:])\/\/.*/gm, '$1 ');
+
 const violations = { storageOutsideAllowlist: [], forbiddenInsideStorageLayer: [], generalClientInStorageLayer: [] };
 let storageCallsTotal = 0;
 let storageCallsInsideAllowlist = 0;
 
 for (const file of files) {
-  const text = readFileSync(file, 'utf8');
+  const text = stripComments(readFileSync(file, 'utf8'));
   const storageCalls = count(text, STORAGE_CALL);
   const allowed = STORAGE_ALLOWLIST.includes(file);
   storageCallsTotal += storageCalls;
@@ -57,7 +66,9 @@ for (const file of files) {
   if (GENERAL_CLIENT.test(text)) violations.generalClientInStorageLayer.push({ file });
   for (const [name, pattern] of Object.entries(FORBIDDEN_IN_STORAGE_LAYER)) {
     // `.from(` inside the Storage layer is legitimate only as `storage.from(bucket)`.
-    const masked = name === 'database' ? text.replace(/storage\s*\.\s*from\s*\(/g, 'STORAGE_BUCKET(') : text;
+    const masked = name === 'database'
+      ? text.replace(/(?:storage|getStorageBackend\(\))\s*\.\s*from\s*\(/g, 'STORAGE_BUCKET(')
+      : text;
     const hits = count(masked, pattern);
     if (hits) violations.forbiddenInsideStorageLayer.push({ file, kind: name, count: hits });
   }

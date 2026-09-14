@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-14T08:07:37.190Z",
+  "generatedAt": "2026-09-14T09:10:51.741Z",
   "readOnly": true,
   "productionMutations": 0,
   "policy": {
@@ -20,12 +20,12 @@
     "shippedProduct": {
       "entry": "src/production-main.tsx",
       "present": true,
-      "reachableFiles": 199,
+      "reachableFiles": 201,
       "supabaseDatabase": 167,
       "supabaseRpc": 42,
-      "supabaseAuth": 12,
+      "supabaseAuth": 13,
       "supabaseRealtime": 2,
-      "supabaseStorage": 11,
+      "supabaseStorage": 9,
       "firestore": 0,
       "carriers": {
         "supabaseDatabase": [
@@ -260,6 +260,10 @@
           {
             "file": "src/data/SupabaseStorageRepository.ts",
             "count": 1
+          },
+          {
+            "file": "src/data/storageIdentity.ts",
+            "count": 1
           }
         ],
         "supabaseRealtime": [
@@ -270,54 +274,17 @@
         ],
         "supabaseStorage": [
           {
-            "file": "src/components/Settings.tsx",
-            "count": 2
-          },
-          {
-            "file": "src/components/market/AddProductModal.tsx",
-            "count": 2
-          },
-          {
-            "file": "src/components/ui/FileUpload.tsx",
-            "count": 2
-          },
-          {
             "file": "src/data/SupabaseStorageRepository.ts",
-            "count": 2
+            "count": 8
           },
           {
-            "file": "src/lib/businessImages.ts",
+            "file": "src/data/supabaseStorageClient.ts",
             "count": 1
-          },
-          {
-            "file": "src/lib/tripAttachments.ts",
-            "count": 2
           }
         ]
       },
-      "storageIsolated": false,
-      "storageOutsideAllowlist": [
-        {
-          "file": "src/components/Settings.tsx",
-          "count": 2
-        },
-        {
-          "file": "src/components/market/AddProductModal.tsx",
-          "count": 2
-        },
-        {
-          "file": "src/components/ui/FileUpload.tsx",
-          "count": 2
-        },
-        {
-          "file": "src/lib/businessImages.ts",
-          "count": 1
-        },
-        {
-          "file": "src/lib/tripAttachments.ts",
-          "count": 2
-        }
-      ]
+      "storageIsolated": true,
+      "storageOutsideAllowlist": []
     },
     "firebaseRoot": {
       "entry": "src/migration-app/main.tsx",

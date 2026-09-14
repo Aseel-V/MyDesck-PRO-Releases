@@ -1,5 +1,4 @@
 import { SupabaseStorageRepository } from '../data/SupabaseStorageRepository';
-import { supabase } from './supabase';
 
 // Keep stable references in profiles; resolve private objects only for display.
 export function businessImageReference(value: string | null | undefined): { bucket: string; path: string } | null {
@@ -26,8 +25,8 @@ export async function resolveBusinessImage(value: string | null | undefined): Pr
       return await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result)); reader.onerror = reject; reader.readAsDataURL(blob); });
     } catch { return null; }
   }
-  const { data, error } = await supabase.storage.from(ref.bucket).createSignedUrl(ref.path, 600);
-  return error ? null : data.signedUrl;
+  try { return await new SupabaseStorageRepository().signedUrl(ref.bucket, ref.path, 600); }
+  catch { return null; }
 }
 
 export async function resolvePrivateSignature(value: string | null | undefined): Promise<string | null> {

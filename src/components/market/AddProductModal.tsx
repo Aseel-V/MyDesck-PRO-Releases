@@ -1,3 +1,4 @@
+import { SupabaseStorageRepository } from '../../data/SupabaseStorageRepository';
 import { useState, useRef, useEffect } from 'react';
 import { X, Package, Scale, Camera, Barcode, ScanBarcode } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
@@ -134,17 +135,9 @@ export default function AddProductModal({ onClose, onSuccess, product, initialBa
       if (imageFile) {
         const fileExt = imageFile.name.split('.').pop();
         const fileName = `market-items/${user.id}/${Math.random()}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage
-          .from('restaurant-assets')
-          .upload(fileName, imageFile);
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('restaurant-assets')
-          .getPublicUrl(fileName);
-        
-        imageUrl = publicUrl;
+        const storage = new SupabaseStorageRepository();
+        await storage.upload('restaurant-assets', fileName, imageFile);
+        imageUrl = storage.publicUrl('restaurant-assets', fileName);
       }
 
        if (product) {

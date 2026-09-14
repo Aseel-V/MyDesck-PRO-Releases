@@ -1,21 +1,80 @@
-import { supabase } from '../lib/supabase';
-import type { StorageRepository } from './contracts';
+import { getStorageBackend } from './supabaseStorageClient';
+import type { StorageRepository, StorageUploadOptions } from './contracts';
 
-/** Private signatures must be downloaded with the session, never a public URL. */
+/** The private bucket that holds business signatures. Never served over a public URL. */
+export const SIGNATURE_BUCKET = 'business-signatures';
+
+/**
+ * The production Storage implementation.
+ *
+ * It reaches Supabase only through `getStorageBackend()`, which exposes the `storage` handle
+ * and nothing else, so no database, RPC, Auth or realtime API is reachable from here. Identity
+ * comes from the registered access-token provider: the Supabase session today, the Firebase ID
+ * token after Third-Party Auth is enabled.
+ *
+ * `uid` is supplied by the caller rather than read from a Supabase session. That is deliberate:
+ * reading `supabase.auth.getUser()` here would both reintroduce the Auth surface and break the
+ * moment Supabase Auth is removed. The caller passes whichever identity is currently
+ * authoritative, and because UIDs are preserved across the migration the `{uid}/...` path model
+ * is unchanged on either side of the cutover.
+ */
 export class SupabaseStorageRepository implements StorageRepository {
-  private async authorize(path: string) {
-    const { data, error } = await supabase.auth.getUser();
-    if (error || !data.user || !path.startsWith(`${data.user.id}/`) || path.includes('..')) throw Error('PRIVATE_PATH_DENIED');
+  constructor(private readonly uid: string | null = null) {}
+
+  /**
+   * Private paths are namespaced by owner. Rejecting traversal here is defence in depth: the
+   * Storage RLS policy is the actual boundary, and it is enforced server-side.
+   */
+  private authorize(path: string): string {
+    if (!this.uid) throw new Error('PRIVATE_PATH_DENIED');
+    if (!path.startsWith(`${this.uid}/`) || path.includes('..')) throw new Error('PRIVATE_PATH_DENIED');
     return path;
   }
-  async readPrivateFile(path: string) {
-    const { data, error } = await supabase.storage.from('business-signatures').download(await this.authorize(path));
-    if (error || !data) throw Error('PRIVATE_DOWNLOAD_FAILED');
+
+  async readPrivateFile(path: string): Promise<Blob> {
+    const { data, error } = await getStorageBackend().from(SIGNATURE_BUCKET).download(this.authorize(path));
+    if (error || !data) throw new Error('PRIVATE_DOWNLOAD_FAILED');
     return data;
   }
-  async uploadPrivateFile(path: string, file: Blob) {
-    const { error } = await supabase.storage.from('business-signatures').upload(await this.authorize(path), file, { upsert: false, contentType: file.type, cacheControl: '0' });
-    if (error) throw Error('PRIVATE_UPLOAD_FAILED');
-    return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/authenticated/business-signatures/${path.split('/').map(encodeURIComponent).join('/')}`;
+
+  async uploadPrivateFile(path: string, file: Blob): Promise<string> {
+    const authorized = this.authorize(path);
+    const { error } = await getStorageBackend().from(SIGNATURE_BUCKET)
+      .upload(authorized, file, { upsert: false, contentType: file.type, cacheControl: '0' });
+    if (error) throw new Error('PRIVATE_UPLOAD_FAILED');
+    // An authenticated object reference, never a public URL.
+    return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/authenticated/${SIGNATURE_BUCKET}/${authorized.split('/').map(encodeURIComponent).join('/')}`;
+  }
+
+  async upload(bucket: string, path: string, file: Blob, options: StorageUploadOptions = {}): Promise<void> {
+    const { error } = await getStorageBackend().from(bucket).upload(path, file, {
+      upsert: options.upsert ?? false,
+      contentType: options.contentType ?? file.type,
+      ...(options.cacheControl ? { cacheControl: options.cacheControl } : {}),
+    });
+    if (error) throw error;
+  }
+
+  async download(bucket: string, path: string): Promise<Blob> {
+    const { data, error } = await getStorageBackend().from(bucket).download(path);
+    if (error || !data) throw new Error('STORAGE_DOWNLOAD_FAILED');
+    return data;
+  }
+
+  publicUrl(bucket: string, path: string): string {
+    if (bucket === SIGNATURE_BUCKET) throw new Error('SIGNATURES_ARE_NEVER_PUBLIC');
+    return getStorageBackend().from(bucket).getPublicUrl(path).data.publicUrl;
+  }
+
+  async signedUrl(bucket: string, path: string, expiresInSeconds: number): Promise<string> {
+    const { data, error } = await getStorageBackend().from(bucket).createSignedUrl(path, expiresInSeconds);
+    if (error || !data) throw error ?? new Error('SIGNED_URL_FAILED');
+    return data.signedUrl;
+  }
+
+  async remove(bucket: string, paths: string[]): Promise<void> {
+    if (!paths.length) return;
+    const { error } = await getStorageBackend().from(bucket).remove(paths);
+    if (error) throw error;
   }
 }

@@ -1,8 +1,8 @@
+import { SupabaseStorageRepository } from '../../data/SupabaseStorageRepository';
 import { useState, useRef } from 'react';
 import { Upload, Loader2 } from 'lucide-react';
 import { compressImage } from '../../lib/imageUtils';
 import { Attachment } from '../../types/trip';
-import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
 import { useLanguage } from '../../contexts/LanguageContext';
 
@@ -45,11 +45,8 @@ export function FileUpload({
       const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
       const filePath = `${folderName}/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from(bucketName)
-        .upload(filePath, processedFile);
-
-      if (uploadError) throw uploadError;
+      const storage = new SupabaseStorageRepository();
+      await storage.upload(bucketName, filePath, processedFile);
 
       // 4. Determine type
       const type = file.type.startsWith('image/') 
@@ -58,7 +55,7 @@ export function FileUpload({
 
       onUploadComplete({
         file_name: file.name,
-        url: isPrivate ? `storage://${bucketName}/${filePath}` : supabase.storage.from(bucketName).getPublicUrl(filePath).data.publicUrl,
+        url: isPrivate ? `storage://${bucketName}/${filePath}` : storage.publicUrl(bucketName, filePath),
         type: type as Attachment['type'],
         bucket: isPrivate ? bucketName : undefined,
         storage_path: isPrivate ? filePath : undefined,

@@ -1,4 +1,7 @@
 import { SupabaseStorageRepository } from '../data/SupabaseStorageRepository';
+
+/** Business logos are intentionally public; signatures live in a separate private bucket. */
+const LOGO_BUCKET = 'logos';
 import { useState, useEffect, ChangeEvent, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -411,19 +414,15 @@ export default function Settings() {
       const resizedBlob = await resizeImage(file, 500, 500);
       const resizedFile = new File([resizedBlob], fileName, { type: file.type });
 
-      const { error: uploadError } = await supabase.storage.from('business-logos').upload(filePath, resizedFile, {
+      // Logos are intentionally public; signatures never are. See LOGO_BUCKET.
+      const storage = new SupabaseStorageRepository();
+      await storage.upload(LOGO_BUCKET, filePath, resizedFile, {
         upsert: true,
         cacheControl: '3600',
         contentType: file.type || 'image/*',
       });
 
-      if (uploadError) {
-        // لو bucket/policy غلط، هذه الرسالة تكون أوضح للمستخدم
-        throw uploadError;
-      }
-
-      const { data: publicUrlData } = supabase.storage.from('business-logos').getPublicUrl(filePath);
-      const newLogoUrl = publicUrlData?.publicUrl;
+      const newLogoUrl = storage.publicUrl(LOGO_BUCKET, filePath);
 
       if (!newLogoUrl) throw new Error('Could not get public URL for the uploaded logo.');
 

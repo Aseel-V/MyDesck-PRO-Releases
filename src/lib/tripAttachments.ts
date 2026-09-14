@@ -1,5 +1,7 @@
-import { supabase } from './supabase';
+import { SupabaseStorageRepository } from '../data/SupabaseStorageRepository';
 import { Attachment } from '../types/trip';
+
+const storage = new SupabaseStorageRepository();
 
 export const TRIP_ATTACHMENTS_BUCKET = 'trip-attachments';
 
@@ -12,12 +14,7 @@ export async function getTripAttachmentUrl(attachment: Attachment): Promise<stri
     return attachment.url;
   }
 
-  const { data, error } = await supabase.storage
-    .from(attachment.bucket!)
-    .createSignedUrl(attachment.storage_path!, 60 * 15);
-
-  if (error) throw error;
-  return data.signedUrl;
+  return storage.signedUrl(attachment.bucket!, attachment.storage_path!, 60 * 15);
 }
 
 export async function removeTripAttachments(attachments: Attachment[]): Promise<void> {
@@ -33,9 +30,6 @@ export async function removeTripAttachments(attachments: Attachment[]): Promise<
   }, {});
 
   await Promise.all(
-    Object.entries(byBucket).map(async ([bucket, paths]) => {
-      const { error } = await supabase.storage.from(bucket).remove(paths);
-      if (error) throw error;
-    })
+    Object.entries(byBucket).map(([bucket, paths]) => storage.remove(bucket, paths))
   );
 }

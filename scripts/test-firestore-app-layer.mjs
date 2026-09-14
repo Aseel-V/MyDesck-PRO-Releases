@@ -38,7 +38,15 @@ assert.ok(signature, 'signature flow exists');
 assert.doesNotMatch(signature.split('const fieldClass')[0], /getPublicUrl/,
   'private signatures never produce public URLs');
 const storage = readFileSync('src/data/SupabaseStorageRepository.ts', 'utf8');
-assert.doesNotMatch(storage, /getPublicUrl/);
+// The repository now also serves intentionally-public logos, so a blanket ban on getPublicUrl
+// would be wrong. The invariant that matters is narrower: the signature bucket can never
+// produce a public URL, and the private helpers only ever touch that bucket.
+assert.match(storage, /SIGNATURES_ARE_NEVER_PUBLIC/,
+  'publicUrl must refuse the signature bucket');
+assert.match(storage, /bucket === SIGNATURE_BUCKET/,
+  'the refusal must be keyed on the signature bucket itself');
+assert.doesNotMatch(storage, /getPublicUrl[\s\S]{0,200}SIGNATURE_BUCKET/,
+  'no public URL path may reach the signature bucket');
 assert.match(storage, /upsert: false/);
 const spark = readFileSync('src/data/SparkTransactionService.ts', 'utf8');
 assert.doesNotMatch(spark, /parseFloat|toFixed|Math[.]round/);

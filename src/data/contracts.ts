@@ -26,5 +26,23 @@ export interface AttachmentRepository { listAttachments(tripId: string): Promise
 export interface AuditRepository { listAuditHistory(tripId: string): Promise<AuditEvent[]> }
 export interface AnalyticsRepository { getTravelAnalytics(): Promise<unknown> }
 /** Legacy rollback adapter only. The Firebase Spark runtime does not implement this interface. */
-export interface StorageRepository { readPrivateFile(path: string): Promise<Blob>; uploadPrivateFile(path: string, file: Blob): Promise<string> }
+export interface StorageUploadOptions { contentType?: string; upsert?: boolean; cacheControl?: string }
+/**
+ * The only route to Supabase Storage.
+ *
+ * Supabase Storage is an intentional production dependency; Supabase database, RPC, Auth and
+ * realtime are not. Every Storage operation goes through this interface so the distinction is
+ * enforceable statically rather than by convention.
+ */
+export interface StorageRepository {
+  /** Private signature objects. The path is authorised against the caller's own uid. */
+  readPrivateFile(path: string): Promise<Blob>;
+  uploadPrivateFile(path: string, file: Blob): Promise<string>;
+  upload(bucket: string, path: string, file: Blob, options?: StorageUploadOptions): Promise<void>;
+  download(bucket: string, path: string): Promise<Blob>;
+  /** Only valid for buckets that are intentionally public. */
+  publicUrl(bucket: string, path: string): string;
+  signedUrl(bucket: string, path: string, expiresInSeconds: number): Promise<string>;
+  remove(bucket: string, paths: string[]): Promise<void>;
+}
 export type TravelRepositories = BusinessRepository & TripRepository & TravelerRepository & PaymentRepository & PaymentPlanRepository & InstallmentRepository & FinancialEventRepository & DocumentRepository & AttachmentRepository & AuditRepository & AnalyticsRepository;

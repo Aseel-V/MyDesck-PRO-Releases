@@ -13,6 +13,12 @@ import '@fontsource/ibm-plex-sans-arabic/700.css';
 
 import './lib/i18n';
 
+// Storage identity is registered once, at the composition root. Today it yields the Supabase
+// session token; after Supabase Third-Party Auth for Firebase is enabled this becomes
+// useFirebaseStorageIdentity and nothing else in the Storage layer changes.
+import { useSupabaseStorageIdentity } from './data/storageIdentity';
+useSupabaseStorageIdentity();
+
 import { QueryClient } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { createIDBPersister } from './lib/persister';

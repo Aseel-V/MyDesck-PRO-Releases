@@ -19,7 +19,9 @@ import { reachableSource } from '../lib/spark-readiness.mjs';
 
 // Storage is matched first and removed from the text so a `supabase.storage.from(...)`
 // chain can never also be counted as a database `.from(...)`.
-const STORAGE = /supabase[A-Za-z]*\s*\.\s*storage\b/g;
+// Storage now flows through the repository accessor, so count that too. Otherwise moving
+// calls behind StorageRepository would read as Storage usage dropping to zero.
+const STORAGE = /supabase[A-Za-z]*\s*\.\s*storage\b|getStorageBackend\s*\(/g;
 const CATEGORIES = {
   database: /supabase[A-Za-z]*\s*\.\s*from\s*\(/g,
   rpc: /supabase[A-Za-z]*\s*\.\s*rpc\s*\(/g,
@@ -30,6 +32,7 @@ const FIRESTORE = /firebase\/firestore|getFirestore/g;
 const count = (text, pattern) => (text.match(pattern) ?? []).length;
 
 const STORAGE_ALLOWLIST = [
+  'src/data/supabaseStorageClient.ts',
   'src/data/SupabaseStorageRepository.ts',
   'src/data/contracts.ts',
 ];
