@@ -1,9 +1,17 @@
 {
-  "generatedAt": "2026-09-14T09:29:23.970Z",
+  "generatedAt": "2026-09-14T17:35:01.663Z",
   "readOnly": true,
   "productionMutations": 0,
   "bytesDownloaded": 0,
   "buckets": [
+    {
+      "bucket": "business-signatures",
+      "public": false,
+      "objects": 0,
+      "bytes": 0,
+      "classification": "PRIVATE_BUSINESS",
+      "kinds": []
+    },
     {
       "bucket": "logos",
       "public": true,
@@ -141,15 +149,48 @@
       "permissive": true,
       "usesAuthUid": false,
       "usesJwtClaim": false
+    },
+    {
+      "name": "signatures never anonymous",
+      "cmd": "*",
+      "permissive": false,
+      "usesAuthUid": true,
+      "usesJwtClaim": false
+    },
+    {
+      "name": "signatures owner delete",
+      "cmd": "d",
+      "permissive": true,
+      "usesAuthUid": true,
+      "usesJwtClaim": false
+    },
+    {
+      "name": "signatures owner insert",
+      "cmd": "a",
+      "permissive": true,
+      "usesAuthUid": true,
+      "usesJwtClaim": false
+    },
+    {
+      "name": "signatures owner read",
+      "cmd": "r",
+      "permissive": true,
+      "usesAuthUid": true,
+      "usesJwtClaim": false
+    },
+    {
+      "name": "signatures owner update",
+      "cmd": "w",
+      "permissive": true,
+      "usesAuthUid": true,
+      "usesJwtClaim": false
     }
   ],
-  "restrictivePolicyCount": 0,
+  "restrictivePolicyCount": 1,
   "bucketsReferencedInCode": [
     "business-signatures"
   ],
-  "bucketsReferencedInCodeButMissing": [
-    "business-signatures"
-  ],
+  "bucketsReferencedInCodeButMissing": [],
   "unknownClassifications": 0,
   "publiclyReadablePrivateObjects": 1,
   "findings": [
@@ -157,16 +198,6 @@
       "severity": "HIGH",
       "id": "PRIVATE_OBJECT_PUBLICLY_READABLE",
       "detail": "1 signature image(s) are anonymously readable over the public CDN path."
-    },
-    {
-      "severity": "HIGH",
-      "id": "NO_RESTRICTIVE_POLICY_IN_PRODUCTION",
-      "detail": "The private-signature RESTRICTIVE policy in supabase/migrations has never been applied to production."
-    },
-    {
-      "severity": "HIGH",
-      "id": "CODE_TARGETS_NONEXISTENT_BUCKET",
-      "detail": "SupabaseStorageRepository targets business-signatures, which do not exist in production."
     }
   ],
   "decision": "STORAGE_SECURITY_BLOCKED"

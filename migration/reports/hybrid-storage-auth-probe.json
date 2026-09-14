@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-14T09:27:47.945Z",
+  "generatedAt": "2026-09-14T09:43:52.719Z",
   "readOnly": true,
   "productionMutations": 0,
   "bytesRead": 0,
@@ -8,8 +8,8 @@
   "algorithms": {
     "RS256": {
       "http": 400,
-      "message": "\"alg\" (Algorithm) Header Parameter value not allowed",
-      "algorithmAccepted": false
+      "message": "Key for the RS256 algorithm must be one of type CryptoKey, KeyObject, or JSON Web Key. Received an instance of Uint8Array",
+      "algorithmAccepted": true
     },
     "HS256": {
       "http": 400,
@@ -28,6 +28,7 @@
     }
   },
   "acceptedAlgorithms": [
+    "RS256",
     "HS256"
   ],
   "gotrueExternalProviders": [
@@ -37,9 +38,9 @@
     "http": 400,
     "denied": true
   },
-  "firebaseThirdPartyAuthEnabled": false,
+  "firebaseThirdPartyAuthEnabled": true,
   "clientPassesFirebaseToken": false,
   "storageRepositoryUsesSupabaseAuth": true,
-  "decision": "HYBRID_STORAGE_AUTH_BLOCKED",
-  "reason": "The Storage service accepts HS256 only, so it validates against the project JWT secret rather than a third-party JWKS. Firebase ID tokens are RS256 and are rejected at the algorithm header. Minting an HS256 token requires the project JWT secret, which cannot ship inside Electron, and the Spark constraint forbids a server to mint one."
+  "decision": "HYBRID_STORAGE_AUTH_POSSIBLE",
+  "reason": "The Storage service accepts RS256, consistent with a configured third-party issuer. Prove end to end with a real Firebase identity before relying on it."
 }

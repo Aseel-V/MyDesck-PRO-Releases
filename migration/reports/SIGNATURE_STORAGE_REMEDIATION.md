@@ -180,3 +180,63 @@ One audit fix landed this round: an earlier refactor replaced the literal bucket
 repository with a `SIGNATURE_BUCKET` constant, which silently stopped the audit reporting the
 bucket as missing. The detector now matches both forms, so `CODE_TARGETS_NONEXISTENT_BUCKET` is
 reported again.
+
+
+---
+
+# STATUS 2026-09-14 (post third-party auth) — DESTINATION READY, COPY STILL OPERATOR-ONLY
+
+Two of the three preconditions are now closed.
+
+| Precondition | Status |
+| --- | --- |
+| Supabase Third-Party Auth for Firebase | **DONE** - RS256 accepted, scoped to `mydesckpro` |
+| Private `business-signatures` bucket + narrow RLS | **DONE** - private, 5 policies, 1 restrictive |
+| Least-privileged copy path | **STILL MISSING** |
+
+`storage-rls-audit` now reports `restrictivePolicyCount: 1` and
+`bucketsReferencedInCodeButMissing: []`. One finding remains:
+**`PRIVATE_OBJECT_PUBLICLY_READABLE`**.
+
+## Why the copy is still not automated
+
+The destination policy is `(storage.foldername(name))[1] = auth.uid()::text`. Writing the
+signature to `<ownerUid>/...` therefore requires holding that owner's identity.
+
+- There is still **no `service_role` key** in this environment.
+- Creating a Firebase identity with the customer's UID would be **impersonating a customer**.
+- Adding a policy that lets a migration identity write into another identity's folder is exactly
+  the cross-tenant write the smoke just proved is denied. Weakening it to automate a copy would
+  undo the property being established.
+
+So the copy stays an operator action, by design rather than by accident.
+
+## `OPERATOR STORAGE COPY REQUIRED` — exact steps
+
+The file never leaves your Supabase environment. Do not download it, and do not share it with an
+assistant.
+
+1. **Supabase Dashboard -> Storage -> `logos`** -> open the `business-signatures/` folder ->
+   select the signature object -> **Download** to your own machine, or use **Copy/Move** if your
+   dashboard offers a cross-bucket move.
+2. **Storage -> `business-signatures`** (already created, already private) -> create a folder
+   named with the owning business's **user UUID** -> upload the file into it, so the final path is
+   `<ownerUid>/<filename>`. The first path segment must be that UUID or the policy will deny.
+3. Update `business_profiles.signature_url` for that business to reference the
+   `business-signatures` bucket. The app already handles this: `businessImageReference()` parses
+   both buckets, and `resolveBusinessImage()` routes `business-signatures` through
+   `SupabaseStorageRepository.readPrivateFile()` - an authenticated download, never a public URL.
+4. **Verify before deleting anything:** run
+   `node migration/firestore/tools/storage-rls-audit.mjs`. It must report
+   `publiclyReadablePrivateObjects: 0` only *after* step 5, but at this point it should already
+   show the new private object present and the bucket private.
+5. **Only then**, delete the original from `logos/business-signatures/`.
+6. Re-run the audit. Required: `publiclyReadablePrivateObjects: 0`, findings empty, decision
+   **`STORAGE_SECURITY_OK`**.
+
+If the byte size of the uploaded object does not match the original, **stop and keep the
+original**. The audit records size for exactly this comparison.
+
+Once step 6 passes, `storageRlsAudit` flips to PASS, which closes both
+`HYBRID_STORAGE_AUTH_GO` and `SIGNATURE_PRIVACY_GO` in the same move - they share this single
+root cause.

@@ -1,0 +1,79 @@
+{
+  "generatedAt": "2026-09-14T17:34:28.745Z",
+  "migrationRunId": "migration-test--hybrid-15cf33aa-e406-41c3-b9cb-41a96a012928",
+  "project": "mydesckpro",
+  "bucket": "business-signatures",
+  "target": "REAL_SUPABASE_STORAGE_AND_REAL_FIREBASE_AUTH",
+  "supabaseAuthSessionCreated": false,
+  "supabaseDatabaseCallsMade": 0,
+  "supabaseRpcCallsMade": 0,
+  "customerObjectsTouched": 0,
+  "syntheticIdentitiesCreated": 2,
+  "syntheticIdentitiesRemaining": 0,
+  "syntheticObjectsRemaining": 0,
+  "results": {
+    "firebaseTokenShape": {
+      "pass": true,
+      "alg": "RS256",
+      "issuerMatchesProject": true,
+      "audience": "mydesckpro",
+      "subEqualsUid": true,
+      "roleClaim": "authenticated"
+    },
+    "authorizedUpload": {
+      "pass": true,
+      "http": 200
+    },
+    "authorizedRead": {
+      "pass": true,
+      "http": 200,
+      "checksumMatches": true
+    },
+    "crossUserReadDenied": {
+      "pass": true,
+      "http": 400
+    },
+    "crossUserOverwriteDenied": {
+      "pass": true,
+      "http": 400
+    },
+    "crossUserDeleteDenied": {
+      "pass": true,
+      "http": 400
+    },
+    "crossTenantWriteDenied": {
+      "pass": true,
+      "http": 400
+    },
+    "anonymousDenied": {
+      "pass": true,
+      "apiHttp": 400,
+      "publicCdnHttp": 400
+    },
+    "untrustedIssuerDenied": {
+      "pass": true,
+      "http": 400
+    },
+    "ownFolderWriteAllowed": {
+      "pass": true,
+      "http": 200
+    },
+    "publicBucketUnchanged": {
+      "pass": true,
+      "publicBucketStillResolvesCdnPath": true,
+      "privateBucketInvisibleOnCdnPath": true,
+      "publicCode": "NoSuchKey",
+      "privateCode": "NoSuchBucket"
+    },
+    "authorizedDelete": {
+      "pass": true,
+      "http": 200
+    },
+    "cleanup": {
+      "pass": true,
+      "objectsRemaining": 0,
+      "identitiesRemaining": 0
+    }
+  },
+  "decision": "HYBRID_STORAGE_SMOKE_PASS"
+}

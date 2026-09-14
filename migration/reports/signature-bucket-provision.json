@@ -1,0 +1,74 @@
+{
+  "generatedAt": "2026-09-14T17:30:42.119Z",
+  "mode": "apply",
+  "bucket": "business-signatures",
+  "before": {
+    "bucket": null,
+    "policies": [],
+    "logos": {
+      "id": "logos",
+      "public": true
+    }
+  },
+  "after": {
+    "bucket": {
+      "id": "business-signatures",
+      "public": false
+    },
+    "policies": [
+      {
+        "name": "signatures never anonymous",
+        "restrictive": true
+      },
+      {
+        "name": "signatures owner delete",
+        "restrictive": false
+      },
+      {
+        "name": "signatures owner insert",
+        "restrictive": false
+      },
+      {
+        "name": "signatures owner read",
+        "restrictive": false
+      },
+      {
+        "name": "signatures owner update",
+        "restrictive": false
+      }
+    ],
+    "logos": {
+      "id": "logos",
+      "public": true
+    }
+  },
+  "applied": [
+    "bucket:business-signatures",
+    "policy:signatures owner read",
+    "policy:signatures owner insert",
+    "policy:signatures owner update",
+    "policy:signatures owner delete",
+    "policy:signatures never anonymous"
+  ],
+  "logosPublicUnchanged": true,
+  "bucketIsPrivate": true,
+  "restrictivePolicyPresent": true,
+  "policyCount": 5,
+  "objectsTouched": 0,
+  "statements": [
+    "create policy \"signatures owner read\" on storage.objects for select to authenticated using (bucket_id = 'business-signatures' and (storage.foldername(name))[1] = auth.uid()::text)",
+    "create policy \"signatures owner insert\" on storage.objects for insert to authenticated with check (bucket_id = 'business-signatures' and (storage.foldername(name))[1] = auth.uid()::text)",
+    "create policy \"signatures owner update\" on storage.objects for update to authenticated using (bucket_id = 'business-signatures' and (storage.foldername(name))[1] = auth.uid()::text) with check (bucket_id = 'business-signatures' and (storage.foldername(name))[1] = auth.uid()::text)",
+    "create policy \"signatures owner delete\" on storage.objects for delete to authenticated using (bucket_id = 'business-signatures' and (storage.foldername(name))[1] = auth.uid()::text)",
+    "create policy \"signatures never anonymous\" on storage.objects as restrictive for all to public using (bucket_id <> 'business-signatures' or auth.uid() is not null)"
+  ],
+  "rollback": [
+    "drop policy \"signatures owner read\" on storage.objects;",
+    "drop policy \"signatures owner insert\" on storage.objects;",
+    "drop policy \"signatures owner update\" on storage.objects;",
+    "drop policy \"signatures owner delete\" on storage.objects;",
+    "drop policy \"signatures never anonymous\" on storage.objects;",
+    "delete from storage.buckets where id = 'business-signatures';  -- only while empty"
+  ],
+  "decision": "SIGNATURE_BUCKET_READY"
+}

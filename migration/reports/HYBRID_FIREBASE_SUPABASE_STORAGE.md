@@ -322,3 +322,95 @@ together with working policies and a verified copy.
    still absent here, and was deliberately not synthesised from the project JWT secret.
 
 `HYBRID_STORAGE_AUTH_GO` = **NO_GO**. `SIGNATURE_PRIVACY_GO` = **NO_GO**.
+
+
+---
+
+# RESOLVED 2026-09-14 — third-party auth enabled and proven end to end
+
+`HYBRID_STORAGE_AUTH_GO` is now blocked by exactly one thing, and it is not authentication.
+
+## Third-party Firebase Auth: ENABLED
+
+`node migration/firestore/tools/hybrid-storage-auth-probe.mjs`
+
+| Token `alg` | Before | After |
+| --- | --- | --- |
+| **RS256** (Firebase) | rejected at the `"alg"` header | **accepted** - reaches key verification |
+| HS256 (Supabase) | accepted | accepted |
+| ES256 / `none` | rejected | rejected |
+
+The RS256 message changed from `"alg" (Algorithm) Header Parameter value not allowed` to a
+key-type error, which is the signature of a verifier that now attempts RS256 against a JWKS.
+`firebaseThirdPartyAuthEnabled: true`, decision `HYBRID_STORAGE_AUTH_POSSIBLE`.
+
+## Unrelated Supabase Auth config: UNCHANGED
+
+`supabase config diff` returns the **same 10 differences with identical values** as the captured
+baseline. MFA enroll `true`, MFA verify `true`, Twilio `true`, `max_frequency 1m0s`,
+`otp_expiry 86400`, `site_url http://localhost:3000`, pooler 15/200, `storage.vector false`.
+Nothing was pushed; `config push` was never used.
+
+## Real end-to-end proof: 13/13 PASS
+
+`node migration/firestore/tools/hybrid-storage-smoke.mjs` -> **`HYBRID_STORAGE_SMOKE_PASS`**.
+Real Firebase Auth, real Supabase Storage, synthetic identities only.
+
+| Check | Result |
+| --- | --- |
+| Firebase token shape | **PASS** - `alg RS256`, issuer `securetoken.google.com/mydesckpro`, audience `mydesckpro`, `sub` equals the uid, `role: authenticated` |
+| Authorized upload | **PASS** |
+| Authorized read | **PASS** - SHA-256 of the retrieved bytes matches what was written |
+| Cross-user read denied | **PASS** |
+| Cross-user overwrite denied | **PASS** |
+| Cross-user delete denied | **PASS** |
+| Cross-tenant write denied | **PASS** - B cannot write into A's folder |
+| Anonymous denied | **PASS** - both the API path and the public CDN path |
+| **Untrusted issuer denied** | **PASS** - a token from a different Firebase project is refused |
+| Own-folder write allowed | **PASS** - the policy grants, it does not blanket-deny |
+| Public logo bucket unchanged | **PASS** |
+| Authorized delete | **PASS** |
+| Cleanup | **PASS** - 0 synthetic objects, 0 synthetic identities remaining |
+
+`supabaseAuthSessionCreated: false`. `supabaseDatabaseCallsMade: 0`. `supabaseRpcCallsMade: 0`.
+`customerObjectsTouched: 0`.
+
+Enabling RS256 did **not** widen the trust boundary: a correctly-formed RS256 token from
+*another* Firebase project is still refused, so acceptance is scoped to `mydesckpro`.
+
+## Private bucket created
+
+`node migration/firestore/tools/provision-signature-bucket.mjs --mode=apply` ->
+**`SIGNATURE_BUCKET_READY`**.
+
+- `business-signatures` created with `public: false`, 5 MiB limit, `image/png` and `image/jpeg` only
+- 5 policies: owner read / insert / update / delete, keyed on
+  `(storage.foldername(name))[1] = auth.uid()::text`, plus one **RESTRICTIVE** policy making the
+  bucket unreachable without an identity
+- `logos` public state **unchanged**; 0 objects touched
+- Rollback statements are recorded in `signature-bucket-provision.json`
+
+A useful property fell out of this: on the public CDN path the private bucket answers
+`NoSuchBucket`, identical to a bucket that does not exist. Signatures are not merely denied
+there, they are invisible.
+
+`auth.uid()` returns `uuid`, so identities must be UUIDs for these policies to evaluate at all.
+Production UIDs are preserved Supabase UUIDs, and the synthetic test identities were created with
+UUID localIds to match that shape rather than Firebase's default 28-character ids.
+
+## The one remaining blocker
+
+`storageRlsAudit` still FAILs on a single finding: **`PRIVATE_OBJECT_PUBLICLY_READABLE`** - the
+real signature is still sitting in the public `logos` bucket. Everything needed to receive it now
+exists and is proven. Moving it requires a Storage write into another identity's folder, which is
+exactly the cross-tenant write this architecture correctly forbids, so it is an operator action.
+See `SIGNATURE_STORAGE_REMEDIATION.md`.
+
+`HYBRID_STORAGE_AUTH_GO` = **NO_GO** (4/5, only `storageRlsAudit`).
+`SIGNATURE_PRIVACY_GO` = **NO_GO** (3/4, only `signatureNotPubliclyReadable`).
+
+## Note on the harness
+
+The hybrid smoke is deliberately **not** registered in the regression harness: it creates and
+deletes real Firebase Auth identities in the production project. It is a milestone tool, run
+explicitly, not something that should fire on every test run.

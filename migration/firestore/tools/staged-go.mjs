@@ -20,6 +20,8 @@ const isolation = read('migration/reports/storage-isolation-guard.json');
 const rlsAudit = read('migration/reports/storage-rls-audit.json');
 const roleClaim = read('migration/reports/supabase-role-claim.json');
 const staff = read('migration/reports/restaurant-staff-inventory.json');
+const smoke = read('migration/reports/hybrid-storage-smoke.json');
+const bucket = read('migration/reports/signature-bucket-provision.json');
 const staffRulesSuite = harness?.suites?.find((x) => x.label === 'restaurant staff membership Rules');
 const rulesSource = existsSync('migration/firestore/rules/firestore.rules')
   ? readFileSync('migration/firestore/rules/firestore.rules', 'utf8') : '';
@@ -72,8 +74,11 @@ const evidence = {
       replacement: 'Firebase Auth for identity, restaurantMemberships plus Rules for authorisation',
       note: 'The Postgres RPC remains live until the restaurant vertical cuts over; the replacement path is proven in the emulator.' } },
   // SIGNATURE_PRIVACY_GO
-  signaturePrivateBucketExists: { status: rlsAudit && !(rlsAudit.bucketsReferencedInCodeButMissing ?? []).includes('business-signatures') ? 'PASS' : 'FAIL',
-    evidence: rlsAudit ? { missing: rlsAudit.bucketsReferencedInCodeButMissing } : 'not generated' },
+  signaturePrivateBucketExists: { status: rlsAudit && bucket?.bucketIsPrivate === true
+      && !(rlsAudit.bucketsReferencedInCodeButMissing ?? []).includes('business-signatures') ? 'PASS' : 'FAIL',
+    evidence: { missing: rlsAudit?.bucketsReferencedInCodeButMissing ?? null,
+      bucketIsPrivate: bucket?.bucketIsPrivate ?? null, policyCount: bucket?.policyCount ?? null,
+      logosPublicUnchanged: bucket?.logosPublicUnchanged ?? null } },
   signatureNotPubliclyReadable: { status: rlsAudit?.publiclyReadablePrivateObjects === 0 ? 'PASS' : 'FAIL',
     evidence: rlsAudit ? { publiclyReadablePrivateObjects: rlsAudit.publiclyReadablePrivateObjects } : 'not generated' },
   signatureRestrictivePolicy: { status: (rlsAudit?.restrictivePolicyCount ?? 0) > 0 ? 'PASS' : 'FAIL',
@@ -88,8 +93,14 @@ const evidence = {
     evidence: storageAuth ? { acceptedAlgorithms: storageAuth.acceptedAlgorithms,
       firebaseThirdPartyAuthEnabled: storageAuth.firebaseThirdPartyAuthEnabled,
       reason: storageAuth.reason } : 'not generated' },
-  storageTenantIsolation: { status: 'NOT_RUN',
-    evidence: 'Requires a real Firebase identity reaching Supabase Storage; blocked by hybridStorageAuth.' },
+  storageTenantIsolation: { status: smoke?.decision === 'HYBRID_STORAGE_SMOKE_PASS' ? 'PASS' : smoke ? 'FAIL' : 'NOT_RUN',
+    evidence: smoke ? { target: smoke.target,
+      results: Object.fromEntries(Object.entries(smoke.results).map(([k, v]) => [k, v.pass ? 'PASS' : 'FAIL'])),
+      supabaseAuthSessionCreated: smoke.supabaseAuthSessionCreated,
+      supabaseDatabaseCallsMade: smoke.supabaseDatabaseCallsMade,
+      customerObjectsTouched: smoke.customerObjectsTouched,
+      syntheticResidue: smoke.syntheticObjectsRemaining + smoke.syntheticIdentitiesRemaining }
+      : 'not generated' },
   storageAnonymousDenied: { status: storageAuth?.anonymousPrivateRead?.denied ? 'PASS' : 'NOT_RUN',
     evidence: storageAuth?.anonymousPrivateRead ?? 'not generated' },
 };
