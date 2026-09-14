@@ -1,0 +1,47 @@
+{
+  "generatedAt": "2026-09-14T18:55:38.521Z",
+  "mode": "apply",
+  "ownerUid": "72647632-d481-4889-bf27-ed1bb14ad347",
+  "matchedRows": 1,
+  "rowsUpdated": 1,
+  "businessType": "tourism",
+  "oldUrlHash": "9fcee27208fc",
+  "expectedNewUrlHash": "6e0e5b40e8c5",
+  "actualNewUrlHash": "6e0e5b40e8c5",
+  "newUrlMatchesExpected": true,
+  "rewrittenPathMatchesStorageObject": true,
+  "rewrittenPathFirstSegmentIsOwner": true,
+  "pointsAtPublicUrl": false,
+  "businessRowsTotal": 6,
+  "businessRowsChanged": 1,
+  "unrelatedBusinessRowsChanged": 0,
+  "otherBusinesses": [
+    {
+      "type": "tourism",
+      "urlHash": null,
+      "unchanged": true
+    },
+    {
+      "type": "supermarket",
+      "urlHash": null,
+      "unchanged": true
+    },
+    {
+      "type": "auto_repair",
+      "urlHash": null,
+      "unchanged": true
+    },
+    {
+      "type": "restaurant",
+      "urlHash": "960bc308453c",
+      "unchanged": true
+    },
+    {
+      "type": "tourism",
+      "urlHash": null,
+      "unchanged": true
+    }
+  ],
+  "decision": "SIGNATURE_REFERENCE_MIGRATED",
+  "rollback": "update public.business_profiles set signature_url = <old url, sha256 9fcee27208fc> where id = '13df61b1-1d38-40eb-bf85-61673246f0de';"
+}

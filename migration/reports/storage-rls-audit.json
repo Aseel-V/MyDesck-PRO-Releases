@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-14T17:35:01.663Z",
+  "generatedAt": "2026-09-14T18:58:00.170Z",
   "readOnly": true,
   "productionMutations": 0,
   "bytesDownloaded": 0,
@@ -7,10 +7,12 @@
     {
       "bucket": "business-signatures",
       "public": false,
-      "objects": 0,
-      "bytes": 0,
-      "classification": "PRIVATE_BUSINESS",
-      "kinds": []
+      "objects": 1,
+      "bytes": 146338,
+      "classification": "PRIVATE_USER",
+      "kinds": [
+        "SIGNATURE_IMAGE"
+      ]
     },
     {
       "bucket": "logos",
@@ -35,6 +37,18 @@
     }
   ],
   "objects": [
+    {
+      "bucket": "business-signatures",
+      "pathPrefix": "72647632-d481-4889-bf27-ed1bb14ad347",
+      "nameHash": "fa42ad9eaf61",
+      "kind": "SIGNATURE_IMAGE",
+      "mime": "image/jpeg",
+      "sizeBytes": 146338,
+      "ownerPresent": false,
+      "createdAt": "2026-09-14T18:09:14.198Z",
+      "anonymousHttp": 400,
+      "publiclyReadable": false
+    },
     {
       "bucket": "logos",
       "pathPrefix": "business-logos",
