@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { getBackend } from '../data/backend';
 import { ArrowLeft, Mail, Loader2, CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -21,12 +21,8 @@ export default function ForgotPassword({ onBack }: ForgotPasswordProps) {
     setError(null);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        // Crucial for HashRouter: Must include the /#/ in the redirect URL
-        redirectTo: window.location.origin + '/#/reset-password',
-      });
-
-      if (error) throw error;
+      // Crucial for HashRouter: Must include the /#/ in the redirect URL
+      await getBackend().auth.sendPasswordReset(email, window.location.origin + '/#/reset-password');
       setSubmitted(true);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to send reset email';

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabase";
+import { getBackend } from "../data/backend";
 import { Trip } from "../types/trip";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
@@ -149,10 +150,7 @@ export default function Dashboard() {
   // 👑 Platform Admin Stats
   async function fetchAdminUserStats() {
     try {
-      const { data, error } = await supabase.from("user_profiles").select("*");
-      if (error) throw error;
-
-      const users = (data || []) as StatsUserProfile[];
+      const users = (await getBackend().admin.listUserProfiles()) as unknown as StatsUserProfile[];
       const totalUsers = users.length;
       const totalAdmins = users.filter((p) => p.role === "admin").length;
       const totalRegularUsers = users.filter((p) => p.role === "user").length;

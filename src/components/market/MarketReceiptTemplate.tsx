@@ -1,4 +1,4 @@
-import { BusinessProfile } from '../../lib/supabase';
+import type { BusinessProfile } from '../../data/domain/profiles';
 import { ShoppingCart } from 'lucide-react';
 import { translations, type Language } from '../../i18n/locales';
 

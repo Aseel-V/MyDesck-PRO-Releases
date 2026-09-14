@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../../lib/supabase';
+import { getBackend } from '../../data/backend';
 import { Users, TrendingUp, Search, UserPlus, CreditCard, ShieldCheck } from 'lucide-react';
 import { useDebounce } from '../../hooks/useDebounce';
 import CreateUserForm from './CreateUserForm';
@@ -45,18 +45,8 @@ export default function AdminDashboard() {
       // 1. Fetch Users (User Profiles joined with Business Profiles)
       // Note: Supabase join syntax or two queries. Two queries is safer/easier if no strict FK set up in client types yet.
       
-      const { data: userProfiles, error: userError } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (userError) throw userError;
-
-      const { data: businessProfiles, error: businessError } = await supabase
-        .from('business_profiles')
-        .select('*');
-
-      if (businessError) throw businessError;
+      const userProfiles = await getBackend().admin.listUserProfiles();
+      const businessProfiles = await getBackend().admin.listBusinessProfiles();
 
       // Merge data
       const mergedUsers = userProfiles.map(u => {

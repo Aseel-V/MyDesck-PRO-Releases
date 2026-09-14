@@ -116,6 +116,7 @@ export class RulesClient {
 
 export function toFirestoreValue(value) {
   if (value === null) return { nullValue: null };
+  if (value instanceof Date) return { timestampValue: value.toISOString() };
   if (typeof value === 'boolean') return { booleanValue: value };
   if (typeof value === 'number') {
     return Number.isInteger(value) ? { integerValue: String(value) } : { doubleValue: value };

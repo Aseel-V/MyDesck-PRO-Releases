@@ -1,5 +1,5 @@
 import { DailyReport } from '../../types/restaurant';
-import { BusinessProfile } from '../../lib/supabase';
+import type { BusinessProfile } from '../../data/domain/profiles';
 
 interface AccountantReportTemplateProps {
   reports: DailyReport[];

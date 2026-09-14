@@ -4,7 +4,7 @@ import { X, Printer, ChefHat } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import MarketReceiptTemplate from '../market/MarketReceiptTemplate';
 import { createRoot } from 'react-dom/client';
-import { BusinessProfile } from '../../lib/supabase';
+import type { BusinessProfile } from '../../data/domain/profiles';
 import { RestaurantOrder, OrderItem } from '../../types/restaurant';
 
 interface RestaurantReceiptModalProps {

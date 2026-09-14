@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useMemo, useRef } from 'react';
-import { User } from '@supabase/supabase-js';
-import { supabase, BusinessProfile } from '../lib/supabase';
-import type { Database } from '../types/supabase';
+import { getBackend } from '../data/backend';
+import { AuthSessionResetError, type AppUser } from '../data/domain/auth';
+import type { BusinessProfile, PreferredCurrency, PreferredLanguage, UserProfile } from '../data/domain/profiles';
 import { RestaurantStaff } from '../types/restaurant';
 import { safeImageSrc } from '../lib/safeUrl';
 import { getFriendlyAuthError } from '../lib/authNetwork';
@@ -11,12 +11,8 @@ const CACHE_KEY_BUSINESS_PROFILE = 'app_business_profile';
 const CACHE_KEY_USER_PROFILE = 'app_user_profile';
 const CACHE_KEY_STAFF_USER = 'app_staff_user';
 
-type UserProfile = Database['public']['Tables']['user_profiles']['Row'];
-type PreferredCurrency = BusinessProfile['preferred_currency'];
-type PreferredLanguage = BusinessProfile['preferred_language'];
-
 interface AuthContextType {
-  user: User | null;
+  user: AppUser | null;
   profile: BusinessProfile | null;
   userProfile: UserProfile | null;
   staffUser: RestaurantStaff | null;
@@ -64,25 +60,30 @@ const isResolvedDisplayValue = (value: unknown): boolean =>
 
 const sanitizeBusinessProfileUpdates = (
   updates: Partial<BusinessProfile>
-): Partial<BusinessProfile> => ({
-  ...updates,
-  ...(Object.prototype.hasOwnProperty.call(updates, 'logo_url') && !isResolvedDisplayValue(updates.logo_url)
-    ? { logo_url: canonicalBusinessImage(safeImageSrc(updates.logo_url)) }
-    : {}),
-  ...(Object.prototype.hasOwnProperty.call(updates, 'signature_url') && !isResolvedDisplayValue(updates.signature_url)
-    ? { signature_url: canonicalBusinessImage(safeImageSrc(updates.signature_url)) }
-    : {}),
-});
+): Partial<BusinessProfile> => {
+  const { logo_url: _logo, signature_url: _signature, ...rest } = updates;
+  void _logo;
+  void _signature;
+  return {
+    ...rest,
+    ...(Object.prototype.hasOwnProperty.call(updates, 'logo_url') && !isResolvedDisplayValue(updates.logo_url)
+      ? { logo_url: canonicalBusinessImage(safeImageSrc(updates.logo_url)) }
+      : {}),
+    ...(Object.prototype.hasOwnProperty.call(updates, 'signature_url') && !isResolvedDisplayValue(updates.signature_url)
+      ? { signature_url: canonicalBusinessImage(safeImageSrc(updates.signature_url)) }
+      : {}),
+  };
+};
 
 export const __testing = { isResolvedDisplayValue, sanitizeBusinessProfileUpdates };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [profile, setProfile] = useState<BusinessProfile | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [staffUser, setStaffUser] = useState<RestaurantStaff | null>(null);
   const [loading, setLoading] = useState(true);
-  
+
   // Track current user ID to avoid redundant fetches
   const lastUserIdRef = useRef<string | null>(null);
   const refreshInFlightRef = useRef<{ userId: string; promise: Promise<void> } | null>(null);
@@ -93,7 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const cachedBusiness = localStorage.getItem(CACHE_KEY_BUSINESS_PROFILE);
       const cachedUser = localStorage.getItem(CACHE_KEY_USER_PROFILE);
       const cachedStaff = localStorage.getItem(CACHE_KEY_STAFF_USER);
-      
+
       if (cachedBusiness) setProfile(sanitizeBusinessProfile(JSON.parse(cachedBusiness)));
       if (cachedUser) setUserProfile(JSON.parse(cachedUser));
       if (cachedStaff) setStaffUser(JSON.parse(cachedStaff));
@@ -117,12 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchProfile = useCallback(async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('business_profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .maybeSingle();
-      if (error) throw error;
+      const data = await getBackend().profiles.fetchBusinessProfile(userId);
       if (!data) return null;
       const [logo_url, signature_url] = await Promise.all([
         resolveBusinessImage(data.logo_url), resolvePrivateSignature(data.signature_url),
@@ -136,20 +132,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserProfile = useCallback(async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .maybeSingle();
-      if (error) throw error;
-      return data as UserProfile | null;
+      return await getBackend().profiles.fetchUserProfile(userId);
     } catch (e) {
       console.error('Error fetching user profile:', e);
       return null;
     }
   }, []);
 
-  // دالة لتحديث البيانات وحفظها في الكاش (تعمل في الخلفية)
+  // Refresh profile data in the background and keep the cache current.
   const refreshUserData = useCallback(async (userId: string) => {
     if (refreshInFlightRef.current?.userId === userId) {
       return refreshInFlightRef.current.promise;
@@ -182,7 +172,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         if (userProfileData.is_suspended) {
-          await supabase.auth.signOut();
+          await getBackend().auth.signOut();
           window.location.reload();
         }
       }
@@ -205,58 +195,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    // 1. تحميل الكاش فوراً قبل أي اتصال بالإنترنت
+    // 1. Load the cache before any network call.
     loadFromCache();
 
     const initSession = async () => {
       try {
-        // 2. التحقق من الجلسة (سريع عادةً)
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) throw error;
+        // 2. Resolve the session (usually fast).
+        const sessionUser = await getBackend().auth.getSessionUser();
 
         if (!mounted) return;
 
-        if (session?.user) {
-           setUser(session.user);
-           lastUserIdRef.current = session.user.id;
-           
-           // 3. نطلب تحديث البيانات في الخلفية، ولا ننتظرها (لا نستخدم await هنا لتعطيل الـ loading)
-           refreshUserData(session.user.id);
+        if (sessionUser) {
+           setUser(sessionUser);
+           lastUserIdRef.current = sessionUser.id;
+
+           // 3. Refresh profile data in the background without holding the loading state.
+           refreshUserData(sessionUser.id);
         } else {
-           // إذا لم يكن هناك جلسة، نمسح البيانات
+           // No session: clear account data. A cached staff session is kept for offline refresh.
            setUser(null);
            setProfile(null);
            setUserProfile(null);
-           // Do not clear staffUser here immediately if we want to allow offline/refresh, 
-           // but normally staff session is tied to... local state. 
-           // We'll keep staffUser if it exists in cache.
            lastUserIdRef.current = null;
         }
       } catch (err: unknown) {
         console.error('Auth load error:', err);
-        const e = err as { message?: string };
-
-        // Handle invalid refresh token by clearing local data
-        // Handle invalid refresh token by clearing local data
-        const errorMessage = e?.message || (e as { error_description?: string })?.error_description || JSON.stringify(e);
-        if (
-          errorMessage.includes('Invalid Refresh Token') || 
-          errorMessage.includes('Refresh Token Not Found') ||
-          errorMessage.includes('not found') // Catch generic "not found" which sometimes happens with tokens
-        ) {
-          console.warn('[Auth] Critical session error detected, wiping storage and resetting...');
-          
-          // 1. Attempt standard sign out
-          await supabase.auth.signOut().catch(() => console.warn('SignOut failed during recovery'));
-          
-          // 2. Aggressively clear ALL Supabase-related keys from localStorage
+        if (err instanceof AuthSessionResetError) {
+          // The gateway wiped an unusable stored session; clear the app caches and reset state.
           Object.keys(localStorage).forEach(key => {
             if (
-              key.startsWith('sb-') || 
-              key.startsWith('supabase.') || 
-              key.startsWith('supabase.') || 
-              key === CACHE_KEY_BUSINESS_PROFILE || 
+              key === CACHE_KEY_BUSINESS_PROFILE ||
               key === CACHE_KEY_USER_PROFILE ||
               key === CACHE_KEY_STAFF_USER
             ) {
@@ -264,7 +232,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
           });
 
-          // 3. Reset internal state immediately
           if (mounted) {
             setUser(null);
             setProfile(null);
@@ -274,27 +241,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
       } finally {
-        // 4. نوقف التحميل فوراً (لأن لدينا بيانات الكاش والجلسة، لا داعي لانتظار تحميل الملفات من النت)
+        // 4. Stop loading: the cache and session are enough to render.
         if (mounted) setLoading(false);
       }
     };
 
     initSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const unsubscribe = getBackend().auth.onAuthStateChange(async (sessionUser) => {
       if (!mounted) return;
 
-      if (session?.user) {
-        // إذا كان نفس المستخدم، لا داعي لعمل أي شيء ثقيل
-        if (session.user.id === lastUserIdRef.current) {
-             return; 
+      if (sessionUser) {
+        // Same user: nothing heavy to do.
+        if (sessionUser.id === lastUserIdRef.current) {
+             return;
         }
 
-        setUser(session.user);
-        lastUserIdRef.current = session.user.id;
-        
-        // تحديث في الخلفية
-        refreshUserData(session.user.id);
+        setUser(sessionUser);
+        lastUserIdRef.current = sessionUser.id;
+
+        // Background refresh.
+        refreshUserData(sessionUser.id);
       } else {
         setUser(null);
         setProfile(null);
@@ -302,13 +269,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Note: Staff logout is handled manually usually.
         lastUserIdRef.current = null;
       }
-      
+
       setLoading(false);
     });
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+      unsubscribe();
     };
   }, [loadFromCache, refreshUserData]);
 
@@ -320,81 +287,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     currency: PreferredCurrency = 'USD',
     language: PreferredLanguage = 'en'
   ) => {
-    const { data, error } = await supabase.auth.signUp({ email, password });
-    if (error) throw error;
-    if (data.user) {
-      // Create profiles...
-      await supabase.from('business_profiles').insert([{
-        user_id: data.user.id,
-        business_name: businessName,
-        logo_url: safeImageSrc(logoUrl),
-        preferred_currency: currency || 'USD',
-        preferred_language: language || 'en'
-      }]);
-      await supabase.from('user_profiles').insert([{
-        user_id: data.user.id, 
-        full_name: businessName || email, 
-        role: 'user' as const, 
-        is_suspended: false
-      }]);
+    const created = await getBackend().auth.signUp(email, password);
+    if (created) {
+      await getBackend().profiles.createOwnerProfiles(created.id, email, {
+        businessName,
+        logoUrl: safeImageSrc(logoUrl),
+        currency: currency || 'USD',
+        language: language || 'en',
+      });
       // Refresh immediately
-      await refreshUserData(data.user.id);
+      await refreshUserData(created.id);
     }
   }, [refreshUserData]);
 
   const signIn = useCallback(async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      console.warn('[Auth] Primary sign-in failed:', {
-        message: error.message,
-        status: 'status' in error ? error.status : undefined,
-      });
-      throw new Error(getFriendlyAuthError(error));
-    }
-    if (data.user) {
-       await refreshUserData(data.user.id);
+    const signedIn = await getBackend().auth.signIn(email, password);
+    if (signedIn) {
+       await refreshUserData(signedIn.id);
     }
   }, [refreshUserData]);
 
   const signInStaff = useCallback(async (email: string, password: string) => {
-    // Call RPC function
-    const { data, error } = await supabase.rpc('authenticate_staff', {
-      p_email: email,
-      p_password: password
-    });
-
-    if (error) {
-      console.warn('[Auth] Staff sign-in RPC failed:', {
-        message: error.message,
-        status: 'status' in error ? error.status : undefined,
-      });
+    let result;
+    try {
+      result = await getBackend().auth.signInStaff(email, password);
+    } catch (error) {
       throw new Error(getFriendlyAuthError(error));
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const result = data as any;
-
-    if (!result.success) {
-      throw new Error(result.error || 'Login failed');
     }
 
     // Set persistence
     const staff = result.staff;
-    const businessProfile = sanitizeBusinessProfile(result.business_profile);
+    const businessProfile = sanitizeBusinessProfile(result.businessProfile);
 
     setStaffUser(staff);
     setProfile(businessProfile); // Reuse profile for business settings context
     localStorage.setItem(CACHE_KEY_STAFF_USER, JSON.stringify(staff));
     localStorage.setItem(CACHE_KEY_BUSINESS_PROFILE, JSON.stringify(businessProfile));
-    
+
   }, []);
 
   const signOut = useCallback(async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.warn('[Auth] SignOut warning:', error.message);
-      }
+      await getBackend().auth.signOut();
     } catch (err) {
       console.warn('[Auth] SignOut error:', err);
     } finally {
@@ -418,19 +352,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const updateProfile = useCallback(async (updates: Partial<BusinessProfile>) => {
     if (!user) throw new Error('No user');
-    
+
     // We no longer filter out these fields as they are now in the schema
     const sanitizedUpdates = sanitizeBusinessProfileUpdates(updates);
-    const { error } = await supabase.from('business_profiles').update({ 
-      ...sanitizedUpdates,
-      updated_at: new Date().toISOString() 
-    }).eq('user_id', user.id);
-    
-    if (error) throw error;
-    
+    await getBackend().profiles.updateBusinessProfile(user.id, sanitizedUpdates);
+
     // We update the local state manually with ALL fields so the UI reflects the change (until refresh)
     setProfile((prev: BusinessProfile | null) => prev ? ({ ...prev, ...sanitizedUpdates }) : null);
-    
+
     // await refreshUserData(user.id); // This would overwrite our optimistic update if DB doesn't have fields
   }, [user]);
 

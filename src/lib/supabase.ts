@@ -47,4 +47,5 @@ if (!globalScope.__mydesck_supabase_client__) {
 export const supabase = globalScope.__mydesck_supabase_client__;
 // Admin client is removed for security. Use Edge Functions instead.
 
-export type BusinessProfile = Database['public']['Tables']['business_profiles']['Row'];
+// The profile type lives with the backend-neutral domain contract; re-exported for compatibility.
+export type { BusinessProfile } from '../data/domain/profiles';

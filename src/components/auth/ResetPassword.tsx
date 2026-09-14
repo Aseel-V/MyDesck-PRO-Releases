@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { supabase } from '../../lib/supabase';
+import { getBackend } from '../../data/backend';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
@@ -31,12 +31,12 @@ export default function ResetPassword() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: password
-      });
+      // A Firebase reset link carries an oobCode; a Supabase recovery link signs the user in instead.
+      const hashQuery = window.location.hash.includes('?') ? window.location.hash.slice(window.location.hash.indexOf('?') + 1) : '';
+      const actionCode = new URLSearchParams(window.location.search).get('oobCode')
+        ?? new URLSearchParams(hashQuery).get('oobCode');
+      await getBackend().auth.completePasswordReset(password, actionCode);
 
-      if (error) throw error;
-      
       toast.success(t('forgotPassword.resetPassword.success'));
       navigate('/login');
     } catch (err) {

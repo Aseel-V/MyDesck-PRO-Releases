@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { X, ShoppingCart, Check, Printer } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { BusinessProfile } from '../../lib/supabase';
+import type { BusinessProfile } from '../../data/domain/profiles';
 import MarketReceiptTemplate from './MarketReceiptTemplate';
 import { createRoot } from 'react-dom/client';
 

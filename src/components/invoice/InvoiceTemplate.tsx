@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Trip } from '../../types/trip';
-import { BusinessProfile } from '../../lib/supabase';
+import type { BusinessProfile } from '../../data/domain/profiles';
 import { formatRoomConfiguration } from '../../lib/tripRoom';
 import { formatCurrency, formatDate, getTextDirection } from '../../utils/localeFormatting';
 import { fromPaymentMinor, getCanonicalTripPayment } from '../../lib/tripPaymentSummary';

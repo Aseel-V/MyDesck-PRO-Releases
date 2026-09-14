@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { supabase } from '../../lib/supabase';
+import { getBackend } from '../../data/backend';
+import type { AdminCreateUserPayload } from '../../data/domain/admin';
 import { UserPlus, Building2, User } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -63,62 +64,9 @@ export default function CreateUserForm({ onClose, onSuccess, existingBusinesses 
                 payload.businessId = selectedBusinessId;
             }
 
-            console.log("Sending Create User Payload:", JSON.stringify(payload, null, 2));
-
-            console.log("Sending Payload:", JSON.stringify(payload, null, 2));
-
-            const { data, error } = await supabase.functions.invoke('create-user', {
-                body: payload,
-            });
-
-            console.log('Response data:', data);
-            console.log('Response error:', error);
-            
-            if (error) {
-                console.error("Functions Invoke Error Object:", error);
-                
-                let errorMessage = error.message || 'Unknown error';
-
-                // Handle Supabase FunctionsHttpError specifically
-                // The SDK might hide the body in the error message or context
-                
-                if ('context' in error && error.context) {
-                    try {
-                        const response = (error.context as Response);
-                         // New improved parsing attempt:
-                        if (typeof response.text === 'function' && !response.bodyUsed) {
-                             const rawText = await response.text();
-                             console.log("Raw Error Body:", rawText);
-                             try {
-                                 const json = JSON.parse(rawText);
-                                 // If the server returned { error: "..." }
-                                 if (json.error) errorMessage = json.error;
-                                 else if (json.message) errorMessage = json.message;
-                             } catch {
-                                 if (rawText && rawText.length < 500) errorMessage = rawText;
-                             }
-                        } else if (typeof response.json === 'function' && !response.bodyUsed) {
-                             // Some environments might prefer json() directly if text() isn't reliable/available
-                             const json = await response.json();
-                             if (json.error) errorMessage = json.error;
-                        }
-                    } catch (e) {
-                        console.warn('Could not parse error body:', e);
-                    }
-                }
-                
-                // If we still have a generic message but the stringified error has more info
-                if (errorMessage === 'Unknown error' || errorMessage === 'Edge Function returned a non-2xx status code') {
-                     // Try to see if there's any other useful prop
-                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                     const errAny = error as any;
-                     if (errAny.details) errorMessage = errAny.details;
-                     else if (errAny.hint) errorMessage = errAny.hint;
-                }
-
-                throw new Error(errorMessage);
-            }
-            if (data?.error) throw new Error(data.error);
+            // The backend owns account creation: the create-user Edge Function on the Supabase root,
+            // a secondary-app sign-up plus admin-gated Rules on the Firebase root.
+            await getBackend().admin.createUser(payload as unknown as AdminCreateUserPayload);
 
             // Success
             toast.success('User created successfully');

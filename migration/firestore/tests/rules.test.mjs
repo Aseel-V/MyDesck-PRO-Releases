@@ -55,14 +55,29 @@ const PRODUCTION_RULES = readFileSync(RULES_PATH, 'utf8');
 
 const amount = (unitsText, scale = 2) => ({ unitsText, scale, units: Number(unitsText), currency: 'ILS' });
 
+/**
+ * A users document in the migrated shape: every user_profiles column (camelCased, business_id as
+ * sourceBusinessId) plus the derived identity fields. The Rules validate this shape, so fixtures that
+ * omit columns would be refused for the wrong reason and prove nothing.
+ */
+const userDoc = (uid, overrides = {}) => ({
+  id: `profile-${uid}`, userId: uid, fullName: 'X', phoneNumber: '', role: 'user', createdAt: null, updatedAt: null,
+  isSuspended: false, sourceBusinessId: null, canViewFinancials: false, uid, legacyProfileId: `profile-${uid}`,
+  ownerUid: uid, businessId: null, schemaVersion: 1, transformVersion: 1, isDeleted: false, ...overrides,
+});
+const businessDoc = (id, ownerUid, name) => ({
+  id, userId: ownerUid, businessName: name, logoUrl: null, preferredCurrency: 'ILS', preferredLanguage: 'he',
+  createdAt: null, updatedAt: null, businessRegistrationNumber: null, signatureUrl: null, businessType: 'tourism',
+  subscriptionStatus: 'trial', trialStartDate: null, isSuspended: false, ownerUid, businessId: id,
+  schemaVersion: 1, transformVersion: 1, isDeleted: false,
+});
+
 /** Fixtures are seeded with the admin bypass, never through the rules. */
 const FIXTURES = [
-  ['users', UID_A, { uid: UID_A, userId: UID_A, role: 'user', isSuspended: false, canViewFinancials: false,
-    fullName: 'Alice', businessId: BUSINESS_A, schemaVersion: 1 }],
-  ['users', UID_B, { uid: UID_B, userId: UID_B, role: 'user', isSuspended: false, canViewFinancials: false,
-    fullName: 'Bob', businessId: BUSINESS_B, schemaVersion: 1 }],
-  ['businesses', BUSINESS_A, { ownerUid: UID_A, businessId: BUSINESS_A, businessName: 'Alice Travel', isSuspended: false }],
-  ['businesses', BUSINESS_B, { ownerUid: UID_B, businessId: BUSINESS_B, businessName: 'Bob Travel', isSuspended: false }],
+  ['users', UID_A, userDoc(UID_A, { fullName: 'Alice', businessId: BUSINESS_A })],
+  ['users', UID_B, userDoc(UID_B, { fullName: 'Bob', businessId: BUSINESS_B })],
+  ['businesses', BUSINESS_A, businessDoc(BUSINESS_A, UID_A, 'Alice Travel')],
+  ['businesses', BUSINESS_B, businessDoc(BUSINESS_B, UID_B, 'Bob Travel')],
   ['trips', TRIP_A, { ownerUid: UID_A, businessId: BUSINESS_A, clientName: 'Client',
     destination: 'Paris', isDeleted: false, status: 'active', paymentStatus: 'unpaid',
     id: TRIP_A, userId: UID_A, currency: 'ILS', revision: 1, moneyScale: 2,
@@ -178,25 +193,26 @@ test('privilege escalation is denied in every shape', async () => {
 
 test('a new user cannot be created already privileged', async () => {
   const newUser = RulesClient.asUser('rules-test-new-user', options);
-  assert.equal(isDenied(await newUser.create('users', 'rules-test-new-user',
-    { uid: 'rules-test-new-user', userId: 'rules-test-new-user', role: 'admin', isSuspended: false,
-      canViewFinancials: false, businessId: null, fullName: 'X' })), true, 'created as admin');
-  assert.equal(isDenied(await newUser.create('users', 'rules-test-new-user',
-    { uid: 'rules-test-new-user', userId: 'rules-test-new-user', role: 'user', isSuspended: false,
-      canViewFinancials: true, businessId: null, fullName: 'X' })), true, 'created with financial visibility');
-  assert.equal(isDenied(await newUser.create('users', UID_A,
-    { uid: UID_A, userId: UID_A, role: 'user', isSuspended: false, canViewFinancials: false,
-      businessId: null, fullName: 'X' })), true, 'created under another identity');
-  assert.equal(isAllowed(await newUser.create('users', 'rules-test-new-user',
-    { uid: 'rules-test-new-user', userId: 'rules-test-new-user', role: 'user', isSuspended: false,
-      canViewFinancials: false, businessId: null, fullName: 'X' })), true, 'the legitimate signup shape');
+  const signup = (overrides) => userDoc('rules-test-new-user', { createdAt: new Date(), updatedAt: new Date(),
+    transformVersion: 'app-v1', ...overrides });
+  assert.equal(isDenied(await newUser.create('users', 'rules-test-new-user', signup({ role: 'admin' }))), true,
+    'created as admin');
+  assert.equal(isDenied(await newUser.create('users', 'rules-test-new-user', signup({ canViewFinancials: true }))), true,
+    'created with financial visibility');
+  assert.equal(isDenied(await newUser.create('users', 'rules-test-new-user', signup({ isSuspended: true }))), true,
+    'created already carrying an administrative flag');
+  assert.equal(isDenied(await newUser.create('users', 'rules-test-new-user', signup({ businessId: BUSINESS_A }))), true,
+    'created linked to a business it does not own');
+  assert.equal(isDenied(await newUser.create('users', UID_A, userDoc(UID_A, { createdAt: new Date(), transformVersion: 'app-v1' }))), true,
+    'created under another identity');
+  assert.equal(isAllowed(await newUser.create('users', 'rules-test-new-user', signup({}))), true,
+    'the legitimate signup shape');
 });
 
 test('an unknown field cannot be smuggled onto a user document', async () => {
   const newUser = RulesClient.asUser('rules-test-new-user-2', options);
   assert.equal(isDenied(await newUser.create('users', 'rules-test-new-user-2',
-    { uid: 'rules-test-new-user-2', userId: 'rules-test-new-user-2', role: 'user', isSuspended: false,
-      canViewFinancials: false, businessId: null, fullName: 'X', isSuperuser: true })), true);
+    userDoc('rules-test-new-user-2', { createdAt: new Date(), transformVersion: 'app-v1', isSuperuser: true }))), true);
 });
 
 test('money on a trip is not client-writable', async () => {

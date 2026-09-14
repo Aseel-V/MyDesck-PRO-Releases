@@ -26,8 +26,8 @@ import {
   LogOut,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { getBackend } from '../data/backend';
 import RestaurantSettings from './restaurant/RestaurantSettings';
-import { PostgrestError } from '@supabase/supabase-js';
 import { resizeImage } from '../lib/imageUtils';
 import { CurrencyService } from '../lib/currency';
 import { safeImageSrc } from '../lib/safeUrl';
@@ -167,31 +167,7 @@ export default function Settings() {
     setSuccess(false);
 
     try {
-      const { data: existingProfile, error: selectError } = await supabase
-        .from('user_profiles')
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (selectError && (selectError as PostgrestError).code !== 'PGRST116') throw selectError;
-
-      if (existingProfile) {
-        const { error: updateError } = await supabase
-          .from('user_profiles')
-          .update({
-            full_name: fullName,
-            phone_number: phoneNumber,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('user_id', user.id);
-
-        if (updateError) throw updateError;
-      } else {
-        const { error: insertError } = await supabase.from('user_profiles').insert([
-          { user_id: user.id, full_name: fullName, phone_number: phoneNumber },
-        ]);
-        if (insertError) throw insertError;
-      }
+      await getBackend().profiles.saveUserProfile(user.id, { full_name: fullName, phone_number: phoneNumber });
 
       await refreshProfile();
       setSuccess(true);
@@ -241,17 +217,7 @@ export default function Settings() {
       setLogoUrl('');
 
       try {
-        const { error } = await supabase
-          .from('business_profiles')
-          .update({
-            business_name: 'MyDesck PRO',
-            logo_url: null,
-            preferred_currency: currency,
-            preferred_language: language,
-          })
-          .eq('user_id', user.id);
-
-        if (error) throw error;
+        await getBackend().profiles.resetBranding(user.id, currency, language);
         showNotice('success', t('settings.messages.brandingReset'), 2500);
       } catch (error) {
         console.error('Failed to reset branding:', error);
@@ -275,8 +241,7 @@ export default function Settings() {
     }
 
     try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) throw error;
+      await getBackend().auth.updatePassword(newPassword);
       showNotice('success', t('settings.messages.passwordChanged'));
       setShowPasswordModal(false);
       setNewPassword('');

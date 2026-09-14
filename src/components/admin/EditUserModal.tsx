@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
+import { getBackend } from '../../data/backend';
 import { useAuth } from '../../contexts/AuthContext';
 import { X, Save, Calendar, Building2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
@@ -43,30 +43,13 @@ export default function EditUserModal({ user, onClose, onSuccess }: EditUserModa
     setLoading(true);
 
     try {
-      // 1. Update business_profiles
-      const { error: businessError } = await supabase
-        .from('business_profiles')
-        .update({
-          business_type: businessType,
-          trial_start_date: trialStart ? new Date(trialStart).toISOString() : null,
-          subscription_status: subscriptionStatus,
-          is_suspended: isSuspended // Ensure this is also in business_profiles as per plan
-        })
-        .eq('user_id', user.user_id);
-
-      if (businessError) throw businessError;
-
-      // 2. Update user_profiles (for suspension redundancy/safety if needed, or if app uses this)
-      // The prompt says "Modify business_profiles table... Add is_suspended". 
-      // But user_profiles ALSO has is_suspended. Let's update both to be safe and consistent.
-      const { error: profileError } = await supabase
-        .from('user_profiles')
-        .update({
-          is_suspended: isSuspended
-        })
-        .eq('user_id', user.user_id);
-
-      if (profileError) throw profileError;
+      // business_profiles (type, trial, subscription, suspension) then user_profiles (suspension).
+      await getBackend().admin.updateUserAdminFields(user.user_id, {
+        businessType,
+        trialStartDate: trialStart ? new Date(trialStart).toISOString() : null,
+        subscriptionStatus,
+        isSuspended,
+      });
 
       toast.success('User updated successfully');
       onSuccess();
