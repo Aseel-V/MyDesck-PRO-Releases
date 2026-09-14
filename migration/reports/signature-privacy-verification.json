@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-14T18:11:25.568Z",
-  "migrationRunId": "migration-test--privacy-5c0b30f2-45c5-4fce-963e-ed5fe82bfa87",
+  "generatedAt": "2026-09-14T19:29:56.055Z",
+  "migrationRunId": "migration-test--privacy-cf2da962-632f-46ac-acbd-22db0cb312e8",
   "bucket": "business-signatures",
   "targetPathHash": "fa42ad9eaf61",
   "targetFirstSegmentEqualsOwner": true,
@@ -40,8 +40,9 @@
   "allDenied": true,
   "publicSource": {
     "label": "public source still served",
-    "http": 200,
-    "served": true
+    "http": null,
+    "served": false,
+    "note": "no public signature object remains"
   },
   "syntheticIdentitiesRemaining": 0,
   "productionCustomerObjectsModified": 0,

@@ -24,8 +24,20 @@ const ca = migrationEnv.SUPABASE_CA_FILE ? readFileSync(migrationEnv.SUPABASE_CA
 const client = new pg.Client({ connectionString: migrationEnv.SUPABASE_DB_URL || migrationEnv.PGURL,
   ssl: ca ? { ca, rejectUnauthorized: true } : { rejectUnauthorized: false } });
 
-const classifyObject = (name) => (/signature|sig-/i.test(name) ? 'SIGNATURE_IMAGE'
-  : /logo/i.test(name) ? 'LOGO' : 'OTHER');
+/**
+ * Classifies an object by name, with one carve-out.
+ *
+ * Deleting the last file in a folder leaves Supabase's zero-byte `.emptyFolderPlaceholder`
+ * behind so the folder stays visible in the dashboard. It inherits the folder's path, so a
+ * placeholder under `business-signatures/` reads as a signature by name while containing
+ * nothing. Both conditions are required - the exact placeholder name AND zero bytes - so a real
+ * signature can never be excluded by this branch.
+ */
+const isEmptyFolderPlaceholder = (name, sizeBytes) =>
+  name.split('/').pop() === '.emptyFolderPlaceholder' && sizeBytes === 0;
+const classifyObject = (name, sizeBytes) => (isEmptyFolderPlaceholder(name, sizeBytes) ? 'EMPTY_FOLDER_PLACEHOLDER'
+  : /signature|sig-/i.test(name) ? 'SIGNATURE_IMAGE'
+    : /logo/i.test(name) ? 'LOGO' : 'OTHER');
 const hash = (value) => createHash('sha256').update(value).digest('hex').slice(0, 12);
 
 await client.connect();
@@ -56,7 +68,7 @@ for (const object of objects) {
     bucket: object.bucket_id,
     pathPrefix: object.name.split('/')[0],
     nameHash: hash(object.name),
-    kind: classifyObject(object.name),
+    kind: classifyObject(object.name, Number(object.size ?? 0)),
     mime: object.mime,
     sizeBytes: Number(object.size ?? 0),
     ownerPresent: Boolean(object.owner),

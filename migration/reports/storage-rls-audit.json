@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-14T18:58:00.170Z",
+  "generatedAt": "2026-09-14T19:28:13.564Z",
   "readOnly": true,
   "productionMutations": 0,
   "bytesDownloaded": 0,
@@ -18,11 +18,11 @@
       "bucket": "logos",
       "public": true,
       "objects": 2,
-      "bytes": 438670,
-      "classification": "PRIVATE_USER_EXPOSED_IN_PUBLIC_BUCKET",
+      "bytes": 292332,
+      "classification": "PUBLIC_INTENTIONAL",
       "kinds": [
         "LOGO",
-        "SIGNATURE_IMAGE"
+        "EMPTY_FOLDER_PLACEHOLDER"
       ]
     },
     {
@@ -32,7 +32,7 @@
       "bytes": 0,
       "classification": "PUBLIC_INTENTIONAL",
       "kinds": [
-        "OTHER"
+        "EMPTY_FOLDER_PLACEHOLDER"
       ]
     }
   ],
@@ -64,12 +64,12 @@
     {
       "bucket": "logos",
       "pathPrefix": "business-signatures",
-      "nameHash": "e6cad920e366",
-      "kind": "SIGNATURE_IMAGE",
-      "mime": "image/jpeg",
-      "sizeBytes": 146338,
-      "ownerPresent": true,
-      "createdAt": "2025-12-22T11:31:16.067Z",
+      "nameHash": "8b08569f6988",
+      "kind": "EMPTY_FOLDER_PLACEHOLDER",
+      "mime": "application/octet-stream",
+      "sizeBytes": 0,
+      "ownerPresent": false,
+      "createdAt": "2026-09-14T19:25:21.084Z",
       "anonymousHttp": 200,
       "publiclyReadable": true
     },
@@ -77,7 +77,7 @@
       "bucket": "restaurant-assets",
       "pathPrefix": "market-items",
       "nameHash": "3a64b14421ff",
-      "kind": "OTHER",
+      "kind": "EMPTY_FOLDER_PLACEHOLDER",
       "mime": "application/octet-stream",
       "sizeBytes": 0,
       "ownerPresent": false,
@@ -206,13 +206,7 @@
   ],
   "bucketsReferencedInCodeButMissing": [],
   "unknownClassifications": 0,
-  "publiclyReadablePrivateObjects": 1,
-  "findings": [
-    {
-      "severity": "HIGH",
-      "id": "PRIVATE_OBJECT_PUBLICLY_READABLE",
-      "detail": "1 signature image(s) are anonymously readable over the public CDN path."
-    }
-  ],
-  "decision": "STORAGE_SECURITY_BLOCKED"
+  "publiclyReadablePrivateObjects": 0,
+  "findings": [],
+  "decision": "STORAGE_SECURITY_OK"
 }

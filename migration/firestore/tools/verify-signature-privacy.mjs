@@ -39,8 +39,14 @@ await db.connect();
 await db.query('BEGIN TRANSACTION READ ONLY');
 const target = (await db.query(
   `select name from storage.objects where bucket_id=$1`, [BUCKET])).rows[0]?.name ?? null;
+// A zero-byte .emptyFolderPlaceholder is what Supabase leaves behind after the last file in a
+// folder is deleted. It is not the signature, so it must not read as "the source still exists".
 const source = (await db.query(
-  `select name from storage.objects where bucket_id='logos' and name like 'business-signatures/%'`)).rows[0]?.name ?? null;
+  `select name from storage.objects
+   where bucket_id='logos' and name like 'business-signatures/%'
+     and coalesce((metadata->>'size')::bigint, 0) > 0
+     and split_part(name, '/', array_length(string_to_array(name, '/'), 1)) <> '.emptyFolderPlaceholder'`))
+  .rows[0]?.name ?? null;
 const policyAllowsOwner = target ? (await db.query(
   `select ((storage.foldername($1))[1] = $2) is true as ok`, [target, OWNER_UID])).rows[0].ok : false;
 await db.query('ROLLBACK');
@@ -95,7 +101,7 @@ const deleted = await fetch(`https://identitytoolkit.googleapis.com/v1/projects/
 // The public source is the exposure itself; a HEAD confirms it is still served.
 const sourceProbe = source
   ? await attempt('public source still served', `${U}/storage/v1/object/public/logos/${enc(source)}`)
-  : { label: 'public source still served', http: null, served: false };
+  : { label: 'public source still served', http: null, served: false, note: 'no public signature object remains' };
 
 const allDenied = checks.every((c) => !c.served);
 const report = {
