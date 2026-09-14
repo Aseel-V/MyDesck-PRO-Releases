@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-12T14:25:12.427Z",
+  "generatedAt": "2026-09-14T07:49:04.537Z",
   "status": "PASS",
   "suites": [
     {
@@ -81,6 +81,12 @@
       "tests": 14
     },
     {
+      "label": "Enterprise index, IAM and deployment guards",
+      "file": "migration/firestore/tests/enterprise-readiness.test.mjs",
+      "outcome": "PASS",
+      "tests": 5
+    },
+    {
       "label": "isolated readiness callable and rollback emulator",
       "file": "migration/firestore/tests/readiness-smoke.test.mjs",
       "outcome": "PASS",
@@ -136,11 +142,11 @@
     }
   ],
   "totals": {
-    "steps": 23,
-    "passed": 23,
+    "steps": 24,
+    "passed": 24,
     "failed": 0,
-    "nodeTestCases": 194,
-    "assertionCallSites": 649,
+    "nodeTestCases": 199,
+    "assertionCallSites": 688,
     "fullCorpusApplicationAssertions": 1023,
     "searchCorpusCases": 12,
     "fullCorpusSecurityChecks": 50,

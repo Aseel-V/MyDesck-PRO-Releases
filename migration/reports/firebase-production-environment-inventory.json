@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-12T14:19:41.764Z",
+  "generatedAt": "2026-09-14T07:35:06.095Z",
   "project": "mydesckpro",
   "database": "projects/mydesckpro/databases/default",
   "migrationIdentity": "mydesck-migration@mydesckpro.iam.gserviceaccount.com",
@@ -58,7 +58,7 @@
             "type": "FIRESTORE_NATIVE",
             "concurrencyMode": "OPTIMISTIC",
             "versionRetentionPeriod": "3600s",
-            "earliestVersionTime": "2026-09-12T13:19:31.445577Z",
+            "earliestVersionTime": "2026-09-14T06:34:54.183368Z",
             "appEngineIntegrationMode": "DISABLED",
             "pointInTimeRecoveryEnablement": "POINT_IN_TIME_RECOVERY_DISABLED",
             "deleteProtectionState": "DELETE_PROTECTION_DISABLED",
@@ -68,7 +68,7 @@
             "firestoreDataAccessMode": "DATA_ACCESS_MODE_ENABLED",
             "mongodbCompatibleDataAccessMode": "DATA_ACCESS_MODE_DISABLED",
             "enhancedTextSearchQueryMode": "ENHANCED_QUERY_MODE_ENABLED",
-            "etag": "ILbNyZ2e6ZYDMIPCl9GH55YD"
+            "etag": "ILTt3sLH7ZYDMIPCl9GH55YD"
           }
         ]
       }
@@ -84,7 +84,7 @@
         "type": "FIRESTORE_NATIVE",
         "concurrencyMode": "OPTIMISTIC",
         "versionRetentionPeriod": "3600s",
-        "earliestVersionTime": "2026-09-12T13:19:31.796369Z",
+        "earliestVersionTime": "2026-09-14T06:34:54.555126Z",
         "appEngineIntegrationMode": "DISABLED",
         "pointInTimeRecoveryEnablement": "POINT_IN_TIME_RECOVERY_DISABLED",
         "deleteProtectionState": "DELETE_PROTECTION_DISABLED",
@@ -94,7 +94,7 @@
         "firestoreDataAccessMode": "DATA_ACCESS_MODE_ENABLED",
         "mongodbCompatibleDataAccessMode": "DATA_ACCESS_MODE_DISABLED",
         "enhancedTextSearchQueryMode": "ENHANCED_QUERY_MODE_ENABLED",
-        "etag": "ILTO8p2e6ZYDMIPCl9GH55YD"
+        "etag": "IMO0iMPH7ZYDMIPCl9GH55YD"
       }
     },
     "parenthesizedDatabase": {

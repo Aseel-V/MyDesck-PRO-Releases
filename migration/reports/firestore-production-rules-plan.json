@@ -1,0 +1,20 @@
+{
+  "generatedAt": "2026-09-14T07:34:05.110Z",
+  "project": "mydesckpro",
+  "database": "default",
+  "mode": "plan",
+  "productionMutations": 0,
+  "currentRelease": "projects/mydesckpro/releases/cloud.firestore/default",
+  "currentRuleset": "projects/mydesckpro/rulesets/c6fc85cd-4681-491c-bb7c-b879e5893a92",
+  "expectedCurrentSha256": "ecf30f940747dcc3c5ba4993093e9a11ac9fc5df7e14b2a1512d2446923d84eb",
+  "currentSha256": "ecf30f940747dcc3c5ba4993093e9a11ac9fc5df7e14b2a1512d2446923d84eb",
+  "candidateSha256": "e77ed17b8e3652a5523b25d4fb524f5afa4ec2de291ce23baf74d1a54349e9ba",
+  "rollbackSha256": "ecf30f940747dcc3c5ba4993093e9a11ac9fc5df7e14b2a1512d2446923d84eb",
+  "currentMatchesExpectedBaseline": true,
+  "candidateDeployed": false,
+  "deployCommand": "firebase deploy --only firestore:rules --project mydesckpro --config migration/firestore/firebase.production.json",
+  "verifyCommand": "node migration/firestore/tools/inspect-production-environment.mjs",
+  "rollbackCommand": "firebase deploy --only firestore:rules --project mydesckpro --config migration/firestore/firebase.rollback-rules.json",
+  "operatorActionRequired": true,
+  "status": "READY_FOR_OPERATOR_DEPLOYMENT"
+}

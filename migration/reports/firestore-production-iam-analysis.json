@@ -1,0 +1,49 @@
+{
+  "generatedAt": "2026-09-12T15:08:20.218Z",
+  "project": "mydesckpro",
+  "database": "projects/mydesckpro/databases/default",
+  "identity": "serviceAccount:mydesck-migration@mydesckpro.iam.gserviceaccount.com",
+  "productionMutations": 0,
+  "mode": "plan",
+  "currentBindings": [],
+  "syntheticRead": {
+    "http": 403,
+    "status": "PERMISSION_DENIED",
+    "reasons": [],
+    "message": "Missing or insufficient permissions."
+  },
+  "proposed": {
+    "member": "serviceAccount:mydesck-migration@mydesckpro.iam.gserviceaccount.com",
+    "role": "roles/datastore.user",
+    "condition": "expression=resource.name==\"projects/mydesckpro/databases/default\" || resource.name.startsWith(\"projects/mydesckpro/databases/default/documents/\"),title=mydesck-default-only",
+    "approvalSha256": "880933c418a8f9d4ce91e7447575238c65828b06d163b503db010e09bdfe9753",
+    "command": "node migration/firestore/tools/production-iam.mjs --mode=apply --binding=migration-writer --approval-sha256=880933c418a8f9d4ce91e7447575238c65828b06d163b503db010e09bdfe9753",
+    "removalCommand": "node migration/firestore/tools/production-iam.mjs --mode=plan --binding=migration-writer",
+    "resourceScope": "Project binding constrained to the default database and its document descendants by IAM Condition."
+  },
+  "roleDefinition": {
+    "name": "roles/datastore.user",
+    "title": "Cloud Datastore User",
+    "stage": "GA",
+    "permissionCount": 23,
+    "entityPermissions": [
+      "datastore.entities.allocateIds",
+      "datastore.entities.create",
+      "datastore.entities.delete",
+      "datastore.entities.get",
+      "datastore.entities.list",
+      "datastore.entities.update"
+    ],
+    "databasePermissions": [
+      "datastore.databases.get",
+      "datastore.databases.getMetadata",
+      "datastore.databases.list"
+    ],
+    "indexPermissions": [],
+    "forbiddenPermissionsPresent": []
+  },
+  "broadRoleCount": 0,
+  "permissionAnalysis": "FAIL",
+  "reason": "The binding is not applied; the service account synthetic Firestore read is denied. Effective positive and negative tests remain NOT RUN.",
+  "operatorActionRequired": true
+}

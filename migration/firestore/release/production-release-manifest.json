@@ -1,27 +1,30 @@
 {
   "firebaseProject": "mydesckpro",
   "firestoreDatabaseId": "default",
+  "architecture": "FIREBASE_SPARK_ONLY",
   "schemaVersion": 1,
   "transformVersion": "1.full.1",
   "candidateHashes": {
-    "firestoreRules": "bfb3413ad1af01377b8e079dd4cfa9ea7813a2b18b61a70c43ac0f9c520cee90",
-    "storageRules": "5ccf1d426c4fbe75133e0bdc31562888523ac7d7bce8ba4d11e5be6e09af73bb",
-    "firestoreIndexes": "b145d250a7f5238a6092761217efff7122409253f2ce34846b2d9393e9ef1832",
-    "productionFunctionsEntrypoint": "1b3ddfa817edd08f880381846e20f31f9890c3705bcc23632d04e4dc668c0c80"
+    "firestoreRules": "e77ed17b8e3652a5523b25d4fb524f5afa4ec2de291ce23baf74d1a54349e9ba",
+    "firestoreIndexes": "c516b73728401cd577c3214efaf5a839b2a8cde65dc714c6a39d70300ee2bc39",
+    "storageRules": "NOT_USED_IN_SPARK_ARCHITECTURE",
+    "productionFunctionsEntrypoint": "NOT_USED_IN_SPARK_ARCHITECTURE"
   },
   "expectedCurrentProductionHashes": {
     "firestoreRules": "ecf30f940747dcc3c5ba4993093e9a11ac9fc5df7e14b2a1512d2446923d84eb",
-    "storageRules": "UNREADABLE_NO_BUCKET_API_DISABLED"
+    "storageRules": "NOT_USED_IN_SPARK_ARCHITECTURE"
   },
   "rollbackArtifacts": {
     "firestoreRules": "migration/firestore/release/rollback-production/source-0.rules",
-    "storageRules": "PENDING_BUCKET_AND_SECURE_DATABASE_INTEGRATION"
+    "storageRules": "NOT_USED_IN_SPARK_ARCHITECTURE"
   },
   "deployment": {
-    "packageCommand": "node migration/firestore/tools/build-production-functions-package.mjs",
-    "command": "firebase deploy --config migration/firestore/firebase.production.json --project mydesckpro --only firestore:rules,firestore:indexes,storage,functions",
+    "command": "firebase deploy --only firestore:rules --project mydesckpro --config migration/firestore/firebase.production.json",
+    "indexCommand": "node migration/firestore/tools/production-index-plan.mjs",
+    "indexNote": "Indexes are created one at a time from the reviewed plan with the narrow index-deployer identity, never by a bulk firestore:indexes deploy.",
+    "storageAndFunctions": "NOT_DEPLOYED_NOT_USED_IN_SPARK_ARCHITECTURE",
     "allowedOnlyAfterGo": true,
     "hashDriftBehavior": "REFUSE"
   },
-  "readiness": "NO_GO_STORAGE_CAPABILITY_AND_OPERATOR_APPROVAL_REQUIRED"
+  "readiness": "NO_GO_OPERATOR_APPROVAL_REQUIRED_FOR_RULES_IAM_AND_INDEXES"
 }

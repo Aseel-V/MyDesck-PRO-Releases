@@ -7,9 +7,8 @@ export const REQUIRED_APIS = ['cloudfunctions.googleapis.com', 'run.googleapis.c
   'cloudbuild.googleapis.com', 'artifactregistry.googleapis.com'];
 
 function indexShape(index) {
-  // Firestore adds the document-name tie-breaker; all repository cursors use ASC.
+  // Enterprise does not assume an implicit name tie-breaker; deterministic paginated queries declare it.
   const fields = [...index.fields];
-  if (!fields.some(f => f.fieldPath === '__name__')) fields.push({ fieldPath: '__name__', order: fields.at(-1)?.order ?? 'ASCENDING' });
   return JSON.stringify({ collectionGroup: index.collectionGroup ?? index.name?.split('/collectionGroups/')[1]?.split('/')[0],
     queryScope: index.queryScope, fields: fields.map(({ fieldPath, order, arrayConfig }) => ({ fieldPath, order, arrayConfig })) });
 }
@@ -23,8 +22,12 @@ export function indexReadiness(required, response) {
   });
 }
 export function capabilityBlockers({ billingEnabled, indexes, iam, rules, secret, sparkPlan, quota }) {
+  const reviewedIndexes = indexes.length === 3 && indexes.every(i =>
+    ['HARD_REQUIRED_FOR_CORRECTNESS', 'REQUIRED_FOR_ACCEPTABLE_PERFORMANCE',
+      'REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE', 'OPTIONAL', 'COST_OPTIMIZATION', 'NOT_REQUIRED'].includes(i.classification));
+  const requiredIndexesReady = reviewedIndexes && indexes.filter(i => i.hardDryRunGate).every(i => i.state === 'READY');
   return [billingEnabled !== false && 'BILLING_MUST_REMAIN_DISABLED', sparkPlan !== 'PASS' && 'SPARK_PLAN',
-    (indexes.length !== 3 || indexes.some(i => i.state !== 'READY')) && 'INDEXES', iam !== 'PASS' && 'IAM',
+    !requiredIndexesReady && 'INDEXES', iam !== 'PASS' && 'IAM',
     rules !== 'PASS' && 'RULES', quota !== 'PASS' && 'QUOTA', secret !== 'PASS' && 'SECRET'].filter(Boolean);
 }
 export function assertSyntheticPreflight(input) {
@@ -54,7 +57,7 @@ export function cleanupPlan(manifest, actualResources) {
   });
 }
 
-export const DB_CONDITION = 'expression=resource.name=="projects/mydesckpro/databases/default",title=mydesck-default-only';
+export const DB_CONDITION = 'expression=resource.name=="projects/mydesckpro/databases/default" || resource.name.startsWith("projects/mydesckpro/databases/default/documents/"),title=mydesck-default-only';
 export const IAM_BINDINGS = Object.freeze({
   'migration-writer': { member: 'serviceAccount:mydesck-migration@mydesckpro.iam.gserviceaccount.com', role: 'roles/datastore.user', condition: DB_CONDITION },
   'rules-reader': { member: 'serviceAccount:mydesck-rules-reader@mydesckpro.iam.gserviceaccount.com', role: 'roles/firebaserules.viewer', condition: 'None' },

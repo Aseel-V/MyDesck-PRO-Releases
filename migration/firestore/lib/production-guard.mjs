@@ -70,11 +70,14 @@ export function assertNoSilentFallback(result) {
 }
 
 export function evaluateGo(evidence) {
+  // `activeSupabase` measures the Firebase-mode composition root only. `activeProductParity`
+  // measures the root the selector actually ships, so the engine cannot return GO for a
+  // cutover that would drop product surfaces still served by Supabase.
   const required = ['environment', 'sparkPlan', 'auth', 'iam', 'rules', 'indexes', 'quota',
     'noFunctions', 'noStorage', 'criticalTransactions', 'ruleAccessBudget', 'maliciousClient',
     'realClientSmoke', 'bulkData', 'delta', 'financial', 'relationships', 'events', 'search',
-    'arabic', 'hebrew', 'english', 'electron', 'activeSupabase', 'secret', 'writeFreeze',
-    'rollback', 'observability', 'backendSwitch'];
+    'arabic', 'hebrew', 'english', 'electron', 'activeSupabase', 'activeProductParity', 'secret',
+    'writeFreeze', 'rollback', 'observability', 'backendSwitch'];
   const gates = required.map((name) => ({ name, status: evidence[name]?.status ?? 'MISSING',
     evidence: evidence[name]?.evidence ?? null }));
   const fail = gates.filter((gate) => gate.status !== 'PASS');

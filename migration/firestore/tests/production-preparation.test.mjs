@@ -55,19 +55,25 @@ test('fallback, triggers and operational evidence fail closed', () => {
 
 test('missing evidence and unresolved secret always produce NO_GO', () => {
   assert.equal(evaluateGo({}).decision, 'NO_GO');
-  const all = Object.fromEntries(['environment','sparkPlan','auth','iam','rules','indexes','quota','noFunctions','noStorage','criticalTransactions','ruleAccessBudget','maliciousClient','realClientSmoke','bulkData','delta','financial','relationships','events','search','arabic','hebrew','english','electron','activeSupabase','secret','writeFreeze','rollback','observability','backendSwitch'].map((x) => [x,{status:'PASS'}]));
+  const all = Object.fromEntries(['environment','sparkPlan','auth','iam','rules','indexes','quota','noFunctions','noStorage','criticalTransactions','ruleAccessBudget','maliciousClient','realClientSmoke','bulkData','delta','financial','relationships','events','search','arabic','hebrew','english','electron','activeSupabase','activeProductParity','secret','writeFreeze','rollback','observability','backendSwitch'].map((x) => [x,{status:'PASS'}]));
   assert.equal(evaluateGo(all).decision, 'GO');
   all.secret = { status: 'FAIL' };
   assert.equal(evaluateGo(all).decision, 'NO_GO');
   assert.ok(evaluateGo(all).blockers.includes('secret'));
 });
 
-test('production Functions package cannot use the emulator entrypoint', () => {
+test('the Spark production release cannot deploy Functions or Storage', () => {
   const config = JSON.parse(readFileSync('migration/firestore/firebase.production.json', 'utf8'));
   const release = JSON.parse(readFileSync('migration/firestore/release/production-release-manifest.json', 'utf8'));
-  assert.equal(config.functions.source, '../production-prep.local/functions-package');
+  assert.deepEqual(Object.keys(config), ['firestore']);
+  assert.equal(release.architecture, 'FIREBASE_SPARK_ONLY');
   assert.match(release.deployment.command, /firebase\.production\.json/);
-  assert.match(release.deployment.packageCommand, /build-production-functions-package/);
+  assert.match(release.deployment.command, /--only firestore:rules(?:\s|$)/);
+  assert.doesNotMatch(release.deployment.command, /storage|functions|database|hosting/);
+  assert.equal(release.deployment.packageCommand, undefined);
+  assert.equal(release.deployment.storageAndFunctions, 'NOT_DEPLOYED_NOT_USED_IN_SPARK_ARCHITECTURE');
+  assert.equal(release.candidateHashes.productionFunctionsEntrypoint, 'NOT_USED_IN_SPARK_ARCHITECTURE');
+  assert.equal(release.candidateHashes.storageRules, 'NOT_USED_IN_SPARK_ARCHITECTURE');
 });
 
 test('production writer is bounded, restartable and retries transient failures', async () => {

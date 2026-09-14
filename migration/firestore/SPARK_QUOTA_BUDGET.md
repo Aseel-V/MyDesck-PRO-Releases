@@ -1,22 +1,24 @@
-# Spark quota budget
+# Spark Enterprise quota budget
 
-The verified database is Firestore Native **Enterprise** with free tier enabled. The budget therefore uses the inspected database edition: 1 GiB stored data, 50,000 read units/day, 40,000 write units/day, 50,000 realtime update units/day, and 10 GiB outbound/month. Usage-rate telemetry is unavailable, so this report gives measured per-workflow costs and single-workflow break-even limits rather than inventing customer traffic.
+The inspected database is Firestore Enterprise Native mode with free tier enabled and no linked billing account. The verified free allowance is 1 GiB stored data, 50,000 read units/day, 40,000 write units/day, 50,000 realtime update units/day, and 10 GiB outbound/month. Enterprise charges read work in 4 KiB tranches and write work in 1 KiB tranches, including index work.
 
-The rehearsed corpus contains 1,439 documents. The largest measured document is 4,835 bytes. A conservative four-times index/metadata upper bound is 27,830,260 bytes, about 2.592% of 1 GiB.
+The rehearsed corpus contains 1,439 documents; the largest is 4,835 bytes. The deliberately conservative four-times data/index upper bound is 27,830,260 bytes, or 2.592% of 1 GiB. Per-operation estimates below use that largest document for every document, so they are upper bounds rather than invented average usage.
 
-| Workflow | Reads | Writes | Maximum/day from limiting daily unit quota |
+| Workflow | Conservative read units | Conservative write units | Maximum/day from limiting quota |
 | --- | ---: | ---: | ---: |
-| Login + business load | 2 | 0 | 25,000 |
-| Trip list page (25) | 25 | 0 | 2,000 |
-| Typical trip detail | 8 | 0 | 6,250 |
-| Create trip + 3 installments | 19 | 10 | 2,631 |
-| Edit trip | 6 | 3 | 8,333 |
-| Cash payment | 10 | 6 | 5,000 |
-| Installment payment | 13 | 8 | 3,846 |
-| Analytics worst bounded load | 250 | 0 | 200 |
-| Search bounded page | 100 | 0 | 500 |
-| Archive/restore | 7 | 3 | 7,142 |
+| Login + business load | 4 | 0 | 12,500 |
+| Trip list page, 25 results, indexed | 51 | 0 | 980 |
+| Trip list, unindexed scan of current 99 trips | 117 | 0 | 427 |
+| Typical trip detail | 16 | 0 | 3,125 |
+| Create trip + 3 installments | 38 | 52 | 769 |
+| Edit trip | 12 | 17 | 2,352 |
+| Cash payment | 20 | 32 | 1,250 |
+| Installment payment | 26 | 42 | 952 |
+| Analytics, current 99 trips | 117 | 0 | 427 |
+| Analytics at 250-trip bound | 296 | 0 | 168 |
+| Search, current 99-trip bound | 117 | 0 | 427 |
+| Archive/restore | 14 | 17 | 2,352 |
 
-Queries use explicit limits. Related histories refuse 500-row unbounded behavior, analytics refuses more than 250 trips, and list/search pages are bounded. The Spark UI does not install an unbounded realtime listener. A mixed daily workload must be monitored by summing its units; the table is not additive headroom.
+The two trip-list indexes remain required for acceptable free-tier usage because that screen is common and an unindexed scan more than doubles the conservative read-unit cost at the present corpus. The installment due-date index is a cost optimization at 37 current rows and is not a hard dry-run gate. It should be reconsidered as the collection grows.
 
-Quota exhaustion is a failed server operation. The app shows service unavailable/no server confirmation, does not declare a queued financial write final, and never falls back to Supabase. The current corpus fits safely; measured daily user activity must remain below the published unit limits.
+Usage-rate telemetry is unavailable, so no daily customer activity is fabricated. A mixed workload must sum its actual units and remain below the published limits. Quota exhaustion remains a failed server operation: the app does not show financial success and never falls back to Supabase.

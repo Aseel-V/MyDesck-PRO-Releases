@@ -18,6 +18,7 @@ const suites = [
   ['Spark architecture guards', 'migration/firestore/tests/spark-architecture.test.mjs'],
   ['production preparation guards', 'migration/firestore/tests/production-preparation.test.mjs'],
   ['production environment and cleanup guards', 'migration/firestore/tests/environment-readiness.test.mjs'],
+  ['Enterprise index, IAM and deployment guards', 'migration/firestore/tests/enterprise-readiness.test.mjs'],
   ['isolated readiness callable and rollback emulator', 'migration/firestore/tests/readiness-smoke.test.mjs'],
   ['production cutover controls', 'scripts/test-production-cutover-controls.ts',
     ['scripts/run-typescript-source-test.mjs', 'scripts/test-production-cutover-controls.ts']],

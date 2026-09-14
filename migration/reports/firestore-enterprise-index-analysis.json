@@ -1,20 +1,25 @@
 {
-  "generatedAt": "2026-09-12T15:05:37.475Z",
+  "generatedAt": "2026-09-12T15:01:04.534Z",
   "project": "mydesckpro",
   "database": "default",
-  "mode": "plan",
+  "edition": "ENTERPRISE",
+  "mode": "NATIVE",
+  "readOnly": true,
   "productionMutations": 0,
-  "candidates": 3,
-  "hardRequired": 2,
-  "hardReady": 0,
-  "ready": 0,
-  "creating": 0,
-  "missing": 3,
-  "error": 0,
-  "indexes": [
+  "officialModel": {
+    "unindexedQueriesExecute": true,
+    "readUnitTrancheBytes": 4096,
+    "writeUnitTrancheBytes": 1024
+  },
+  "corpus": {
+    "trips": 99,
+    "tripInstallments": 37,
+    "maximumDocumentBytes": 4835
+  },
+  "classifications": [
     {
+      "index": 1,
       "collectionGroup": "trips",
-      "queryScope": "COLLECTION",
       "fields": [
         {
           "fieldPath": "ownerUid",
@@ -39,9 +44,6 @@
       ],
       "query": "FirestoreTravelRepository.listTripsForBusiness: tenant, deletion state, start-date cursor.",
       "state": "MISSING",
-      "resource": null,
-      "productionState": null,
-      "index": 1,
       "plan": {
         "http": 400,
         "status": "INVALID_ARGUMENT",
@@ -51,13 +53,11 @@
       "conservativeUnindexedReadUnits": 117,
       "classification": "REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE",
       "hardDryRunGate": true,
-      "rationale": "Common list query; full scans scale with the tenant collection and consume materially more read units than the 25-result page.",
-      "id": "candidate-1",
-      "command": "gcloud 'firestore' 'indexes' 'composite' 'create' '--project=mydesckpro' '--database=default' '--collection-group=trips' '--query-scope=collection' '--field-config=field-path=ownerUid,order=ascending' '--field-config=field-path=businessId,order=ascending' '--field-config=field-path=isDeleted,order=ascending' '--field-config=field-path=startDate,order=ascending' '--field-config=field-path=__name__,order=ascending'"
+      "rationale": "Common list query; full scans scale with the tenant collection and consume materially more read units than the 25-result page."
     },
     {
+      "index": 2,
       "collectionGroup": "trips",
-      "queryScope": "COLLECTION",
       "fields": [
         {
           "fieldPath": "ownerUid",
@@ -86,9 +86,6 @@
       ],
       "query": "FirestoreTravelRepository.listTripsForBusiness with a status filter.",
       "state": "MISSING",
-      "resource": null,
-      "productionState": null,
-      "index": 2,
       "plan": {
         "http": 400,
         "status": "INVALID_ARGUMENT",
@@ -98,13 +95,11 @@
       "conservativeUnindexedReadUnits": 117,
       "classification": "REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE",
       "hardDryRunGate": true,
-      "rationale": "Common list query; full scans scale with the tenant collection and consume materially more read units than the 25-result page.",
-      "id": "candidate-2",
-      "command": "gcloud 'firestore' 'indexes' 'composite' 'create' '--project=mydesckpro' '--database=default' '--collection-group=trips' '--query-scope=collection' '--field-config=field-path=ownerUid,order=ascending' '--field-config=field-path=businessId,order=ascending' '--field-config=field-path=isDeleted,order=ascending' '--field-config=field-path=status,order=ascending' '--field-config=field-path=startDate,order=ascending' '--field-config=field-path=__name__,order=ascending'"
+      "rationale": "Common list query; full scans scale with the tenant collection and consume materially more read units than the 25-result page."
     },
     {
+      "index": 3,
       "collectionGroup": "tripInstallments",
-      "queryScope": "COLLECTION",
       "fields": [
         {
           "fieldPath": "ownerUid",
@@ -125,9 +120,6 @@
       ],
       "query": "FirestoreTravelRepository.listDueInstallments: tenant, active status set, due date.",
       "state": "MISSING",
-      "resource": null,
-      "productionState": null,
-      "index": 3,
       "plan": {
         "http": 400,
         "status": "INVALID_ARGUMENT",
@@ -137,12 +129,9 @@
       "conservativeUnindexedReadUnits": 44,
       "classification": "COST_OPTIMIZATION",
       "hardDryRunGate": false,
-      "rationale": "Current 37-row collection remains bounded; index reduces scan cost but its absence does not block a no-customer-write dry-run.",
-      "id": "candidate-3",
-      "command": "gcloud 'firestore' 'indexes' 'composite' 'create' '--project=mydesckpro' '--database=default' '--collection-group=tripInstallments' '--query-scope=collection' '--field-config=field-path=ownerUid,order=ascending' '--field-config=field-path=businessId,order=ascending' '--field-config=field-path=status,order=ascending' '--field-config=field-path=dueDate,order=ascending'"
+      "rationale": "Current 37-row collection remains bounded; index reduces scan cost but its absence does not block a no-customer-write dry-run."
     }
   ],
-  "verification": "gcloud firestore indexes composite list --project=mydesckpro --database=default --format=json",
-  "cleanup": "Delete only a specific index resource created by the approved operation: gcloud firestore indexes composite delete EXACT_CREATED_INDEX_RESOURCE --project=mydesckpro --database=default. Never delete preexisting indexes or use wildcard cleanup.",
-  "note": "Create only reviewed MISSING entries. The two hard-required trip indexes must become READY; the installment index is an explicit cost optimization. CREATING is not READY. Field overrides are outside these commands."
+  "hardRequiredIndexes": 2,
+  "hardRequiredReady": 0
 }

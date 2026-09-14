@@ -10,7 +10,8 @@ const live = required.map((s,i) => ({ ...s, name: `${DATABASE}/collectionGroups/
 const response = indexes => ({ http: 200, data: { indexes } });
 const run = 'migration-test--production-readiness-12345678-1234-1234-1234-123456789abc';
 const ready = () => ({ project: PROJECT, database: DATABASE, backend: 'supabase', migrationRunId: run,
-  billingEnabled: false, sparkPlan: 'PASS', quota: 'PASS', indexes: indexReadiness(required,response(live)),
+  billingEnabled: false, sparkPlan: 'PASS', quota: 'PASS', indexes: indexReadiness(required,response(live)).map((i,n)=>({
+    ...i, classification: n < 2 ? 'REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE' : 'COST_OPTIMIZATION', hardDryRunGate: n < 2 })),
   iam: 'PASS', rules: 'PASS', secret: 'PASS' });
 const entry = () => ({ kind: 'firestore', path: `migration-test/${run}--trip`, migrationRunId: run,
   createdByThisRun: true, creationReceipt: 'create-succeeded-1', version: 'update-time-1' });
@@ -28,8 +29,8 @@ test('creating and failed indexes never satisfy readiness', () => {
   assert.ok(indexReadiness(required,{http:403}).every(i=>i.state==='ERROR'));
   assert.ok(indexReadiness(required,response(live)).every(i=>i.state==='READY'));
 });
-test('implicit document-name ordering is normalized without accepting reversed cursors', () => {
-  const indexes = live.map(i=>({...i,fields:[...i.fields,{fieldPath:'__name__',order:'ASCENDING'}]}));
+test('Enterprise document-name ordering must match the explicit cursor index', () => {
+  const indexes = structuredClone(live);
   assert.ok(indexReadiness(required,response(indexes)).every(i=>i.state==='READY'));
   indexes[0].fields.at(-1).order='DESCENDING';
   assert.equal(indexReadiness(required,response(indexes))[0].state,'MISSING');
@@ -42,6 +43,9 @@ test('every Spark capability and secret is required before synthetic network wri
   }
   assert.throws(()=>assertSyntheticPreflight({...ready(),billingEnabled:true}),/BILLING/);
   assert.throws(()=>assertSyntheticPreflight({...ready(),indexes:[]}),/INDEXES/);
+  assert.doesNotThrow(()=>assertSyntheticPreflight({...ready(),indexes:ready().indexes.map((i,n)=>n===2?{...i,state:'MISSING'}:i)}));
+  assert.throws(()=>assertSyntheticPreflight({...ready(),indexes:ready().indexes.map((i,n)=>n===0?{...i,state:'MISSING'}:i)}),/INDEXES/);
+  assert.throws(()=>assertSyntheticPreflight({...ready(),indexes:ready().indexes.map(i=>({...i,classification:'UNKNOWN'}))}),/INDEXES/);
 });
 test('production identity and backend are fixed for the smoke', () => {
   assert.throws(()=>assertSyntheticPreflight({...ready(),project:'other'}),/TARGET_MISMATCH/);
@@ -98,6 +102,7 @@ test('IAM writer and deployment identities remain separate', () => {
   assert.notEqual(writer.binding.member,deployer.binding.member);
   assert.equal(writer.binding.role,'roles/datastore.user');
   assert.ok(writer.binding.condition.includes(`resource.name=="${DATABASE}"`));
+  assert.ok(writer.binding.condition.includes(`resource.name.startsWith("${DATABASE}/documents/")`));
   assert.equal(deployer.binding.role,'roles/datastore.indexAdmin');
   assert.ok(writer.remove.includes('remove-iam-policy-binding'));
   assert.ok(!writer.remove.includes('--all'));
@@ -113,6 +118,8 @@ test('production release pins default and unprovisioned Storage has no guessed t
   const config=JSON.parse(readFileSync('migration/firestore/firebase.production.json','utf8'));
   const storage=JSON.parse(readFileSync('migration/firestore/config/production-storage-target.json','utf8'));
   assert.equal(config.firestore.database,'default');
+  assert.equal(config.functions,undefined);
+  assert.equal(config.storage,undefined);
   assert.equal(storage.bucket,null);
   assert.equal(storage.state,'UNPROVISIONED');
   assert.equal(storage.publicAccess,false);

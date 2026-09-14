@@ -87,25 +87,39 @@ export function quotaBudget() {
   const maximumDocumentBytes = corpus.sizes.largest.bytes;
   const conservativeDocumentBytes = documents * maximumDocumentBytes;
   const indexedUpperBoundBytes = conservativeDocumentBytes * 4;
+  // Enterprise Native bills/scopes free quota in 4KiB read and 1KiB write units.
+  // Use the largest measured document for a conservative bound. Index write entries are
+  // separately included where the two required trip indexes can be affected.
+  const readUnitsPerDocument = Math.ceil(maximumDocumentBytes / 4096);
+  const writeUnitsPerDocument = Math.ceil(maximumDocumentBytes / 1024);
+  const workflow = (readDocuments, writeDocuments, indexWriteUnits = 0) => ({
+    readDocuments, writeDocuments,
+    readUnits: readDocuments * readUnitsPerDocument,
+    writeUnits: writeDocuments * writeUnitsPerDocument + indexWriteUnits,
+  });
   const workflows = {
-    loginBusinessLoad: { reads: 2, writes: 0 },
-    tripListPage25: { reads: 25, writes: 0 },
-    tripDetailTypical: { reads: 8, writes: 0 },
-    createTripThreeInstallments: { reads: 19, writes: 10 },
-    editTrip: { reads: 6, writes: 3 },
-    payment: { reads: 10, writes: 6 },
-    installmentPayment: { reads: 13, writes: 8 },
-    analyticsWorstBound: { reads: 250, writes: 0 },
-    searchBoundedPage: { reads: 100, writes: 0 },
-    archiveOrRestore: { reads: 7, writes: 3 },
+    loginBusinessLoad: workflow(2, 0),
+    tripListPage25Indexed: { ...workflow(25, 0), indexScanReadUnits: 1, readUnits: workflow(25,0).readUnits + 1 },
+    tripListPage25UnindexedCurrentCorpus: { ...workflow(0, 0), scannedDocuments: 99, readUnits: Math.ceil(99 * maximumDocumentBytes / 4096) },
+    tripDetailTypical: workflow(8, 0),
+    createTripThreeInstallments: workflow(19, 10, 2),
+    editTrip: workflow(6, 3, 2),
+    payment: workflow(10, 6, 2),
+    installmentPayment: workflow(13, 8, 2),
+    analyticsCurrentCorpus: { ...workflow(0,0), scannedDocuments: 99, readUnits: Math.ceil(99 * maximumDocumentBytes / 4096) },
+    analyticsWorstBound: { ...workflow(0,0), scannedDocuments: 250, readUnits: Math.ceil(250 * maximumDocumentBytes / 4096) },
+    searchBoundedCurrentCorpus: { ...workflow(0,0), scannedDocuments: 99, readUnits: Math.ceil(99 * maximumDocumentBytes / 4096) },
+    archiveOrRestore: workflow(7, 3, 2),
   };
   const breakEven = Object.fromEntries(Object.entries(workflows).map(([name, cost]) => [name,
-    Math.min(cost.reads ? Math.floor(SPARK_ENTERPRISE_QUOTA.readUnitsPerDay / cost.reads) : Infinity,
-      cost.writes ? Math.floor(SPARK_ENTERPRISE_QUOTA.writeUnitsPerDay / cost.writes) : Infinity)]));
+    Math.min(cost.readUnits ? Math.floor(SPARK_ENTERPRISE_QUOTA.readUnitsPerDay / cost.readUnits) : Infinity,
+      cost.writeUnits ? Math.floor(SPARK_ENTERPRISE_QUOTA.writeUnitsPerDay / cost.writeUnits) : Infinity)]));
   return {
     databaseEdition: 'ENTERPRISE', documents, maximumDocumentBytes,
     conservativeDocumentBytes, indexedUpperBoundBytes,
     storedQuotaUtilizationPercent: Number((indexedUpperBoundBytes / SPARK_ENTERPRISE_QUOTA.storedBytes * 100).toFixed(3)),
+    unitModel: { readTrancheBytes: 4096, writeTrancheBytes: 1024, readUnitsPerMaximumDocument: readUnitsPerDocument,
+      writeUnitsPerMaximumDocument: writeUnitsPerDocument, indexWriteUnitsIncluded: true },
     quotas: SPARK_ENTERPRISE_QUOTA, workflows, breakEven,
     usageRateKnown: false,
     conclusion: indexedUpperBoundBytes < SPARK_ENTERPRISE_QUOTA.storedBytes

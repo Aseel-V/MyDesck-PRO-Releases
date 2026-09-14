@@ -16,9 +16,12 @@ test('Spark quota model is bounded and reports break-even instead of invented us
   const budget = quotaBudget();
   assert.equal(budget.usageRateKnown, false);
   assert.ok(budget.storedQuotaUtilizationPercent < 3);
-  assert.equal(budget.workflows.analyticsWorstBound.reads, 250);
-  assert.equal(budget.breakEven.analyticsWorstBound, 200);
-  assert.ok(budget.breakEven.payment >= 5000);
+  assert.equal(budget.unitModel.readTrancheBytes, 4096);
+  assert.equal(budget.unitModel.writeTrancheBytes, 1024);
+  assert.equal(budget.workflows.analyticsWorstBound.scannedDocuments, 250);
+  assert.equal(budget.workflows.analyticsWorstBound.readUnits, 296);
+  assert.equal(budget.breakEven.analyticsWorstBound, 168);
+  assert.ok(budget.breakEven.payment >= 1250);
   assert.match(budget.conclusion, /^SAFE_/);
 });
 
