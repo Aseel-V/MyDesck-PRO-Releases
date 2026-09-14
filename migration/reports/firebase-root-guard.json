@@ -1,0 +1,1412 @@
+{
+  "generatedAt": "2026-09-14T22:50:06.656Z",
+  "entry": "src/firebase-main.tsx",
+  "runtimeReachableFiles": 213,
+  "allowed": {
+    "supabaseStorageThrough": [
+      "src/data/supabaseStorageClient.ts",
+      "src/data/SupabaseStorageRepository.ts"
+    ],
+    "storageCallSites": 7
+  },
+  "counts": {
+    "genericSupabaseClient": 40,
+    "supabaseAdapters": 0,
+    "supabaseJsOutsideStorageClient": 1,
+    "forbiddenCallSites": 202,
+    "storageOutsideRepository": 0,
+    "firebaseStorage": 0,
+    "cloudFunctions": 0,
+    "adminSdk": 0
+  },
+  "violations": {
+    "genericSupabaseClient": [
+      {
+        "file": "src/components/CommandPalette.tsx",
+        "line": 17
+      },
+      {
+        "file": "src/components/Dashboard.tsx",
+        "line": 4
+      },
+      {
+        "file": "src/components/Settings.tsx",
+        "line": 28
+      },
+      {
+        "file": "src/components/analytics/EditRestaurantOrderModal.tsx",
+        "line": 3
+      },
+      {
+        "file": "src/components/analytics/RestaurantAnalytics.tsx",
+        "line": 10
+      },
+      {
+        "file": "src/components/analytics/RestaurantOrderModal.tsx",
+        "line": 6
+      },
+      {
+        "file": "src/components/cars/AddServiceModal.tsx",
+        "line": 4
+      },
+      {
+        "file": "src/components/cars/Cars.tsx",
+        "line": 12
+      },
+      {
+        "file": "src/components/cars/NewCarForm.tsx",
+        "line": 6
+      },
+      {
+        "file": "src/components/dashboards/SupermarketDashboard.tsx",
+        "line": 28
+      },
+      {
+        "file": "src/components/market/AddProductModal.tsx",
+        "line": 4
+      },
+      {
+        "file": "src/components/market/EditTransactionModal.tsx",
+        "line": 4
+      },
+      {
+        "file": "src/components/market/SalesAnalytics.tsx",
+        "line": 3
+      },
+      {
+        "file": "src/components/parts/CarPartsInventory.tsx",
+        "line": 7
+      },
+      {
+        "file": "src/components/restaurant/OrderEntry.tsx",
+        "line": 11
+      },
+      {
+        "file": "src/components/restaurant/OrderHistoryModal.tsx",
+        "line": 3
+      },
+      {
+        "file": "src/components/restaurant/OrderModal.tsx",
+        "line": 6
+      },
+      {
+        "file": "src/components/restaurant/ReservationsBoard.tsx",
+        "line": 11
+      },
+      {
+        "file": "src/components/trips/DuplicateTripDialog.tsx",
+        "line": 8
+      },
+      {
+        "file": "src/components/trips/NewTripForm.tsx",
+        "line": 12
+      },
+      {
+        "file": "src/components/trips/TripSmartToolsDialog.tsx",
+        "line": 6
+      },
+      {
+        "file": "src/components/trips/TripTrash.tsx",
+        "line": 6
+      },
+      {
+        "file": "src/components/trips/TripWhatsappDialog.tsx",
+        "line": 16
+      },
+      {
+        "file": "src/components/trips/Trips.tsx",
+        "line": 31
+      },
+      {
+        "file": "src/contexts/RestaurantRoleContext.tsx",
+        "line": 8
+      },
+      {
+        "file": "src/data/SupabaseTripRepository.ts",
+        "line": 1
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 9
+      },
+      {
+        "file": "src/lib/analyticsQueries.ts",
+        "line": 2
+      },
+      {
+        "file": "src/lib/paymentContractCompatibility.ts",
+        "line": 1
+      },
+      {
+        "file": "src/lib/pdfGenerator.ts",
+        "line": 4
+      },
+      {
+        "file": "src/lib/travelReports.ts",
+        "line": 4
+      },
+      {
+        "file": "src/lib/tripAuditQueries.ts",
+        "line": 1
+      },
+      {
+        "file": "src/lib/tripNotifications.ts",
+        "line": 1
+      },
+      {
+        "file": "src/lib/tripPayments.ts",
+        "line": 1
+      },
+      {
+        "file": "src/lib/tripPdfClient.ts",
+        "line": 1
+      },
+      {
+        "file": "src/lib/tripQueries.ts",
+        "line": 1
+      },
+      {
+        "file": "src/lib/tripTemplates.ts",
+        "line": 1
+      },
+      {
+        "file": "src/lib/tripTrashQueries.ts",
+        "line": 1
+      },
+      {
+        "file": "src/lib/tripWhatsapp.ts",
+        "line": 1
+      },
+      {
+        "file": "src/lib/visaPaymentArrivals.ts",
+        "line": 1
+      }
+    ],
+    "supabaseAdapters": [],
+    "supabaseJsOutsideStorageClient": [
+      {
+        "file": "src/lib/supabase.ts",
+        "line": 1
+      }
+    ],
+    "forbiddenCallSites": [
+      {
+        "file": "src/components/CommandPalette.tsx",
+        "line": 36,
+        "kind": "database",
+        "target": "trips"
+      },
+      {
+        "file": "src/components/Dashboard.tsx",
+        "line": 186,
+        "kind": "rpc",
+        "target": "get_trip_years"
+      },
+      {
+        "file": "src/components/Settings.tsx",
+        "line": 286,
+        "kind": "database",
+        "target": "trips"
+      },
+      {
+        "file": "src/components/Settings.tsx",
+        "line": 337,
+        "kind": "database",
+        "target": "trips"
+      },
+      {
+        "file": "src/components/analytics/EditRestaurantOrderModal.tsx",
+        "line": 41,
+        "kind": "database",
+        "target": "restaurant_menu_items"
+      },
+      {
+        "file": "src/components/analytics/EditRestaurantOrderModal.tsx",
+        "line": 132,
+        "kind": "database",
+        "target": "restaurant_order_items"
+      },
+      {
+        "file": "src/components/analytics/EditRestaurantOrderModal.tsx",
+        "line": 146,
+        "kind": "database",
+        "target": "restaurant_order_items"
+      },
+      {
+        "file": "src/components/analytics/EditRestaurantOrderModal.tsx",
+        "line": 154,
+        "kind": "database",
+        "target": "restaurant_orders"
+      },
+      {
+        "file": "src/components/analytics/RestaurantAnalytics.tsx",
+        "line": 63,
+        "kind": "database",
+        "target": "restaurant_orders"
+      },
+      {
+        "file": "src/components/analytics/RestaurantAnalytics.tsx",
+        "line": 109,
+        "kind": "database",
+        "target": "restaurant_order_items"
+      },
+      {
+        "file": "src/components/analytics/RestaurantAnalytics.tsx",
+        "line": 116,
+        "kind": "database",
+        "target": "restaurant_orders"
+      },
+      {
+        "file": "src/components/analytics/RestaurantOrderModal.tsx",
+        "line": 52,
+        "kind": "database",
+        "target": "business_profiles"
+      },
+      {
+        "file": "src/components/cars/AddServiceModal.tsx",
+        "line": 32,
+        "kind": "database",
+        "target": "car_parts"
+      },
+      {
+        "file": "src/components/cars/AddServiceModal.tsx",
+        "line": 107,
+        "kind": "rpc",
+        "target": "add_repair_service_transaction"
+      },
+      {
+        "file": "src/components/cars/Cars.tsx",
+        "line": 55,
+        "kind": "database",
+        "target": "repair_orders"
+      },
+      {
+        "file": "src/components/cars/Cars.tsx",
+        "line": 208,
+        "kind": "database",
+        "target": "repair_orders"
+      },
+      {
+        "file": "src/components/cars/NewCarForm.tsx",
+        "line": 105,
+        "kind": "database",
+        "target": "customer_vehicles"
+      },
+      {
+        "file": "src/components/cars/NewCarForm.tsx",
+        "line": 144,
+        "kind": "database",
+        "target": "customer_vehicles"
+      },
+      {
+        "file": "src/components/cars/NewCarForm.tsx",
+        "line": 154,
+        "kind": "database",
+        "target": "customer_vehicles"
+      },
+      {
+        "file": "src/components/cars/NewCarForm.tsx",
+        "line": 161,
+        "kind": "database",
+        "target": "repair_orders"
+      },
+      {
+        "file": "src/components/dashboards/SupermarketDashboard.tsx",
+        "line": 446,
+        "kind": "database",
+        "target": "restaurant_menu_items"
+      },
+      {
+        "file": "src/components/dashboards/SupermarketDashboard.tsx",
+        "line": 451,
+        "kind": "database",
+        "target": "restaurant_menu_categories"
+      },
+      {
+        "file": "src/components/dashboards/SupermarketDashboard.tsx",
+        "line": 696,
+        "kind": "database",
+        "target": "restaurant_menu_items"
+      },
+      {
+        "file": "src/components/dashboards/SupermarketDashboard.tsx",
+        "line": 719,
+        "kind": "database",
+        "target": "<dynamic>"
+      },
+      {
+        "file": "src/components/market/AddProductModal.tsx",
+        "line": 71,
+        "kind": "database",
+        "target": "restaurant_menu_categories"
+      },
+      {
+        "file": "src/components/market/AddProductModal.tsx",
+        "line": 89,
+        "kind": "database",
+        "target": "restaurant_menu_categories"
+      },
+      {
+        "file": "src/components/market/AddProductModal.tsx",
+        "line": 144,
+        "kind": "database",
+        "target": "restaurant_menu_items"
+      },
+      {
+        "file": "src/components/market/AddProductModal.tsx",
+        "line": 160,
+        "kind": "database",
+        "target": "restaurant_menu_items"
+      },
+      {
+        "file": "src/components/market/EditTransactionModal.tsx",
+        "line": 85,
+        "kind": "database",
+        "target": "<dynamic>"
+      },
+      {
+        "file": "src/components/market/SalesAnalytics.tsx",
+        "line": 99,
+        "kind": "database",
+        "target": "<dynamic>"
+      },
+      {
+        "file": "src/components/market/SalesAnalytics.tsx",
+        "line": 135,
+        "kind": "database",
+        "target": "<dynamic>"
+      },
+      {
+        "file": "src/components/market/SalesAnalytics.tsx",
+        "line": 152,
+        "kind": "database",
+        "target": "<dynamic>"
+      },
+      {
+        "file": "src/components/parts/CarPartsInventory.tsx",
+        "line": 31,
+        "kind": "database",
+        "target": "car_parts"
+      },
+      {
+        "file": "src/components/parts/CarPartsInventory.tsx",
+        "line": 56,
+        "kind": "database",
+        "target": "car_parts"
+      },
+      {
+        "file": "src/components/parts/CarPartsInventory.tsx",
+        "line": 74,
+        "kind": "database",
+        "target": "car_parts"
+      },
+      {
+        "file": "src/components/parts/CarPartsInventory.tsx",
+        "line": 93,
+        "kind": "database",
+        "target": "car_parts"
+      },
+      {
+        "file": "src/components/restaurant/OrderEntry.tsx",
+        "line": 769,
+        "kind": "database",
+        "target": "restaurant_table_sessions"
+      },
+      {
+        "file": "src/components/restaurant/OrderHistoryModal.tsx",
+        "line": 27,
+        "kind": "database",
+        "target": "restaurant_orders"
+      },
+      {
+        "file": "src/components/restaurant/OrderModal.tsx",
+        "line": 274,
+        "kind": "database",
+        "target": "restaurant_orders"
+      },
+      {
+        "file": "src/components/restaurant/OrderModal.tsx",
+        "line": 285,
+        "kind": "database",
+        "target": "restaurant_order_items"
+      },
+      {
+        "file": "src/components/restaurant/OrderModal.tsx",
+        "line": 338,
+        "kind": "database",
+        "target": "restaurant_orders"
+      },
+      {
+        "file": "src/components/restaurant/OrderModal.tsx",
+        "line": 403,
+        "kind": "database",
+        "target": "restaurant_orders"
+      },
+      {
+        "file": "src/components/restaurant/OrderModal.tsx",
+        "line": 409,
+        "kind": "database",
+        "target": "restaurant_order_items"
+      },
+      {
+        "file": "src/components/restaurant/ReservationsBoard.tsx",
+        "line": 393,
+        "kind": "auth",
+        "target": "getSession"
+      },
+      {
+        "file": "src/components/trips/DuplicateTripDialog.tsx",
+        "line": 23,
+        "kind": "rpc",
+        "target": "log_trip_activity"
+      },
+      {
+        "file": "src/components/trips/NewTripForm.tsx",
+        "line": 178,
+        "kind": "database",
+        "target": "trips"
+      },
+      {
+        "file": "src/components/trips/TripSmartToolsDialog.tsx",
+        "line": 30,
+        "kind": "database",
+        "target": "trips"
+      },
+      {
+        "file": "src/components/trips/TripSmartToolsDialog.tsx",
+        "line": 37,
+        "kind": "database",
+        "target": "trip_packing_lists"
+      },
+      {
+        "file": "src/components/trips/TripTrash.tsx",
+        "line": 41,
+        "kind": "database",
+        "target": "trip_attachment_cleanup_queue"
+      },
+      {
+        "file": "src/components/trips/TripWhatsappDialog.tsx",
+        "line": 109,
+        "kind": "database",
+        "target": "trips"
+      },
+      {
+        "file": "src/components/trips/TripWhatsappDialog.tsx",
+        "line": 123,
+        "kind": "rpc",
+        "target": "log_trip_activity"
+      },
+      {
+        "file": "src/components/trips/Trips.tsx",
+        "line": 228,
+        "kind": "rpc",
+        "target": "get_trip_years"
+      },
+      {
+        "file": "src/contexts/RestaurantRoleContext.tsx",
+        "line": 214,
+        "kind": "database",
+        "target": "restaurant_staff"
+      },
+      {
+        "file": "src/contexts/RestaurantRoleContext.tsx",
+        "line": 243,
+        "kind": "database",
+        "target": "restaurant_staff"
+      },
+      {
+        "file": "src/contexts/RestaurantRoleContext.tsx",
+        "line": 266,
+        "kind": "database",
+        "target": "restaurant_staff"
+      },
+      {
+        "file": "src/data/SupabaseTripRepository.ts",
+        "line": 28,
+        "kind": "rpc",
+        "target": "save_trip_transaction"
+      },
+      {
+        "file": "src/data/SupabaseTripRepository.ts",
+        "line": 39,
+        "kind": "database",
+        "target": "trips"
+      },
+      {
+        "file": "src/data/SupabaseTripRepository.ts",
+        "line": 54,
+        "kind": "database",
+        "target": "trips"
+      },
+      {
+        "file": "src/data/SupabaseTripRepository.ts",
+        "line": 68,
+        "kind": "database",
+        "target": "trips"
+      },
+      {
+        "file": "src/data/SupabaseTripRepository.ts",
+        "line": 78,
+        "kind": "database",
+        "target": "trips"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 57,
+        "kind": "realtime",
+        "target": "<dynamic>"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 69,
+        "kind": "realtime",
+        "target": "<dynamic>"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 101,
+        "kind": "database",
+        "target": "restaurant_tables"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 119,
+        "kind": "database",
+        "target": "restaurant_menu_categories"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 134,
+        "kind": "database",
+        "target": "restaurant_modifier_groups"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 152,
+        "kind": "database",
+        "target": "restaurant_orders"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 180,
+        "kind": "database",
+        "target": "restaurant_staff"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 198,
+        "kind": "database",
+        "target": "restaurant_table_sessions"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 222,
+        "kind": "database",
+        "target": "restaurant_kitchen_tickets"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 260,
+        "kind": "database",
+        "target": "restaurant_daily_reports"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 279,
+        "kind": "database",
+        "target": "restaurant_tables"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 308,
+        "kind": "database",
+        "target": "restaurant_tables"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 321,
+        "kind": "database",
+        "target": "restaurant_tables"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 334,
+        "kind": "database",
+        "target": "restaurant_tables"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 352,
+        "kind": "database",
+        "target": "restaurant_menu_categories"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 371,
+        "kind": "database",
+        "target": "restaurant_menu_categories"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 384,
+        "kind": "database",
+        "target": "restaurant_menu_categories"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 401,
+        "kind": "database",
+        "target": "restaurant_menu_items"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 436,
+        "kind": "database",
+        "target": "restaurant_menu_items"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 449,
+        "kind": "rpc",
+        "target": "delete_menu_item_secure"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 462,
+        "kind": "database",
+        "target": "restaurant_menu_items"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 480,
+        "kind": "database",
+        "target": "restaurant_modifier_groups"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 501,
+        "kind": "database",
+        "target": "restaurant_modifiers"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 526,
+        "kind": "database",
+        "target": "restaurant_staff"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 554,
+        "kind": "database",
+        "target": "restaurant_staff"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 567,
+        "kind": "rpc",
+        "target": "delete_staff_secure"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 579,
+        "kind": "database",
+        "target": "restaurant_staff"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 595,
+        "kind": "database",
+        "target": "restaurant_staff"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 618,
+        "kind": "database",
+        "target": "restaurant_table_sessions"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 633,
+        "kind": "database",
+        "target": "restaurant_tables"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 648,
+        "kind": "database",
+        "target": "restaurant_table_sessions"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 657,
+        "kind": "database",
+        "target": "restaurant_table_sessions"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 669,
+        "kind": "database",
+        "target": "restaurant_tables"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 711,
+        "kind": "database",
+        "target": "restaurant_orders"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 727,
+        "kind": "database",
+        "target": "restaurant_orders"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 741,
+        "kind": "database",
+        "target": "restaurant_orders"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 752,
+        "kind": "database",
+        "target": "restaurant_order_items"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 760,
+        "kind": "rpc",
+        "target": "log_business_activity_v2"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 783,
+        "kind": "database",
+        "target": "restaurant_order_items"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 811,
+        "kind": "database",
+        "target": "restaurant_order_item_modifiers"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 827,
+        "kind": "database",
+        "target": "restaurant_order_items"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 842,
+        "kind": "rpc",
+        "target": "authorize_staff_action"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 867,
+        "kind": "database",
+        "target": "restaurant_menu_items"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 908,
+        "kind": "rpc",
+        "target": "close_business_day_secure"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 925,
+        "kind": "rpc",
+        "target": "void_order_item_secure"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 946,
+        "kind": "rpc",
+        "target": "create_kitchen_ticket"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 954,
+        "kind": "database",
+        "target": "restaurant_orders"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 979,
+        "kind": "database",
+        "target": "restaurant_kitchen_tickets"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1001,
+        "kind": "database",
+        "target": "restaurant_ticket_items"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1016,
+        "kind": "database",
+        "target": "restaurant_kitchen_tickets"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1038,
+        "kind": "database",
+        "target": "restaurant_daily_reports"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1061,
+        "kind": "rpc",
+        "target": "apply_discount_secure"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1088,
+        "kind": "rpc",
+        "target": "log_business_activity_v2"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1103,
+        "kind": "database",
+        "target": "restaurant_orders"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1105,
+        "kind": "database",
+        "target": "restaurant_orders"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1210,
+        "kind": "database",
+        "target": "restaurant_reservations"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1226,
+        "kind": "database",
+        "target": "restaurant_reservations"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1247,
+        "kind": "database",
+        "target": "restaurant_reservations"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1278,
+        "kind": "database",
+        "target": "restaurant_reservations"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1296,
+        "kind": "database",
+        "target": "restaurant_reservations"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1310,
+        "kind": "database",
+        "target": "restaurant_reservations"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1347,
+        "kind": "database",
+        "target": "restaurant_waitlist"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1366,
+        "kind": "database",
+        "target": "restaurant_waitlist"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1390,
+        "kind": "database",
+        "target": "restaurant_waitlist"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1407,
+        "kind": "database",
+        "target": "restaurant_waitlist"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1439,
+        "kind": "database",
+        "target": "restaurant_guest_profiles"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1451,
+        "kind": "database",
+        "target": "restaurant_guest_profiles"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1462,
+        "kind": "database",
+        "target": "restaurant_guest_profiles"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1474,
+        "kind": "database",
+        "target": "restaurant_guest_profiles"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1505,
+        "kind": "database",
+        "target": "restaurant_guest_profiles"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1522,
+        "kind": "database",
+        "target": "restaurant_guest_profiles"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1534,
+        "kind": "database",
+        "target": "restaurant_guest_profiles"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1583,
+        "kind": "database",
+        "target": "restaurant_payments"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1601,
+        "kind": "database",
+        "target": "restaurant_orders"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1634,
+        "kind": "database",
+        "target": "restaurant_payments"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1652,
+        "kind": "database",
+        "target": "restaurant_orders"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1691,
+        "kind": "database",
+        "target": "restaurant_orders"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1698,
+        "kind": "database",
+        "target": "restaurant_orders"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1704,
+        "kind": "database",
+        "target": "restaurant_table_sessions"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1710,
+        "kind": "database",
+        "target": "restaurant_tables"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1715,
+        "kind": "database",
+        "target": "restaurant_kitchen_tickets"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1721,
+        "kind": "database",
+        "target": "restaurant_menu_items"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1781,
+        "kind": "database",
+        "target": "business_settings"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1791,
+        "kind": "database",
+        "target": "business_settings"
+      },
+      {
+        "file": "src/hooks/useRestaurant.ts",
+        "line": 1826,
+        "kind": "database",
+        "target": "business_settings"
+      },
+      {
+        "file": "src/lib/analyticsQueries.ts",
+        "line": 423,
+        "kind": "rpc",
+        "target": "get_travel_analytics_summary"
+      },
+      {
+        "file": "src/lib/analyticsQueries.ts",
+        "line": 424,
+        "kind": "rpc",
+        "target": "get_travel_payment_analytics"
+      },
+      {
+        "file": "src/lib/paymentContractCompatibility.ts",
+        "line": 20,
+        "kind": "rpc",
+        "target": "get_travel_payment_contract_version"
+      },
+      {
+        "file": "src/lib/pdfGenerator.ts",
+        "line": 573,
+        "kind": "rpc",
+        "target": "log_trip_activity"
+      },
+      {
+        "file": "src/lib/pdfGenerator.ts",
+        "line": 574,
+        "kind": "rpc",
+        "target": "create_trip_event_notification"
+      },
+      {
+        "file": "src/lib/travelReports.ts",
+        "line": 21,
+        "kind": "rpc",
+        "target": "get_travel_reports"
+      },
+      {
+        "file": "src/lib/tripAuditQueries.ts",
+        "line": 34,
+        "kind": "rpc",
+        "target": "get_trip_activity_page"
+      },
+      {
+        "file": "src/lib/tripAuditQueries.ts",
+        "line": 42,
+        "kind": "rpc",
+        "target": "get_trip_financial_audit_page"
+      },
+      {
+        "file": "src/lib/tripNotifications.ts",
+        "line": 15,
+        "kind": "database",
+        "target": "trip_notifications"
+      },
+      {
+        "file": "src/lib/tripNotifications.ts",
+        "line": 21,
+        "kind": "rpc",
+        "target": "mark_all_trip_notifications_read"
+      },
+      {
+        "file": "src/lib/tripNotifications.ts",
+        "line": 26,
+        "kind": "database",
+        "target": "trip_notifications"
+      },
+      {
+        "file": "src/lib/tripNotifications.ts",
+        "line": 31,
+        "kind": "database",
+        "target": "trip_notifications"
+      },
+      {
+        "file": "src/lib/tripNotifications.ts",
+        "line": 37,
+        "kind": "database",
+        "target": "trip_notifications"
+      },
+      {
+        "file": "src/lib/tripNotifications.ts",
+        "line": 42,
+        "kind": "database",
+        "target": "trip_notifications"
+      },
+      {
+        "file": "src/lib/tripNotifications.ts",
+        "line": 48,
+        "kind": "database",
+        "target": "trip_notification_settings"
+      },
+      {
+        "file": "src/lib/tripNotifications.ts",
+        "line": 54,
+        "kind": "database",
+        "target": "trip_notification_settings"
+      },
+      {
+        "file": "src/lib/tripPayments.ts",
+        "line": 21,
+        "kind": "database",
+        "target": "trip_payment_plans"
+      },
+      {
+        "file": "src/lib/tripPayments.ts",
+        "line": 24,
+        "kind": "database",
+        "target": "trip_installments"
+      },
+      {
+        "file": "src/lib/tripPayments.ts",
+        "line": 33,
+        "kind": "rpc",
+        "target": "create_trip_payment_plan"
+      },
+      {
+        "file": "src/lib/tripPayments.ts",
+        "line": 71,
+        "kind": "rpc",
+        "target": "record_trip_installment_payment"
+      },
+      {
+        "file": "src/lib/tripPayments.ts",
+        "line": 78,
+        "kind": "rpc",
+        "target": "reschedule_trip_installment"
+      },
+      {
+        "file": "src/lib/tripPayments.ts",
+        "line": 83,
+        "kind": "rpc",
+        "target": "record_trip_cash_payment"
+      },
+      {
+        "file": "src/lib/tripPayments.ts",
+        "line": 88,
+        "kind": "rpc",
+        "target": "recalculate_future_trip_installments"
+      },
+      {
+        "file": "src/lib/tripPayments.ts",
+        "line": 93,
+        "kind": "database",
+        "target": "trip_installment_events"
+      },
+      {
+        "file": "src/lib/tripPdfClient.ts",
+        "line": 7,
+        "kind": "edgeFunctions",
+        "target": "generate-trip-pdf"
+      },
+      {
+        "file": "src/lib/tripQueries.ts",
+        "line": 70,
+        "kind": "rpc",
+        "target": "get_trip_details"
+      },
+      {
+        "file": "src/lib/tripQueries.ts",
+        "line": 71,
+        "kind": "rpc",
+        "target": "get_trips_page"
+      },
+      {
+        "file": "src/lib/tripQueries.ts",
+        "line": 72,
+        "kind": "rpc",
+        "target": "get_trip_dashboard_items"
+      },
+      {
+        "file": "src/lib/tripQueries.ts",
+        "line": 185,
+        "kind": "rpc",
+        "target": "get_trip_dashboard_items"
+      },
+      {
+        "file": "src/lib/tripQueries.ts",
+        "line": 194,
+        "kind": "database",
+        "target": "trips"
+      },
+      {
+        "file": "src/lib/tripQueries.ts",
+        "line": 211,
+        "kind": "rpc",
+        "target": "get_trips_page"
+      },
+      {
+        "file": "src/lib/tripQueries.ts",
+        "line": 259,
+        "kind": "database",
+        "target": "trips"
+      },
+      {
+        "file": "src/lib/tripQueries.ts",
+        "line": 356,
+        "kind": "rpc",
+        "target": "get_trip_details"
+      },
+      {
+        "file": "src/lib/tripQueries.ts",
+        "line": 365,
+        "kind": "database",
+        "target": "trips"
+      },
+      {
+        "file": "src/lib/tripQueries.ts",
+        "line": 377,
+        "kind": "database",
+        "target": "trips"
+      },
+      {
+        "file": "src/lib/tripTemplates.ts",
+        "line": 35,
+        "kind": "database",
+        "target": "trip_templates"
+      },
+      {
+        "file": "src/lib/tripTemplates.ts",
+        "line": 45,
+        "kind": "database",
+        "target": "trip_templates"
+      },
+      {
+        "file": "src/lib/tripTemplates.ts",
+        "line": 53,
+        "kind": "database",
+        "target": "trip_templates"
+      },
+      {
+        "file": "src/lib/tripTemplates.ts",
+        "line": 53,
+        "kind": "database",
+        "target": "trip_templates"
+      },
+      {
+        "file": "src/lib/tripTemplates.ts",
+        "line": 58,
+        "kind": "database",
+        "target": "trip_templates"
+      },
+      {
+        "file": "src/lib/tripTemplates.ts",
+        "line": 63,
+        "kind": "rpc",
+        "target": "use_trip_template"
+      },
+      {
+        "file": "src/lib/tripTemplates.ts",
+        "line": 68,
+        "kind": "database",
+        "target": "trip_templates"
+      },
+      {
+        "file": "src/lib/tripTemplates.ts",
+        "line": 73,
+        "kind": "database",
+        "target": "trip_templates"
+      },
+      {
+        "file": "src/lib/tripTrashQueries.ts",
+        "line": 20,
+        "kind": "rpc",
+        "target": "get_deleted_trips_page"
+      },
+      {
+        "file": "src/lib/tripTrashQueries.ts",
+        "line": 39,
+        "kind": "database",
+        "target": "trips"
+      },
+      {
+        "file": "src/lib/tripTrashQueries.ts",
+        "line": 61,
+        "kind": "rpc",
+        "target": "restore_deleted_trips"
+      },
+      {
+        "file": "src/lib/tripTrashQueries.ts",
+        "line": 67,
+        "kind": "rpc",
+        "target": "permanently_delete_trips"
+      },
+      {
+        "file": "src/lib/tripTrashQueries.ts",
+        "line": 73,
+        "kind": "rpc",
+        "target": "retry_trip_attachment_cleanup"
+      },
+      {
+        "file": "src/lib/tripWhatsapp.ts",
+        "line": 212,
+        "kind": "database",
+        "target": "trip_whatsapp_templates"
+      },
+      {
+        "file": "src/lib/tripWhatsapp.ts",
+        "line": 221,
+        "kind": "database",
+        "target": "trip_whatsapp_templates"
+      },
+      {
+        "file": "src/lib/tripWhatsapp.ts",
+        "line": 222,
+        "kind": "database",
+        "target": "trip_whatsapp_templates"
+      },
+      {
+        "file": "src/lib/tripWhatsapp.ts",
+        "line": 227,
+        "kind": "database",
+        "target": "trip_whatsapp_templates"
+      },
+      {
+        "file": "src/lib/tripWhatsapp.ts",
+        "line": 232,
+        "kind": "database",
+        "target": "trip_whatsapp_templates"
+      },
+      {
+        "file": "src/lib/tripWhatsapp.ts",
+        "line": 237,
+        "kind": "database",
+        "target": "trip_whatsapp_templates"
+      },
+      {
+        "file": "src/lib/visaPaymentArrivals.ts",
+        "line": 51,
+        "kind": "rpc",
+        "target": "materialize_due_visa_progress_events"
+      },
+      {
+        "file": "src/lib/visaPaymentArrivals.ts",
+        "line": 53,
+        "kind": "database",
+        "target": "trip_notifications"
+      },
+      {
+        "file": "src/lib/visaPaymentArrivals.ts",
+        "line": 67,
+        "kind": "database",
+        "target": "trip_notifications"
+      }
+    ],
+    "storageOutsideRepository": [],
+    "firebaseStorage": [],
+    "cloudFunctions": [],
+    "adminSdk": []
+  },
+  "decision": "FIREBASE_ROOT_VIOLATIONS"
+}

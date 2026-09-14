@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-14T19:29:25.386Z",
+  "generatedAt": "2026-09-14T22:51:46.052Z",
   "status": "PASS",
   "suites": [
     {
@@ -111,6 +111,18 @@
       "tests": 0
     },
     {
+      "label": "Firestore document codec parity",
+      "file": "scripts/test-firestore-document-codec.mjs",
+      "outcome": "PASS",
+      "tests": 10
+    },
+    {
+      "label": "settings image safety",
+      "file": "scripts/test-business-profile-image-safety.mjs",
+      "outcome": "PASS",
+      "tests": 6
+    },
+    {
       "label": "Firestore Rules",
       "file": "migration/firestore/tests/rules.test.mjs",
       "outcome": "PASS",
@@ -121,6 +133,12 @@
       "file": "migration/firestore/tests/restaurant-staff-rules.test.mjs",
       "outcome": "PASS",
       "tests": 14
+    },
+    {
+      "label": "identity, profiles and administration",
+      "file": "scripts/test-firestore-identity.mjs",
+      "outcome": "PASS",
+      "tests": 13
     },
     {
       "label": "trip transaction",
@@ -160,11 +178,11 @@
     }
   ],
   "totals": {
-    "steps": 27,
-    "passed": 27,
+    "steps": 30,
+    "passed": 30,
     "failed": 0,
-    "nodeTestCases": 226,
-    "assertionCallSites": 753,
+    "nodeTestCases": 255,
+    "assertionCallSites": 893,
     "fullCorpusApplicationAssertions": 1023,
     "searchCorpusCases": 12,
     "fullCorpusSecurityChecks": 50,
