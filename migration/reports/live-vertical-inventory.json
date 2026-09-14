@@ -1,0 +1,207 @@
+{
+  "generatedAt": "2026-09-14T08:06:56.073Z",
+  "source": {
+    "readOnly": true,
+    "isolationLevel": "repeatable read",
+    "writeAttemptRejected": true,
+    "writesCaused": 0,
+    "transactionOutcome": "ROLLBACK"
+  },
+  "authUsers": 10,
+  "publicTables": 77,
+  "dispatchedVerticals": [
+    "auto_repair",
+    "car_parts",
+    "clothes_shop",
+    "furniture_store",
+    "phone_shop",
+    "restaurant",
+    "supermarket",
+    "tourism"
+  ],
+  "businessTypesWithTenantsNotDispatched": [],
+  "verticals": [
+    {
+      "vertical": "auto_repair",
+      "reachableFromDashboard": true,
+      "tenants": 1,
+      "rows": 2,
+      "tables": [
+        {
+          "table": "car_parts",
+          "rows": 1
+        },
+        {
+          "table": "customer_vehicles",
+          "rows": 1
+        }
+      ],
+      "classification": "ACTIVE_WITH_DATA",
+      "retirementRequiresOwnerApproval": true
+    },
+    {
+      "vertical": "car_parts",
+      "reachableFromDashboard": true,
+      "tenants": 0,
+      "rows": 1,
+      "tables": [
+        {
+          "table": "car_parts",
+          "rows": 1
+        }
+      ],
+      "classification": "ACTIVE_EMPTY",
+      "retirementRequiresOwnerApproval": true
+    },
+    {
+      "vertical": "clothes_shop",
+      "reachableFromDashboard": true,
+      "tenants": 0,
+      "rows": 0,
+      "tables": [],
+      "classification": "ACTIVE_EMPTY",
+      "retirementRequiresOwnerApproval": true
+    },
+    {
+      "vertical": "furniture_store",
+      "reachableFromDashboard": true,
+      "tenants": 0,
+      "rows": 0,
+      "tables": [],
+      "classification": "ACTIVE_EMPTY",
+      "retirementRequiresOwnerApproval": true
+    },
+    {
+      "vertical": "phone_shop",
+      "reachableFromDashboard": true,
+      "tenants": 0,
+      "rows": 0,
+      "tables": [],
+      "classification": "ACTIVE_EMPTY",
+      "retirementRequiresOwnerApproval": true
+    },
+    {
+      "vertical": "restaurant",
+      "reachableFromDashboard": true,
+      "tenants": 1,
+      "rows": 94,
+      "tables": [
+        {
+          "table": "restaurant_audit_logs",
+          "rows": 4
+        },
+        {
+          "table": "restaurant_kitchen_tickets",
+          "rows": 11
+        },
+        {
+          "table": "restaurant_menu_categories",
+          "rows": 17
+        },
+        {
+          "table": "restaurant_menu_items",
+          "rows": 4
+        },
+        {
+          "table": "restaurant_order_items",
+          "rows": 17
+        },
+        {
+          "table": "restaurant_orders",
+          "rows": 10
+        },
+        {
+          "table": "restaurant_staff",
+          "rows": 1
+        },
+        {
+          "table": "restaurant_tables",
+          "rows": 13
+        },
+        {
+          "table": "restaurant_ticket_items",
+          "rows": 17
+        }
+      ],
+      "classification": "ACTIVE_WITH_DATA",
+      "retirementRequiresOwnerApproval": true
+    },
+    {
+      "vertical": "supermarket",
+      "reachableFromDashboard": true,
+      "tenants": 1,
+      "rows": 1,
+      "tables": [
+        {
+          "table": "market_transactions",
+          "rows": 1
+        }
+      ],
+      "classification": "ACTIVE_WITH_DATA",
+      "retirementRequiresOwnerApproval": true
+    },
+    {
+      "vertical": "tourism",
+      "reachableFromDashboard": true,
+      "tenants": 3,
+      "rows": 1339,
+      "tables": [
+        {
+          "table": "travel_payment_feature_rollouts",
+          "rows": 1
+        },
+        {
+          "table": "trip_activity_log",
+          "rows": 501
+        },
+        {
+          "table": "trip_attachment_cleanup_queue",
+          "rows": 8
+        },
+        {
+          "table": "trip_financial_audit",
+          "rows": 465
+        },
+        {
+          "table": "trip_installment_events",
+          "rows": 4
+        },
+        {
+          "table": "trip_installments",
+          "rows": 37
+        },
+        {
+          "table": "trip_payment_events",
+          "rows": 4
+        },
+        {
+          "table": "trip_payment_plans",
+          "rows": 100
+        },
+        {
+          "table": "trip_pdf_rate_limits",
+          "rows": 8
+        },
+        {
+          "table": "trip_write_requests",
+          "rows": 111
+        },
+        {
+          "table": "trips",
+          "rows": 100
+        }
+      ],
+      "classification": "ACTIVE_WITH_DATA",
+      "retirementRequiresOwnerApproval": true
+    }
+  ],
+  "counts": {
+    "ACTIVE_WITH_DATA": 4,
+    "ACTIVE_EMPTY": 4,
+    "LEGACY_REACHABLE": 0,
+    "LEGACY_UNREACHABLE": 0,
+    "DEAD": 0,
+    "MIGRATION_ONLY": 0,
+    "unknown": 0
+  }
+}
