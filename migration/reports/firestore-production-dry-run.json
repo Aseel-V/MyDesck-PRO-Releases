@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-14T19:15:31.994Z",
+  "generatedAt": "2026-09-14T19:29:25.349Z",
   "migrationRunId": "harness-production-prep",
   "architecture": "FIREBASE_SPARK_ONLY",
   "mode": "dry-run",
@@ -15,7 +15,7 @@
     "firebaseProject": "mydesckpro",
     "firestoreDatabaseId": "default"
   },
-  "executableCommitSha": "6c54f3d5c35dd8e43c07587d5003852d0b54e6a7",
+  "executableCommitSha": "659b6374f3a9a26212967b9112bc4fdb537b2945",
   "configHashes": {
     "firestoreRules": "6e28ddf7a98487799505699a2e8fbcb3159ee47d99cbcca1873b962bd82a0172",
     "indexes": "c516b73728401cd577c3214efaf5a839b2a8cde65dc714c6a39d70300ee2bc39",
