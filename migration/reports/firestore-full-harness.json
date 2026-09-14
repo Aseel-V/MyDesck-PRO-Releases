@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-14T18:16:15.341Z",
+  "generatedAt": "2026-09-14T19:15:32.053Z",
   "status": "PASS",
   "suites": [
     {
@@ -73,6 +73,12 @@
       "file": "migration/firestore/tests/storage-identity.test.mjs",
       "outcome": "PASS",
       "tests": 5
+    },
+    {
+      "label": "PDF private signature",
+      "file": "migration/firestore/tests/pdf-signature.test.mjs",
+      "outcome": "PASS",
+      "tests": 8
     },
     {
       "label": "production preparation guards",
@@ -154,11 +160,11 @@
     }
   ],
   "totals": {
-    "steps": 26,
-    "passed": 26,
+    "steps": 27,
+    "passed": 27,
     "failed": 0,
-    "nodeTestCases": 218,
-    "assertionCallSites": 733,
+    "nodeTestCases": 226,
+    "assertionCallSites": 753,
     "fullCorpusApplicationAssertions": 1023,
     "searchCorpusCases": 12,
     "fullCorpusSecurityChecks": 50,

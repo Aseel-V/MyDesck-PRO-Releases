@@ -177,6 +177,16 @@ async function imageUrlToDataUrl(value: string | null | undefined): Promise<stri
   const src = safeImageSrc(value);
   if (!src) return null;
 
+  // Already inline: hand it straight back.
+  //
+  // Private signatures arrive here as data: URLs, because resolvePrivateSignature has already
+  // read them out of private Storage. Re-fetching one is not merely wasteful, it fails: the
+  // app's CSP allows `data:` under img-src but not under connect-src, so fetch() on a data URL
+  // is blocked, the catch below swallows the violation, and the signature silently vanishes
+  // from the PDF while still rendering correctly in an <img>. Logos were unaffected because
+  // they resolve to an https Supabase URL, which connect-src does allow.
+  if (src.startsWith('data:')) return src;
+
   try {
     const response = await fetch(src);
     if (!response.ok) return null;

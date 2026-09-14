@@ -49,17 +49,32 @@ const sanitizeBusinessProfile = (profile: BusinessProfile | null): BusinessProfi
   };
 };
 
+/**
+ * A resolved image is a display value, never a stored reference.
+ *
+ * `profile.logo_url` and `profile.signature_url` are resolved on read: a private signature
+ * becomes a `data:` URL so it can render. Forms hold that resolved value in state, so a plain
+ * save would write the whole base64 payload back over the storage reference and destroy it.
+ * Dropping the key leaves the stored column untouched, which is what a form that did not change
+ * the image should do. A genuine upload still passes, because uploadPrivateFile returns an
+ * authenticated object reference rather than inline data.
+ */
+const isResolvedDisplayValue = (value: unknown): boolean =>
+  typeof value === 'string' && /^(data:|blob:)/i.test(value.trim());
+
 const sanitizeBusinessProfileUpdates = (
   updates: Partial<BusinessProfile>
 ): Partial<BusinessProfile> => ({
   ...updates,
-  ...(Object.prototype.hasOwnProperty.call(updates, 'logo_url')
+  ...(Object.prototype.hasOwnProperty.call(updates, 'logo_url') && !isResolvedDisplayValue(updates.logo_url)
     ? { logo_url: canonicalBusinessImage(safeImageSrc(updates.logo_url)) }
     : {}),
-  ...(Object.prototype.hasOwnProperty.call(updates, 'signature_url')
+  ...(Object.prototype.hasOwnProperty.call(updates, 'signature_url') && !isResolvedDisplayValue(updates.signature_url)
     ? { signature_url: canonicalBusinessImage(safeImageSrc(updates.signature_url)) }
     : {}),
 });
+
+export const __testing = { isResolvedDisplayValue, sanitizeBusinessProfileUpdates };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
