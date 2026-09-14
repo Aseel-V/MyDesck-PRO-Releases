@@ -71,6 +71,16 @@ const evidence = {
     evidence: { classification: 'AUTH_REPLACED',
       replacement: 'Firebase Auth for identity, restaurantMemberships plus Rules for authorisation',
       note: 'The Postgres RPC remains live until the restaurant vertical cuts over; the replacement path is proven in the emulator.' } },
+  // SIGNATURE_PRIVACY_GO
+  signaturePrivateBucketExists: { status: rlsAudit && !(rlsAudit.bucketsReferencedInCodeButMissing ?? []).includes('business-signatures') ? 'PASS' : 'FAIL',
+    evidence: rlsAudit ? { missing: rlsAudit.bucketsReferencedInCodeButMissing } : 'not generated' },
+  signatureNotPubliclyReadable: { status: rlsAudit?.publiclyReadablePrivateObjects === 0 ? 'PASS' : 'FAIL',
+    evidence: rlsAudit ? { publiclyReadablePrivateObjects: rlsAudit.publiclyReadablePrivateObjects } : 'not generated' },
+  signatureRestrictivePolicy: { status: (rlsAudit?.restrictivePolicyCount ?? 0) > 0 ? 'PASS' : 'FAIL',
+    evidence: rlsAudit ? { restrictivePolicyCount: rlsAudit.restrictivePolicyCount } : 'not generated' },
+  signaturesNeverPublicInCode: { status: /SIGNATURES_ARE_NEVER_PUBLIC/.test(
+      existsSync('src/data/SupabaseStorageRepository.ts') ? readFileSync('src/data/SupabaseStorageRepository.ts', 'utf8') : '') ? 'PASS' : 'FAIL',
+    evidence: 'publicUrl() refuses the signature bucket outright' },
   analytics: carried.search ?? { status: 'MISSING' },
 
   // HYBRID_STORAGE_GO

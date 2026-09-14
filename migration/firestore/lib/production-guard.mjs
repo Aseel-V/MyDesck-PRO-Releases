@@ -132,6 +132,10 @@ export const STAGE_GATES = Object.freeze({
   HYBRID_STORAGE_AUTH_GO: ['hybridStorageAuth', 'supabaseRoleClaim', 'storageRlsAudit',
     'storageTenantIsolation', 'storageAnonymousDenied'],
   STORAGE_ISOLATION_GO: ['storageIsolation'],
+  // Signature privacy is its own gate: the exposure is a live production issue that exists
+  // independently of whether the hybrid architecture is ever adopted.
+  SIGNATURE_PRIVACY_GO: ['signaturePrivateBucketExists', 'signatureNotPubliclyReadable',
+    'signatureRestrictivePolicy', 'signaturesNeverPublicInCode'],
   RESTAURANT_STAFF_AUTH_MODEL_GO: ['restaurantStaffInventory', 'restaurantStaffIdentityModel',
     'restaurantStaffRules', 'authenticateStaffReplaced'],
   // Product work. Only begins once the three blockers above are GO.
@@ -158,8 +162,10 @@ export const STAGE_GATES = Object.freeze({
 const STAGE_DEPENDENCIES = Object.freeze({
   HYBRID_STORAGE_AUTH_GO: [],
   STORAGE_ISOLATION_GO: [],
+  SIGNATURE_PRIVACY_GO: [],
   RESTAURANT_STAFF_AUTH_MODEL_GO: [],
-  PRODUCT_PARITY_GO: ['HYBRID_STORAGE_AUTH_GO', 'STORAGE_ISOLATION_GO', 'RESTAURANT_STAFF_AUTH_MODEL_GO'],
+  PRODUCT_PARITY_GO: ['HYBRID_STORAGE_AUTH_GO', 'STORAGE_ISOLATION_GO', 'SIGNATURE_PRIVACY_GO',
+    'RESTAURANT_STAFF_AUTH_MODEL_GO'],
   DRY_RUN_GO: ['PRODUCT_PARITY_GO'],
   BULK_COPY_GO: ['DRY_RUN_GO'],
   CUTOVER_GO: ['BULK_COPY_GO'],

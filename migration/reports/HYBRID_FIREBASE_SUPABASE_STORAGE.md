@@ -238,3 +238,87 @@ the exposure remediation in §4. Rewiring now would bake in the wrong bucket lay
 | `storageIsolation` | **FAIL** — 9 call sites outside the allowlist |
 
 `HYBRID_STORAGE_AUTH_GO` = **NO_GO**. `STORAGE_ISOLATION_GO` = **NO_GO**.
+
+
+---
+
+# VERIFICATION 2026-09-14 (finalization attempt) — STILL NOT ENABLED
+
+The owner was asked to enable Supabase Dashboard -> Authentication -> Third-Party Auth -> Firebase
+for project `mydesckpro`. **That change has not taken effect.** Verified three independent ways.
+
+## 1. Algorithm allowlist — unchanged
+
+`node migration/firestore/tools/hybrid-storage-auth-probe.mjs`
+
+| Token `alg` | HTTP | Message | Accepted |
+| --- | ---: | --- | --- |
+| **RS256** (Firebase) | 400 | `"alg" (Algorithm) Header Parameter value not allowed` | **NO** |
+| HS256 (Supabase) | 400 | `signature verification failed` | YES |
+| ES256 | 400 | `"alg" ... not allowed` | NO |
+| `none` | 400 | `"alg" ... not allowed` | NO |
+
+**Exact rejection class: `AccessDenied` / `Unauthorized` — the RS256 token is refused at the JWT
+header, before any issuer, JWKS or signature check.** No token contents were exposed; the probe
+sends deliberately invalid signatures and never needs a real credential.
+
+## 2. GoTrue settings — unchanged
+
+`external: ["email"]`. No third-party provider is advertised.
+
+## 3. Remote config — unchanged
+
+`supabase config diff` (read-only) returns the **same 10 differences as the previously captured
+baseline, with identical values**. No third-party auth entry appears, and `unmanaged: []`.
+
+## Unrelated Auth settings: NOT CHANGED
+
+Checked explicitly, because drift would itself be a stop condition. Every security-relevant live
+value is exactly as captured before:
+
+| Setting | Live value | Baseline | Status |
+| --- | --- | --- | --- |
+| `auth.mfa.totp.enroll_enabled` | `true` | `true` | unchanged |
+| `auth.mfa.totp.verify_enabled` | `true` | `true` | unchanged |
+| `auth.sms.twilio.enabled` | `true` | `true` | unchanged |
+| `auth.email.max_frequency` | `1m0s` | `1m0s` | unchanged |
+| `auth.email.otp_expiry` | `86400` | `86400` | unchanged |
+| `auth.site_url` | `http://localhost:3000` | `http://localhost:3000` | unchanged |
+| `db.pooler.default_pool_size` | `15` | `15` | unchanged |
+| `db.pooler.max_client_conn` | `200` | `200` | unchanged |
+| `storage.vector.enabled` | `false` | `false` | unchanged |
+
+MFA, SMS and rate limiting are all still on in production. Nothing was pushed.
+
+## Consequence
+
+Phases 2 through 8 cannot run:
+
+| Phase | Status | Reason |
+| --- | --- | --- |
+| 2 — Firebase token acceptance | **STOPPED** | RS256 refused at the algorithm header |
+| 3 — private bucket + Firebase-UID policies | **NOT DONE** | policies key on `auth.uid()` from the Firebase `sub`; with third-party auth off that is always null, so every policy would deny |
+| 4 — synthetic hybrid Storage proof | **NOT RUN** | needs an accepted Firebase token |
+| 5 — real signature remediation | **NOT DONE** | gated on Phase 4, and separately on a copy credential |
+| 7 — real hybrid smoke | **NOT RUN** | same |
+| 8 — exposure final proof | **NOT RUN** | same |
+
+### Why the private bucket was not created anyway
+
+Creating an empty `business-signatures` bucket would have flipped
+`signaturePrivateBucketExists` to PASS while the real signature stayed publicly readable — a gate
+looking better with no security improvement. It is withheld deliberately until it can be created
+together with working policies and a verified copy.
+
+## What the operator still needs to do
+
+1. **Supabase Dashboard -> MyDesckPRO -> Authentication -> Third-Party Auth -> Add provider ->
+   Firebase -> Firebase project ID `mydesckpro` -> Save.**
+   Then re-run the probe: **RS256 must move to accepted.** That single check is the gate.
+   Do **not** use `supabase config push`; it would apply 10 unrelated differences, including
+   disabling production MFA.
+2. Provide a **least-privileged path for the one-time signature copy** — the Dashboard Storage UI
+   is sufficient and keeps the file inside your controlled environment. A `service_role` key is
+   still absent here, and was deliberately not synthesised from the project JWT secret.
+
+`HYBRID_STORAGE_AUTH_GO` = **NO_GO**. `SIGNATURE_PRIVACY_GO` = **NO_GO**.

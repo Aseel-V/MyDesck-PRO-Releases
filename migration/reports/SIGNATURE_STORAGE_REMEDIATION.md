@@ -149,3 +149,34 @@ null for a Firebase-authenticated client and every policy above denies. See
 `HYBRID_FIREBASE_SUPABASE_STORAGE.md`. Either order is safe for the data; doing Storage first
 simply means signatures are briefly reachable only through the Supabase-Auth app, which is the
 app that is live today.
+
+
+---
+
+# STATUS 2026-09-14 (finalization attempt) — UNCHANGED, STILL EXPOSED
+
+Re-verified with `node migration/firestore/tools/storage-rls-audit.mjs`:
+
+- `publiclyReadablePrivateObjects`: **1** — the signature is still anonymously readable
+- `restrictivePolicyCount`: **0**
+- `bucketsReferencedInCodeButMissing`: **`business-signatures`**
+- decision: **`STORAGE_SECURITY_BLOCKED`**
+
+Nothing was created, copied or deleted. The source object is intact.
+
+Two independent preconditions are still unmet:
+
+1. **Supabase Third-Party Auth for Firebase is not enabled**, so the Firebase-UID policies this
+   bucket needs would deny every request. See `HYBRID_FIREBASE_SUPABASE_STORAGE.md`.
+2. **No least-privileged copy path exists.** The `service_role` key is still absent. Minting one
+   from the project JWT secret remains refused: that credential can impersonate any identity,
+   including `service_role`, and using it to fix a data-exposure bug would be a worse risk.
+
+**`OPERATOR STORAGE COPY REQUIRED`** — the manual procedure above is unchanged and ready. The file
+stays inside your Supabase environment throughout; it must not be downloaded or shared with an
+assistant.
+
+One audit fix landed this round: an earlier refactor replaced the literal bucket string in the
+repository with a `SIGNATURE_BUCKET` constant, which silently stopped the audit reporting the
+bucket as missing. The detector now matches both forms, so `CODE_TARGETS_NONEXISTENT_BUCKET` is
+reported again.

@@ -77,8 +77,14 @@ const classified = buckets.map((bucket) => {
     kinds: [...new Set(contents.map((p) => p.kind))] };
 });
 
-const codeBuckets = [...new Set([...readFileSync('src/data/SupabaseStorageRepository.ts', 'utf8')
-  .matchAll(/storage\s*\.\s*from\(\s*['"]([^'"]+)['"]/g)].map((m) => m[1]))];
+// Buckets the application expects to exist. The repository now names the signature bucket
+// through a constant rather than a literal `.from('...')`, so match both forms: detecting only
+// the literal would silently stop reporting a missing bucket after that refactor.
+const repositorySource = readFileSync('src/data/SupabaseStorageRepository.ts', 'utf8');
+const codeBuckets = [...new Set([
+  ...[...repositorySource.matchAll(/storage\s*\.\s*from\(\s*['"]([^'"]+)['"]/g)].map((m) => m[1]),
+  ...[...repositorySource.matchAll(/_BUCKET\s*=\s*['"]([^'"]+)['"]/g)].map((m) => m[1]),
+])];
 const missingBuckets = codeBuckets.filter((b) => !buckets.some((x) => x.id === b));
 
 const exposedPrivate = probed.filter((p) => p.kind === 'SIGNATURE_IMAGE' && p.publiclyReadable);

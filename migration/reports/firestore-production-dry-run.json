@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-14T09:16:52.402Z",
+  "generatedAt": "2026-09-14T09:30:33.710Z",
   "migrationRunId": "harness-production-prep",
   "architecture": "FIREBASE_SPARK_ONLY",
   "mode": "dry-run",
@@ -15,7 +15,7 @@
     "firebaseProject": "mydesckpro",
     "firestoreDatabaseId": "default"
   },
-  "executableCommitSha": "8c3ccdc6bfe0784ae94474fd27752a65650cd8f7",
+  "executableCommitSha": "1757b4c2b52b81f2436f75061fe9abfe057cb2a4",
   "configHashes": {
     "firestoreRules": "6e28ddf7a98487799505699a2e8fbcb3159ee47d99cbcca1873b962bd82a0172",
     "indexes": "c516b73728401cd577c3214efaf5a839b2a8cde65dc714c6a39d70300ee2bc39",
@@ -398,7 +398,7 @@
       "evidence": "LTR regression"
     },
     "electron": {
-      "status": "NOT_RUN",
+      "status": "PASS",
       "evidence": "Electron-compatible renderer composition, Auth persistence, token refresh and local print/PDF path"
     },
     "activeSupabase": {
@@ -837,7 +837,7 @@
       },
       {
         "name": "electron",
-        "status": "NOT_RUN",
+        "status": "PASS",
         "evidence": "Electron-compatible renderer composition, Auth persistence, token refresh and local print/PDF path"
       },
       {
@@ -882,16 +882,15 @@
         "evidence": "Spark plan and billing-disabled fail-closed runtime selector; cutover not started"
       }
     ],
-    "pass": 24,
+    "pass": 25,
     "fail": 4,
-    "notRun": 2,
+    "notRun": 1,
     "missing": 0,
     "decision": "NO_GO",
     "blockers": [
       "iam",
       "indexes",
       "realClientSmoke",
-      "electron",
       "activeProductParity",
       "secret"
     ]
@@ -900,7 +899,6 @@
     "iam",
     "indexes",
     "realClientSmoke",
-    "electron",
     "activeProductParity",
     "secret"
   ],

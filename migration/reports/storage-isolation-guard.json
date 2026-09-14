@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-14T09:09:13.698Z",
+  "generatedAt": "2026-09-14T09:31:27.076Z",
   "readOnly": true,
   "productionMutations": 0,
   "allowlist": [
@@ -14,12 +14,14 @@
   "violations": {
     "storageOutsideAllowlist": [],
     "forbiddenInsideStorageLayer": [],
-    "generalClientInStorageLayer": []
+    "generalClientInStorageLayer": [],
+    "exportedGenericClient": []
   },
   "rules": {
     "storageOnlyInsideAllowlist": true,
     "noDatabaseRpcAuthRealtimeInStorageLayer": true,
-    "noGeneralClientImportInStorageLayer": true
+    "noGeneralClientImportInStorageLayer": true,
+    "noExportedGenericClient": true
   },
   "decision": "STORAGE_ISOLATION_GO"
 }

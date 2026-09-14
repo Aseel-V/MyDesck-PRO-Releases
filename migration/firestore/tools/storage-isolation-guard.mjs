@@ -50,7 +50,12 @@ const stripComments = (text) => text
   .replace(/\/\*[\s\S]*?\*\//g, ' ')
   .replace(/(^|[^:])\/\/.*/gm, '$1 ');
 
-const violations = { storageOutsideAllowlist: [], forbiddenInsideStorageLayer: [], generalClientInStorageLayer: [] };
+// A generic client escaping the Storage layer would defeat every other rule here, so check the
+// export surface directly rather than trusting that nobody widens the return type later.
+const EXPORTED_GENERIC_CLIENT = /export\s+(?:async\s+)?function\s+\w+\s*\([^)]*\)\s*:\s*SupabaseClient|export\s+(?:const|let|var)\s+\w+\s*:\s*SupabaseClient/;
+
+const violations = { storageOutsideAllowlist: [], forbiddenInsideStorageLayer: [],
+  generalClientInStorageLayer: [], exportedGenericClient: [] };
 let storageCallsTotal = 0;
 let storageCallsInsideAllowlist = 0;
 
@@ -64,6 +69,7 @@ for (const file of files) {
 
   if (!allowed) continue;
   if (GENERAL_CLIENT.test(text)) violations.generalClientInStorageLayer.push({ file });
+  if (EXPORTED_GENERIC_CLIENT.test(text)) violations.exportedGenericClient.push({ file });
   for (const [name, pattern] of Object.entries(FORBIDDEN_IN_STORAGE_LAYER)) {
     // `.from(` inside the Storage layer is legitimate only as `storage.from(bucket)`.
     const masked = name === 'database'
@@ -76,7 +82,8 @@ for (const file of files) {
 
 const isolated = violations.storageOutsideAllowlist.length === 0
   && violations.forbiddenInsideStorageLayer.length === 0
-  && violations.generalClientInStorageLayer.length === 0;
+  && violations.generalClientInStorageLayer.length === 0
+  && violations.exportedGenericClient.length === 0;
 
 const report = {
   generatedAt: new Date().toISOString(),
@@ -92,6 +99,7 @@ const report = {
     storageOnlyInsideAllowlist: violations.storageOutsideAllowlist.length === 0,
     noDatabaseRpcAuthRealtimeInStorageLayer: violations.forbiddenInsideStorageLayer.length === 0,
     noGeneralClientImportInStorageLayer: violations.generalClientInStorageLayer.length === 0,
+    noExportedGenericClient: violations.exportedGenericClient.length === 0,
   },
   decision: isolated ? 'STORAGE_ISOLATION_GO' : 'STORAGE_ISOLATION_NO_GO',
 };
@@ -100,5 +108,6 @@ console.log(JSON.stringify({ storageCallsTotal, storageCallsInsideAllowlist,
   storageCallsOutsideAllowlist: report.storageCallsOutsideAllowlist,
   outside: violations.storageOutsideAllowlist,
   generalClientInStorageLayer: violations.generalClientInStorageLayer,
+  exportedGenericClient: violations.exportedGenericClient,
   decision: report.decision }, null, 2));
 if (!isolated) process.exitCode = 2;
