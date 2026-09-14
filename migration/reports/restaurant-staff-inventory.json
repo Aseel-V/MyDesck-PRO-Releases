@@ -1,0 +1,60 @@
+{
+  "generatedAt": "2026-09-14T08:31:43.004Z",
+  "source": {
+    "readOnly": true,
+    "isolationLevel": "repeatable read",
+    "writeAttemptRejected": true,
+    "writesCaused": 0,
+    "transactionOutcome": "ROLLBACK"
+  },
+  "staffCount": 1,
+  "roles": {
+    "legacy": [
+      "Manager"
+    ],
+    "restaurant": [
+      "waiter"
+    ]
+  },
+  "productDefinedRestaurantRoles": [
+    "super_admin",
+    "branch_manager",
+    "kitchen_staff",
+    "waiter"
+  ],
+  "counts": {
+    "NEEDS_FIREBASE_ACCOUNT": 1,
+    "UNKNOWN": 0
+  },
+  "credentialDispositions": {
+    "OWNER_REPROVISION_REQUIRED": 1
+  },
+  "bcryptImportCandidates": 0,
+  "plaintextPinsPresent": 1,
+  "findings": [
+    {
+      "severity": "MEDIUM",
+      "id": "PLAINTEXT_PIN_AT_REST",
+      "detail": "1 staff record(s) store an unhashed pin_code."
+    }
+  ],
+  "identityModelDecided": false,
+  "records": [
+    {
+      "staffFingerprint": "fd97301e3dbe",
+      "businessFingerprint": "29f3c0367460",
+      "legacyRole": "Manager",
+      "restaurantRole": "waiter",
+      "isActive": true,
+      "hasEmail": false,
+      "matchesExistingAuthUser": false,
+      "passwordFormat": "ABSENT",
+      "pinHashFormat": "ABSENT",
+      "pinCodeFormat": "PLAINTEXT_OR_UNRECOGNISED",
+      "plaintextPinPresent": true,
+      "classification": "NEEDS_FIREBASE_ACCOUNT",
+      "credentialDisposition": "OWNER_REPROVISION_REQUIRED"
+    }
+  ],
+  "note": "authenticate_staff and authorize_staff_action cannot be reimplemented without a server. Staff must become Firebase Auth identities authorised by Firestore membership documents and Rules."
+}
