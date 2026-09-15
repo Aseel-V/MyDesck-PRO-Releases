@@ -42,17 +42,39 @@ function scriptKind(file) {
   return ts.ScriptKind.JS;
 }
 
-/** The leftmost identifier of a property-access chain, unwrapping parentheses and non-null assertions. */
+/** Parentheses, `as`, `<T>` assertions, `satisfies` and `!` do not change the value an expression evaluates to. */
+function isTransparent(node) {
+  return ts.isParenthesizedExpression(node) || ts.isAsExpression(node) || ts.isTypeAssertionExpression(node)
+    || ts.isNonNullExpression(node) || Boolean(ts.isSatisfiesExpression?.(node));
+}
+
+/** The expression inside any transparent wrappers. */
+function unwrap(node) {
+  let current = node;
+  while (isTransparent(current)) current = current.expression;
+  return current;
+}
+
+/** The outermost transparent wrapper around a node: the value the surrounding code actually uses. */
+function outermost(node) {
+  let current = node;
+  while (current.parent && isTransparent(current.parent)) current = current.parent;
+  return current;
+}
+
+/** The leftmost identifier of a property-access chain, unwrapping transparent wrappers. */
 function rootIdentifier(node) {
   let current = node;
   for (;;) {
     if (ts.isPropertyAccessExpression(current) || ts.isElementAccessExpression(current)) current = current.expression;
-    else if (ts.isParenthesizedExpression(current) || ts.isNonNullExpression(current) || ts.isAsExpression(current)) current = current.expression;
+    else if (isTransparent(current)) current = current.expression;
     else if (ts.isCallExpression(current)) current = current.expression;
     else break;
   }
   return ts.isIdentifier(current) ? current.text : null;
 }
+
+const CLIENT_METHODS = { from: 'database', rpc: 'rpc', channel: 'realtime', removeChannel: 'realtime' };
 
 export function analyzeFile(file) {
   const text = readFileSync(file, 'utf8');
@@ -60,6 +82,10 @@ export function analyzeFile(file) {
   const facts = { imports: [], calls: [] };
   const line = (node) => source.getLineAndCharacterOfPosition(node.getStart(source)).line + 1;
   const record = (kind, node, target) => facts.calls.push({ kind, line: line(node), target });
+  const calledWith = (node) => {
+    const used = outermost(node);
+    return ts.isCallExpression(used.parent) && used.parent.expression === used ? used.parent : null;
+  };
 
   const visit = (node) => {
     if ((ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
@@ -72,27 +98,26 @@ export function analyzeFile(file) {
     }
     if (ts.isPropertyAccessExpression(node)) {
       const name = node.name.text;
-      const root = rootIdentifier(node.expression);
-      const directClient = ts.isIdentifier(node.expression) && /^supabase/i.test(node.expression.text);
-      if (directClient) {
-        const parentCall = ts.isCallExpression(node.parent) && node.parent.expression === node ? node.parent : null;
-        const firstArgument = parentCall?.arguments[0];
-        const literal = firstArgument && (ts.isStringLiteral(firstArgument) || ts.isNoSubstitutionTemplateLiteral(firstArgument))
-          ? firstArgument.text : parentCall ? '<dynamic>' : null;
-        if (name === 'from' && parentCall) record('database', node, literal);
-        else if (name === 'rpc' && parentCall) record('rpc', node, literal);
-        else if (name === 'auth') {
-          const method = ts.isPropertyAccessExpression(node.parent) && node.parent.expression === node ? node.parent.name.text : '<property>';
-          record('auth', node, method);
-        } else if ((name === 'channel' || name === 'removeChannel') && parentCall) record('realtime', node, literal);
-        else if (name === 'storage') record('storage', node, null);
-        else if (name === 'functions' && ts.isPropertyAccessExpression(node.parent) && node.parent.name.text === 'invoke') {
-          const call = ts.isCallExpression(node.parent.parent) ? node.parent.parent : null;
+      const receiver = unwrap(node.expression);
+      // `(supabase as any).from(...)`, `(supabase.rpc as any)(...)` and `const rpc = supabase.rpc` are the same calls.
+      if (ts.isIdentifier(receiver) && /^supabase/i.test(receiver.text)) {
+        const used = outermost(node);
+        const member = ts.isPropertyAccessExpression(used.parent) && used.parent.expression === used ? used.parent : null;
+        if (Object.hasOwn(CLIENT_METHODS, name)) {
+          // A method taken off the client without being called at once (an alias, a bind, a cast callee) is still that call.
+          const call = calledWith(node);
           const argument = call?.arguments[0];
+          const target = argument && (ts.isStringLiteral(argument) || ts.isNoSubstitutionTemplateLiteral(argument))
+            ? argument.text : call ? '<dynamic>' : '<alias>';
+          record(CLIENT_METHODS[name], node, target);
+        } else if (name === 'auth') {
+          record('auth', node, member ? member.name.text : '<property>');
+        } else if (name === 'storage') {
+          record('storage', node, null);
+        } else if (name === 'functions' && member?.name.text === 'invoke') {
+          const argument = calledWith(member)?.arguments[0];
           record('edgeFunctions', node, argument && ts.isStringLiteral(argument) ? argument.text : '<dynamic>');
         }
-      } else if (root && /^supabase/i.test(root) && name === 'storage') {
-        // e.g. supabase.storage.from(...) reached through a longer chain is still Storage.
       }
     }
     if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'getStorageBackend') {

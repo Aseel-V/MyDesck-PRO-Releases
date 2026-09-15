@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-15T10:49:10.701Z",
+  "generatedAt": "2026-09-15T10:55:35.685Z",
   "readOnly": true,
   "productionMutations": 0,
   "measurement": "TypeScript AST import graph (comments and strings are not code; @/ aliases resolved)",
@@ -27,12 +27,12 @@
       "reachableFiles": 217,
       "runtimeReachableFiles": 209,
       "supabaseDatabase": 169,
-      "supabaseRpc": 42,
+      "supabaseRpc": 45,
       "supabaseAuth": 13,
       "supabaseRealtime": 2,
       "supabaseEdgeFunctions": 2,
       "supabaseStorage": 7,
-      "forbiddenTotal": 228,
+      "forbiddenTotal": 231,
       "firestoreImports": 0,
       "firebaseAuthImports": 0,
       "genericSupabaseClientImports": [
@@ -350,6 +350,14 @@
         ],
         "rpc": [
           {
+            "file": "src/components/restaurant/OrderEntry.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/restaurant/ReservationsBoard.tsx",
+            "count": 1
+          },
+          {
             "file": "src/components/trips/DuplicateTripDialog.tsx",
             "count": 1
           },
@@ -359,6 +367,10 @@
           },
           {
             "file": "src/components/trips/Trips.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/contexts/RestaurantRoleContext.tsx",
             "count": 1
           },
           {
@@ -466,12 +478,12 @@
       "reachableFiles": 225,
       "runtimeReachableFiles": 217,
       "supabaseDatabase": 138,
-      "supabaseRpc": 39,
+      "supabaseRpc": 42,
       "supabaseAuth": 1,
       "supabaseRealtime": 2,
       "supabaseEdgeFunctions": 1,
       "supabaseStorage": 7,
-      "forbiddenTotal": 181,
+      "forbiddenTotal": 184,
       "firestoreImports": 8,
       "firebaseAuthImports": 3,
       "genericSupabaseClientImports": [
@@ -713,6 +725,14 @@
         ],
         "rpc": [
           {
+            "file": "src/components/restaurant/OrderEntry.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/restaurant/ReservationsBoard.tsx",
+            "count": 1
+          },
+          {
             "file": "src/components/trips/DuplicateTripDialog.tsx",
             "count": 1
           },
@@ -722,6 +742,10 @@
           },
           {
             "file": "src/components/trips/Trips.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/contexts/RestaurantRoleContext.tsx",
             "count": 1
           },
           {
@@ -806,7 +830,7 @@
   },
   "firebaseRootActual": {
     "supabaseDatabase": 138,
-    "supabaseRpc": 39,
+    "supabaseRpc": 42,
     "supabaseAuth": 1,
     "supabaseRealtime": 2,
     "supabaseEdgeFunctions": 1,
@@ -954,15 +978,15 @@
       "rows": 94,
       "reachableInFirebaseRoot": true,
       "firebaseRootSurfaceFiles": 27,
-      "firebaseRootForbiddenCallSites": 104,
+      "firebaseRootForbiddenCallSites": 107,
       "firebaseRootForbiddenByCategory": {
         "database": 92,
-        "rpc": 9,
+        "rpc": 12,
         "auth": 1,
         "realtime": 2,
         "edgeFunctions": 0
       },
-      "shippedRootForbiddenCallSites": 104,
+      "shippedRootForbiddenCallSites": 107,
       "evidence": "NOT_GENERATED",
       "firestoreMigrated": false,
       "blocksParity": true
