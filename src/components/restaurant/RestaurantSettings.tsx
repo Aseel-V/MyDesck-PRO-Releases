@@ -1,6 +1,7 @@
 ﻿// ... imports
 import { useState, useEffect } from 'react';
 import { useRestaurant } from '../../hooks/useRestaurant';
+import { getBackend } from '../../data/backend';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { toast } from 'sonner';
 import { 
@@ -828,6 +829,8 @@ function MenuManager() {
 function StaffManager() {
   const { t, formatCurrency } = useLanguage();
   const { staff, loadingStaff, createStaff, updateStaff, deleteStaff } = useRestaurant();
+  // PIN and password columns exist only on the Supabase backend; Firebase staff sign in with their own accounts.
+  const staffCredentials = getBackend().restaurant.staffRecordCredentials;
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<{ full_name: string; role: StaffRole; hourly_rate: number; pin_code: string; email: string; password: string }>({ 
@@ -984,6 +987,7 @@ function StaffManager() {
                 className="w-full px-3 py-2 rounded-lg border dark:bg-slate-900 dark:border-slate-700"
               />
             </div>
+            {staffCredentials && (
             <div>
               <label className="block text-sm font-medium mb-1">{t('settings.restaurantSetup.pinCode')}</label>
               <input
@@ -995,6 +999,7 @@ function StaffManager() {
                 placeholder="0000"
               />
             </div>
+            )}
             <div className="col-span-2">
               <label className="block text-sm font-medium mb-1">{t('auth.email')}</label>
               <input
@@ -1005,6 +1010,7 @@ function StaffManager() {
                 placeholder="staff@example.com"
               />
             </div>
+            {staffCredentials && (
             <div className="col-span-2">
               <label className="block text-sm font-medium mb-1">{t('auth.password')}</label>
               <input
@@ -1015,6 +1021,7 @@ function StaffManager() {
                 placeholder={t('settings.restaurantSetup.password')}
               />
             </div>
+            )}
           </div>
           <div className="flex gap-2">
             <button
@@ -1074,6 +1081,7 @@ function StaffManager() {
                       className="px-3 py-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700"
                       placeholder={t('settings.restaurantSetup.hourlyRate')}
                     />
+                      {staffCredentials && (
                       <input
                         type="text"
                         maxLength={6}
@@ -1082,6 +1090,7 @@ function StaffManager() {
                         className="px-3 py-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700 tracking-widest text-center font-mono"
                         placeholder={t('settings.restaurantSetup.pinCode')}
                       />
+                      )}
                       <input
                         type="email"
                         value={formData.email}
@@ -1089,6 +1098,7 @@ function StaffManager() {
                         className="px-3 py-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700 sm:col-span-2"
                         placeholder={t('settings.restaurantSetup.email')}
                       />
+                      {staffCredentials && (
                       <input
                         type="text"
                         value={formData.password}
@@ -1096,6 +1106,7 @@ function StaffManager() {
                         className="px-3 py-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700 sm:col-span-2 font-mono"
                         placeholder={t('settings.restaurantSetup.password')}
                       />
+                      )}
                   </div>
                   <div className="flex gap-2">
                     <button
@@ -1130,7 +1141,7 @@ function StaffManager() {
                       </div>
                       <div className="text-xs text-slate-400 mt-1 flex flex-col gap-0.5">
                          {staffMember.email && <div>{staffMember.email}</div>}
-                         {staffMember.password && <div className="font-mono bg-slate-100 dark:bg-slate-800 px-1 rounded inline-block">Pass: {staffMember.password}</div>}
+                         {staffCredentials && staffMember.password && <div className="font-mono bg-slate-100 dark:bg-slate-800 px-1 rounded inline-block">Pass: {staffMember.password}</div>}
                       </div>
                     </div>
                   </div>

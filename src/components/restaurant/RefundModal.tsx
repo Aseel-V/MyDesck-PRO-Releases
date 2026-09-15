@@ -1,7 +1,9 @@
 import { useState, useRef } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { RestaurantOrder } from '../../types/restaurant';
-import { PinPadModal, PinPadModalHandle } from './PinPadModal';
+import type { PinPadModalHandle } from './PinPadModal';
+import { ManagerApprovalPad } from './ManagerApprovalPad';
+import type { ApprovalCredential } from '../../data/domain/restaurant';
 import { X, RefreshCcw, CheckSquare, Square } from 'lucide-react';
 import { useRestaurant } from '../../hooks/useRestaurant';
 import { toast } from 'sonner';
@@ -54,13 +56,10 @@ export default function RefundModal({ isOpen, onClose, order }: RefundModalProps
     setIsPinPadOpen(true);
   };
 
-  const handlePinSuccess = async (pin: string) => {
+  const handlePinSuccess = async (credential: ApprovalCredential) => {
     setIsProcessing(true);
     try {
-      const auth = await authorizeStaffAction.mutateAsync({ 
-          pin, 
-          requiredRole: 'manager' 
-      });
+      const auth = await authorizeStaffAction.mutateAsync({ credential, requiredRole: 'manager' });
 
       await refundOrder.mutateAsync({
         orderId: order.id,
@@ -169,7 +168,7 @@ export default function RefundModal({ isOpen, onClose, order }: RefundModalProps
       </div>
 
       {isPinPadOpen && (
-        <PinPadModal
+        <ManagerApprovalPad
             ref={pinPadRef}
             title={t('refund.authorize')}
             description={t('refund.enterPinToRefund')}

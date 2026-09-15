@@ -3,12 +3,14 @@ import { RestaurantTable, MenuItem, RestaurantOrder, OrderItem} from '../../type
 import { useRestaurant } from '../../hooks/useRestaurant';
 import { X, Plus, Minus, Printer, CreditCard, ChefHat, Sparkles, Trash2, Percent, Clock } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { supabase } from '../../lib/supabase';
+import { getBackend } from '../../data/backend';
 import { safeImageSrc } from '../../lib/safeUrl';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'sonner';
 import BusinessLunchModal from './BusinessLunchModal';
-import { PinPadModal, PinPadModalHandle } from './PinPadModal';
+import type { PinPadModalHandle } from './PinPadModal';
+import { ManagerApprovalPad } from './ManagerApprovalPad';
+import type { ApprovalCredential } from '../../data/domain/restaurant';
 import { DiscountModal } from './DiscountModal';
 import OrderModificationModal from './OrderModificationModal';
 import { Ban } from 'lucide-react';
@@ -269,34 +271,21 @@ export default function OrderModal({ table, isOpen, onClose, onToggleNavbar }: O
                     tax_amount: calculateSubtotal() * (0.17 / 1.17), // VAT Inclusive
                 });
                 orderId = newOrder.id;
-            } else {
-                // Update total
-                 await supabase.from('restaurant_orders').update({
-                    total_amount: calculateTotal(), // Updates with potential discount? Check logic. 
-                    // VAT Inclusive Calc: Tax = Total * (Rate / (1 + Rate))
-                    tax_amount: calculateTotal() * (0.17 / 1.17)
-                 }).eq('id', orderId);
             }
 
-            // 2. Sync Items
-            const ops = cartItems.map(item => {
-                // Only upsert if it's new or changed. 
-                // Currently simplified to always upsert active items.
-                return supabase.from('restaurant_order_items').upsert({
-                    id: item.id, // Only present if existing
-                    order_id: orderId,
-                    item_id: item.item_id,
-                    quantity: item.quantity,
-                    price_at_time: item.price_at_time,
-                    notes: item.notes,
-                    course_number: item.course_number || 1,
-                    is_fired: shouldFire // Set based on button click
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                } as any);
-            });
-            
-            
-            await Promise.all(ops);
+            // 2. Sync Items (an existing order's total goes with its lines)
+            await getBackend().restaurant.saveOrderCart(orderId, cartItems.map(item => ({
+                id: item.id, // Only present if existing
+                item_id: item.item_id,
+                quantity: item.quantity,
+                price_at_time: item.price_at_time,
+                notes: item.notes,
+                course_number: item.course_number,
+            })), shouldFire, currentOrder?.id ? {
+                total_amount: calculateTotal(),
+                // VAT Inclusive Calc: Tax = Total * (Rate / (1 + Rate))
+                tax_amount: calculateTotal() * (0.17 / 1.17),
+            } : null);
             
             // 3. Fire to Kitchen if requested
             if (shouldFire && orderId) {
@@ -335,14 +324,11 @@ export default function OrderModal({ table, isOpen, onClose, onToggleNavbar }: O
             const change = amountPaid - finalTotal;
 
             // 1. Close Order In DB
-            await supabase.from('restaurant_orders').update({
-                status: 'closed',
-                closed_at: new Date().toISOString(),
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                payment_method: method as any,
+            await getBackend().restaurant.closeOrderPaid(currentOrder.id, {
+                method,
                 total_amount: finalTotal,
                 tax_amount: finalTotal * (0.17 / 1.17)
-            }).eq('id', currentOrder.id);
+            });
 
             // 2. Close Session
             if (currentOrder.session_id) {
@@ -367,14 +353,11 @@ export default function OrderModal({ table, isOpen, onClose, onToggleNavbar }: O
         }
     };
 
-    const handlePinSuccess = async (pin: string) => {
+    const handlePinSuccess = async (credential: ApprovalCredential) => {
         setIsVoiding(true);
         try {
             // 1. Authorize
-            const auth = await authorizeStaffAction.mutateAsync({ 
-                pin, 
-                requiredRole: 'manager' 
-            });
+            const auth = await authorizeStaffAction.mutateAsync({ credential, requiredRole: 'manager' });
 
             // 2. Perform Action based on context
             if (itemToVoid) {
@@ -400,17 +383,7 @@ export default function OrderModal({ table, isOpen, onClose, onToggleNavbar }: O
             }
             else if (pendingCancelOrder && currentOrder) {
                  // Cancel Order Logic
-                 await supabase.from('restaurant_orders').update({
-                     status: 'cancelled',
-                     notes: `Cancelled by Manager (ID: ${auth.staff_id})`
-                 }).eq('id', currentOrder.id);
-                 
-                 // Cancel all items
-                 await supabase.from('restaurant_order_items').update({
-                     status: 'cancelled',
-                     voided: true,
-                     void_reason: 'Full Order Cancelled'
-                 }).eq('order_id', currentOrder.id);
+                 await getBackend().restaurant.cancelOrderByManager(currentOrder.id, auth.staff_id!);
 
                   // And release table
                   if (table.status !== 'free') {
@@ -734,7 +707,7 @@ export default function OrderModal({ table, isOpen, onClose, onToggleNavbar }: O
 
             {/* Security Modals */}
             {isPinPadOpen && (
-                <PinPadModal
+                <ManagerApprovalPad
                     ref={pinPadRef}
                     title={t('orderModal.approvalRequired')}
                     description={

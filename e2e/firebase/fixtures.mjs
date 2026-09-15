@@ -26,9 +26,10 @@ const FIRESTORE_HOST = process.env.FIRESTORE_EMULATOR_HOST ?? '127.0.0.1:8080';
 const AUTH_HOST = process.env.FIREBASE_AUTH_EMULATOR_HOST ?? '127.0.0.1:9099';
 const FIXTURE = 'migration/full-vertical.local/ui-smoke-fixture.json';
 const SUBCOLLECTIONS = ['menuItems', 'menuCategories', 'marketTransactions',
-  'vehicles', 'vehiclePlates', 'repairOrders', 'repairOrderItems', 'repairServices', 'parts'];
+  'vehicles', 'vehiclePlates', 'repairOrders', 'repairOrderItems', 'repairServices', 'parts',
+  'tables', 'restaurantStaff', 'restaurantCounters', 'orders', 'orderItems', 'kitchenTickets', 'ticketItems', 'voidLogs', 'restaurantAuditLogs'];
 /** One tenant per interface language, so right-to-left and left-to-right rendering are both exercised. */
-const TENANTS = { supermarket: ['he', 'ar', 'en'], auto_repair: ['en', 'he'], car_parts: ['ar'] };
+const TENANTS = { supermarket: ['he', 'ar', 'en'], auto_repair: ['en', 'he'], car_parts: ['ar'], restaurant: ['en', 'he', 'ar'] };
 const bypass = RulesClient.asAdminBypass({ host: FIRESTORE_HOST, projectId: PROJECT });
 const restCodec = {
   timestamp: (seconds, nanoseconds) => new Date(seconds * 1000 + Math.floor(nanoseconds / 1e6)),
@@ -66,6 +67,23 @@ async function create() {
           restCodec, { ownerUid: user.id, businessId: business.businessId });
           const seeded = await bypass.set(`businesses/${business.businessId}/parts/${part.id}`, part.data);
           if (!seeded.ok) throw new Error(`PART_NOT_SEEDED:${seeded.status}`);
+        }
+        if (vertical === 'restaurant') {
+          // A menu and a table in the migrated shape; names are unique per tenant so isolation checks cannot match their own.
+          const tenancy = { ownerUid: user.id, businessId: business.businessId };
+          const put = async (name, table, row) => {
+            const encoded = encodeInsert(table, row, restCodec, tenancy);
+            const saved = await bypass.set(`businesses/${business.businessId}/${name}/${encoded.id}`, encoded.data);
+            if (!saved.ok) throw new Error(`RESTAURANT_SEED_FAILED:${name}:${saved.status}`);
+            return encoded.id;
+          };
+          Object.assign(tenant, { tableName: `Smoke table ${language} ${run}`, dishName: `Smoke hummus ${language} ${run}`,
+            drinkName: `Smoke lemonade ${language} ${run}` });
+          const categoryId = await put('menuCategories', 'restaurant_menu_categories', { business_id: user.id, name: `Smoke mains ${language}`, sort_order: 1 });
+          for (const [name, price] of [[tenant.dishName, 45.5], [tenant.drinkName, 12]]) {
+            await put('menuItems', 'restaurant_menu_items', { category_id: categoryId, name, name_he: name, name_ar: name, price });
+          }
+          await put('tables', 'restaurant_tables', { business_id: user.id, name: tenant.tableName, seats: 4 });
         }
         fixture.tenants[vertical][language] = tenant;
       } finally {

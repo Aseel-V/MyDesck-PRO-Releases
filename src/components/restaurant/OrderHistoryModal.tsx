@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '../../lib/supabase';
+import { getBackend } from '../../data/backend';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { RestaurantOrder } from '../../types/restaurant';
 import { X, Search, Calendar, CheckCircle2, XCircle, RefreshCcw, CreditCard, ChevronRight, ChevronLeft, Filter } from 'lucide-react';
@@ -24,32 +24,13 @@ export default function OrderHistoryModal({ isOpen, onClose }: OrderHistoryModal
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ['order_history', page, search],
     queryFn: async () => {
-      let query = supabase
-        .from('restaurant_orders')
-        .select(`
-          *,
-          items:restaurant_order_items(
-            *,
-            menu_item:restaurant_menu_items(*)
-          ),
-          table:restaurant_tables(*),
-          server:restaurant_staff(*)
-        `)
-        .in('status', ['closed', 'cancelled'])
-        .order('closed_at', { ascending: false })
-        .range(page * pageSize, (page + 1) * pageSize - 1);
-
-      if (search) {
-        query = query.or(`order_number.eq.${search},id.eq.${search}`);
-      }
-
-      const { data, error } = await query;
-      if (error) {
+      try {
+        return await getBackend().restaurant.listOrderHistory(page, pageSize, search);
+      } catch (error) {
           console.error(error);
           toast.error('Failed to load history');
           return [];
       }
-      return data as unknown as RestaurantOrder[];
     },
     enabled: isOpen
   });

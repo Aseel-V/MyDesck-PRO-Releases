@@ -1,0 +1,72 @@
+{
+  "generatedAt": "2026-09-15T16:37:15.520Z",
+  "vertical": "restaurant",
+  "root": "src/firebase-main.tsx",
+  "backendMode": "firestore-emulator",
+  "browser": "msedge",
+  "languages": [
+    "en",
+    "he",
+    "ar"
+  ],
+  "expectedFlows": 7,
+  "flows": [
+    {
+      "name": "the English owner opens the restaurant home, orders from the migrated menu and sends the order to the kitchen",
+      "status": "passed",
+      "durationMs": 9170,
+      "supabaseRuntimeRequests": 0,
+      "pageErrors": 0,
+      "firestoreRequests": 62
+    },
+    {
+      "name": "the kitchen display shows the ticket and moves it to served",
+      "status": "passed",
+      "durationMs": 4009,
+      "supabaseRuntimeRequests": 0,
+      "pageErrors": 0,
+      "firestoreRequests": 53
+    },
+    {
+      "name": "a manager voids a saved line and applies a discount, approved with a Firebase account instead of a PIN",
+      "status": "passed",
+      "durationMs": 8279,
+      "supabaseRuntimeRequests": 0,
+      "pageErrors": 0,
+      "firestoreRequests": 58
+    },
+    {
+      "name": "the order is paid by card and closed, and the table has no open order afterwards",
+      "status": "passed",
+      "durationMs": 7919,
+      "supabaseRuntimeRequests": 0,
+      "pageErrors": 0,
+      "firestoreRequests": 49
+    },
+    {
+      "name": "analytics lists the closed order, edits it from its ledger and deletes it",
+      "status": "passed",
+      "durationMs": 7360,
+      "supabaseRuntimeRequests": 0,
+      "pageErrors": 0,
+      "firestoreRequests": 55
+    },
+    {
+      "name": "another restaurant signs in right-to-left in Hebrew and sees only its own table",
+      "status": "passed",
+      "durationMs": 2786,
+      "supabaseRuntimeRequests": 0,
+      "pageErrors": 0,
+      "firestoreRequests": 10
+    },
+    {
+      "name": "the Arabic owner adds a table and a staff member in the restaurant settings, without PIN or password fields",
+      "status": "passed",
+      "durationMs": 5445,
+      "supabaseRuntimeRequests": 0,
+      "pageErrors": 0,
+      "firestoreRequests": 40
+    }
+  ],
+  "decision": "PASS"
+}

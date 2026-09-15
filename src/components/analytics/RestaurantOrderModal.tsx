@@ -3,7 +3,9 @@ import { X, Printer, Clock, StickyNote } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { RestaurantOrder } from '../../types/restaurant';
 import ReceiptTemplate from '../invoice/ReceiptTemplate';
-import { supabase, BusinessProfile } from '../../lib/supabase';
+import { getBackend } from '../../data/backend';
+import type { BusinessProfile } from '../../data/domain/profiles';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface RestaurantOrderModalProps {
     order: RestaurantOrder;
@@ -43,13 +45,15 @@ const formatTime = (dateStr: string) => {
 export default function RestaurantOrderModal({ order, onClose }: RestaurantOrderModalProps) {
     const { t, direction, formatCurrency } = useLanguage();
     const [profile, setProfile] = useState<BusinessProfile | null>(null);
+    const { user } = useAuth();
 
     useEffect(() => {
         fetchProfile();
     }, []);
 
     const fetchProfile = async () => {
-        const { data } = await supabase.from('business_profiles').select('*').single();
+        if (!user) return;
+        const data = await getBackend().profiles.fetchBusinessProfile(user.id).catch(() => null);
         if (data) setProfile(data);
     };
 

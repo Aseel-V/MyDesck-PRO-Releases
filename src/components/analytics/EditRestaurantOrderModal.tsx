@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { X, Save, Trash2, Plus, Minus, Search, Utensils } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { getBackend } from '../../data/backend';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { toast } from 'sonner';
@@ -38,13 +38,7 @@ export default function EditRestaurantOrderModal({ order, onClose, onSuccess }: 
       try {
           if (menuItems.length > 0) return; // already fetched
           setLoadingMenu(true);
-          const { data, error } = await supabase
-            .from('restaurant_menu_items')
-            .select('*')
-            .eq('is_available', true)
-            .order('name');
-          
-          if (error) throw error;
+          const data = await getBackend().restaurant.listAvailableMenuItems();
           setMenuItems(data as MenuItem[]);
       } catch (err) {
           console.error('Error fetching menu:', err);
@@ -123,44 +117,14 @@ export default function EditRestaurantOrderModal({ order, onClose, onSuccess }: 
         const subtotal = total / (1 + taxRate);
         const tax = total - subtotal;
 
-        // A. Remove deleted items
-        const originalIds = order.items?.map(i => i.id) || [];
-        const currentIds = items.map(i => i.id).filter(Boolean); // Only keep items that have an ID (existing ones)
-        const idsToDelete = originalIds.filter(id => !currentIds.includes(id));
-
-        if (idsToDelete.length > 0) {
-            await supabase.from('restaurant_order_items').delete().in('id', idsToDelete);
-        }
-
-        // B. Update/Upsert current items
-        const upsertData = items.map(item => ({
+        await getBackend().restaurant.saveOrderEdit(order, items.map(item => ({
             id: item.id, // undefined for new items
-            order_id: order.id,
-            item_id: item.menu_item_id || item.item_id, 
+            item_id: (item.menu_item_id || item.item_id) as string,
             quantity: item.quantity,
             price_at_time: item.price_at_time,
-            notes: item.notes,
+            notes: item.notes as string | null,
             status: item.status || 'pending'
-        }));
-
-        const { error: itemsError } = await supabase
-            .from('restaurant_order_items')
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            .upsert(upsertData as any); // Using any temporarily as upsert types can be tricky with partial IDs
-
-        if (itemsError) throw itemsError;
-
-        // C. Update Order Totals
-        const { error: orderError } = await supabase
-            .from('restaurant_orders')
-            .update({
-            total_amount: total,
-            subtotal_amount: subtotal,
-            tax_amount: tax,
-            })
-            .eq('id', order.id);
-
-        if (orderError) throw orderError;
+        })), { total_amount: total, subtotal_amount: subtotal, tax_amount: tax });
 
         toast.success(t('restaurantAnalytics.saveChanges'));
         onSuccess();

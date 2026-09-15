@@ -7,13 +7,13 @@ import { TABLE_MAP, validateTableMap } from '../lib/table-map.mjs';
 import { openTarget } from '../lib/firestore-target.mjs';
 import { MigrationLedger, LEDGER_STATES } from '../lib/ledger.mjs';
 import { canonicalHash, encode } from '../lib/canonical.mjs';
-import { canonicalFromDocument, transformRow } from '../lib/transform.mjs';
+import { canonicalFromDocument, firestoreFieldsFromSource, transformRow } from '../lib/transform.mjs';
 import { parseDecimalString, decimalStringToScaledInteger } from '../lib/exact-decimal.mjs';
 import {
   FULL_TRANSFORM_VERSION, authDerivedDocument, businessOwnerIndexDocument, credentialExclusions, documentId,
   vehiclePlateIndexDocument, vehiclePlateKey,
   extraFields, indexRisk, migratableColumns, normalizePgArray, rawDocumentHash,
-  resolveTenancy, sizeClass, sourceKey, sourcePk, targetPath, topologicalTables,
+  resolveTenancy, restaurantLedgerFields, sizeClass, sourceKey, sourcePk, targetPath, topologicalTables,
 } from '../lib/full-rehearsal-core.mjs';
 
 const args = new Set(process.argv.slice(2));
@@ -136,6 +136,20 @@ try {
       COALESCE((SELECT count(*)::text FROM auth.mfa_factors f WHERE f.user_id = u.id), '0') AS mfa_count
       FROM auth.users u ORDER BY u.id`)).rows;
 
+    // Restaurant ledger values the Rules check on every later edit, read from this same snapshot
+    // (restaurantLedgerFields). Status is nullable in the source; only 'cancelled' or voided lines leave the sum.
+    const restaurantDerived = {
+      orderItemsTotal: new Map((await select(`SELECT order_id::text AS order_id,
+        coalesce(sum(price_at_time * quantity) FILTER (WHERE status IS DISTINCT FROM 'cancelled' AND NOT coalesce(voided, false)), 0)::text AS items_total
+        FROM public.restaurant_order_items GROUP BY order_id`)).rows.map((row) => [row.order_id, row.items_total])),
+      ticketItemByLine: new Map((await select(`SELECT DISTINCT ON (order_item_id) order_item_id::text AS order_item_id, id::text AS id
+        FROM public.restaurant_ticket_items ORDER BY order_item_id, created_at DESC, id DESC`)).rows.map((row) => [row.order_item_id, row.id])),
+      orderCounters: (await select(`SELECT business_id::text AS owner_uid, max(order_number)::int AS max_number,
+        (array_agg(id::text ORDER BY order_number DESC, id DESC))[1] AS last_order_id
+        FROM public.restaurant_orders GROUP BY business_id`)).rows,
+    };
+    const ledgerDecimal = (field, text) => firestoreFieldsFromSource(field, text, 'decimal', { Timestamp: target.Timestamp });
+
     const profileUids = new Set();
     const vehicleRows = [];
     const tableOrder = topologicalTables(catalog);
@@ -194,8 +208,9 @@ try {
           if (prior && prior !== key) throw new Error(`TARGET_PATH_COLLISION:${path}`);
           collisions.set(path, key);
           const transformed = transformRow({ row, columns, kind: tableName, docId,
-            extraFields: extraFields({ table: { ...table, orderingField: mapping.orderingField },
-              row, tenancy, exclusions }), ctx: { Timestamp: target.Timestamp } });
+            extraFields: { ...extraFields({ table: { ...table, orderingField: mapping.orderingField },
+              row, tenancy, exclusions }), ...restaurantLedgerFields(tableName, row, restaurantDerived, ledgerDecimal) },
+            ctx: { Timestamp: target.Timestamp } });
           const sourceHash = canonicalHash({ kind: tableName, id: docId,
             fields: transformed.canonicalSource }).hash;
           const cls = sizeClass(transformed.estimatedBytes);
@@ -358,6 +373,23 @@ try {
         sourcePk: [vehicle.id], targetPath: path, docId: path.split('/').pop(), columns: [], sourceHash: rawHash, rawHash,
         ownerUid: vehicle.ownerUid, businessId: vehicle.businessId, foreignKeys: [],
         estimatedBytes: Buffer.byteLength(JSON.stringify(data)), entityType: 'vehiclePlates', rawOnly: true };
+      collisions.set(path, meta.key);
+      expected.push(meta);
+      written += 1;
+    }
+
+    // The per-business order counter new orders are numbered from (the source numbers from one global sequence).
+    for (const counter of restaurantDerived.orderCounters) {
+      const businessId = businessByOwner.get(counter.owner_uid);
+      if (!businessId) throw new Error('RESTAURANT_ORDERS_WITHOUT_BUSINESS');
+      const path = `businesses/${encodeURIComponent(businessId)}/restaurantCounters/orders`;
+      if (collisions.has(path)) throw new Error(`RESTAURANT_COUNTER_NOT_UNIQUE:${redactPath(path)}`);
+      const data = { next: counter.max_number + 1, lastOrderId: counter.last_order_id, businessId, schemaVersion: 1 };
+      await target.db.doc(path).set(data);
+      const rawHash = rawDocumentHash(path, data);
+      const meta = { key: `restaurantCounters#${encodeURIComponent(businessId)}`, sourceTable: 'restaurant_orders.order_number_counter', derived: true,
+        sourcePk: [businessId], targetPath: path, docId: 'orders', columns: [], sourceHash: rawHash, rawHash, ownerUid: counter.owner_uid,
+        businessId, foreignKeys: [], estimatedBytes: Buffer.byteLength(JSON.stringify(data)), entityType: 'restaurantCounters', rawOnly: true };
       collisions.set(path, meta.key);
       expected.push(meta);
       written += 1;

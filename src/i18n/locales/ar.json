@@ -3052,5 +3052,8 @@
     "deleteTransactionConfirmDesc": "האם אתה בטוח שברצונך למחוק עסקה זו? פעולה זו אינה הפיכה.",
     "deleteTransactionSuccess": "העסקה נמחקה בהצלחה",
     "editTransactionTitle": "עריכת עסקה"
+  },
+  "managerApproval": {
+    "accountDescription": "سجّل الدخول بحساب المالك أو بحساب مدير نشط للموافقة على هذا الإجراء."
   }
 }

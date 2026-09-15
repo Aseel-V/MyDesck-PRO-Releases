@@ -145,6 +145,20 @@ export function targetPath({ mapping, table, row, docId, tenancy }) {
   return rendered;
 }
 
+/**
+ * Restaurant ledger values the Rules need on migrated documents, derived from the same source snapshot:
+ * an order's itemsTotal is the exact sum of its active lines (status not cancelled, not voided), and an order line
+ * records the ticket line it was sent to the kitchen with. `derived` maps are built by the importer.
+ */
+export function restaurantLedgerFields(tableName, row, derived, decimalField) {
+  if (!derived) return {};
+  if (tableName === 'restaurant_orders') {
+    return { ...decimalField('itemsTotal', derived.orderItemsTotal.get(row.id) ?? '0'), ledgerRevision: 0, ledgerItemId: null };
+  }
+  if (tableName === 'restaurant_order_items') return { ticketItemId: derived.ticketItemByLine.get(row.id) ?? null };
+  return {};
+}
+
 export function extraFields({ table, row, tenancy, exclusions }) {
   const out = {
     schemaVersion: SCHEMA_VERSION,

@@ -43,6 +43,8 @@ const suites = [
     ['scripts/run-typescript-source-test.mjs', 'scripts/test-firestore-auto-repair.mjs']],
   ['car parts repository, Rules and malicious clients', 'scripts/test-firestore-car-parts.mjs',
     ['scripts/run-typescript-source-test.mjs', 'scripts/test-firestore-car-parts.mjs']],
+  ['restaurant repository, Rules, staff roles and malicious clients', 'scripts/test-firestore-restaurant.mjs',
+    ['scripts/run-typescript-source-test.mjs', 'scripts/test-firestore-restaurant.mjs']],
   ['Rules evaluation budget', 'scripts/test-firestore-rules-budget.mjs',
     ['scripts/run-typescript-source-test.mjs', 'scripts/test-firestore-rules-budget.mjs']],
   ['trip transaction', 'migration/firestore/tests/save-trip-transaction.test.mjs'],
@@ -67,8 +69,9 @@ for (const [label, file, args = ['--test', file]] of suites) {
       continue;
     }
   }
-  // The Rules budget suite reloads the Rules for every measurement; it needs more than two minutes.
-  const run = spawnSync(process.execPath, args, { encoding: 'utf8', env: process.env, timeout: 600000 });
+  // The Rules budget suite reloads the Rules for every measurement (59 paths, about ten minutes); the others stay at ten.
+  const timeout = file.endsWith('test-firestore-rules-budget.mjs') ? 1_800_000 : 600_000;
+  const run = spawnSync(process.execPath, args, { encoding: 'utf8', env: process.env, timeout });
   process.stdout.write(run.stdout ?? '');
   process.stderr.write(run.stderr ?? '');
   const tests = Number((run.stdout ?? '').match(/^(?:#|ℹ) tests (\d+)$/m)?.[1] ?? 0);

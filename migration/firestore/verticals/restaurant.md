@@ -11,13 +11,13 @@ Do not hand-edit outside the Design block.
 | Classification | **ACTIVE_WITH_DATA** |
 | Tenants (live `business_profiles`) | **1** |
 | Source rows (live) | **94** |
-| Firestore migrated | **NO** |
-| Reachable in a Firebase production root without Supabase database calls | **NO** |
-| Rules authored and within budget | NO |
-| Data rehearsal reconciled | NO |
-| UI parity proven | NO |
-| Search proven | NO |
-| Analytics proven | NO |
+| Firestore migrated | **YES** |
+| Reachable in a Firebase production root without Supabase database calls | **YES** |
+| Rules authored and within budget | YES |
+| Data rehearsal reconciled | YES |
+| UI parity proven | YES |
+| Search proven | YES |
+| Analytics proven | YES |
 | Retirement requires owner approval | YES |
 
 ## Source data (live counts, read-only)
@@ -41,13 +41,13 @@ Runtime-reachable files of `src/firebase-main.tsx` attributed to this vertical, 
 
 | Measure | Value |
 | --- | ---: |
-| Reachable surface files | 27 |
-| Supabase database call sites | 92 |
-| Supabase RPC call sites | 12 |
-| Supabase Auth call sites | 1 |
-| Supabase database realtime call sites | 2 |
+| Reachable surface files | 28 |
+| Supabase database call sites | 0 |
+| Supabase RPC call sites | 0 |
+| Supabase Auth call sites | 0 |
+| Supabase database realtime call sites | 0 |
 | Supabase Edge Function call sites | 0 |
-| Forbidden call sites in the shipped Supabase root | 107 |
+| Forbidden call sites in the shipped Supabase root | 0 |
 
 ## Whole source tree, attributed by file name
 
@@ -56,30 +56,200 @@ adapters and legacy code no root imports. A text count: it shows what still refe
 
 | Measure | Value |
 | --- | ---: |
-| Attributed source files | 35 |
-| Supabase database call sites | 95 |
-| Supabase RPC call sites | 9 |
+| Attributed source files | 39 |
+| Supabase database call sites | 85 |
+| Supabase RPC call sites | 0 |
 | Supabase database realtime call sites | 2 |
 | Supabase Storage call sites (allowed) | 0 |
 
-Tables referenced directly: `business_profiles`, `business_settings`, `restaurant_daily_reports`, `restaurant_guest_profiles`, `restaurant_kitchen_tickets`, `restaurant_menu_categories`, `restaurant_menu_items`, `restaurant_modifier_groups`, `restaurant_modifiers`, `restaurant_order_item_modifiers`, `restaurant_order_items`, `restaurant_orders`, `restaurant_payments`, `restaurant_reservations`, `restaurant_staff`, `restaurant_table_sessions`, `restaurant_tables`, `restaurant_ticket_items`, `restaurant_waitlist`
+Tables referenced directly: `business_settings`, `restaurant_daily_reports`, `restaurant_guest_profiles`, `restaurant_kitchen_tickets`, `restaurant_menu_categories`, `restaurant_menu_items`, `restaurant_modifier_groups`, `restaurant_modifiers`, `restaurant_order_item_modifiers`, `restaurant_order_items`, `restaurant_orders`, `restaurant_payments`, `restaurant_reservations`, `restaurant_staff`, `restaurant_table_sessions`, `restaurant_tables`, `restaurant_ticket_items`, `restaurant_waitlist`
 
-RPCs referenced: `apply_discount_secure`, `authorize_staff_action`, `close_business_day_secure`, `create_kitchen_ticket`, `delete_menu_item_secure`, `delete_staff_secure`, `log_business_activity_v2`, `void_order_item_secure`
+RPCs referenced: _none detected_
 
 ## Parity evidence
 
-Gates from `migration/reports/vertical-parity-restaurant.json`.
+Gates from `migration/reports/vertical-parity-restaurant.json` (generated 2026-09-15T20:37:08.677Z, decision **PASS**).
 
 | Gate | Status |
 | --- | --- |
-| _not generated_ | FAIL |
+| firebaseRoot | PASS |
+| generatedSchema | PASS |
+| suites | PASS |
+| rulesBudget | PASS |
+| dataRehearsal | PASS |
+| uiSmoke | PASS |
+| search | PASS |
+| analytics | PASS |
+| rpc | PASS |
+| realtime | PASS |
+| edgeFunctions | PASS |
 
 <!-- DESIGN:BEGIN -->
 ## Design
 
-_Not authored yet._ Firestore collections, document IDs,
-relationships, Rules ownership model, transaction invariants, search and analytics
-strategy must be designed before this vertical can be migrated.
+### What the product reaches (runtime)
+
+- **Owner, restaurant home** (`dashboards/RestaurantDashboard`): table grid, `OrderModal` (menu, cart, send to kitchen, hold,
+  discount, bill, pay and close, cancel, void), `KitchenDisplaySystem`, `FloorPlanEditor`.
+- **Analytics** (`RestaurantAnalytics`): closed orders by day, month and year, with view (`RestaurantOrderModal`), edit
+  (`EditRestaurantOrderModal`) and delete.
+- **Settings** (`RestaurantSettings`): tables, categories and menu items (including 86), staff.
+- **Staff route** (`App.tsx` `LoginWrapper`): renders `KitchenDisplaySystem` or `RestaurantDashboardV2` without a
+  `RestaurantRoleProvider`, so `useRestaurantRole` throws in the source. `OrderEntry`, `ReservationsBoard`, `GuestProfiles`,
+  `AnalyticsDashboard` → `OrderHistoryModal` → `RefundModal` are reachable only through it.
+- **Mounted by nothing**: `RestaurantModeRouter` (with `StaffShiftScreen` and its PIN manager overlay), `CloseDayWizard`,
+  `useRequireManagerAuth`.
+
+Every restaurant data call goes through `ProductBackend.restaurant` (`src/data/domain/restaurant.ts`). The Supabase adapter keeps
+every query verbatim, including the calls that fail in production. The Firebase root reaches no Supabase database, RPC, Auth,
+realtime or Edge Function call site (measured by the import-graph guard).
+
+### Production facts that shaped the design (read-only snapshot, 2026-09-15)
+
+- 1 tenant, 94 rows. All 10 orders are closed with `payment_status` pending; every order's `total_amount` equals the sum of its
+  lines; `subtotal_amount` and discounts are 0. 17 lines, all fired, each sent to the kitchen exactly once; 11 tickets, all served.
+- `authorize_staff_action` exists only as `(p_pin_code, p_required_role)`; the product calls it with `p_business_id`, which
+  PostgREST cannot resolve, so **every manager approval (void, discount, cancel) fails in production**.
+- `void_order_item_secure` reads `restaurant_staff.first_name` and `restaurant_order_items.menu_item_id` (neither exists) and
+  inserts void logs without `void_type` and `original_amount`; it cannot complete. The `log_void_action` trigger reads
+  `NEW.voided_by` (absent), so any `voided` false→true update fails, including OrderModal's cancel.
+- `delete_menu_item_secure`, `delete_staff_secure`, `log_business_activity_v2` and `get_server_time` do not exist in production.
+- `deduct_ingredients_on_order` has no recipes to act on; `prevent_unauthorized_order_item_updates` is a no-op.
+- RLS on every restaurant table is owner-only (`business_id = auth.uid()`).
+
+### Firestore model
+
+| Source table | Firestore path | Notes |
+| --- | --- | --- |
+| restaurant_tables | businesses/{b}/tables/{id} | |
+| restaurant_menu_categories, restaurant_menu_items | businesses/{b}/menuCategories, menuItems | shared with the supermarket; a restaurant item may carry no business_id and belong through its category, as the source RLS allows |
+| restaurant_staff | businesses/{b}/restaurantStaff/{id} | `pin_code`, `pin_hash`, `password` are never migrated and never accepted (not even as null) |
+| restaurant_orders | businesses/{b}/orders/{id} | + `itemsTotal`, `ledgerRevision`, `ledgerItemId`, `lastAuditId` |
+| restaurant_order_items | businesses/{b}/orderItems/{id} | + `ticketItemId` |
+| restaurant_kitchen_tickets, restaurant_ticket_items | kitchenTickets, ticketItems | |
+| restaurant_void_logs, restaurant_audit_logs | voidLogs, restaurantAuditLogs | immutable except SET NULL of foreign keys (void logs) |
+| order_number sequence | businesses/{b}/restaurantCounters/orders | `{ next, lastOrderId }` per business; the source sequence is global |
+| reservations, waitlist, guest profiles | same names | reservation create and status moves, waitlist seating and removal, guest edits (the screens' calls) |
+| sessions, payments, daily reports, modifiers, cash | same names | read-only in the Rules (flows unreachable) |
+
+Migrated orders get `itemsTotal` (exact sum of lines not cancelled and not voided), `ledgerRevision` 0 and `ledgerItemId` null;
+migrated lines get the `ticketItemId` of their ticket line; each business with orders gets its counter at max(order_number)+1.
+All are derived by `full-migration-rehearsal.mjs` from the same read-only snapshot and reconciled by the dual read (28 checks).
+
+### Identity and roles (AUTH_REPLACED)
+
+- Owner: `isActiveOwner`. Staff: an active, enabled `restaurantMemberships/{businessId}__{uid}` (the model gated by
+  RESTAURANT_STAFF_AUTH_MODEL_GO). Roles: manager = owner, `super_admin`, `branch_manager`; order taker = manager or `waiter`;
+  kitchen = manager or `kitchen_staff`. Members of a suspended business are refused.
+- **No PIN exists anywhere.** `verify_staff_pin_secure` is refused with `RESTAURANT_FLOW_AUTH_REPLACED` (its screen is not mounted).
+- **Manager approval** (`authorize_staff_action`): `ManagerApprovalPad` shows the PIN pad on the Supabase backend and an account form
+  on the Firebase backend. The approver signs in with a Firebase account in an isolated app with in-memory persistence
+  (`FirebaseClient.isolatedIdentity`); the business owner, or an active manager membership of this business, approves. The
+  approval serves exactly one action, runs that action under the approver's own identity (so the Rules decide on the approver,
+  not on a staff id the client names), and is signed out afterwards or after two minutes.
+- The one production staff record (Manager / waiter, plaintext PIN, no account) stays **OWNER_REPROVISION_REQUIRED**; until the
+  owner provisions a manager account, the owner approves with their own account. The workflow is proven with synthetic identities.
+- The staff settings form hides the PIN and password inputs on the Firebase backend; the repository strips them regardless.
+
+### Money: the order ledger
+
+Money is never taken from the client.
+
+- One order line changes per transaction, together with its order: the order's `itemsTotal` moves by exactly the line's active
+  amount after minus before, `ledgerRevision` increments and `ledgerItemId` names the line. The Rules recompute that difference
+  from the line documents before and after the write, in exact decimal (`unitsText`, `scale`).
+- `total_amount` is written only from the ledger: `max(0, itemsTotal − discount_amount)` when OrderModal saves or closes an order,
+  and `itemsTotal` when analytics edits a closed order (the source recomputed the edit from the lines, without the discount).
+  Tax is checked against `total × 17 / 117` within 0.005, as the screens compute it in floating point.
+- Pay and close requires the total the payment screen showed to equal the ledger total (`ORDER_TOTAL_CHANGED` otherwise);
+  `payment_method` keeps its CHECK (`bit` is refused, as PostgreSQL refuses it).
+- A waiter sells at the menu price; price overrides (analytics edit, business lunch) are the managers'.
+- `apply_discount_secure` keeps its formula on `subtotal_amount` (which OrderModal never sets, so a percentage discount computes
+  0 there, as in the source), exact, and is bound to its audit record through `lastAuditId`.
+- Void: the line is cancelled with the source note `[VOID: reason | Auth: name]`, the ledger drops it, and an immutable void log
+  (`void_type` item, `original_amount` = the line amount) and a `VOID_ITEM` audit record are written in the same transaction.
+- Cancel: the order is cancelled with its lines in one batch, with an `ORDER_CANCELLED` audit record bound to the order.
+
+### Kitchen tickets (create_kitchen_ticket)
+
+Each fired line without a ticket line gets one; the order line records its `ticketItemId` in the same write, which replaces the
+source `NOT EXISTS (ticket_items)` and makes a second ticket line impossible even when two terminals send at once. The ticket
+carries the table name or `Counter`. Each ticket line costs the Rules document reads of its line, ticket line and dish; five
+distinct dishes in one write is the measured ceiling, so lines are written three per transaction into the one ticket the first
+write creates, and the order moves to `pending` with the last write. An interrupted send leaves the remaining lines unsent for
+the next send.
+
+### Foreign keys reproduced by the repository
+
+Menu item delete: order lines, shrinkage and stock-take references refuse (23503); batches, modifier links and recipes cascade.
+Category delete cascades its items (with the same checks) and SET NULLs subcategories. Table delete: orders refuse; sessions and
+waitlist SET NULL. Staff delete: audit logs (and unreachable-flow references) refuse; orders and void logs SET NULL. Order delete:
+lines, ticket lines, tickets, modifiers and payments cascade; void logs SET NULL. Every delete is one atomic batch.
+
+### Realtime
+
+`postgres_changes` on tables, orders, kitchen tickets and sessions (and reservations, waitlist) become tenant-scoped `onSnapshot`
+listeners on the screen's own bounded query, invalidating the same query key once the listener holds the server's view. The
+subscription is keyed by the query key's content, so a re-render does not open a new listener.
+
+### LEGACY_UNREACHABLE writes
+
+Refused by the Firebase repository (`RESTAURANT_FLOW_LEGACY_UNREACHABLE`) and by the Rules, because no statically reachable
+code calls them: modifier creation, table sessions start, `updateOrder`, payments and split payments, daily report creation,
+`close_business_day_secure` (its only caller, `CloseDayWizard`, is imported by nothing; a client-computed Z report would also be a
+client-authoritative financial total), waitlist and guest creation, guest visits, operation-mode settings writes. Their reads are
+implemented and bounded.
+
+### Writes of the staff-route screens
+
+`ReservationsBoard`, `GuestProfiles`, `RefundModal` and `OrderEntry` are statically imported by the Firebase root (through the
+staff route that throws at runtime in the source), so the writes they call are implemented and proven by
+`scripts/test-firestore-restaurant.mjs`:
+
+- Refund (`RefundModal`): under the approver, one transaction writes the `REFUND` audit record and, when the amount is within 0.01
+  of `total_amount` as the source checks, marks the order `refunded` with server `closed_at`, bound by `lastAuditId`. The Rules
+  recompute that comparison from the audit record and the stored exact total.
+- Activity log (`OrderEntry` allergy override): `log_business_activity_v2` as the repository migration defines it: owner only,
+  and a staff id must name a `restaurant_staff` row. The screen passes the user id as the staff id, so the write fails with the
+  foreign-key error as in the source, and the screen swallows it (production lacks the function, so no override is logged there
+  either). Preserved, not repaired.
+- Reservations: the source insert column for column; the Rules apply `trg_validate_reservation_datetime` (UTC slot not in the past,
+  party 1..50, duration 15..480) and the date CHECK on create and on status updates. `ReservationModal` submits `date`, `time` and
+  `tags` without `reservation_date`, so its insert fails as it does against PostgREST (preserved). `seated_at` is server time.
+- Waitlist: seat at a table of the business (server `seated_at`) or mark `left` / `no_show`.
+- Guest profiles: the detail panel's changed columns, `updated_at` from server time; visit count, lifetime spend, average check and
+  last visit date are not client-writable (manager roles only).
+
+### Source behaviour changed on purpose
+
+- Manager void, discount and cancel work (with a Firebase account) where the production functions and call cannot.
+- Menu item and staff delete work, with foreign keys, where the functions are missing in production.
+- A failed OrderModal save, payment or cancel is reported; the source ignored those responses and could show a receipt for a
+  payment that was never recorded (for example `bit`).
+- Order numbers count per business.
+- Ticket status timestamps use server time instead of the terminal clock.
+- Voided lines leave the analytics edit total; the source edit summed every line it listed.
+
+### Source behaviour preserved as is
+
+- The staff route throws for want of `RestaurantRoleProvider`; its screens stay unreachable.
+- A percentage discount computes against `subtotal_amount`, which OrderModal never fills.
+- OrderModal renders a stray `0` above the total when the discount amount is 0.
+- `getSessionGuestId` finds nothing (the source selects a `guest_id` column the sessions table does not have).
+- The restaurant analytics report and PDFs omit a signature they cannot resolve.
+- The analytics edit dialog lists voided lines and sums them in its own running total; the saved total comes from the ledger.
+- The English locale holds Hebrew text for the edit dialog's "add item" and "save changes" labels.
+- After payment the receipt closes as soon as the live order list drops the closed order.
+
+### Dangling image references (classified, not repaired)
+
+The restaurant business profile's `signature_url` and `logo_url` are public `logos` bucket URLs whose objects do not exist
+(read-only check 2026-09-15: signature path sha256 `42981693c38f`, logo path sha256 `0e6fe417c5a9`, both `objectExists: false`).
+They are migrated unchanged; no file is fabricated. The application tolerates both: `resolvePrivateSignature` resolves only
+`business-signatures` references, so the signature resolves to null, and `resolveBusinessImage` returns null when the signed URL
+cannot be issued, so the logo does too. Profile loading, the restaurant screens, the analytics report and PDFs render without
+them. They are storage-reference findings for the owner, not migration mismatches: the storage rehearsal reconciles objects, and
+these references name no object in the source either.
 
 <!-- DESIGN:END -->
 

@@ -7,7 +7,7 @@ import { ChevronDown, ChevronUp, BarChart3, Receipt, Eye, Edit, Trash2, Printer,
 
 import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../lib/supabase';
+import { getBackend } from '../../data/backend';
 import { RestaurantOrder } from '../../types/restaurant';
 import RestaurantOrderModal from './RestaurantOrderModal';
 import EditRestaurantOrderModal from './EditRestaurantOrderModal';
@@ -60,23 +60,7 @@ export default function RestaurantAnalytics() {
                 endDate.setHours(23, 59, 59, 999);
             }
 
-            const { data, error } = await supabase
-                .from('restaurant_orders')
-                .select(`
-                    *,
-                    items:restaurant_order_items(
-                        *,
-                        menu_item:restaurant_menu_items(*)
-                    ),
-                    table:restaurant_tables(*),
-                    server:restaurant_staff(*)
-                `)
-                .eq('status', 'closed') // Only closed orders for analytics
-                .gte('closed_at', startDate.toISOString())
-                .lte('closed_at', endDate.toISOString())
-                .order('closed_at', { ascending: false });
-
-            if (error) throw error;
+            const data = await getBackend().restaurant.listClosedOrders(startDate.toISOString(), endDate.toISOString());
             setOrders(data as unknown as RestaurantOrder[] || []);
         } catch (error) {
             console.error('Error fetching orders:', error);
@@ -106,19 +90,7 @@ export default function RestaurantAnalytics() {
             // Assuming cascade delete is ON or we perform manual cleanup.
             // It's safer to delete items first then order.
 
-            const { error: itemsError } = await supabase
-                .from('restaurant_order_items')
-                .delete()
-                .eq('order_id', deletingOrder.id);
-            
-            if (itemsError) throw itemsError;
-
-            const { error } = await supabase
-                .from('restaurant_orders')
-                .delete()
-                .eq('id', deletingOrder.id);
-            
-            if (error) throw error;
+            await getBackend().restaurant.deleteOrder(deletingOrder.id);
 
             toast.success(t('restaurantAnalytics.deleteSuccess') || 'Order deleted');
             setOrders(prev => prev.filter(o => o.id !== deletingOrder.id));

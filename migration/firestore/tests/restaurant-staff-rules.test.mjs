@@ -15,7 +15,7 @@
  *     node --test migration/firestore/tests/restaurant-staff-rules.test.mjs
  */
 
-import test, { before } from 'node:test';
+import test, { after, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { RulesClient, isDenied, isAllowed } from '../lib/rules-client.mjs';
@@ -75,6 +75,12 @@ before(async () => {
   }
   await admin.create('restaurantMemberships', id(OTHER_BUSINESS, OUTSIDER),
     membership(OTHER_BUSINESS, OUTSIDER, 'super_admin', 'active'));
+});
+
+// The emulator project is shared with the rehearsal import, which reconciles every business document it finds.
+after(async () => {
+  await admin.delete(`businesses/${BUSINESS}`);
+  await admin.delete(`businesses/${OTHER_BUSINESS}`);
 });
 
 test('a member reads its own membership and an administrator reads the roster', async () => {

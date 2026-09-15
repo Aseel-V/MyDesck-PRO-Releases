@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-15T11:39:37.721Z",
+  "generatedAt": "2026-09-15T21:04:13.377Z",
   "status": "PASS",
   "suites": [
     {
@@ -183,10 +183,16 @@
       "tests": 10
     },
     {
+      "label": "restaurant repository, Rules, staff roles and malicious clients",
+      "file": "scripts/test-firestore-restaurant.mjs",
+      "outcome": "PASS",
+      "tests": 12
+    },
+    {
       "label": "Rules evaluation budget",
       "file": "scripts/test-firestore-rules-budget.mjs",
       "outcome": "PASS",
-      "tests": 8
+      "tests": 9
     },
     {
       "label": "trip transaction",
@@ -226,11 +232,11 @@
     }
   ],
   "totals": {
-    "steps": 38,
-    "passed": 38,
+    "steps": 39,
+    "passed": 39,
     "failed": 0,
-    "nodeTestCases": 311,
-    "assertionCallSites": 1094,
+    "nodeTestCases": 324,
+    "assertionCallSites": 1235,
     "fullCorpusApplicationAssertions": 1023,
     "searchCorpusCases": 12,
     "fullCorpusSecurityChecks": 50,

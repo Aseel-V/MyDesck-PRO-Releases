@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-15T11:39:37.705Z",
+  "generatedAt": "2026-09-15T21:04:13.338Z",
   "migrationRunId": "harness-production-prep",
   "architecture": "FIREBASE_SPARK_ONLY",
   "mode": "dry-run",
@@ -15,9 +15,9 @@
     "firebaseProject": "mydesckpro",
     "firestoreDatabaseId": "default"
   },
-  "executableCommitSha": "d0717fc1bea23e0a054f17792c70f85204eb318d",
+  "executableCommitSha": "64d34986fa7d074c18fb01907ba4d053b71b4145",
   "configHashes": {
-    "firestoreRules": "deb3ccd980748559b8b5d711ea79b1993d4bc8253e8c1d1b1c866b4d689cbce6",
+    "firestoreRules": "5f365f1788c670baf3c34f9f2deeb78b09f8daab4bb3b66f61444466f72b5b43",
     "indexes": "c516b73728401cd577c3214efaf5a839b2a8cde65dc714c6a39d70300ee2bc39",
     "deltaMap": "cf60c2b43faf32d30a5965e958a10d2226cc57e161095eff40342ba1d5d3db85"
   },
@@ -62,7 +62,7 @@
             }
           ]
         },
-        "candidateSha256": "deb3ccd980748559b8b5d711ea79b1993d4bc8253e8c1d1b1c866b4d689cbce6",
+        "candidateSha256": "5f365f1788c670baf3c34f9f2deeb78b09f8daab4bb3b66f61444466f72b5b43",
         "rollback": {
           "release": "projects/mydesckpro/releases/cloud.firestore/default",
           "ruleset": "projects/mydesckpro/rulesets/c6fc85cd-4681-491c-bb7c-b879e5893a92",
@@ -412,7 +412,7 @@
       "status": "FAIL",
       "evidence": {
         "shippedEntry": "src/production-main.tsx",
-        "shippedReachableFiles": 219
+        "shippedReachableFiles": 222
       }
     },
     "secret": {
@@ -483,7 +483,7 @@
               }
             ]
           },
-          "candidateSha256": "deb3ccd980748559b8b5d711ea79b1993d4bc8253e8c1d1b1c866b4d689cbce6",
+          "candidateSha256": "5f365f1788c670baf3c34f9f2deeb78b09f8daab4bb3b66f61444466f72b5b43",
           "rollback": {
             "release": "projects/mydesckpro/releases/cloud.firestore/default",
             "ruleset": "projects/mydesckpro/rulesets/c6fc85cd-4681-491c-bb7c-b879e5893a92",
@@ -853,7 +853,7 @@
         "status": "FAIL",
         "evidence": {
           "shippedEntry": "src/production-main.tsx",
-          "shippedReachableFiles": 219
+          "shippedReachableFiles": 222
         }
       },
       {

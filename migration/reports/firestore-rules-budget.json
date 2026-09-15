@@ -73,32 +73,32 @@
       "rule": "/menuCategories/{categoryId} allow create",
       "product": true,
       "withinLimit": true,
-      "costAtMost": 214,
-      "costAbove": 211
+      "costAtMost": 232,
+      "costAbove": 229
     },
     {
       "path": "supermarket: list categories",
       "rule": "/menuCategories/{categoryId} allow get, list",
       "product": true,
       "withinLimit": true,
-      "costAtMost": 52,
-      "costAbove": 49
+      "costAtMost": 55,
+      "costAbove": 52
     },
     {
       "path": "supermarket: list available products",
       "rule": "/menuItems/{itemId} allow get, list",
       "product": true,
       "withinLimit": true,
-      "costAtMost": 52,
-      "costAbove": 49
+      "costAtMost": 55,
+      "costAbove": 52
     },
     {
       "path": "supermarket: create product (product modal)",
       "rule": "/menuItems/{itemId} allow create",
       "product": true,
       "withinLimit": true,
-      "costAtMost": 574,
-      "costAbove": 571
+      "costAtMost": 595,
+      "costAbove": 592
     },
     {
       "path": "supermarket: update product (product modal)",
@@ -113,32 +113,32 @@
       "rule": "/menuItems/{itemId} allow delete",
       "product": true,
       "withinLimit": true,
-      "costAtMost": 52,
-      "costAbove": 49
+      "costAtMost": 55,
+      "costAbove": 52
     },
     {
       "path": "menu item create, every optional column populated",
       "rule": "/menuItems/{itemId} allow create",
       "product": false,
       "withinLimit": true,
-      "costAtMost": 583,
-      "costAbove": 580
+      "costAtMost": 604,
+      "costAbove": 601
     },
     {
       "path": "menu item update, every mutable column changed",
       "rule": "/menuItems/{itemId} allow update",
       "product": false,
       "withinLimit": true,
-      "costAtMost": 634,
-      "costAbove": 631
+      "costAtMost": 637,
+      "costAbove": 634
     },
     {
       "path": "supermarket: checkout (40-line cart)",
       "rule": "/marketTransactions/{transactionId} allow create",
       "product": true,
       "withinLimit": true,
-      "costAtMost": 391,
-      "costAbove": 388
+      "costAtMost": 409,
+      "costAbove": 406
     },
     {
       "path": "supermarket: sales analytics range",
@@ -299,6 +299,238 @@
       "withinLimit": true,
       "costAtMost": 52,
       "costAbove": 49
+    },
+    {
+      "path": "restaurant: create a table (settings)",
+      "rule": "/tables/{tableId} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 484,
+      "costAbove": 481
+    },
+    {
+      "path": "restaurant: add a category-scoped menu item (settings)",
+      "rule": "/menuItems/{itemId} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 607,
+      "costAbove": 604
+    },
+    {
+      "path": "restaurant: open an order (order)",
+      "rule": "/orders/{orderId} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 790,
+      "costAbove": 787
+    },
+    {
+      "path": "restaurant: open an order (number counter)",
+      "rule": "/restaurantCounters/{counterId} allow create, update",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 163,
+      "costAbove": 160
+    },
+    {
+      "path": "restaurant: add an order line (line)",
+      "rule": "/orderItems/{itemId} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 493,
+      "costAbove": 490
+    },
+    {
+      "path": "restaurant: add an order line (order ledger)",
+      "rule": "/orders/{orderId} allow update",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 331,
+      "costAbove": 328
+    },
+    {
+      "path": "restaurant (waiter member): add an order line at the menu price",
+      "rule": "/orderItems/{itemId} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 781,
+      "costAbove": 778
+    },
+    {
+      "path": "restaurant: send to the kitchen (ticket)",
+      "rule": "/kitchenTickets/{ticketId} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 349,
+      "costAbove": 346
+    },
+    {
+      "path": "restaurant: send to the kitchen (ticket line)",
+      "rule": "/ticketItems/{ticketItemId} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 352,
+      "costAbove": 349
+    },
+    {
+      "path": "restaurant: send to the kitchen (line marked sent)",
+      "rule": "/orderItems/{itemId} allow update",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 124,
+      "costAbove": 121
+    },
+    {
+      "path": "restaurant: kitchen display moves a ticket",
+      "rule": "/kitchenTickets/{ticketId} allow update",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 235,
+      "costAbove": 232
+    },
+    {
+      "path": "restaurant: save an open order total (order modal)",
+      "rule": "/orders/{orderId} allow update",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 412,
+      "costAbove": 409
+    },
+    {
+      "path": "restaurant: pay and close",
+      "rule": "/orders/{orderId} allow update",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 631,
+      "costAbove": 628
+    },
+    {
+      "path": "restaurant: manager void (line)",
+      "rule": "/orderItems/{itemId} allow update",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 514,
+      "costAbove": 511
+    },
+    {
+      "path": "restaurant: manager void (void log)",
+      "rule": "/voidLogs/{logId} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 442,
+      "costAbove": 439
+    },
+    {
+      "path": "restaurant: manager void (audit record)",
+      "rule": "/restaurantAuditLogs/{logId} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 328,
+      "costAbove": 325
+    },
+    {
+      "path": "restaurant: manager discount (order)",
+      "rule": "/orders/{orderId} allow update",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 640,
+      "costAbove": 637
+    },
+    {
+      "path": "restaurant: manager cancel (lines)",
+      "rule": "/orderItems/{itemId} allow update",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 277,
+      "costAbove": 274
+    },
+    {
+      "path": "restaurant: analytics edit of a closed order (totals)",
+      "rule": "/orders/{orderId} allow update",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 781,
+      "costAbove": 778
+    },
+    {
+      "path": "restaurant: analytics delete an order (lines)",
+      "rule": "/orderItems/{itemId} allow delete",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 76,
+      "costAbove": 73
+    },
+    {
+      "path": "restaurant: full refund (order marked refunded)",
+      "rule": "/orders/{orderId} allow update",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 553,
+      "costAbove": 550
+    },
+    {
+      "path": "restaurant: full refund (audit record)",
+      "rule": "/restaurantAuditLogs/{logId} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 289,
+      "costAbove": 286
+    },
+    {
+      "path": "restaurant: allergy override log naming a staff member (audit record)",
+      "rule": "/restaurantAuditLogs/{logId} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 574,
+      "costAbove": 571
+    },
+    {
+      "path": "restaurant: create a reservation (reservations board)",
+      "rule": "/reservations/{reservationId} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 424,
+      "costAbove": 421
+    },
+    {
+      "path": "restaurant: seat a reservation (reservations board)",
+      "rule": "/reservations/{reservationId} allow update",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 349,
+      "costAbove": 346
+    },
+    {
+      "path": "restaurant: seat a waiting party at a table (waitlist)",
+      "rule": "/waitlist/{entryId} allow update",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 316,
+      "costAbove": 313
+    },
+    {
+      "path": "restaurant: edit a guest profile (guest profiles)",
+      "rule": "/guestProfiles/{guestId} allow update",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 331,
+      "costAbove": 328
+    },
+    {
+      "path": "restaurant: add a staff member (settings)",
+      "rule": "/restaurantStaff/{staffId} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 328,
+      "costAbove": 325
+    },
+    {
+      "path": "restaurant: list active orders with lines, dishes, table and server",
+      "rule": "/orders/{orderId} allow get, list",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 55,
+      "costAbove": 52
     }
   ]
 }

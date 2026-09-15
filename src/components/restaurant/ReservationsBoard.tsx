@@ -8,7 +8,7 @@ import { useReservations, useWaitlist, useGuestProfiles, useRestaurant } from '.
 import { useRestaurantRole } from '../../contexts/RestaurantRoleContext';
 import ReservationModal from './ReservationModal';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { supabase } from '../../lib/supabase';
+import { getBackend } from '../../data/backend';
 
 import { Reservation, Waitlist as WaitlistType, ReservationStatus, GuestProfile } from '../../types/restaurant';
 import { 
@@ -374,27 +374,9 @@ export default function ReservationsBoard() {
 
   useEffect(() => {
     const syncTime = async () => {
-      // Preferred: Select NOW() via RPC
-      // Fallback: Use simple offset if RPC missing (graceful degradation)
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data, error } = await (supabase as any).rpc('get_server_time');
-        if (data && !error) {
-           const serverTime = new Date(data as string).getTime();
-           setServerOffset(serverTime - Date.now());
-           return;
-        }
-      } catch {
-        // RPC might not exist
-      }
-      
-      // Alternative: Use auth token issue time as reasonably trusted source
-      // or just assume client time if RPC fails (best effort without breaking app)
-       const { data } = await supabase.auth.getSession();
-       if (data.session?.access_token) {
-          // Parsing JWT iat would be next step, but let's default to 0 (client trust) 
-          // if we can't get strict server time, to avoid blocking valid usage.
-       }
+      // Preferred: the backend's server clock
+      // Fallback: client time (offset 0) when the backend has none (graceful degradation)
+      setServerOffset(await getBackend().restaurant.getServerTimeOffset());
     };
     syncTime();
   }, []);

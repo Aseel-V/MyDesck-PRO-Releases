@@ -5,7 +5,9 @@ import { toast } from 'sonner';
 import { supabase } from '../../lib/supabase';
 import { ChevronRight, DollarSign, Users, FileText } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { PinPadModal, PinPadModalHandle } from './PinPadModal';
+import type { PinPadModalHandle } from './PinPadModal';
+import { ManagerApprovalPad } from './ManagerApprovalPad';
+import type { ApprovalCredential } from '../../data/domain/restaurant';
 
 interface CloseDayWizardProps {
     isOpen: boolean;
@@ -98,12 +100,9 @@ export default function CloseDayWizard({ isOpen, onClose }: CloseDayWizardProps)
 
     // ... (rest of component state)
 
-    const handlePinSuccess = async (pin: string) => {
+    const handlePinSuccess = async (credential: ApprovalCredential) => {
         try {
-            const result = await authorizeStaffAction.mutateAsync({ 
-                pin, 
-                requiredRole: 'Manager' // Check standard role name
-            });
+            const result = await authorizeStaffAction.mutateAsync({ credential, requiredRole: 'Manager' });
             
             if (result.staff_id) {
                 setIsPinPadOpen(false);
@@ -302,7 +301,7 @@ export default function CloseDayWizard({ isOpen, onClose }: CloseDayWizardProps)
             </div>
 
             {isPinPadOpen && (
-                <PinPadModal
+                <ManagerApprovalPad
                     ref={pinPadRef}
                     title={t('restaurantAnalytics.closeDayWizard.managerAuth')}
                     description={t('restaurantAnalytics.closeDayWizard.enterPinToClose')}

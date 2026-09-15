@@ -3052,5 +3052,8 @@
       "active": "Active",
       "past_due": "Past due"
     }
+  },
+  "managerApproval": {
+    "accountDescription": "Sign in with the owner's account or an active manager's account to approve this action."
   }
 }

@@ -486,6 +486,436 @@ service cloud.firestore {
         !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
       ].hasOnly([true]));
     }
+    function sv_restaurant_tables(d) {
+      return d.keys().hasOnly(['businessId', 'createdAt', 'createdAtMicros', 'createdBy', 'height', 'id', 'isDeleted', 'isMergeable', 'legacyBusinessUserId', 'mergedWith', 'migrationExcludedFields', 'migrationTransformVersion', 'minPartySize', 'name', 'ownerUid', 'positionX', 'positionY', 'rotation', 'schemaVersion', 'seats', 'shape', 'status', 'transformVersion', 'width', 'zone']) && [
+        d.id is string,
+        d.legacyBusinessUserId is string,
+        d.name is string,
+        d.status in ['free', 'occupied', 'billed', 'reserved', 'dirty', 'blocked'],
+        d.positionX == null || sfDecimal(d.positionX),
+        d.positionY == null || sfDecimal(d.positionY),
+        d.createdAt is timestamp,
+        d.get('createdAtMicros', '0').matches('-?[0-9]+'),
+        d.shape in [null, 'round', 'square', 'rectangle', 'booth', 'bar'],
+        d.zone in [null, 'indoor', 'outdoor', 'patio', 'private', 'bar_area'],
+        d.width == null || sfDecimal(d.width),
+        d.height == null || sfDecimal(d.height),
+        d.rotation == null || sfDecimal(d.rotation),
+        d.mergedWith == null || d.mergedWith is list,
+        d.isMergeable == null || d.isMergeable is bool,
+        d.seats == null || d.seats is int,
+        d.minPartySize == null || d.minPartySize is int,
+        d.get('schemaVersion', 1) == 1
+      ].hasOnly([true]);
+    }
+    function svu_restaurant_tables(changed, d) {
+      return changed.hasOnly(['businessId', 'createdAt', 'createdAtMicros', 'createdBy', 'height', 'id', 'isDeleted', 'isMergeable', 'legacyBusinessUserId', 'mergedWith', 'migrationExcludedFields', 'migrationTransformVersion', 'minPartySize', 'name', 'ownerUid', 'positionX', 'positionY', 'rotation', 'schemaVersion', 'seats', 'shape', 'status', 'transformVersion', 'width', 'zone']) && (changed.size() > 9 ? sv_restaurant_tables(d) : [
+        !('id' in changed) || (d.id is string),
+        !('legacyBusinessUserId' in changed) || (d.legacyBusinessUserId is string),
+        !('name' in changed) || (d.name is string),
+        !('status' in changed) || (d.status in ['free', 'occupied', 'billed', 'reserved', 'dirty', 'blocked']),
+        !('positionX' in changed) || (d.positionX == null || sfDecimal(d.positionX)),
+        !('positionY' in changed) || (d.positionY == null || sfDecimal(d.positionY)),
+        !changed.hasAny(['createdAt', 'createdAtMicros']) || ((d.createdAt is timestamp) && (d.get('createdAtMicros', '0').matches('-?[0-9]+'))),
+        !('shape' in changed) || (d.shape in [null, 'round', 'square', 'rectangle', 'booth', 'bar']),
+        !('zone' in changed) || (d.zone in [null, 'indoor', 'outdoor', 'patio', 'private', 'bar_area']),
+        !('width' in changed) || (d.width == null || sfDecimal(d.width)),
+        !('height' in changed) || (d.height == null || sfDecimal(d.height)),
+        !('rotation' in changed) || (d.rotation == null || sfDecimal(d.rotation)),
+        !('mergedWith' in changed) || (d.mergedWith == null || d.mergedWith is list),
+        !('isMergeable' in changed) || (d.isMergeable == null || d.isMergeable is bool),
+        !('seats' in changed) || (d.seats == null || d.seats is int),
+        !('minPartySize' in changed) || (d.minPartySize == null || d.minPartySize is int),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
+    function sv_restaurant_staff(d) {
+      return d.keys().hasOnly(['assignedStation', 'assignedTables', 'businessId', 'clockedInAt', 'clockedInAtMicros', 'createdAt', 'createdAtMicros', 'createdBy', 'email', 'fullName', 'hourlyRate', 'id', 'isActive', 'isClockedIn', 'isDeleted', 'legacyBusinessUserId', 'migrationExcludedFields', 'migrationTransformVersion', 'ownerUid', 'phone', 'restaurantRole', 'role', 'schemaVersion', 'transformVersion', 'userId']) && [
+        d.id is string,
+        d.legacyBusinessUserId is string,
+        d.fullName is string,
+        d.role in ['Waiter', 'Chef', 'Manager', 'Other', 'Host', 'Cashier', 'Kitchen'],
+        d.hourlyRate == null || sfDecimal(d.hourlyRate),
+        d.createdAt is timestamp,
+        d.get('createdAtMicros', '0').matches('-?[0-9]+'),
+        d.restaurantRole in [null, 'super_admin', 'branch_manager', 'head_chef', 'waiter', 'kitchen_staff', 'cashier', 'host'],
+        d.clockedInAt == null || d.clockedInAt is timestamp,
+        d.get('clockedInAtMicros', '0').matches('-?[0-9]+'),
+        d.assignedTables == null || d.assignedTables is list,
+        d.assignedStation in [null, 'grill', 'fry', 'salad', 'bar', 'expo', 'dessert', 'general'],
+        sfStrings([d.userId, d.email, d.phone]),
+        sfBools([d.isActive, d.isClockedIn]),
+        d.get('schemaVersion', 1) == 1
+      ].hasOnly([true]);
+    }
+    function svu_restaurant_staff(changed, d) {
+      return changed.hasOnly(['assignedStation', 'assignedTables', 'businessId', 'clockedInAt', 'clockedInAtMicros', 'createdAt', 'createdAtMicros', 'createdBy', 'email', 'fullName', 'hourlyRate', 'id', 'isActive', 'isClockedIn', 'isDeleted', 'legacyBusinessUserId', 'migrationExcludedFields', 'migrationTransformVersion', 'ownerUid', 'phone', 'restaurantRole', 'role', 'schemaVersion', 'transformVersion', 'userId']) && (changed.size() > 8 ? sv_restaurant_staff(d) : [
+        !('id' in changed) || (d.id is string),
+        !('legacyBusinessUserId' in changed) || (d.legacyBusinessUserId is string),
+        !('fullName' in changed) || (d.fullName is string),
+        !('role' in changed) || (d.role in ['Waiter', 'Chef', 'Manager', 'Other', 'Host', 'Cashier', 'Kitchen']),
+        !('hourlyRate' in changed) || (d.hourlyRate == null || sfDecimal(d.hourlyRate)),
+        !changed.hasAny(['createdAt', 'createdAtMicros']) || ((d.createdAt is timestamp) && (d.get('createdAtMicros', '0').matches('-?[0-9]+'))),
+        !('restaurantRole' in changed) || (d.restaurantRole in [null, 'super_admin', 'branch_manager', 'head_chef', 'waiter', 'kitchen_staff', 'cashier', 'host']),
+        !changed.hasAny(['clockedInAt', 'clockedInAtMicros']) || ((d.clockedInAt == null || d.clockedInAt is timestamp) && (d.get('clockedInAtMicros', '0').matches('-?[0-9]+'))),
+        !('assignedTables' in changed) || (d.assignedTables == null || d.assignedTables is list),
+        !('assignedStation' in changed) || (d.assignedStation in [null, 'grill', 'fry', 'salad', 'bar', 'expo', 'dessert', 'general']),
+        !changed.hasAny(['userId', 'email', 'phone']) || (sfStrings([d.userId, d.email, d.phone])),
+        !changed.hasAny(['isActive', 'isClockedIn']) || (sfBools([d.isActive, d.isClockedIn])),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
+    function sv_restaurant_table_sessions(d) {
+      return d.keys().hasOnly(['businessId', 'createdBy', 'endedAt', 'endedAtMicros', 'guestCount', 'id', 'isDeleted', 'legacyBusinessUserId', 'migrationExcludedFields', 'migrationTransformVersion', 'ownerUid', 'schemaVersion', 'serverId', 'startedAt', 'startedAtMicros', 'status', 'tableId', 'transformVersion']) && [
+        d.id is string,
+        d.legacyBusinessUserId is string,
+        d.guestCount is int,
+        d.startedAt is timestamp,
+        d.get('startedAtMicros', '0').matches('-?[0-9]+'),
+        d.endedAt == null || d.endedAt is timestamp,
+        d.get('endedAtMicros', '0').matches('-?[0-9]+'),
+        d.status in [null, 'active', 'billed', 'closed'],
+        sfStrings([d.tableId, d.serverId]),
+        d.get('schemaVersion', 1) == 1
+      ].hasOnly([true]);
+    }
+    function svu_restaurant_table_sessions(changed, d) {
+      return changed.hasOnly(['businessId', 'createdBy', 'endedAt', 'endedAtMicros', 'guestCount', 'id', 'isDeleted', 'legacyBusinessUserId', 'migrationExcludedFields', 'migrationTransformVersion', 'ownerUid', 'schemaVersion', 'serverId', 'startedAt', 'startedAtMicros', 'status', 'tableId', 'transformVersion']) && (changed.size() > 8 ? sv_restaurant_table_sessions(d) : [
+        !('id' in changed) || (d.id is string),
+        !('legacyBusinessUserId' in changed) || (d.legacyBusinessUserId is string),
+        !('guestCount' in changed) || (d.guestCount is int),
+        !changed.hasAny(['startedAt', 'startedAtMicros']) || ((d.startedAt is timestamp) && (d.get('startedAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['endedAt', 'endedAtMicros']) || ((d.endedAt == null || d.endedAt is timestamp) && (d.get('endedAtMicros', '0').matches('-?[0-9]+'))),
+        !('status' in changed) || (d.status in [null, 'active', 'billed', 'closed']),
+        !changed.hasAny(['tableId', 'serverId']) || (sfStrings([d.tableId, d.serverId])),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
+    function sv_restaurant_orders(d) {
+      return d.keys().hasOnly(['businessId', 'closedAt', 'closedAtMicros', 'courseNumber', 'createdAt', 'createdAtMicros', 'createdBy', 'currency', 'discountAmount', 'discountPercentage', 'discountReason', 'guestId', 'id', 'isDeleted', 'isRush', 'isVip', 'itemsTotal', 'lastAuditId', 'ledgerItemId', 'ledgerRevision', 'legacyBusinessUserId', 'migrationExcludedFields', 'migrationTransformVersion', 'notes', 'orderNumber', 'orderType', 'ownerUid', 'paymentMethod', 'paymentStatus', 'schemaVersion', 'serverId', 'sessionId', 'status', 'subtotalAmount', 'tableId', 'taxAmount', 'tipAmount', 'totalAmount', 'transformVersion']) && [
+        d.id is string,
+        d.legacyBusinessUserId is string,
+        d.status in ['draft', 'pending', 'in_progress', 'ready', 'served', 'billed', 'open', 'closed', 'cancelled'],
+        d.totalAmount == null || sfDecimal(d.totalAmount),
+        d.taxAmount == null || sfDecimal(d.taxAmount),
+        d.tipAmount == null || sfDecimal(d.tipAmount),
+        d.paymentMethod in [null, 'cash', 'card', 'split'],
+        d.createdAt is timestamp,
+        d.get('createdAtMicros', '0').matches('-?[0-9]+'),
+        d.closedAt == null || d.closedAt is timestamp,
+        d.get('closedAtMicros', '0').matches('-?[0-9]+'),
+        d.orderNumber is int,
+        d.orderType in [null, 'dine_in', 'takeaway', 'delivery'],
+        d.subtotalAmount == null || sfDecimal(d.subtotalAmount),
+        d.discountAmount == null || sfDecimal(d.discountAmount),
+        d.discountPercentage == null || sfDecimal(d.discountPercentage),
+        d.paymentStatus in [null, 'pending', 'partial', 'paid', 'refunded'],
+        sfStrings([d.tableId, d.sessionId, d.serverId, d.guestId, d.discountReason, d.notes, d.currency]),
+        sfBools([d.isRush, d.isVip]),
+        d.courseNumber == null || d.courseNumber is int,
+        d.get('schemaVersion', 1) == 1
+      ].hasOnly([true]);
+    }
+    function svu_restaurant_orders(changed, d) {
+      return changed.hasOnly(['businessId', 'closedAt', 'closedAtMicros', 'courseNumber', 'createdAt', 'createdAtMicros', 'createdBy', 'currency', 'discountAmount', 'discountPercentage', 'discountReason', 'guestId', 'id', 'isDeleted', 'isRush', 'isVip', 'itemsTotal', 'lastAuditId', 'ledgerItemId', 'ledgerRevision', 'legacyBusinessUserId', 'migrationExcludedFields', 'migrationTransformVersion', 'notes', 'orderNumber', 'orderType', 'ownerUid', 'paymentMethod', 'paymentStatus', 'schemaVersion', 'serverId', 'sessionId', 'status', 'subtotalAmount', 'tableId', 'taxAmount', 'tipAmount', 'totalAmount', 'transformVersion']) && (changed.size() > 10 ? sv_restaurant_orders(d) : [
+        !('id' in changed) || (d.id is string),
+        !('legacyBusinessUserId' in changed) || (d.legacyBusinessUserId is string),
+        !('status' in changed) || (d.status in ['draft', 'pending', 'in_progress', 'ready', 'served', 'billed', 'open', 'closed', 'cancelled']),
+        !('totalAmount' in changed) || (d.totalAmount == null || sfDecimal(d.totalAmount)),
+        !('taxAmount' in changed) || (d.taxAmount == null || sfDecimal(d.taxAmount)),
+        !('tipAmount' in changed) || (d.tipAmount == null || sfDecimal(d.tipAmount)),
+        !('paymentMethod' in changed) || (d.paymentMethod in [null, 'cash', 'card', 'split']),
+        !changed.hasAny(['createdAt', 'createdAtMicros']) || ((d.createdAt is timestamp) && (d.get('createdAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['closedAt', 'closedAtMicros']) || ((d.closedAt == null || d.closedAt is timestamp) && (d.get('closedAtMicros', '0').matches('-?[0-9]+'))),
+        !('orderNumber' in changed) || (d.orderNumber is int),
+        !('orderType' in changed) || (d.orderType in [null, 'dine_in', 'takeaway', 'delivery']),
+        !('subtotalAmount' in changed) || (d.subtotalAmount == null || sfDecimal(d.subtotalAmount)),
+        !('discountAmount' in changed) || (d.discountAmount == null || sfDecimal(d.discountAmount)),
+        !('discountPercentage' in changed) || (d.discountPercentage == null || sfDecimal(d.discountPercentage)),
+        !('paymentStatus' in changed) || (d.paymentStatus in [null, 'pending', 'partial', 'paid', 'refunded']),
+        !changed.hasAny(['tableId', 'sessionId', 'serverId', 'guestId', 'discountReason', 'notes', 'currency']) || (sfStrings([d.tableId, d.sessionId, d.serverId, d.guestId, d.discountReason, d.notes, d.currency])),
+        !changed.hasAny(['isRush', 'isVip']) || (sfBools([d.isRush, d.isVip])),
+        !('courseNumber' in changed) || (d.courseNumber == null || d.courseNumber is int),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
+    function sv_restaurant_order_items(d) {
+      return d.keys().hasOnly(['businessId', 'courseNumber', 'createdAt', 'createdAtMicros', 'createdBy', 'id', 'isDeleted', 'isFired', 'itemId', 'migrationExcludedFields', 'migrationTransformVersion', 'notes', 'orderId', 'ownerUid', 'priceAtTime', 'quantity', 'schemaVersion', 'seatNumber', 'status', 'ticketItemId', 'transformVersion', 'voidReason', 'voided']) && [
+        d.id is string,
+        d.orderId is string,
+        sfDecimal(d.priceAtTime),
+        d.createdAt is timestamp,
+        d.get('createdAtMicros', '0').matches('-?[0-9]+'),
+        d.status in [null, 'pending', 'cooking', 'ready', 'cancelled'],
+        sfStrings([d.itemId, d.notes, d.voidReason]),
+        sfBools([d.isFired, d.voided]),
+        d.quantity == null || d.quantity is int,
+        d.courseNumber == null || d.courseNumber is int,
+        d.seatNumber == null || d.seatNumber is int,
+        d.get('schemaVersion', 1) == 1
+      ].hasOnly([true]);
+    }
+    function svu_restaurant_order_items(changed, d) {
+      return changed.hasOnly(['businessId', 'courseNumber', 'createdAt', 'createdAtMicros', 'createdBy', 'id', 'isDeleted', 'isFired', 'itemId', 'migrationExcludedFields', 'migrationTransformVersion', 'notes', 'orderId', 'ownerUid', 'priceAtTime', 'quantity', 'schemaVersion', 'seatNumber', 'status', 'ticketItemId', 'transformVersion', 'voidReason', 'voided']) && (changed.size() > 8 ? sv_restaurant_order_items(d) : [
+        !('id' in changed) || (d.id is string),
+        !('orderId' in changed) || (d.orderId is string),
+        !('priceAtTime' in changed) || (sfDecimal(d.priceAtTime)),
+        !changed.hasAny(['createdAt', 'createdAtMicros']) || ((d.createdAt is timestamp) && (d.get('createdAtMicros', '0').matches('-?[0-9]+'))),
+        !('status' in changed) || (d.status in [null, 'pending', 'cooking', 'ready', 'cancelled']),
+        !changed.hasAny(['itemId', 'notes', 'voidReason']) || (sfStrings([d.itemId, d.notes, d.voidReason])),
+        !changed.hasAny(['isFired', 'voided']) || (sfBools([d.isFired, d.voided])),
+        !('quantity' in changed) || (d.quantity == null || d.quantity is int),
+        !('courseNumber' in changed) || (d.courseNumber == null || d.courseNumber is int),
+        !('seatNumber' in changed) || (d.seatNumber == null || d.seatNumber is int),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
+    function sv_restaurant_kitchen_tickets(d) {
+      return d.keys().hasOnly(['businessId', 'completedAt', 'completedAtMicros', 'createdAt', 'createdAtMicros', 'createdBy', 'id', 'isDeleted', 'legacyBusinessUserId', 'migrationExcludedFields', 'migrationTransformVersion', 'orderId', 'ownerUid', 'priority', 'schemaVersion', 'servedAt', 'servedAtMicros', 'startedAt', 'startedAtMicros', 'station', 'status', 'tableName', 'transformVersion']) && [
+        d.id is string,
+        d.legacyBusinessUserId is string,
+        d.orderId is string,
+        d.status in [null, 'new', 'in_progress', 'ready', 'served', 'cancelled'],
+        d.createdAt is timestamp,
+        d.get('createdAtMicros', '0').matches('-?[0-9]+'),
+        d.startedAt == null || d.startedAt is timestamp,
+        d.get('startedAtMicros', '0').matches('-?[0-9]+'),
+        d.completedAt == null || d.completedAt is timestamp,
+        d.get('completedAtMicros', '0').matches('-?[0-9]+'),
+        d.servedAt == null || d.servedAt is timestamp,
+        d.get('servedAtMicros', '0').matches('-?[0-9]+'),
+        sfStrings([d.tableName, d.station]),
+        d.priority == null || d.priority is int,
+        d.get('schemaVersion', 1) == 1
+      ].hasOnly([true]);
+    }
+    function svu_restaurant_kitchen_tickets(changed, d) {
+      return changed.hasOnly(['businessId', 'completedAt', 'completedAtMicros', 'createdAt', 'createdAtMicros', 'createdBy', 'id', 'isDeleted', 'legacyBusinessUserId', 'migrationExcludedFields', 'migrationTransformVersion', 'orderId', 'ownerUid', 'priority', 'schemaVersion', 'servedAt', 'servedAtMicros', 'startedAt', 'startedAtMicros', 'station', 'status', 'tableName', 'transformVersion']) && (changed.size() > 8 ? sv_restaurant_kitchen_tickets(d) : [
+        !('id' in changed) || (d.id is string),
+        !('legacyBusinessUserId' in changed) || (d.legacyBusinessUserId is string),
+        !('orderId' in changed) || (d.orderId is string),
+        !('status' in changed) || (d.status in [null, 'new', 'in_progress', 'ready', 'served', 'cancelled']),
+        !changed.hasAny(['createdAt', 'createdAtMicros']) || ((d.createdAt is timestamp) && (d.get('createdAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['startedAt', 'startedAtMicros']) || ((d.startedAt == null || d.startedAt is timestamp) && (d.get('startedAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['completedAt', 'completedAtMicros']) || ((d.completedAt == null || d.completedAt is timestamp) && (d.get('completedAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['servedAt', 'servedAtMicros']) || ((d.servedAt == null || d.servedAt is timestamp) && (d.get('servedAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['tableName', 'station']) || (sfStrings([d.tableName, d.station])),
+        !('priority' in changed) || (d.priority == null || d.priority is int),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
+    function sv_restaurant_ticket_items(d) {
+      return d.keys().hasOnly(['businessId', 'completedAt', 'completedAtMicros', 'createdAt', 'createdAtMicros', 'createdBy', 'id', 'isDeleted', 'itemName', 'migrationExcludedFields', 'migrationTransformVersion', 'modifiersText', 'notes', 'orderItemId', 'ownerUid', 'quantity', 'schemaVersion', 'startedAt', 'startedAtMicros', 'status', 'ticketId', 'transformVersion']) && [
+        d.id is string,
+        d.ticketId is string,
+        d.orderItemId is string,
+        d.itemName is string,
+        d.status in [null, 'pending', 'cooking', 'ready', 'cancelled'],
+        d.createdAt is timestamp,
+        d.get('createdAtMicros', '0').matches('-?[0-9]+'),
+        d.startedAt == null || d.startedAt is timestamp,
+        d.get('startedAtMicros', '0').matches('-?[0-9]+'),
+        d.completedAt == null || d.completedAt is timestamp,
+        d.get('completedAtMicros', '0').matches('-?[0-9]+'),
+        sfStrings([d.notes, d.modifiersText]),
+        d.quantity == null || d.quantity is int,
+        d.get('schemaVersion', 1) == 1
+      ].hasOnly([true]);
+    }
+    function svu_restaurant_ticket_items(changed, d) {
+      return changed.hasOnly(['businessId', 'completedAt', 'completedAtMicros', 'createdAt', 'createdAtMicros', 'createdBy', 'id', 'isDeleted', 'itemName', 'migrationExcludedFields', 'migrationTransformVersion', 'modifiersText', 'notes', 'orderItemId', 'ownerUid', 'quantity', 'schemaVersion', 'startedAt', 'startedAtMicros', 'status', 'ticketId', 'transformVersion']) && (changed.size() > 8 ? sv_restaurant_ticket_items(d) : [
+        !('id' in changed) || (d.id is string),
+        !('ticketId' in changed) || (d.ticketId is string),
+        !('orderItemId' in changed) || (d.orderItemId is string),
+        !('itemName' in changed) || (d.itemName is string),
+        !('status' in changed) || (d.status in [null, 'pending', 'cooking', 'ready', 'cancelled']),
+        !changed.hasAny(['createdAt', 'createdAtMicros']) || ((d.createdAt is timestamp) && (d.get('createdAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['startedAt', 'startedAtMicros']) || ((d.startedAt == null || d.startedAt is timestamp) && (d.get('startedAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['completedAt', 'completedAtMicros']) || ((d.completedAt == null || d.completedAt is timestamp) && (d.get('completedAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['notes', 'modifiersText']) || (sfStrings([d.notes, d.modifiersText])),
+        !('quantity' in changed) || (d.quantity == null || d.quantity is int),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
+    function sv_restaurant_void_logs(d) {
+      return d.keys().hasOnly(['approvedBy', 'businessId', 'createdAt', 'createdAtMicros', 'createdBy', 'id', 'isDeleted', 'legacyBusinessUserId', 'migrationExcludedFields', 'migrationTransformVersion', 'orderId', 'orderItemId', 'originalAmount', 'ownerUid', 'performedBy', 'reason', 'schemaVersion', 'transformVersion', 'voidType']) && [
+        d.id is string,
+        d.legacyBusinessUserId is string,
+        d.voidType in ['order', 'item'],
+        sfDecimal(d.originalAmount),
+        d.reason is string,
+        d.createdAt is timestamp,
+        d.get('createdAtMicros', '0').matches('-?[0-9]+'),
+        sfStrings([d.orderId, d.orderItemId, d.approvedBy, d.performedBy]),
+        d.get('schemaVersion', 1) == 1
+      ].hasOnly([true]);
+    }
+    function svu_restaurant_void_logs(changed, d) {
+      return changed.hasOnly(['approvedBy', 'businessId', 'createdAt', 'createdAtMicros', 'createdBy', 'id', 'isDeleted', 'legacyBusinessUserId', 'migrationExcludedFields', 'migrationTransformVersion', 'orderId', 'orderItemId', 'originalAmount', 'ownerUid', 'performedBy', 'reason', 'schemaVersion', 'transformVersion', 'voidType']) && (changed.size() > 8 ? sv_restaurant_void_logs(d) : [
+        !('id' in changed) || (d.id is string),
+        !('legacyBusinessUserId' in changed) || (d.legacyBusinessUserId is string),
+        !('voidType' in changed) || (d.voidType in ['order', 'item']),
+        !('originalAmount' in changed) || (sfDecimal(d.originalAmount)),
+        !('reason' in changed) || (d.reason is string),
+        !changed.hasAny(['createdAt', 'createdAtMicros']) || ((d.createdAt is timestamp) && (d.get('createdAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['orderId', 'orderItemId', 'approvedBy', 'performedBy']) || (sfStrings([d.orderId, d.orderItemId, d.approvedBy, d.performedBy])),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
+    function sv_restaurant_audit_logs(d) {
+      return d.keys().hasOnly(['actionType', 'actorId', 'businessId', 'createdAt', 'createdAtMicros', 'createdBy', 'details', 'detailsEncoding', 'detailsJson', 'detailsTextReason', 'entityId', 'id', 'isDeleted', 'legacyBusinessUserId', 'migrationExcludedFields', 'migrationTransformVersion', 'ownerUid', 'schemaVersion', 'staffId', 'transformVersion']) && [
+        d.id is string,
+        d.legacyBusinessUserId is string,
+        d.actionType is string,
+        sfJson(d.get('detailsEncoding', null), d.get('details', null), d.get('detailsJson', null)),
+        d.createdAt is timestamp,
+        d.get('createdAtMicros', '0').matches('-?[0-9]+'),
+        sfStrings([d.actorId, d.staffId, d.entityId]),
+        d.get('schemaVersion', 1) == 1
+      ].hasOnly([true]);
+    }
+    function svu_restaurant_audit_logs(changed, d) {
+      return changed.hasOnly(['actionType', 'actorId', 'businessId', 'createdAt', 'createdAtMicros', 'createdBy', 'details', 'detailsEncoding', 'detailsJson', 'detailsTextReason', 'entityId', 'id', 'isDeleted', 'legacyBusinessUserId', 'migrationExcludedFields', 'migrationTransformVersion', 'ownerUid', 'schemaVersion', 'staffId', 'transformVersion']) && (changed.size() > 8 ? sv_restaurant_audit_logs(d) : [
+        !('id' in changed) || (d.id is string),
+        !('legacyBusinessUserId' in changed) || (d.legacyBusinessUserId is string),
+        !('actionType' in changed) || (d.actionType is string),
+        !changed.hasAny(['details', 'detailsEncoding', 'detailsJson', 'detailsTextReason']) || (sfJson(d.get('detailsEncoding', null), d.get('details', null), d.get('detailsJson', null))),
+        !changed.hasAny(['createdAt', 'createdAtMicros']) || ((d.createdAt is timestamp) && (d.get('createdAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['actorId', 'staffId', 'entityId']) || (sfStrings([d.actorId, d.staffId, d.entityId])),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
+    function sv_restaurant_reservations(d) {
+      return d.keys().hasOnly(['businessId', 'confirmationSent', 'createdAt', 'createdAtMicros', 'createdBy', 'durationMinutes', 'guestEmail', 'guestId', 'guestName', 'guestPhone', 'id', 'isDeleted', 'legacyBusinessUserId', 'migrationExcludedFields', 'migrationTransformVersion', 'notes', 'ownerUid', 'partySize', 'reminderSent', 'reservationDate', 'reservationTime', 'schemaVersion', 'seatedAt', 'seatedAtMicros', 'source', 'specialRequests', 'status', 'tableIds', 'transformVersion']) && [
+        d.id is string,
+        d.legacyBusinessUserId is string,
+        d.guestName is string,
+        d.guestPhone is string,
+        d.partySize is int,
+        d.reservationDate.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}'),
+        d.reservationTime is string,
+        d.tableIds == null || d.tableIds is list,
+        d.status in [null, 'pending', 'confirmed', 'seated', 'completed', 'cancelled', 'no_show'],
+        d.source in [null, 'phone', 'website', 'walk_in', 'app', 'whatsapp'],
+        d.createdAt is timestamp,
+        d.get('createdAtMicros', '0').matches('-?[0-9]+'),
+        d.seatedAt == null || d.seatedAt is timestamp,
+        d.get('seatedAtMicros', '0').matches('-?[0-9]+'),
+        sfStrings([d.guestId, d.guestEmail, d.notes, d.specialRequests, d.createdBy]),
+        sfBools([d.reminderSent, d.confirmationSent]),
+        d.durationMinutes == null || d.durationMinutes is int,
+        d.get('schemaVersion', 1) == 1
+      ].hasOnly([true]);
+    }
+    function svu_restaurant_reservations(changed, d) {
+      return changed.hasOnly(['businessId', 'confirmationSent', 'createdAt', 'createdAtMicros', 'createdBy', 'durationMinutes', 'guestEmail', 'guestId', 'guestName', 'guestPhone', 'id', 'isDeleted', 'legacyBusinessUserId', 'migrationExcludedFields', 'migrationTransformVersion', 'notes', 'ownerUid', 'partySize', 'reminderSent', 'reservationDate', 'reservationTime', 'schemaVersion', 'seatedAt', 'seatedAtMicros', 'source', 'specialRequests', 'status', 'tableIds', 'transformVersion']) && (changed.size() > 8 ? sv_restaurant_reservations(d) : [
+        !('id' in changed) || (d.id is string),
+        !('legacyBusinessUserId' in changed) || (d.legacyBusinessUserId is string),
+        !('guestName' in changed) || (d.guestName is string),
+        !('guestPhone' in changed) || (d.guestPhone is string),
+        !('partySize' in changed) || (d.partySize is int),
+        !('reservationDate' in changed) || (d.reservationDate.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')),
+        !('reservationTime' in changed) || (d.reservationTime is string),
+        !('tableIds' in changed) || (d.tableIds == null || d.tableIds is list),
+        !('status' in changed) || (d.status in [null, 'pending', 'confirmed', 'seated', 'completed', 'cancelled', 'no_show']),
+        !('source' in changed) || (d.source in [null, 'phone', 'website', 'walk_in', 'app', 'whatsapp']),
+        !changed.hasAny(['createdAt', 'createdAtMicros']) || ((d.createdAt is timestamp) && (d.get('createdAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['seatedAt', 'seatedAtMicros']) || ((d.seatedAt == null || d.seatedAt is timestamp) && (d.get('seatedAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['guestId', 'guestEmail', 'notes', 'specialRequests', 'createdBy']) || (sfStrings([d.guestId, d.guestEmail, d.notes, d.specialRequests, d.createdBy])),
+        !changed.hasAny(['reminderSent', 'confirmationSent']) || (sfBools([d.reminderSent, d.confirmationSent])),
+        !('durationMinutes' in changed) || (d.durationMinutes == null || d.durationMinutes is int),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
+    function sv_restaurant_waitlist(d) {
+      return d.keys().hasOnly(['businessId', 'checkInTime', 'checkInTimeMicros', 'createdBy', 'estimatedWaitMinutes', 'guestName', 'guestPhone', 'id', 'isDeleted', 'legacyBusinessUserId', 'migrationExcludedFields', 'migrationTransformVersion', 'notes', 'notificationSentAt', 'notificationSentAtMicros', 'ownerUid', 'partySize', 'quotedWaitMinutes', 'schemaVersion', 'seatedAt', 'seatedAtMicros', 'status', 'tableId', 'transformVersion']) && [
+        d.id is string,
+        d.legacyBusinessUserId is string,
+        d.guestName is string,
+        d.guestPhone is string,
+        d.partySize is int,
+        d.checkInTime is timestamp,
+        d.get('checkInTimeMicros', '0').matches('-?[0-9]+'),
+        d.status in [null, 'waiting', 'notified', 'seated', 'left', 'no_show'],
+        d.notificationSentAt == null || d.notificationSentAt is timestamp,
+        d.get('notificationSentAtMicros', '0').matches('-?[0-9]+'),
+        d.seatedAt == null || d.seatedAt is timestamp,
+        d.get('seatedAtMicros', '0').matches('-?[0-9]+'),
+        sfStrings([d.notes, d.tableId]),
+        d.estimatedWaitMinutes == null || d.estimatedWaitMinutes is int,
+        d.quotedWaitMinutes == null || d.quotedWaitMinutes is int,
+        d.get('schemaVersion', 1) == 1
+      ].hasOnly([true]);
+    }
+    function svu_restaurant_waitlist(changed, d) {
+      return changed.hasOnly(['businessId', 'checkInTime', 'checkInTimeMicros', 'createdBy', 'estimatedWaitMinutes', 'guestName', 'guestPhone', 'id', 'isDeleted', 'legacyBusinessUserId', 'migrationExcludedFields', 'migrationTransformVersion', 'notes', 'notificationSentAt', 'notificationSentAtMicros', 'ownerUid', 'partySize', 'quotedWaitMinutes', 'schemaVersion', 'seatedAt', 'seatedAtMicros', 'status', 'tableId', 'transformVersion']) && (changed.size() > 8 ? sv_restaurant_waitlist(d) : [
+        !('id' in changed) || (d.id is string),
+        !('legacyBusinessUserId' in changed) || (d.legacyBusinessUserId is string),
+        !('guestName' in changed) || (d.guestName is string),
+        !('guestPhone' in changed) || (d.guestPhone is string),
+        !('partySize' in changed) || (d.partySize is int),
+        !changed.hasAny(['checkInTime', 'checkInTimeMicros']) || ((d.checkInTime is timestamp) && (d.get('checkInTimeMicros', '0').matches('-?[0-9]+'))),
+        !('status' in changed) || (d.status in [null, 'waiting', 'notified', 'seated', 'left', 'no_show']),
+        !changed.hasAny(['notificationSentAt', 'notificationSentAtMicros']) || ((d.notificationSentAt == null || d.notificationSentAt is timestamp) && (d.get('notificationSentAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['seatedAt', 'seatedAtMicros']) || ((d.seatedAt == null || d.seatedAt is timestamp) && (d.get('seatedAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['notes', 'tableId']) || (sfStrings([d.notes, d.tableId])),
+        !('estimatedWaitMinutes' in changed) || (d.estimatedWaitMinutes == null || d.estimatedWaitMinutes is int),
+        !('quotedWaitMinutes' in changed) || (d.quotedWaitMinutes == null || d.quotedWaitMinutes is int),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
+    function sv_restaurant_guest_profiles(d) {
+      return d.keys().hasOnly(['allergies', 'anniversary', 'averageCheck', 'birthdate', 'businessId', 'createdAt', 'createdAtMicros', 'createdBy', 'dietaryRestrictions', 'email', 'favoriteItems', 'firstName', 'fullName', 'id', 'isDeleted', 'lastName', 'lastVisitDate', 'legacyBusinessUserId', 'marketingOptIn', 'migrationExcludedFields', 'migrationTransformVersion', 'noisePreference', 'notes', 'ownerUid', 'phone', 'preferredServerId', 'schemaVersion', 'seatingPreference', 'tags', 'totalLifetimeSpend', 'transformVersion', 'updatedAt', 'updatedAtMicros', 'vipLevel', 'visitCount', 'whatsappOptIn']) && [
+        d.id is string,
+        d.legacyBusinessUserId is string,
+        d.firstName is string,
+        d.totalLifetimeSpend == null || sfDecimal(d.totalLifetimeSpend),
+        d.averageCheck == null || sfDecimal(d.averageCheck),
+        d.lastVisitDate == null || d.lastVisitDate.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}'),
+        d.favoriteItems == null || d.favoriteItems is list,
+        d.dietaryRestrictions == null || d.dietaryRestrictions is list,
+        d.allergies == null || d.allergies is list,
+        d.seatingPreference in [null, 'booth', 'table', 'patio', 'bar', 'any'],
+        d.noisePreference in [null, 'quiet', 'lively', 'any'],
+        d.tags == null || d.tags is list,
+        d.birthdate == null || d.birthdate.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}'),
+        d.anniversary == null || d.anniversary.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}'),
+        d.vipLevel in [null, 0, 1, 2, 3],
+        d.createdAt is timestamp,
+        d.get('createdAtMicros', '0').matches('-?[0-9]+'),
+        d.updatedAt is timestamp,
+        d.get('updatedAtMicros', '0').matches('-?[0-9]+'),
+        sfStrings([d.lastName, d.fullName, d.phone, d.email, d.preferredServerId, d.notes]),
+        sfBools([d.marketingOptIn, d.whatsappOptIn]),
+        d.visitCount == null || d.visitCount is int,
+        d.get('schemaVersion', 1) == 1
+      ].hasOnly([true]);
+    }
+    function svu_restaurant_guest_profiles(changed, d) {
+      return changed.hasOnly(['allergies', 'anniversary', 'averageCheck', 'birthdate', 'businessId', 'createdAt', 'createdAtMicros', 'createdBy', 'dietaryRestrictions', 'email', 'favoriteItems', 'firstName', 'fullName', 'id', 'isDeleted', 'lastName', 'lastVisitDate', 'legacyBusinessUserId', 'marketingOptIn', 'migrationExcludedFields', 'migrationTransformVersion', 'noisePreference', 'notes', 'ownerUid', 'phone', 'preferredServerId', 'schemaVersion', 'seatingPreference', 'tags', 'totalLifetimeSpend', 'transformVersion', 'updatedAt', 'updatedAtMicros', 'vipLevel', 'visitCount', 'whatsappOptIn']) && (changed.size() > 11 ? sv_restaurant_guest_profiles(d) : [
+        !('id' in changed) || (d.id is string),
+        !('legacyBusinessUserId' in changed) || (d.legacyBusinessUserId is string),
+        !('firstName' in changed) || (d.firstName is string),
+        !('totalLifetimeSpend' in changed) || (d.totalLifetimeSpend == null || sfDecimal(d.totalLifetimeSpend)),
+        !('averageCheck' in changed) || (d.averageCheck == null || sfDecimal(d.averageCheck)),
+        !('lastVisitDate' in changed) || (d.lastVisitDate == null || d.lastVisitDate.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')),
+        !('favoriteItems' in changed) || (d.favoriteItems == null || d.favoriteItems is list),
+        !('dietaryRestrictions' in changed) || (d.dietaryRestrictions == null || d.dietaryRestrictions is list),
+        !('allergies' in changed) || (d.allergies == null || d.allergies is list),
+        !('seatingPreference' in changed) || (d.seatingPreference in [null, 'booth', 'table', 'patio', 'bar', 'any']),
+        !('noisePreference' in changed) || (d.noisePreference in [null, 'quiet', 'lively', 'any']),
+        !('tags' in changed) || (d.tags == null || d.tags is list),
+        !('birthdate' in changed) || (d.birthdate == null || d.birthdate.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')),
+        !('anniversary' in changed) || (d.anniversary == null || d.anniversary.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')),
+        !('vipLevel' in changed) || (d.vipLevel in [null, 0, 1, 2, 3]),
+        !changed.hasAny(['createdAt', 'createdAtMicros']) || ((d.createdAt is timestamp) && (d.get('createdAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['updatedAt', 'updatedAtMicros']) || ((d.updatedAt is timestamp) && (d.get('updatedAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['lastName', 'fullName', 'phone', 'email', 'preferredServerId', 'notes']) || (sfStrings([d.lastName, d.fullName, d.phone, d.email, d.preferredServerId, d.notes])),
+        !changed.hasAny(['marketingOptIn', 'whatsappOptIn']) || (sfBools([d.marketingOptIn, d.whatsappOptIn])),
+        !('visitCount' in changed) || (d.visitCount == null || d.visitCount is int),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
     // SCHEMA-VALIDATORS:END
 
     // users/{uid} holds the user_profiles row; the document id is the Firebase uid.
@@ -611,9 +1041,15 @@ service cloud.firestore {
       // can never change afterwards.
       function newOwnerTenancy(d) {
         return d.businessId == businessId
-          && d.ownerUid == request.auth.uid
-          && d.legacyBusinessUserId == request.auth.uid
+          && d.ownerUid == bizOwnerUid()
+          && d.legacyBusinessUserId == bizOwnerUid()
           && d.isDeleted == false;
+      }
+      // A restaurant menu item belongs to the business through its category and carries no business_id of its own.
+      function catalogItemTenancy(d) {
+        return d.businessId == businessId && d.ownerUid == bizOwnerUid() && d.isDeleted == false
+          && (d.legacyBusinessUserId == bizOwnerUid()
+            || (d.legacyBusinessUserId == null && d.categoryId != null && menuCategoryExists(d.categoryId)));
       }
       function tenancyKept(changed) {
         return !changed.hasAny(['id', 'businessId', 'ownerUid', 'legacyBusinessUserId', 'schemaVersion', 'isDeleted', 'createdBy']);
@@ -622,7 +1058,8 @@ service cloud.firestore {
         return exists(/databases/$(database)/documents/businesses/$(businessId)/menuCategories/$(id));
       }
 
-      // Supermarket catalogue (restaurant_menu_items / restaurant_menu_categories).
+      // Supermarket and restaurant catalogue (restaurant_menu_items / restaurant_menu_categories). Restaurant managers edit
+      // the menu, kitchen staff may only mark an item available or unavailable (86).
       match /menuItems/{itemId} {
         function validItemEdit(changed, d) {
           return svu_restaurant_menu_items(changed, d)
@@ -630,16 +1067,19 @@ service cloud.firestore {
             && (!('categoryId' in changed) || d.categoryId == null || menuCategoryExists(d.categoryId))
             && (!('imageUrl' in changed) || notInlineImage(d.imageUrl));
         }
-        allow get, list: if isActiveOwner(businessId);
-        allow create: if isActiveOwner(businessId)
+        allow get, list: if restaurantReader();
+        allow create: if restaurantManager()
           && sv_restaurant_menu_items(request.resource.data)
           && request.resource.data.id == itemId
-          && newOwnerTenancy(request.resource.data)
+          && catalogItemTenancy(request.resource.data)
           && (request.resource.data.categoryId == null || menuCategoryExists(request.resource.data.categoryId))
           && notInlineImage(request.resource.data.imageUrl);
-        allow update: if isActiveOwner(businessId)
-          && validItemEdit(request.resource.data.diff(resource.data).affectedKeys(), request.resource.data);
-        allow delete: if isActiveOwner(businessId);
+        allow update: if (restaurantManager()
+            && validItemEdit(request.resource.data.diff(resource.data).affectedKeys(), request.resource.data))
+          || (memberRoleIn(['kitchen_staff'])
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isAvailable'])
+            && svu_restaurant_menu_items(request.resource.data.diff(resource.data).affectedKeys(), request.resource.data));
+        allow delete: if restaurantManager();
       }
       match /menuCategories/{categoryId} {
         function validCategoryEdit(changed, d) {
@@ -647,15 +1087,15 @@ service cloud.firestore {
             && tenancyKept(changed)
             && (!('parentId' in changed) || d.parentId == null || menuCategoryExists(d.parentId));
         }
-        allow get, list: if isActiveOwner(businessId);
-        allow create: if isActiveOwner(businessId)
+        allow get, list: if restaurantReader();
+        allow create: if restaurantManager()
           && sv_restaurant_menu_categories(request.resource.data)
           && request.resource.data.id == categoryId
           && newOwnerTenancy(request.resource.data)
           && (request.resource.data.parentId == null || menuCategoryExists(request.resource.data.parentId));
-        allow update: if isActiveOwner(businessId)
+        allow update: if restaurantManager()
           && validCategoryEdit(request.resource.data.diff(resource.data).affectedKeys(), request.resource.data);
-        allow delete: if isActiveOwner(businessId);
+        allow delete: if restaurantManager();
       }
 
       // Supermarket sales (market_transactions).
@@ -682,12 +1122,11 @@ service cloud.firestore {
       // The supermarket reads them only to reproduce the source foreign keys when a product is
       // deleted (NO ACTION refuses, CASCADE removes); their writes arrive with the vertical that owns
       // a reachable flow for them, and until then stay refused.
-      match /orderItems/{orderItemId} { allow get, list: if isActiveOwner(businessId); }
-      match /shrinkageRecords/{recordId} { allow get, list: if isActiveOwner(businessId); }
-      match /stockTakeItems/{itemId} { allow get, list: if isActiveOwner(businessId); }
-      match /inventoryBatches/{batchId} { allow get, list, delete: if isActiveOwner(businessId); }
-      match /itemModifierGroups/{linkId} { allow get, list, delete: if isActiveOwner(businessId); }
-      match /recipes/{recipeId} { allow get, list, delete: if isActiveOwner(businessId); }
+      match /shrinkageRecords/{recordId} { allow get, list: if restaurantReader(); }
+      match /stockTakeItems/{itemId} { allow get, list: if restaurantReader(); }
+      match /inventoryBatches/{batchId} { allow get, list: if restaurantReader(); allow delete: if restaurantManager(); }
+      match /itemModifierGroups/{linkId} { allow get, list: if restaurantReader(); allow delete: if restaurantManager(); }
+      match /recipes/{recipeId} { allow get, list: if restaurantReader(); allow delete: if restaurantManager(); }
 
       // ---- Auto repair (customer_vehicles, repair_orders, repair_order_items, car_parts stock) -------------------
       // The source scopes these tables by business_id = the owner's business_profiles.id and admits the owner through
@@ -867,6 +1306,469 @@ service cloud.firestore {
           && validPartUpdate(partId, request.resource.data.diff(resource.data).affectedKeys(), request.resource.data);
         // No table references car_parts; repair items keep their inventory_item_id, as in the source.
         allow delete: if isActiveOwner(businessId);
+      }
+
+      // ---- Restaurant ----------------------------------------------------------------------------------------------
+      // The source scopes every restaurant table by business_id = the owner uid, under owner-only RLS. Here the owner
+      // and the business's active restaurant members act by role (restaurantMemberships). Money is never trusted from
+      // the client: an order keeps itemsTotal, the exact sum of its active lines, and a line changes only in the same
+      // write as the order's ledger, whose difference these rules recompute. Manager actions carry an audit record.
+      function bizOwnerUid() { return get(businessPath(businessId)).data.ownerUid; }
+      function restaurantMember() {
+        return hasActiveMembership(businessId) && get(businessPath(businessId)).data.get('isSuspended', false) != true;
+      }
+      function memberRoleIn(roles) { return restaurantMember() && staffRole(businessId) in roles; }
+      function restaurantReader() { return isActiveOwner(businessId) || restaurantMember(); }
+      function restaurantManager() { return isActiveOwner(businessId) || memberRoleIn(['super_admin', 'branch_manager']); }
+      function orderTaker() { return isActiveOwner(businessId) || memberRoleIn(['super_admin', 'branch_manager', 'waiter']); }
+      function kitchenActor() { return isActiveOwner(businessId) || memberRoleIn(['super_admin', 'branch_manager', 'kitchen_staff']); }
+      function restaurantTenancy(d) {
+        return d.businessId == businessId && d.ownerUid == bizOwnerUid() && d.isDeleted == false && !('createdBy' in d);
+      }
+      function ownerScoped(d) { return restaurantTenancy(d) && d.legacyBusinessUserId == bizOwnerUid(); }
+      function orderPath(id) { return scopedPath('orders', id); }
+      function unitsAt(v, scale) { return int(v.unitsText) * pow10(scale - v.scale); }
+      function decimalEqual(a, b) {
+        let scale = a.scale > b.scale ? a.scale : b.scale;
+        return unitsAt(a, scale) == unitsAt(b, scale);
+      }
+      function activeLine(m) { return m != null && m.get('status', 'pending') != 'cancelled' && m.get('voided', false) != true; }
+      function lineUnitsAt(m, scale) {
+        return activeLine(m) ? int(m.priceAtTime.unitsText) * m.quantity * pow10(scale - m.priceAtTime.scale) : 0;
+      }
+      function openStatus(status) { return !(status in ['closed', 'cancelled']); }
+
+      match /tables/{tableId} {
+        allow get, list: if restaurantReader();
+        allow create: if restaurantManager()
+          && sv_restaurant_tables(request.resource.data)
+          && request.resource.data.id == tableId
+          && ownerScoped(request.resource.data);
+        allow update: if (restaurantManager()
+            && tenancyKept(request.resource.data.diff(resource.data).affectedKeys())
+            && svu_restaurant_tables(request.resource.data.diff(resource.data).affectedKeys(), request.resource.data))
+          || (orderTaker()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+            && svu_restaurant_tables(request.resource.data.diff(resource.data).affectedKeys(), request.resource.data));
+        allow delete: if restaurantManager();
+      }
+
+      match /restaurantStaff/{staffId} {
+        allow get, list: if restaurantReader();
+        // sv_restaurant_staff has no PIN, PIN hash or password key: a credential is refused, never stored.
+        allow create: if restaurantManager()
+          && sv_restaurant_staff(request.resource.data)
+          && request.resource.data.id == staffId
+          && ownerScoped(request.resource.data);
+        allow update: if restaurantManager()
+          && tenancyKept(request.resource.data.diff(resource.data).affectedKeys())
+          && svu_restaurant_staff(request.resource.data.diff(resource.data).affectedKeys(), request.resource.data);
+        allow delete: if restaurantManager();
+      }
+
+      // restaurantCounters/orders replaces the global order_number sequence: numbers move only with a new order.
+      match /restaurantCounters/{counterId} {
+        allow get, list: if restaurantReader();
+        allow create, update: if orderTaker()
+          && counterId == 'orders'
+          && request.resource.data.keys().hasOnly(['next', 'lastOrderId', 'businessId', 'schemaVersion'])
+          && request.resource.data.businessId == businessId
+          && request.resource.data.schemaVersion == 1
+          && request.resource.data.next == (resource == null ? 1 : resource.data.next) + 1
+          && request.resource.data.lastOrderId is string
+          && !exists(orderPath(request.resource.data.lastOrderId))
+          && getAfter(orderPath(request.resource.data.lastOrderId)).data.orderNumber == request.resource.data.next - 1;
+        allow delete: if false;
+      }
+
+      match /orders/{orderId} {
+        function zeroAmount(v) { return v != null && int(v.unitsText) == 0; }
+        function openedOrder(d) {
+          return d.status == 'draft' && d.paymentStatus == 'pending' && d.closedAt == null && d.paymentMethod == null
+            && zeroAmount(d.subtotalAmount) && zeroAmount(d.discountAmount) && zeroAmount(d.discountPercentage)
+            && zeroAmount(d.taxAmount) && zeroAmount(d.tipAmount) && zeroAmount(d.totalAmount)
+            && zeroAmount(d.itemsTotal) && d.ledgerRevision == 0 && d.ledgerItemId == null && d.get('lastAuditId', null) == null;
+        }
+        function counterPath() { return scopedPath('restaurantCounters', 'orders'); }
+        function numberedOrder(d) {
+          return d.orderNumber == (exists(counterPath()) ? get(counterPath()).data.next : 1)
+            && getAfter(counterPath()).data.lastOrderId == orderId;
+        }
+        // One line changed with this write; itemsTotal moves by exactly its active amount after minus before.
+        function ledgerMoved(before, d) {
+          let itemPath = scopedPath('orderItems', d.ledgerItemId);
+          let lineBefore = exists(itemPath) ? get(itemPath).data : null;
+          let lineAfter = existsAfter(itemPath) ? getAfter(itemPath).data : null;
+          let scale = d.itemsTotal.scale;
+          return d.ledgerItemId is string
+            && d.ledgerRevision == before.get('ledgerRevision', 0) + 1
+            && sfDecimal(d.itemsTotal)
+            && (lineBefore != null || lineAfter != null)
+            && (lineBefore == null || lineBefore.orderId == orderId)
+            && (lineAfter == null || lineAfter.orderId == orderId)
+            && int(d.itemsTotal.unitsText) == unitsAt(decimalOrZero(before.get('itemsTotal', null)), scale)
+              + lineUnitsAt(lineAfter, scale) - lineUnitsAt(lineBefore, scale);
+        }
+        // OrderModal save and payment: total = max(0, itemsTotal - discount_amount).
+        function netTotal(d) {
+          let items = decimalOrZero(d.get('itemsTotal', null));
+          let discount = decimalOrZero(d.discountAmount);
+          let inner = items.scale > discount.scale ? items.scale : discount.scale;
+          let scale = inner > d.totalAmount.scale ? inner : d.totalAmount.scale;
+          let net = unitsAt(items, scale) - unitsAt(discount, scale);
+          return unitsAt(d.totalAmount, scale) == (net > 0 ? net : 0);
+        }
+        // tax = total * 0.17 / 1.17 as the screens compute it in floating point.
+        function taxMatches(d) {
+          return math.abs(sfDecimalValue(d.taxAmount) - sfDecimalValue(d.totalAmount) * 17.0 / 117.0) <= 0.005;
+        }
+        // EditRestaurantOrderModal: total = the line sum; subtotal and tax split from it.
+        function editedTotals(d) {
+          return decimalEqual(d.totalAmount, decimalOrZero(d.get('itemsTotal', null)))
+            && math.abs(sfDecimalValue(d.subtotalAmount) - sfDecimalValue(d.totalAmount) / 1.17) <= 0.005
+            && math.abs(sfDecimalValue(d.taxAmount) - (sfDecimalValue(d.totalAmount) - sfDecimalValue(d.subtotalAmount))) <= 0.005;
+        }
+        function auditBound(d, action) {
+          let path = scopedPath('restaurantAuditLogs', d.lastAuditId);
+          return d.lastAuditId is string && !exists(path)
+            && getAfter(path).data.actionType == action && getAfter(path).data.entityId == orderId;
+        }
+        // apply_discount_secure: percentage of subtotal_amount (exact, scale widened by the /100), or a fixed amount, or reset.
+        function percentageDiscount(sub, pct, amt, d) {
+          let scale = sub.scale + pct.scale + 2;
+          let discountUnits = int(sub.unitsText) * int(pct.unitsText);
+          let net = int(sub.unitsText) * pow10(pct.scale + 2) - discountUnits;
+          return amt.scale <= scale && d.totalAmount.scale <= scale && d.discountReason is string
+            && unitsAt(amt, scale) == discountUnits && unitsAt(d.totalAmount, scale) == (net > 0 ? net : 0);
+        }
+        function amountDiscount(sub, amt, d) {
+          let inner = sub.scale > amt.scale ? sub.scale : amt.scale;
+          let scale = inner > d.totalAmount.scale ? inner : d.totalAmount.scale;
+          let net = unitsAt(sub, scale) - unitsAt(amt, scale);
+          return int(d.discountPercentage.unitsText) == 0 && d.discountReason is string
+            && unitsAt(d.totalAmount, scale) == (net > 0 ? net : 0);
+        }
+        function discountApplied(before, d) {
+          let sub = decimalOrZero(before.subtotalAmount);
+          let pct = decimalOrZero(d.discountPercentage);
+          let amt = decimalOrZero(d.discountAmount);
+          return int(pct.unitsText) > 0 ? percentageDiscount(sub, pct, amt, d)
+            : int(amt.unitsText) > 0 ? amountDiscount(sub, amt, d)
+            : int(pct.unitsText) == 0 && int(amt.unitsText) == 0 && d.discountReason == null && decimalEqual(d.totalAmount, sub);
+        }
+        // The source marks an order refunded when the refund amount is within 0.01 of total_amount.
+        function refundCoversTotal(before, d) {
+          let audit = getAfter(scopedPath('restaurantAuditLogs', d.lastAuditId)).data;
+          return audit.get('detailsEncoding', null) == 'native' && audit.details.get('amount', null) is number
+            && math.abs(float(audit.details.amount) - sfDecimalValue(decimalOrZero(before.totalAmount))) < 0.01;
+        }
+        function orderUpdate(changed, before, d) {
+          return (changed.hasOnly(['itemsTotal', 'ledgerRevision', 'ledgerItemId'])
+              && (openStatus(before.status) ? orderTaker() : restaurantManager())
+              && ledgerMoved(before, d))
+            || (changed.hasOnly(['status', 'tableId', 'sessionId', 'notes', 'isRush', 'isVip', 'courseNumber', 'guestId', 'orderType'])
+              && orderTaker() && openStatus(before.status) && openStatus(d.status)
+              && svu_restaurant_orders(changed, d))
+            || (changed.hasOnly(['totalAmount', 'taxAmount'])
+              && orderTaker() && openStatus(before.status)
+              && svu_restaurant_orders(changed, d) && netTotal(d) && taxMatches(d))
+            || (changed.hasOnly(['status', 'closedAt', 'closedAtMicros', 'paymentMethod', 'totalAmount', 'taxAmount'])
+              && orderTaker() && openStatus(before.status)
+              && d.status == 'closed' && d.closedAt == request.time && d.paymentMethod in ['cash', 'card', 'split']
+              && svu_restaurant_orders(changed, d) && netTotal(d) && taxMatches(d))
+            || (changed.hasOnly(['totalAmount', 'subtotalAmount', 'taxAmount'])
+              && restaurantManager() && svu_restaurant_orders(changed, d) && editedTotals(d))
+            || (changed.hasOnly(['discountPercentage', 'discountAmount', 'discountReason', 'totalAmount', 'lastAuditId'])
+              && restaurantManager() && openStatus(before.status)
+              && svu_restaurant_orders(changed, d) && auditBound(d, 'APPLY_DISCOUNT') && discountApplied(before, d))
+            || (changed.hasOnly(['status', 'notes', 'closedAt', 'closedAtMicros', 'lastAuditId'])
+              && restaurantManager() && before.status != 'cancelled' && d.status == 'cancelled'
+              && (!('closedAt' in changed) || d.closedAt == request.time)
+              && svu_restaurant_orders(changed, d) && auditBound(d, 'ORDER_CANCELLED'))
+            || (changed.hasOnly(['paymentStatus', 'closedAt', 'closedAtMicros', 'lastAuditId'])
+              && restaurantManager() && d.paymentStatus == 'refunded' && d.closedAt == request.time
+              && svu_restaurant_orders(changed, d) && auditBound(d, 'REFUND') && refundCoversTotal(before, d))
+            || (changed.hasOnly(['serverId']) && restaurantManager() && d.serverId == null);
+        }
+        allow get, list: if restaurantReader();
+        allow create: if orderTaker()
+          && sv_restaurant_orders(request.resource.data)
+          && request.resource.data.id == orderId
+          && ownerScoped(request.resource.data)
+          && openedOrder(request.resource.data)
+          && numberedOrder(request.resource.data);
+        allow update: if orderUpdate(request.resource.data.diff(resource.data).affectedKeys(), resource.data, request.resource.data);
+        allow delete: if restaurantManager();
+      }
+
+      match /orderItems/{itemId} {
+        function lineUnchanged(before, d) {
+          return activeLine(before) == activeLine(d)
+            && (!activeLine(d) || (before.quantity == d.quantity && before.priceAtTime == d.priceAtTime));
+        }
+        function ledgerBound(orderId) {
+          let before = get(orderPath(orderId)).data;
+          let after = getAfter(orderPath(orderId)).data;
+          return after.get('ledgerItemId', null) == itemId && after.get('ledgerRevision', 0) == before.get('ledgerRevision', 0) + 1;
+        }
+        // Lines of an open order belong to the floor; a closed or cancelled order is changed only by a manager.
+        function lineWriter(orderId) {
+          return openStatus(getAfter(orderPath(orderId)).data.status) ? orderTaker() : restaurantManager();
+        }
+        // A waiter sells at the menu price; price overrides (analytics edit, business lunch) are the managers'.
+        function pricedLine(d) {
+          return restaurantManager()
+            || (d.itemId != null && decimalEqual(d.priceAtTime, get(scopedPath('menuItems', d.itemId)).data.price));
+        }
+        function editedLine(changed, before, d) {
+          return changed.hasOnly(['itemId', 'quantity', 'priceAtTime', 'notes', 'courseNumber', 'seatNumber', 'isFired', 'status',
+              'voided', 'voidReason'])
+            && svu_restaurant_order_items(changed, d)
+            && lineWriter(d.orderId)
+            && (!changed.hasAny(['priceAtTime', 'itemId']) || pricedLine(d))
+            && (d.itemId == null || !('itemId' in changed) || exists(scopedPath('menuItems', d.itemId)))
+            && ((activeLine(d) || !activeLine(before)) || restaurantManager())
+            && (lineUnchanged(before, d) || ledgerBound(d.orderId));
+        }
+        // sendToKitchen: the line records the ticket line it was sent with, once.
+        function sentToKitchen(changed, before, d) {
+          return changed.hasOnly(['ticketItemId'])
+            && before.get('ticketItemId', null) == null && d.ticketItemId is string
+            && orderTaker()
+            && !exists(scopedPath('ticketItems', d.ticketItemId))
+            && getAfter(scopedPath('ticketItems', d.ticketItemId)).data.orderItemId == itemId;
+        }
+        // Cancelling an order cancels its lines in the same write; a cancelled order has no ledger to keep.
+        function cancelledWithOrder(changed, d) {
+          return changed.hasOnly(['status', 'voided', 'voidReason'])
+            && restaurantManager()
+            && getAfter(orderPath(d.orderId)).data.status == 'cancelled'
+            && svu_restaurant_order_items(changed, d);
+        }
+        allow get, list: if restaurantReader();
+        allow create: if sv_restaurant_order_items(request.resource.data)
+          && request.resource.data.id == itemId
+          && restaurantTenancy(request.resource.data)
+          && existsAfter(orderPath(request.resource.data.orderId))
+          && lineWriter(request.resource.data.orderId)
+          && request.resource.data.status == 'pending' && request.resource.data.voided == false
+          && request.resource.data.ticketItemId == null
+          && (request.resource.data.itemId == null || exists(scopedPath('menuItems', request.resource.data.itemId)))
+          && pricedLine(request.resource.data)
+          && ledgerBound(request.resource.data.orderId);
+        allow update: if sentToKitchen(request.resource.data.diff(resource.data).affectedKeys(), resource.data, request.resource.data)
+          || cancelledWithOrder(request.resource.data.diff(resource.data).affectedKeys(), request.resource.data)
+          || editedLine(request.resource.data.diff(resource.data).affectedKeys(), resource.data, request.resource.data);
+        // A line goes with its order (ON DELETE CASCADE), or alone with its ledger change.
+        allow delete: if restaurantManager()
+          && (!existsAfter(orderPath(resource.data.orderId)) || ledgerBound(resource.data.orderId));
+      }
+
+      match /orderItemModifiers/{linkId} {
+        allow get, list: if restaurantReader();
+        allow create, update: if false;
+        allow delete: if restaurantManager() && !existsAfter(scopedPath('orderItems', resource.data.orderItemId));
+      }
+
+      match /kitchenTickets/{ticketId} {
+        function ticketTableName(order) {
+          return order.tableId != null && exists(scopedPath('tables', order.tableId))
+            ? get(scopedPath('tables', order.tableId)).data.name : 'Counter';
+        }
+        function openedTicket(d) {
+          return sv_restaurant_kitchen_tickets(d)
+            && d.id == ticketId
+            && ownerScoped(d)
+            && d.status == 'new' && d.priority == 0
+            && d.startedAt == null && d.completedAt == null && d.servedAt == null
+            && d.tableName == ticketTableName(get(orderPath(d.orderId)).data);
+        }
+        function ticketProgress(changed, d) {
+          return changed.hasOnly(['status', 'startedAt', 'startedAtMicros', 'completedAt', 'completedAtMicros', 'servedAt', 'servedAtMicros'])
+            && kitchenActor()
+            && svu_restaurant_kitchen_tickets(changed, d)
+            && (!('startedAt' in changed) || d.startedAt == request.time)
+            && (!('completedAt' in changed) || d.completedAt == request.time)
+            && (!('servedAt' in changed) || d.servedAt == request.time);
+        }
+        allow get, list: if restaurantReader();
+        allow create: if orderTaker() && openedTicket(request.resource.data);
+        allow update: if ticketProgress(request.resource.data.diff(resource.data).affectedKeys(), request.resource.data);
+        allow delete: if restaurantManager() && !existsAfter(orderPath(resource.data.orderId));
+      }
+
+      match /ticketItems/{ticketItemId} {
+        // create_kitchen_ticket: one ticket line per fired, not yet sent order line, copied from that line and its menu item.
+        function sentLine(d) {
+          let linePath = scopedPath('orderItems', d.orderItemId);
+          let line = get(linePath).data;
+          let ticketPath = scopedPath('kitchenTickets', d.ticketId);
+          return sv_restaurant_ticket_items(d)
+            && d.id == ticketItemId
+            && restaurantTenancy(d)
+            && d.status == 'pending' && d.startedAt == null && d.completedAt == null && d.modifiersText == null
+            && line.get('ticketItemId', null) == null && line.isFired == true
+            && getAfter(linePath).data.ticketItemId == ticketItemId
+            && getAfter(ticketPath).data.orderId == line.orderId
+            && d.quantity == line.quantity && d.notes == line.notes
+            && d.itemName == get(scopedPath('menuItems', line.itemId)).data.name;
+        }
+        function lineProgress(changed, d) {
+          return changed.hasOnly(['status', 'startedAt', 'startedAtMicros', 'completedAt', 'completedAtMicros'])
+            && kitchenActor()
+            && svu_restaurant_ticket_items(changed, d)
+            && (!('startedAt' in changed) || d.startedAt == request.time)
+            && (!('completedAt' in changed) || d.completedAt == request.time);
+        }
+        allow get, list: if restaurantReader();
+        allow create: if orderTaker() && sentLine(request.resource.data);
+        allow update: if lineProgress(request.resource.data.diff(resource.data).affectedKeys(), request.resource.data);
+        allow delete: if restaurantManager()
+          && (!existsAfter(scopedPath('kitchenTickets', resource.data.ticketId))
+            || !existsAfter(scopedPath('orderItems', resource.data.orderItemId)));
+      }
+
+      match /voidLogs/{logId} {
+        function voidedLine(d) {
+          let linePath = scopedPath('orderItems', d.orderItemId);
+          let before = get(linePath).data;
+          let scale = d.originalAmount.scale > before.priceAtTime.scale ? d.originalAmount.scale : before.priceAtTime.scale;
+          return sv_restaurant_void_logs(d)
+            && d.id == logId
+            && ownerScoped(d)
+            && d.voidType == 'item' && d.performedBy == null && d.createdAt == request.time
+            && d.orderId == before.orderId
+            && activeLine(before) && !activeLine(getAfter(linePath).data)
+            && unitsAt(d.originalAmount, scale) == lineUnitsAt(before, scale)
+            && (d.approvedBy == null || d.approvedBy == membershipOf(businessId).staffId);
+        }
+        allow get, list: if restaurantManager();
+        allow create: if restaurantManager() && voidedLine(request.resource.data);
+        // SET NULL when the order, the line or a staff member is deleted; nothing else ever changes.
+        allow update: if restaurantManager()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['orderId', 'orderItemId', 'approvedBy', 'performedBy'])
+          && (!('orderId' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.orderId == null)
+          && (!('orderItemId' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.orderItemId == null)
+          && (!('approvedBy' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.approvedBy == null)
+          && (!('performedBy' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.performedBy == null);
+        allow delete: if false;
+      }
+
+      match /restaurantAuditLogs/{logId} {
+        function audited(d) {
+          return sv_restaurant_audit_logs(d)
+            && d.id == logId
+            && ownerScoped(d)
+            && d.actorId == request.auth.uid && d.createdAt == request.time
+            && (d.staffId == null || d.staffId == membershipOf(businessId).staffId)
+            && d.entityId is string
+            && (d.actionType == 'VOID_ITEM'
+              ? activeLine(get(scopedPath('orderItems', d.entityId)).data)
+                && !activeLine(getAfter(scopedPath('orderItems', d.entityId)).data)
+              : d.actionType == 'REFUND'
+              ? exists(orderPath(d.entityId))
+              : d.actionType in ['APPLY_DISCOUNT', 'ORDER_CANCELLED']
+                && getAfter(orderPath(d.entityId)).data.get('lastAuditId', null) == logId);
+        }
+        function allergyOverride(d) {
+          return sv_restaurant_audit_logs(d)
+            && d.id == logId
+            && ownerScoped(d)
+            && isActiveOwner(businessId)
+            && d.actorId == request.auth.uid && d.createdAt == request.time
+            && d.actionType == 'ALLERGY_OVERRIDE'
+            && (d.staffId == null || exists(scopedPath('restaurantStaff', d.staffId)));
+        }
+        allow get, list: if restaurantManager();
+        allow create: if (restaurantManager() && audited(request.resource.data)) || allergyOverride(request.resource.data);
+        allow update, delete: if false;
+      }
+
+      match /tableSessions/{sessionId} {
+        allow get, list: if restaurantReader();
+        allow update: if (orderTaker()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'endedAt', 'endedAtMicros'])
+            && request.resource.data.status == 'closed' && request.resource.data.endedAt == request.time
+            && svu_restaurant_table_sessions(request.resource.data.diff(resource.data).affectedKeys(), request.resource.data))
+          || (restaurantManager()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['tableId'])
+            && request.resource.data.tableId == null);
+        allow create, delete: if false;
+      }
+      // ReservationsBoard: seat a waiting party at a table of the business, or mark it left or no-show.
+      match /waitlist/{entryId} {
+        function waitlistUpdate(changed, d) {
+          return svu_restaurant_waitlist(changed, d)
+            && ((changed.hasOnly(['status', 'seatedAt', 'seatedAtMicros', 'tableId'])
+                && d.status == 'seated' && d.seatedAt == request.time
+                && d.tableId is string && exists(scopedPath('tables', d.tableId)))
+              || (changed.hasOnly(['status']) && d.status in ['left', 'no_show']));
+        }
+        allow get, list: if restaurantReader();
+        allow update: if (restaurantManager()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['tableId'])
+            && request.resource.data.tableId == null)
+          || (orderTaker() && waitlistUpdate(request.resource.data.diff(resource.data).affectedKeys(), request.resource.data));
+        allow create, delete: if false;
+      }
+      match /reservations/{reservationId} {
+        // reservation_date + reservation_time as a UTC timestamp, whole seconds.
+        function slotOf(d) {
+          let day = d.reservationDate.split('-');
+          let clock = d.reservationTime.split('[.]')[0].split(':');
+          return timestamp.date(int(day[0]), int(day[1]), int(day[2]))
+            + duration.time(int(clock[0]), int(clock[1]), int(clock[2]), 0);
+        }
+        // trg_validate_reservation_datetime and CHECK (reservation_date >= CURRENT_DATE), on INSERT and on UPDATE.
+        function bookable(d) {
+          return d.reservationTime.matches('[0-9]{2}:[0-9]{2}:[0-9]{2}([.][0-9]{1,6})?')
+            && slotOf(d) >= request.time
+            && d.partySize >= 1 && d.partySize <= 50
+            && (d.durationMinutes == null || (d.durationMinutes >= 15 && d.durationMinutes <= 480));
+        }
+        function reservationTenancy(d) {
+          return d.businessId == businessId && d.ownerUid == bizOwnerUid() && d.isDeleted == false
+            && d.legacyBusinessUserId == bizOwnerUid() && d.createdBy == null;
+        }
+        allow get, list: if restaurantReader();
+        allow create: if orderTaker()
+          && sv_restaurant_reservations(request.resource.data)
+          && request.resource.data.id == reservationId
+          && reservationTenancy(request.resource.data)
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.status == 'pending' && request.resource.data.seatedAt == null
+          && (request.resource.data.guestId == null || exists(scopedPath('guestProfiles', request.resource.data.guestId)))
+          && bookable(request.resource.data);
+        allow update: if orderTaker()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'seatedAt', 'seatedAtMicros'])
+          && svu_restaurant_reservations(request.resource.data.diff(resource.data).affectedKeys(), request.resource.data)
+          && (!('seatedAt' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.seatedAt == request.time)
+          && bookable(request.resource.data);
+        allow delete: if false;
+      }
+      // GuestProfiles: the detail panel edits what a host records about a guest; visits and spend stay out of reach.
+      match /guestProfiles/{guestId} {
+        allow get, list: if restaurantReader();
+        allow update: if restaurantManager()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['firstName', 'lastName', 'fullName', 'phone', 'email',
+            'favoriteItems', 'dietaryRestrictions', 'allergies', 'seatingPreference', 'noisePreference', 'preferredServerId', 'notes', 'tags',
+            'birthdate', 'anniversary', 'vipLevel', 'marketingOptIn', 'whatsappOptIn', 'updatedAt', 'updatedAtMicros'])
+          && request.resource.data.updatedAt == request.time
+          && svu_restaurant_guest_profiles(request.resource.data.diff(resource.data).affectedKeys(), request.resource.data)
+          && (request.resource.data.preferredServerId == null
+            || exists(scopedPath('restaurantStaff', request.resource.data.preferredServerId)));
+        allow create, delete: if false;
+      }
+      // Flows only unmounted screens reach (payments, reports, modifiers, cash): read-only.
+      match /modifierGroups/{groupId} { allow get, list: if restaurantReader(); allow write: if false; }
+      match /modifiers/{modifierId} { allow get, list: if restaurantReader(); allow write: if false; }
+      match /dailyReports/{reportId} { allow get, list: if restaurantManager(); allow write: if false; }
+      match /cashDrawers/{drawerId} { allow get, list: if restaurantManager(); allow write: if false; }
+      match /cashTransactions/{transactionId} { allow get, list: if restaurantManager(); allow write: if false; }
+      match /restaurantPayments/{paymentId} {
+        allow get, list: if restaurantManager();
+        allow create, update: if false;
+        allow delete: if restaurantManager() && !existsAfter(orderPath(resource.data.orderId));
       }
     }
 

@@ -149,14 +149,20 @@ test('products are created, listed when available, and updated; a vanished produ
   await s.a.market.updateProduct('00000000-0000-4000-8000-00000000dead', { price: 1 });
   const hidden = validProduct(s.a, s.a.uid, s.a.businessId, { name: 'Out of stock', is_available: false });
   await setDoc(doc(menuItems(s.a, s.a.businessId), hidden.id), hidden.data);
-  // A migrated row whose business_id is NULL reaches its owner through the category. No supermarket
-  // flow creates one, and a client may not: the fixture is written, then detached by the operator path.
-  const tenancyByCategory = validProduct(s.a, s.a.uid, s.a.businessId, { name: 'Category-owned', category_id: s.categoryId });
-  const detached = validProduct(s.a, s.a.uid, s.a.businessId, { name: 'Detached', business_id: null, category_id: s.categoryId });
-  await assert.rejects(() => setDoc(doc(menuItems(s.a, s.a.businessId), detached.id), detached.data), denied,
-    'a client cannot create an item outside its own business_id');
+  // A row whose business_id is NULL reaches its owner through the category. The source RLS WITH CHECK admits it
+  // (business_id = auth.uid() OR the category is the owner's), and the restaurant settings screen creates such
+  // items; no supermarket flow does. Without a category of this business it is refused.
+  const tenancyByCategory = validProduct(s.a, s.a.uid, s.a.businessId, { name: 'Category-owned', business_id: null, category_id: s.categoryId });
+  for (const [name, overrides] of [
+    ['no category', { business_id: null, category_id: null }],
+    ['a category that does not exist', { business_id: null, category_id: '00000000-0000-4000-8000-00000000cafe' }],
+    ["another business's owner uid", { business_id: s.b.uid, category_id: s.categoryId }],
+  ]) {
+    const orphan = validProduct(s.a, s.a.uid, s.a.businessId, { name: `Detached: ${name}`, ...overrides });
+    await assert.rejects(() => setDoc(doc(menuItems(s.a, s.a.businessId), orphan.id), orphan.data), denied,
+      `a client cannot create an item outside its business: ${name}`);
+  }
   await setDoc(doc(menuItems(s.a, s.a.businessId), tenancyByCategory.id), tenancyByCategory.data);
-  await bypass.update(`businesses/${s.a.businessId}/menuItems/${tenancyByCategory.id}`, { legacyBusinessUserId: null });
   const visible = (await s.a.market.listAvailableProducts(s.a.uid)).map((row) => row.name);
   assert.deepEqual(visible, ['Milk 1L'], 'unavailable and NULL-business_id items are excluded, as the source query excludes them');
 });

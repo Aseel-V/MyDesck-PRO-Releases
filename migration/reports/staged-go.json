@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-09-15T11:41:23.461Z",
+  "generatedAt": "2026-09-15T21:04:28.595Z",
   "readOnly": true,
   "productionMutations": 0,
   "architecture": "FIREBASE_AUTH_FIRESTORE_PLUS_SUPABASE_STORAGE_ONLY",
   "inputs": {
-    "activeProductParity": "2026-09-15T11:25:53.896Z",
+    "activeProductParity": "2026-09-15T20:37:36.426Z",
     "hybridStorageAuthProbe": "2026-09-14T09:43:52.719Z",
     "liveVerticalInventory": "2026-09-15T11:34:47.009Z",
-    "dryRun": "2026-09-15T11:39:37.705Z",
-    "harness": "PASS 38/38"
+    "dryRun": "2026-09-15T21:04:13.338Z",
+    "harness": "PASS 39/39"
   },
   "verticals": [
     {
@@ -70,21 +70,21 @@
   ],
   "supabaseRuntime": {
     "shippedProduct": {
-      "database": 169,
-      "rpc": 45,
+      "database": 159,
+      "rpc": 34,
       "auth": 13,
       "databaseRealtime": 2,
       "storage": 7
     },
     "firebaseRoot": {
-      "supabaseDatabase": 134,
-      "supabaseRpc": 42,
-      "supabaseAuth": 1,
-      "supabaseRealtime": 2,
+      "supabaseDatabase": 42,
+      "supabaseRpc": 30,
+      "supabaseAuth": 0,
+      "supabaseRealtime": 0,
       "supabaseEdgeFunctions": 1,
       "supabaseStorage": 7,
-      "firestore": 9,
-      "genericSupabaseClientImports": 31,
+      "firestore": 10,
+      "genericSupabaseClientImports": 22,
       "supabaseAdapterImports": 0
     },
     "targets": {

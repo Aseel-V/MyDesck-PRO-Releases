@@ -35,6 +35,7 @@ import { FirebaseSession } from '../../../src/data/firestore/FirebaseSession.ts'
 import { FirestoreSupermarketRepository } from '../../../src/data/firestore/FirestoreSupermarketRepository.ts';
 import { FirestoreAutoRepairRepository } from '../../../src/data/firestore/FirestoreAutoRepairRepository.ts';
 import { FirestoreCarPartsRepository } from '../../../src/data/firestore/FirestoreCarPartsRepository.ts';
+import { FirestoreRestaurantRepository } from '../../../src/data/firestore/FirestoreRestaurantRepository.ts';
 import { SOURCE_SCHEMA } from '../../../src/data/firestore/sourceSchema.generated.ts';
 import { encodeInsert } from '../../../src/data/firestore/documentCodec.ts';
 import { timestampToMicros } from '../../../src/data/firestore/exactValues.ts';
@@ -168,6 +169,160 @@ const SPECS = {
         build: (tenant) => ({ table: 'car_parts', row: { business_id: tenant.businessId, part_name: 'Corruption control', quantity: 1 } }) },
     ],
   },
+  restaurant: {
+    businessType: 'restaurant',
+    repository: (session) => new FirestoreRestaurantRepository(session),
+    methods: [
+      { name: 'listTables', table: 'restaurant_tables', order: 'name',
+        sql: agg('SELECT * FROM public.restaurant_tables WHERE business_id = $1 ORDER BY name LIMIT 1000'),
+        params: (tenant) => [tenant.uid], call: (repo, tenant) => repo.listTables(tenant.uid) },
+      { name: 'listMenu', table: 'restaurant_menu_categories', order: 'sort_order',
+        embeds: { items: { table: 'restaurant_menu_items', many: true } },
+        sql: agg(`SELECT c.*, COALESCE((SELECT json_agg(i) FROM public.restaurant_menu_items i WHERE i.category_id = c.id), '[]'::json) AS items
+          FROM public.restaurant_menu_categories c WHERE c.business_id = $1 ORDER BY c.sort_order LIMIT 1000`),
+        params: (tenant) => [tenant.uid], call: (repo, tenant) => repo.listMenu(tenant.uid) },
+      { name: 'listModifierGroups', table: 'restaurant_modifier_groups', order: 'sort_order',
+        embeds: { modifiers: { table: 'restaurant_modifiers', many: true } },
+        sql: agg(`SELECT g.*, COALESCE((SELECT json_agg(m) FROM public.restaurant_modifiers m WHERE m.group_id = g.id), '[]'::json) AS modifiers
+          FROM public.restaurant_modifier_groups g WHERE g.business_id = $1 ORDER BY g.sort_order LIMIT 1000`),
+        params: (tenant) => [tenant.uid], call: (repo, tenant) => repo.listModifierGroups(tenant.uid) },
+      { name: 'listStaff', table: 'restaurant_staff', order: 'full_name',
+        sql: agg('SELECT * FROM public.restaurant_staff WHERE business_id = $1 ORDER BY full_name LIMIT 1000'),
+        params: (tenant) => [tenant.uid], call: (repo, tenant) => repo.listStaff(tenant.uid) },
+      { name: 'listActiveOrders', table: 'restaurant_orders', order: 'created_at',
+        embeds: { items: { table: 'restaurant_order_items', many: true }, table: { table: 'restaurant_tables', many: false },
+          server: { table: 'restaurant_staff', many: false } },
+        sql: agg(`SELECT o.*, COALESCE((SELECT json_agg(i) FROM public.restaurant_order_items i WHERE i.order_id = o.id), '[]'::json) AS items,
+          (SELECT to_json(t) FROM public.restaurant_tables t WHERE t.id = o.table_id) AS "table",
+          (SELECT to_json(st) FROM public.restaurant_staff st WHERE st.id = o.server_id) AS server
+          FROM public.restaurant_orders o WHERE o.business_id = $1 AND o.status NOT IN ('closed', 'cancelled') ORDER BY o.created_at DESC LIMIT 1000`),
+        params: (tenant) => [tenant.uid], call: (repo, tenant) => repo.listActiveOrders(tenant.uid) },
+      // Analytics reads closed orders without a business filter and relies on RLS; the oracle states that for the owner.
+      { name: 'listClosedOrders', table: 'restaurant_orders', order: 'closed_at',
+        embeds: { items: { table: 'restaurant_order_items', many: true }, table: { table: 'restaurant_tables', many: false },
+          server: { table: 'restaurant_staff', many: false } },
+        sql: agg(`SELECT o.*, COALESCE((SELECT json_agg(i) FROM public.restaurant_order_items i WHERE i.order_id = o.id), '[]'::json) AS items,
+          (SELECT to_json(t) FROM public.restaurant_tables t WHERE t.id = o.table_id) AS "table",
+          (SELECT to_json(st) FROM public.restaurant_staff st WHERE st.id = o.server_id) AS server
+          FROM public.restaurant_orders o WHERE o.business_id = $1 AND o.status = 'closed' AND o.closed_at >= $2 AND o.closed_at <= $3
+          ORDER BY o.closed_at DESC LIMIT 1000`),
+        params: (tenant) => [tenant.uid, ...RANGE], call: (repo) => repo.listClosedOrders(...RANGE) },
+      { name: 'listKitchenTickets', table: 'restaurant_kitchen_tickets', order: 'created_at',
+        embeds: { items: { table: 'restaurant_ticket_items', many: true }, order: { table: 'restaurant_orders', many: false } },
+        sql: agg(`SELECT k.*, COALESCE((SELECT json_agg(ti) FROM public.restaurant_ticket_items ti WHERE ti.ticket_id = k.id), '[]'::json) AS items,
+          (SELECT to_json(o) FROM public.restaurant_orders o WHERE o.id = k.order_id) AS "order"
+          FROM public.restaurant_kitchen_tickets k WHERE k.business_id = $1 AND k.status IN ('new', 'in_progress', 'ready')
+          ORDER BY k.created_at ASC LIMIT 1000`),
+        params: (tenant) => [tenant.uid], call: (repo, tenant) => repo.listKitchenTickets(tenant.uid) },
+      { name: 'listActiveSessions', table: 'restaurant_table_sessions', order: 'started_at',
+        embeds: { table: { table: 'restaurant_tables', many: false }, server: { table: 'restaurant_staff', many: false },
+          orders: { table: 'restaurant_orders', many: true } },
+        sql: agg(`SELECT s.*, (SELECT to_json(t) FROM public.restaurant_tables t WHERE t.id = s.table_id) AS "table",
+          (SELECT to_json(st) FROM public.restaurant_staff st WHERE st.id = s.server_id) AS server,
+          COALESCE((SELECT json_agg(o) FROM public.restaurant_orders o WHERE o.session_id = s.id), '[]'::json) AS orders
+          FROM public.restaurant_table_sessions s WHERE s.business_id = $1 AND s.status = 'active' ORDER BY s.started_at DESC LIMIT 1000`),
+        params: (tenant) => [tenant.uid], call: (repo, tenant) => repo.listActiveSessions(tenant.uid) },
+      { name: 'listDailyReports', table: 'restaurant_daily_reports', order: 'date',
+        sql: agg('SELECT * FROM public.restaurant_daily_reports WHERE business_id = $1 ORDER BY date DESC LIMIT 30'),
+        params: (tenant) => [tenant.uid], call: (repo, tenant) => repo.listDailyReports(tenant.uid) },
+      { name: 'getOrCreateBusinessSettings', table: 'business_settings', order: null,
+        sql: agg('SELECT * FROM public.business_settings WHERE business_id = $1'),
+        params: (tenant) => [tenant.uid], call: async (repo, tenant) => [await repo.getOrCreateBusinessSettings(tenant.uid)] },
+    ],
+    inventory: [
+      ...['tables:restaurant_tables', 'menuCategories:restaurant_menu_categories', 'restaurantStaff:restaurant_staff', 'orders:restaurant_orders',
+        'kitchenTickets:restaurant_kitchen_tickets', 'restaurantAuditLogs:restaurant_audit_logs', 'voidLogs:restaurant_void_logs',
+        'tableSessions:restaurant_table_sessions', 'restaurantPayments:restaurant_payments', 'reservations:restaurant_reservations',
+        'waitlist:restaurant_waitlist', 'guestProfiles:restaurant_guest_profiles', 'modifierGroups:restaurant_modifier_groups',
+        'dailyReports:restaurant_daily_reports', 'settings:business_settings'].map((pair) => {
+        const [name, table] = pair.split(':');
+        return { collection: name, tenancy: { field: 'legacyBusinessUserId', of: 'uid', nullable: false },
+          sql: `SELECT id::text AS id FROM public.${table} WHERE business_id = $1`, params: (tenant) => [tenant.uid] };
+      }),
+      { collection: 'menuItems', tenancy: { field: 'legacyBusinessUserId', of: 'uid', nullable: true },
+        sql: `SELECT id::text AS id FROM public.restaurant_menu_items WHERE business_id = $1
+          OR category_id IN (SELECT id FROM public.restaurant_menu_categories WHERE business_id = $1)`, params: (tenant) => [tenant.uid] },
+      { collection: 'orderItems', tenancy: null,
+        sql: `SELECT i.id::text AS id FROM public.restaurant_order_items i JOIN public.restaurant_orders o ON o.id = i.order_id
+          WHERE o.business_id = $1`, params: (tenant) => [tenant.uid] },
+      { collection: 'ticketItems', tenancy: null,
+        sql: `SELECT ti.id::text AS id FROM public.restaurant_ticket_items ti JOIN public.restaurant_kitchen_tickets k ON k.id = ti.ticket_id
+          WHERE k.business_id = $1`, params: (tenant) => [tenant.uid] },
+      { collection: 'restaurantCounters', tenancy: null, derived: true,
+        sql: `SELECT 'orders' AS id FROM public.restaurant_orders WHERE business_id = $1 LIMIT 1`, params: (tenant) => [tenant.uid] },
+    ],
+    // What the Rules check on every later edit, derived at import from the same snapshot: each order's exact sum of
+    // active lines, each line's ticket line, and the next order number.
+    derivedSource: async (select, tenant) => ({
+      itemsTotal: Object.fromEntries((await select(`SELECT o.id::text AS id,
+        coalesce((SELECT sum(i.price_at_time * i.quantity) FROM public.restaurant_order_items i
+          WHERE i.order_id = o.id AND i.status IS DISTINCT FROM 'cancelled' AND NOT coalesce(i.voided, false)), 0)::text AS total
+        FROM public.restaurant_orders o WHERE o.business_id = $1`, [tenant.uid])).rows.map((row) => [row.id, row.total])),
+      ticketItem: Object.fromEntries((await select(`SELECT DISTINCT ON (i.id) i.id::text AS id, t.id::text AS ticket_item
+        FROM public.restaurant_order_items i JOIN public.restaurant_orders o ON o.id = i.order_id
+        LEFT JOIN public.restaurant_ticket_items t ON t.order_item_id = i.id
+        WHERE o.business_id = $1 ORDER BY i.id, t.created_at DESC NULLS LAST, t.id DESC`, [tenant.uid])).rows.map((row) => [row.id, row.ticket_item])),
+      counterNext: (await select('SELECT max(order_number)::int + 1 AS next FROM public.restaurant_orders WHERE business_id = $1', [tenant.uid])).rows[0].next,
+    }),
+    derivedCheck: async (tenant) => {
+      const base = `businesses/${encodeURIComponent(tenant.businessId)}`;
+      const exact = (text) => {
+        const [whole, fraction = ''] = String(text).replace('-', '').split('.');
+        return { units: BigInt(`${String(text).startsWith('-') ? '-' : ''}${whole}${fraction}`), scale: fraction.length };
+      };
+      const same = (fields, text) => {
+        if (!fields?.unitsText?.stringValue) return false;
+        const target = { units: BigInt(fields.unitsText.stringValue), scale: Number(fields.scale.integerValue) };
+        const source = exact(text);
+        const scale = Math.max(target.scale, source.scale);
+        return target.units * 10n ** BigInt(scale - target.scale) === source.units * 10n ** BigInt(scale - source.scale);
+      };
+      let checked = 0;
+      let mismatches = 0;
+      for (const order of await listDocuments(`${base}/orders`)) {
+        checked += 1;
+        const expected = tenant.derived.itemsTotal[docId(order)];
+        if (expected === undefined || !same(order.fields?.itemsTotal?.mapValue?.fields, expected)
+          || order.fields?.ledgerRevision?.integerValue !== '0' || !('ledgerItemId' in (order.fields ?? {}))) mismatches += 1;
+      }
+      for (const line of await listDocuments(`${base}/orderItems`)) {
+        checked += 1;
+        const expected = tenant.derived.ticketItem[docId(line)];
+        if (expected === undefined || !('ticketItemId' in (line.fields ?? {}))
+          || (line.fields.ticketItemId.stringValue ?? null) !== (expected ?? null)) mismatches += 1;
+      }
+      if (tenant.derived.counterNext !== null) {
+        checked += 1;
+        const counter = (await listDocuments(`${base}/restaurantCounters`)).find((document) => docId(document) === 'orders');
+        if (!counter || counter.fields?.next?.integerValue !== String(tenant.derived.counterNext)) mismatches += 1;
+      }
+      return { checked, mismatches };
+    },
+    controls: [
+      { name: 'closed order total changed', collection: 'orders', check: { method: 'listClosedOrders' }, metric: 'fieldMismatches', kind: 'patch',
+        mutate: (fields) => ({ ...fields, totalAmount: differentDecimal(fields.totalAmount, 0) }) },
+      { name: 'order moved to another owner', collection: 'orders', check: { method: 'listClosedOrders' }, metric: 'fieldMismatches', kind: 'patch',
+        mutate: (fields) => ({ ...fields, legacyBusinessUserId: { stringValue: 'corruption-control-owner' } }) },
+      { name: 'order line deleted', collection: 'orderItems', check: { method: 'listClosedOrders' }, metric: 'fieldMismatches', kind: 'delete' },
+      { name: 'order ledger no longer the sum of its lines', collection: 'orders', check: { derived: true }, metric: 'mismatches', kind: 'patch',
+        mutate: (fields) => ({ ...fields, itemsTotal: differentDecimal(fields.itemsTotal, 0) }) },
+      { name: 'sent line lost its ticket link', collection: 'orderItems', check: { derived: true }, metric: 'mismatches', kind: 'patch',
+        mutate: (fields) => ({ ...fields, ticketItemId: { nullValue: null } }) },
+      { name: 'order number counter rewound', collection: 'restaurantCounters', check: { derived: true }, metric: 'mismatches', kind: 'patch',
+        mutate: (fields) => ({ ...fields, next: { integerValue: '1' } }) },
+      { name: 'table renamed', collection: 'tables', check: { method: 'listTables' }, metric: 'fieldMismatches', kind: 'patch',
+        mutate: (fields) => ({ ...fields, name: { stringValue: 'Corruption control table' } }) },
+      { name: 'menu item price changed', collection: 'menuItems', check: { method: 'listMenu' }, metric: 'fieldMismatches', kind: 'patch',
+        mutate: (fields) => ({ ...fields, price: differentDecimal(fields.price, 0) }) },
+      { name: 'staff hourly rate changed', collection: 'restaurantStaff', check: { method: 'listStaff' }, metric: 'fieldMismatches', kind: 'patch',
+        mutate: (fields) => ({ ...fields, hourlyRate: differentDecimal(fields.hourlyRate, 0) }) },
+      { name: 'audit record deleted', collection: 'restaurantAuditLogs', check: { inventory: 'restaurantAuditLogs' }, metric: 'missing', kind: 'delete' },
+      { name: 'open order that the source does not have', collection: 'orders', check: { method: 'listActiveOrders' }, metric: 'unexpected', kind: 'synthetic',
+        build: (tenant) => ({ table: 'restaurant_orders', row: { business_id: tenant.uid, status: 'open', order_number: 999999, total_amount: 0 } }) },
+      { name: 'kitchen ticket that the source does not have', collection: 'kitchenTickets', check: { method: 'listKitchenTickets' }, metric: 'unexpected', kind: 'synthetic',
+        build: (tenant) => ({ table: 'restaurant_kitchen_tickets', row: { business_id: tenant.uid, order_id: randomUUID(), status: 'new' } }) },
+    ],
+  },
 };
 
 const spec = SPECS[vertical];
@@ -204,10 +359,12 @@ async function signedIn(uid, label) {
 }
 
 /** A value per column in the form both sides agree on: instants as microseconds, NUMERIC as the JS number PostgREST yields. */
+const NEVER_MIGRATED = { restaurant_staff: new Set(['pin_code', 'pin_hash', 'password']) };
 function comparable(table, row) {
   if (row === null || row === undefined) return null;
   const out = {};
   for (const column of SOURCE_SCHEMA[table].columns) {
+    if (NEVER_MIGRATED[table]?.has(column.name)) continue;
     const value = row[column.name];
     if (value === null || value === undefined) out[column.name] = null;
     else if (column.kind === 'timestamp') out[column.name] = String(timestampToMicros(String(value)));
@@ -249,8 +406,9 @@ function compare(method, sourceRows, targetRows) {
   }
   for (const key of target.keys()) if (!source.has(key)) result.unexpected += 1;
   if (method.order && result.missing === 0 && result.unexpected === 0) {
-    const sequence = (rows) => rows.map((row) => (method.order === 'created_at'
-      ? (row.created_at === null || row.created_at === undefined ? 'NULL' : String(timestampToMicros(String(row.created_at))))
+    const instant = SOURCE_SCHEMA[table].columns.find((column) => column.name === method.order)?.kind === 'timestamp';
+    const sequence = (rows) => rows.map((row) => (instant
+      ? (row[method.order] === null || row[method.order] === undefined ? 'NULL' : String(timestampToMicros(String(row[method.order]))))
       : String(row[method.order] ?? 'NULL')));
     if (stable(sequence(sourceRows)) !== stable(sequence(targetRows))) result.orderMismatches += 1;
   }
@@ -334,6 +492,7 @@ try {
       for (const item of spec.inventory) {
         tenant.inventory[item.collection] = (await select(item.sql, item.params(tenant))).rows.map((row) => (item.idOf ? item.idOf(row) : row.id)).sort();
       }
+      if (spec.derivedSource) tenant.derived = await spec.derivedSource(select, tenant);
       if (spec.inventory.some((item) => item.collection === 'vehiclePlates')) {
         tenant.vehiclePlates = new Set((await select(`SELECT id::text AS id, plate_number FROM public.customer_vehicles WHERE business_id = $1`,
           [tenant.businessId])).rows.map((row) => `${row.id}|${row.plate_number}`));
@@ -362,6 +521,7 @@ try {
     const entry = { businessHash: hash(tenant.businessId), ownerHash: hash(tenant.uid), methods: await compareTenant(tenant, repo), inventory: {},
       crossTenant: { attempts: 0, denied: 0 } };
     for (const item of spec.inventory) entry.inventory[item.collection] = await inventoryOf(tenant, item);
+    entry.derived = spec.derivedCheck ? await spec.derivedCheck(tenant) : { checked: 0, mismatches: 0 };
 
     if (intruder) {
       for (const item of spec.inventory.filter((candidate) => !candidate.derived)) {
@@ -402,7 +562,9 @@ try {
       }
       let observed;
       try {
-        if (control.check.method) {
+        if (control.check.derived) {
+          observed = (await spec.derivedCheck(tenant))[control.metric];
+        } else if (control.check.method) {
           const result = (await compareTenant(tenant, repo, control.check.method))[control.check.method];
           observed = [control.metric, ...(control.alsoMetrics ?? [])].reduce((sum, metric) => sum + result[metric], 0);
         } else {
@@ -421,7 +583,8 @@ try {
 
     const finalInventory = {};
     for (const item of spec.inventory) finalInventory[item.collection] = await inventoryOf(tenant, item);
-    entry.restoredClean = clean(await compareTenant(tenant, repo)) && inventoryClean(finalInventory);
+    entry.restoredClean = clean(await compareTenant(tenant, repo)) && inventoryClean(finalInventory)
+      && (!spec.derivedCheck || (await spec.derivedCheck(tenant)).mismatches === 0);
     entry.clean = clean(entry.methods);
     report.tenants.push(entry);
   }
@@ -446,10 +609,12 @@ try {
     controlsApplicable: report.corruptionControls.filter((control) => control.status !== 'NOT_APPLICABLE_NO_ROWS').length,
     controlsDetected: report.corruptionControls.filter((control) => control.status === 'DETECTED').length,
     restoredClean: report.tenants.every((tenant) => tenant.restoredClean),
+    derivedChecked: sum((tenant) => tenant.derived.checked),
+    derivedMismatches: sum((tenant) => tenant.derived.mismatches),
   };
   const t = report.totals;
   report.decision = t.missing === 0 && t.unexpected === 0 && t.fieldMismatches === 0 && t.orderMismatches === 0
-    && t.unknownColumns === 0 && t.orphans === 0 && t.crossTenantAllowed === 0 && t.controlsDetected === t.controlsApplicable
+    && t.unknownColumns === 0 && t.orphans === 0 && t.derivedMismatches === 0 && t.crossTenantAllowed === 0 && t.controlsDetected === t.controlsApplicable
     && t.restoredClean && snapshotEvidence.rejectedWriteSqlState === '25006' && snapshotEvidence.successfulWrites === 0
     && (t.tenants === 0 || t.crossTenantAttempts > 0) ? 'PASS' : 'FAIL';
 } finally {

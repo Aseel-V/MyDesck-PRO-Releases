@@ -174,6 +174,213 @@
       "rpc": [],
       "realtime": [],
       "edgeFunctions": []
+    },
+    "restaurant": {
+      "suites": [
+        ["restaurant repository, Rules, staff roles and malicious clients", "scripts/test-firestore-restaurant.mjs", "typescript"],
+        ["restaurant staff membership Rules", "migration/firestore/tests/restaurant-staff-rules.test.mjs", "node-test"],
+        ["schema validator helper semantics", "scripts/test-firestore-schema-validators.mjs", "node-test"],
+        ["Rules evaluation budget", "scripts/test-firestore-rules-budget.mjs", "typescript"]
+      ],
+      "budgetPathPrefixes": ["restaurant"],
+      "search": [
+        {
+          "surface": "Order modal menu search: name, Hebrew and Arabic names, description",
+          "class": "CLIENT_DERIVED",
+          "status": "PASS",
+          "files": ["src/components/restaurant/OrderModal.tsx"],
+          "evidence": "Filters the listMenu result, proven equal to the source by the dual read; exercised by the browser smoke."
+        },
+        {
+          "surface": "Analytics order edit menu search",
+          "class": "CLIENT_DERIVED",
+          "status": "PASS",
+          "files": ["src/components/analytics/EditRestaurantOrderModal.tsx"],
+          "evidence": "Filters listAvailableMenuItems, the owner-scoped source query."
+        },
+        {
+          "surface": "Kitchen display search: table, ticket id, dish or note",
+          "class": "CLIENT_DERIVED",
+          "status": "PASS",
+          "files": ["src/components/restaurant/KitchenDisplaySystem.tsx"],
+          "evidence": "Filters listKitchenTickets, compared with the source by the dual read."
+        },
+        {
+          "surface": "Guest search by name, phone or e-mail (ILIKE)",
+          "class": "CLIENT_DERIVED",
+          "status": "PASS",
+          "files": ["src/components/restaurant/ReservationsBoard.tsx", "src/hooks/useRestaurant.ts", "src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "evidence": "searchGuests applies the three case-insensitive substring filters to the business's bounded guest list, ten results. It is imported through the App.tsx staff route, which throws at runtime in the source for want of RestaurantRoleProvider; the implementation is proven by test-firestore-restaurant.mjs."
+        },
+        {
+          "surface": "Order history search by order number or id",
+          "class": "FIRESTORE_QUERY",
+          "status": "PASS",
+          "files": ["src/components/restaurant/OrderHistoryModal.tsx", "src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "evidence": "listOrderHistory: closed and cancelled orders, closed_at descending with NULLs first, paged, filtered by exact order number or id; a malformed term fails as PostgREST does. It is imported through the App.tsx staff route, which throws at runtime in the source for want of RestaurantRoleProvider; the implementation is proven by test-firestore-restaurant.mjs."
+        }
+      ],
+      "analytics": [
+        {
+          "surface": "Restaurant analytics: revenue, orders and average check by day, month and year, with order detail, edit and delete",
+          "class": "CLIENT_DERIVED",
+          "status": "PASS",
+          "files": ["src/components/analytics/RestaurantAnalytics.tsx", "src/components/analytics/EditRestaurantOrderModal.tsx"],
+          "evidence": "Reducers over listClosedOrders, whose rows, lines, tables and exact amounts the dual read proves; edit and delete run through the order ledger (test-firestore-restaurant.mjs, browser smoke)."
+        },
+        {
+          "surface": "Restaurant home: free tables, active orders and open value",
+          "class": "CLIENT_DERIVED",
+          "status": "PASS",
+          "files": ["src/components/dashboards/RestaurantDashboard.tsx"],
+          "evidence": "Counts and sums over listTables and listActiveOrders."
+        },
+        {
+          "surface": "Live KPIs: revenue today, covers, average check, pending tickets, 86 items",
+          "class": "FIRESTORE_QUERY",
+          "status": "PASS",
+          "files": ["src/hooks/useRestaurant.ts", "src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "evidence": "getKpis runs the six source aggregates as bounded queries over the business's own collections. It is imported through the App.tsx staff route, which throws at runtime in the source for want of RestaurantRoleProvider; the implementation is proven by test-firestore-restaurant.mjs."
+        },
+        {
+          "surface": "Daily Z reports list",
+          "class": "FIRESTORE_QUERY",
+          "status": "PASS",
+          "files": ["src/hooks/useRestaurant.ts", "src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "evidence": "listDailyReports: date descending, 30 rows, compared with the source by the dual read (no rows in production)."
+        }
+      ],
+      "rpc": [
+        {
+          "surface": "verify_staff_pin_secure (PIN shift login)",
+          "class": "AUTH_REPLACED",
+          "status": "PASS",
+          "files": ["src/contexts/RestaurantRoleContext.tsx", "src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "evidence": "No PIN exists in Firestore: staff are Firebase accounts with restaurantMemberships (restaurant-staff-rules.test.mjs), and the Firebase method refuses with AUTH_REPLACED. Its only caller, StaffShiftScreen, is imported by nothing."
+        },
+        {
+          "surface": "authorize_staff_action (manager PIN approval)",
+          "class": "AUTH_REPLACED",
+          "status": "PASS",
+          "files": ["src/data/firestore/FirestoreRestaurantRepository.ts", "src/components/restaurant/ManagerApprovalPad.tsx"],
+          "evidence": "The approver signs in with a Firebase account in an isolated in-memory app; the owner or an active manager membership approves one action, which runs under that identity. The production database cannot resolve the call the product makes (argument mismatch)."
+        },
+        {
+          "surface": "void_order_item_secure",
+          "class": "FIRESTORE_TRANSACTION",
+          "status": "PASS",
+          "files": ["src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "evidence": "One transaction under the approver: line cancelled with the source note, ledger reduced, immutable void log and audit record; the Rules bind all four (firestore.rules orderItems, voidLogs, restaurantAuditLogs). The production function cannot complete."
+        },
+        {
+          "surface": "apply_discount_secure",
+          "class": "FIRESTORE_TRANSACTION",
+          "status": "PASS",
+          "files": ["src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "evidence": "The source formula on subtotal_amount, exact, bound to its audit record by lastAuditId; forged totals are refused."
+        },
+        {
+          "surface": "create_kitchen_ticket",
+          "class": "FIRESTORE_TRANSACTION",
+          "status": "PASS",
+          "files": ["src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "evidence": "Ticket and ticket lines written with each order line recording its ticketItemId, so no line is sent twice; three lines per write, inside the measured document-access limit."
+        },
+        {
+          "surface": "delete_menu_item_secure",
+          "class": "FIRESTORE_TRANSACTION",
+          "status": "PASS",
+          "files": ["src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "evidence": "Atomic batch with the source foreign keys (NO ACTION refuses, CASCADE removes). The function is absent from the production database, where the call always fails."
+        },
+        {
+          "surface": "delete_staff_secure",
+          "class": "FIRESTORE_TRANSACTION",
+          "status": "PASS",
+          "files": ["src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "evidence": "Atomic batch: audit references refuse, orders and void logs SET NULL. The function is absent from the production database."
+        },
+        {
+          "surface": "log_business_activity_v2 (order cancellation)",
+          "class": "FIRESTORE_TRANSACTION",
+          "status": "PASS",
+          "files": ["src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "evidence": "ORDER_CANCELLED audit record written in the cancellation batch and bound to the order by lastAuditId. The function is absent from the production database."
+        },
+        {
+          "surface": "log_business_activity_v2 (refund)",
+          "class": "FIRESTORE_TRANSACTION",
+          "status": "PASS",
+          "files": ["src/components/restaurant/RefundModal.tsx", "src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "evidence": "refundOrder under the approver: an immutable REFUND audit record, and for a full refund the order marked refunded in the same transaction and bound to that record. It is imported through the App.tsx staff route, which throws at runtime in the source for want of RestaurantRoleProvider; the implementation is proven by test-firestore-restaurant.mjs."
+        },
+        {
+          "surface": "log_business_activity_v2 (allergy override)",
+          "class": "FIRESTORE_TRANSACTION",
+          "status": "PASS",
+          "files": ["src/components/restaurant/OrderEntry.tsx", "src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "evidence": "logActivity writes an immutable ALLERGY_OVERRIDE audit record under the signed-in order taker, for a dish of the business. It is imported through the App.tsx staff route, which throws at runtime in the source for want of RestaurantRoleProvider; the implementation is proven by test-firestore-restaurant.mjs."
+        },
+        {
+          "surface": "close_business_day_secure",
+          "class": "LEGACY_UNREACHABLE",
+          "status": "LEGACY_UNREACHABLE",
+          "files": ["src/components/restaurant/CloseDayWizard.tsx"],
+          "evidence": "CloseDayWizard, its only caller, is imported by nothing. A client-computed Z report would be a client-authoritative financial total, so the Firebase method refuses."
+        },
+        {
+          "surface": "get_server_time",
+          "class": "CLIENT_DERIVED",
+          "status": "PASS",
+          "files": ["src/components/restaurant/ReservationsBoard.tsx", "src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "evidence": "Offset 0, the source fallback when the function is missing (it is missing in production); reservation times are checked by the Rules against request.time."
+        }
+      ],
+      "realtime": [
+        {
+          "surface": "restaurant_tables postgres_changes",
+          "class": "FIRESTORE_LISTENER",
+          "status": "PASS",
+          "files": ["src/hooks/useRestaurant.ts", "src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "evidence": "Tenant-scoped onSnapshot listener on the screen query, invalidating the same query key once the listener holds the server view (test-firestore-restaurant.mjs)."
+        },
+        {
+          "surface": "restaurant_orders postgres_changes",
+          "class": "FIRESTORE_LISTENER",
+          "status": "PASS",
+          "files": ["src/hooks/useRestaurant.ts", "src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "evidence": "Tenant-scoped onSnapshot listener on the screen query, invalidating the same query key once the listener holds the server view (test-firestore-restaurant.mjs)."
+        },
+        {
+          "surface": "restaurant_kitchen_tickets postgres_changes",
+          "class": "FIRESTORE_LISTENER",
+          "status": "PASS",
+          "files": ["src/hooks/useRestaurant.ts", "src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "evidence": "Tenant-scoped onSnapshot listener on the screen query, invalidating the same query key once the listener holds the server view (test-firestore-restaurant.mjs)."
+        },
+        {
+          "surface": "restaurant_table_sessions postgres_changes",
+          "class": "FIRESTORE_LISTENER",
+          "status": "PASS",
+          "files": ["src/hooks/useRestaurant.ts", "src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "evidence": "Tenant-scoped onSnapshot listener on the screen query, invalidating the same query key once the listener holds the server view (test-firestore-restaurant.mjs)."
+        },
+        {
+          "surface": "restaurant_reservations postgres_changes",
+          "class": "FIRESTORE_LISTENER",
+          "status": "PASS",
+          "files": ["src/hooks/useRestaurant.ts", "src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "evidence": "Tenant-scoped onSnapshot listener on the screen query, invalidating the same query key once the listener holds the server view (test-firestore-restaurant.mjs)."
+        },
+        {
+          "surface": "restaurant_waitlist postgres_changes",
+          "class": "FIRESTORE_LISTENER",
+          "status": "PASS",
+          "files": ["src/hooks/useRestaurant.ts", "src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "evidence": "Tenant-scoped onSnapshot listener on the screen query, invalidating the same query key once the listener holds the server view (test-firestore-restaurant.mjs)."
+        }
+      ],
+      "edgeFunctions": []
     }
   }
 }

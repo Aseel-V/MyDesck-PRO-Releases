@@ -5,7 +5,7 @@
 
 import { createContext, useContext, ReactNode, useMemo, useCallback, useState, useRef } from 'react';
 import { useAuth } from './AuthContext';
-import { supabase } from '../lib/supabase';
+import { getBackend } from '../data/backend';
 import { toast } from 'sonner';
 import { 
   UserRole, 
@@ -150,18 +150,11 @@ export function RestaurantRoleProvider({ children, staffOverride }: RestaurantRo
     
     try {
       // Use secure server-side PIN verification (hashed comparison)
-      // Type assertion needed until Supabase types are regenerated with new RPC
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: result, error: rpcError } = await (supabase.rpc as any)(
-        'verify_staff_pin_secure',
-        { 
-          p_staff_id: staffId, 
-          p_pin: pin, 
-          p_business_id: profile.id 
-        }
-      );
-      
-      if (rpcError) {
+      let result: any;
+      try {
+        result = await getBackend().restaurant.verifyStaffPin(staffId, pin, profile.id);
+      } catch (rpcError) {
         console.error('PIN verification RPC error:', rpcError);
         toast.error('Login failed. Please try again.');
         return false;
@@ -211,13 +204,7 @@ export function RestaurantRoleProvider({ children, staffOverride }: RestaurantRo
       
       // Auto clock-in if not already
       if (!result.is_clocked_in) {
-        await supabase
-          .from('restaurant_staff')
-          .update({
-            is_clocked_in: true,
-            clocked_in_at: new Date().toISOString(),
-          })
-          .eq('id', staffId);
+        await getBackend().restaurant.setStaffClockedIn(staffId, true).catch(() => undefined);
         
         staffMember.is_clocked_in = true;
         setActiveStaff({ ...staffMember });
@@ -240,13 +227,7 @@ export function RestaurantRoleProvider({ children, staffOverride }: RestaurantRo
   
   const clockIn = useCallback(async (staffId: string) => {
     try {
-      await supabase
-        .from('restaurant_staff')
-        .update({
-          is_clocked_in: true,
-          clocked_in_at: new Date().toISOString(),
-        })
-        .eq('id', staffId);
+      await getBackend().restaurant.setStaffClockedIn(staffId, true).catch(() => undefined);
       
       if (activeStaff?.id === staffId) {
         setActiveStaff(prev => prev ? { ...prev, is_clocked_in: true } : null);
@@ -263,13 +244,7 @@ export function RestaurantRoleProvider({ children, staffOverride }: RestaurantRo
     if (!activeStaff) return;
     
     try {
-      await supabase
-        .from('restaurant_staff')
-        .update({
-          is_clocked_in: false,
-          clocked_in_at: null,
-        })
-        .eq('id', activeStaff.id);
+      await getBackend().restaurant.setStaffClockedIn(activeStaff.id, false).catch(() => undefined);
       
       // Log out after clocking out
       logout();

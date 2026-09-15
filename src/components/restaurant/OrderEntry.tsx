@@ -8,26 +8,14 @@ import { useRestaurant, useGuestProfiles as useGuestProfilesHook, StaffAuthoriza
 import { useRestaurantRole } from '../../contexts/RestaurantRoleContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../lib/supabase';
+import { getBackend } from '../../data/backend';
+import type { ApprovalCredential } from '../../data/domain/restaurant';
 import { safeImageSrc } from '../../lib/safeUrl';
 import { toast } from 'sonner';
 import {
   MenuItem,
   ModifierGroup,
 } from '../../types/restaurant';
-
-// Explicit type definition for the RPC to ensure type safety without 'any'
-type LogActivityRpc = (
-  fn: 'log_business_activity_v2',
-  args: {
-    p_business_id?: string | null;
-    p_activity_type: string;
-    p_entity_type?: string;
-    p_entity_id?: string;
-    p_details: Record<string, unknown>;
-    p_staff_id?: string | null;
-  }
-) => Promise<{ data: null; error: Error | null }>;
 
 import { calculateOrderTotal } from '../../lib/restaurantCalculator';
 import {
@@ -50,7 +38,7 @@ import {
   Split,
   XCircle,
 } from 'lucide-react';
-import { PinPadModal } from './PinPadModal';
+import { ManagerApprovalPad } from './ManagerApprovalPad';
 import AllergyOverrideModal from './AllergyOverrideModal';
 
 // ============================================================================
@@ -766,17 +754,10 @@ export default function OrderEntry({ tableId, sessionId, orderId, onClose }: Ord
     // Look up guest allergies from current session/table
     const fetchGuestAllergies = async () => {
       if (sessionId) {
-        const { data: session } = await supabase
-          .from('restaurant_table_sessions')
-          .select('guest_id')
-          .eq('id', sessionId)
-          .single();
-        
-        // Cast to any because of strict typing issues with generated types
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        if ((session as any)?.guest_id) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const guest = guestProfiles?.find(g => g.id === (session as any).guest_id);
+        const guestId = await getBackend().restaurant.getSessionGuestId(sessionId);
+
+        if (guestId) {
+          const guest = guestProfiles?.find(g => g.id === guestId);
           if (guest?.allergy_codes?.length || guest?.allergies?.length) {
             setGuestAllergies(guest.allergy_codes || guest.allergies || []);
           }
@@ -810,8 +791,7 @@ export default function OrderEntry({ tableId, sessionId, orderId, onClose }: Ord
   // 2. LOGGING: Immutable audit log
   const logAllergyOverride = async (item: MenuItem, reason: string, method: string) => {
     try {
-        const rpc = supabase.rpc as unknown as LogActivityRpc;
-        await rpc('log_business_activity_v2', {
+        await getBackend().restaurant.logActivity({
              p_business_id: user?.id ?? null,
              p_activity_type: 'ALLERGY_OVERRIDE',
              p_entity_type: 'order_item',
@@ -1639,15 +1619,15 @@ export default function OrderEntry({ tableId, sessionId, orderId, onClose }: Ord
             
             {/* PIN Pad */}
             <div className={`${showManagerPin.item && !verballyConfirmed ? 'opacity-40 pointer-events-none' : ''}`}>
-              <PinPadModal
+              <ManagerApprovalPad
                 title=""
                 description={!showManagerPin.item ? t('orderEntry.allergySafety.securityLog') : ''}
                 onClose={() => { setShowManagerPin(null); setVerballyConfirmed(false); }}
-                onSuccess={(pin) => {
+                onSuccess={(credential: ApprovalCredential) => {
                   if (showManagerPin.item && !verballyConfirmed) {
                     return;
                   }
-                  authorizeStaffAction.mutateAsync({ pin, requiredRole: 'Manager' })
+                  authorizeStaffAction.mutateAsync({ credential, requiredRole: 'Manager' })
                     .then((result) => (showManagerPin.action)(result))
                     .catch(err => toast.error(err.message));
                 }}

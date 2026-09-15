@@ -3052,5 +3052,8 @@
     "biConsole": "מסוף BI",
     "platformSettings": "הגדרות הפלטפורמה",
     "manageProfiles": "ניהול פרופילים"
+  },
+  "managerApproval": {
+    "accountDescription": "יש להתחבר עם חשבון הבעלים או עם חשבון של מנהל פעיל כדי לאשר פעולה זו."
   }
 }

@@ -1,0 +1,388 @@
+{
+  "generatedAt": "2026-09-15T20:25:25.002Z",
+  "vertical": "restaurant",
+  "target": "firestore-emulator",
+  "readOnlySource": {
+    "start": {
+      "read_only": "on",
+      "isolation": "repeatable read"
+    },
+    "rejectedWriteSqlState": "25006",
+    "successfulWrites": 0,
+    "end": {
+      "read_only": "on",
+      "isolation": "repeatable read"
+    },
+    "transactionOutcome": "ROLLBACK"
+  },
+  "tenants": [
+    {
+      "businessHash": "496aaed3b536",
+      "ownerHash": "29f3c0367460",
+      "methods": {
+        "listTables": {
+          "sourceRows": 13,
+          "targetRows": 13,
+          "matched": 13,
+          "missing": 0,
+          "unexpected": 0,
+          "fieldMismatches": 0,
+          "orderMismatches": 0,
+          "mismatchedColumns": {},
+          "unknownColumns": []
+        },
+        "listMenu": {
+          "sourceRows": 1,
+          "targetRows": 1,
+          "matched": 1,
+          "missing": 0,
+          "unexpected": 0,
+          "fieldMismatches": 0,
+          "orderMismatches": 0,
+          "mismatchedColumns": {},
+          "unknownColumns": []
+        },
+        "listModifierGroups": {
+          "sourceRows": 0,
+          "targetRows": 0,
+          "matched": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "fieldMismatches": 0,
+          "orderMismatches": 0,
+          "mismatchedColumns": {},
+          "unknownColumns": []
+        },
+        "listStaff": {
+          "sourceRows": 1,
+          "targetRows": 1,
+          "matched": 1,
+          "missing": 0,
+          "unexpected": 0,
+          "fieldMismatches": 0,
+          "orderMismatches": 0,
+          "mismatchedColumns": {},
+          "unknownColumns": []
+        },
+        "listActiveOrders": {
+          "sourceRows": 0,
+          "targetRows": 0,
+          "matched": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "fieldMismatches": 0,
+          "orderMismatches": 0,
+          "mismatchedColumns": {},
+          "unknownColumns": []
+        },
+        "listClosedOrders": {
+          "sourceRows": 10,
+          "targetRows": 10,
+          "matched": 10,
+          "missing": 0,
+          "unexpected": 0,
+          "fieldMismatches": 0,
+          "orderMismatches": 0,
+          "mismatchedColumns": {},
+          "unknownColumns": []
+        },
+        "listKitchenTickets": {
+          "sourceRows": 0,
+          "targetRows": 0,
+          "matched": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "fieldMismatches": 0,
+          "orderMismatches": 0,
+          "mismatchedColumns": {},
+          "unknownColumns": []
+        },
+        "listActiveSessions": {
+          "sourceRows": 0,
+          "targetRows": 0,
+          "matched": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "fieldMismatches": 0,
+          "orderMismatches": 0,
+          "mismatchedColumns": {},
+          "unknownColumns": []
+        },
+        "listDailyReports": {
+          "sourceRows": 0,
+          "targetRows": 0,
+          "matched": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "fieldMismatches": 0,
+          "orderMismatches": 0,
+          "mismatchedColumns": {},
+          "unknownColumns": []
+        },
+        "getOrCreateBusinessSettings": {
+          "sourceRows": 1,
+          "targetRows": 1,
+          "matched": 1,
+          "missing": 0,
+          "unexpected": 0,
+          "fieldMismatches": 0,
+          "orderMismatches": 0,
+          "mismatchedColumns": {},
+          "unknownColumns": []
+        }
+      },
+      "inventory": {
+        "tables": {
+          "sourceRows": 13,
+          "targetDocuments": 13,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "menuCategories": {
+          "sourceRows": 1,
+          "targetDocuments": 1,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "restaurantStaff": {
+          "sourceRows": 1,
+          "targetDocuments": 1,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "orders": {
+          "sourceRows": 10,
+          "targetDocuments": 10,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "kitchenTickets": {
+          "sourceRows": 11,
+          "targetDocuments": 11,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "restaurantAuditLogs": {
+          "sourceRows": 4,
+          "targetDocuments": 4,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "voidLogs": {
+          "sourceRows": 0,
+          "targetDocuments": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "tableSessions": {
+          "sourceRows": 0,
+          "targetDocuments": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "restaurantPayments": {
+          "sourceRows": 0,
+          "targetDocuments": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "reservations": {
+          "sourceRows": 0,
+          "targetDocuments": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "waitlist": {
+          "sourceRows": 0,
+          "targetDocuments": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "guestProfiles": {
+          "sourceRows": 0,
+          "targetDocuments": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "modifierGroups": {
+          "sourceRows": 0,
+          "targetDocuments": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "dailyReports": {
+          "sourceRows": 0,
+          "targetDocuments": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "settings": {
+          "sourceRows": 1,
+          "targetDocuments": 1,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "menuItems": {
+          "sourceRows": 2,
+          "targetDocuments": 2,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "orderItems": {
+          "sourceRows": 17,
+          "targetDocuments": 17,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "ticketItems": {
+          "sourceRows": 17,
+          "targetDocuments": 17,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "restaurantCounters": {
+          "sourceRows": 1,
+          "targetDocuments": 1,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        }
+      },
+      "crossTenant": {
+        "attempts": 18,
+        "denied": 18
+      },
+      "derived": {
+        "checked": 28,
+        "mismatches": 0
+      },
+      "restoredClean": true,
+      "clean": true
+    }
+  ],
+  "corruptionControls": [
+    {
+      "name": "closed order total changed",
+      "tenant": "496aaed3b536",
+      "metric": "fieldMismatches",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "order moved to another owner",
+      "tenant": "496aaed3b536",
+      "metric": "fieldMismatches",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "order line deleted",
+      "tenant": "496aaed3b536",
+      "metric": "fieldMismatches",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "order ledger no longer the sum of its lines",
+      "tenant": "496aaed3b536",
+      "metric": "mismatches",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "sent line lost its ticket link",
+      "tenant": "496aaed3b536",
+      "metric": "mismatches",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "order number counter rewound",
+      "tenant": "496aaed3b536",
+      "metric": "mismatches",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "table renamed",
+      "tenant": "496aaed3b536",
+      "metric": "fieldMismatches",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "menu item price changed",
+      "tenant": "496aaed3b536",
+      "metric": "fieldMismatches",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "staff hourly rate changed",
+      "tenant": "496aaed3b536",
+      "metric": "fieldMismatches",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "audit record deleted",
+      "tenant": "496aaed3b536",
+      "metric": "missing",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "open order that the source does not have",
+      "tenant": "496aaed3b536",
+      "metric": "unexpected",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "kitchen ticket that the source does not have",
+      "tenant": "496aaed3b536",
+      "metric": "unexpected",
+      "observed": 1,
+      "status": "DETECTED"
+    }
+  ],
+  "decision": "PASS",
+  "totals": {
+    "tenants": 1,
+    "sourceRowsCompared": 26,
+    "matched": 26,
+    "missing": 0,
+    "unexpected": 0,
+    "fieldMismatches": 0,
+    "orderMismatches": 0,
+    "unknownColumns": 0,
+    "orphans": 0,
+    "sourceRowsInventoried": 78,
+    "migratedDocuments": 78,
+    "crossTenantAttempts": 18,
+    "crossTenantAllowed": 0,
+    "controlsApplicable": 12,
+    "controlsDetected": 12,
+    "restoredClean": true,
+    "derivedChecked": 28,
+    "derivedMismatches": 0
+  }
+}

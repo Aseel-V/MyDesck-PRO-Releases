@@ -1,0 +1,527 @@
+{
+  "generatedAt": "2026-09-15T20:37:08.677Z",
+  "vertical": "restaurant",
+  "decision": "PASS",
+  "gates": {
+    "firebaseRoot": {
+      "status": "PASS",
+      "runtimeSurfaceFiles": 28,
+      "forbiddenCallSites": [],
+      "genericSupabaseClientImports": [],
+      "supabaseAdapterImports": [],
+      "supabaseJsImports": [],
+      "storageOutsideRepository": []
+    },
+    "generatedSchema": {
+      "status": "PASS",
+      "rulesValidators": "CURRENT"
+    },
+    "suites": {
+      "status": "PASS",
+      "suites": [
+        {
+          "label": "restaurant repository, Rules, staff roles and malicious clients",
+          "file": "scripts/test-firestore-restaurant.mjs",
+          "outcome": "PASS",
+          "tests": 12
+        },
+        {
+          "label": "restaurant staff membership Rules",
+          "file": "migration/firestore/tests/restaurant-staff-rules.test.mjs",
+          "outcome": "PASS",
+          "tests": 14
+        },
+        {
+          "label": "schema validator helper semantics",
+          "file": "scripts/test-firestore-schema-validators.mjs",
+          "outcome": "PASS",
+          "tests": 9
+        },
+        {
+          "label": "Rules evaluation budget",
+          "file": "scripts/test-firestore-rules-budget.mjs",
+          "outcome": "PASS",
+          "tests": 9
+        }
+      ]
+    },
+    "rulesBudget": {
+      "status": "PASS",
+      "limit": 1000,
+      "productCeiling": 850,
+      "paths": [
+        {
+          "path": "restaurant: create a table (settings)",
+          "costAtMost": 484
+        },
+        {
+          "path": "restaurant: add a category-scoped menu item (settings)",
+          "costAtMost": 607
+        },
+        {
+          "path": "restaurant: open an order (order)",
+          "costAtMost": 790
+        },
+        {
+          "path": "restaurant: open an order (number counter)",
+          "costAtMost": 163
+        },
+        {
+          "path": "restaurant: add an order line (line)",
+          "costAtMost": 493
+        },
+        {
+          "path": "restaurant: add an order line (order ledger)",
+          "costAtMost": 331
+        },
+        {
+          "path": "restaurant (waiter member): add an order line at the menu price",
+          "costAtMost": 781
+        },
+        {
+          "path": "restaurant: send to the kitchen (ticket)",
+          "costAtMost": 349
+        },
+        {
+          "path": "restaurant: send to the kitchen (ticket line)",
+          "costAtMost": 352
+        },
+        {
+          "path": "restaurant: send to the kitchen (line marked sent)",
+          "costAtMost": 124
+        },
+        {
+          "path": "restaurant: kitchen display moves a ticket",
+          "costAtMost": 235
+        },
+        {
+          "path": "restaurant: save an open order total (order modal)",
+          "costAtMost": 412
+        },
+        {
+          "path": "restaurant: pay and close",
+          "costAtMost": 631
+        },
+        {
+          "path": "restaurant: manager void (line)",
+          "costAtMost": 514
+        },
+        {
+          "path": "restaurant: manager void (void log)",
+          "costAtMost": 442
+        },
+        {
+          "path": "restaurant: manager void (audit record)",
+          "costAtMost": 328
+        },
+        {
+          "path": "restaurant: manager discount (order)",
+          "costAtMost": 640
+        },
+        {
+          "path": "restaurant: manager cancel (lines)",
+          "costAtMost": 277
+        },
+        {
+          "path": "restaurant: analytics edit of a closed order (totals)",
+          "costAtMost": 781
+        },
+        {
+          "path": "restaurant: analytics delete an order (lines)",
+          "costAtMost": 76
+        },
+        {
+          "path": "restaurant: full refund (order marked refunded)",
+          "costAtMost": 553
+        },
+        {
+          "path": "restaurant: full refund (audit record)",
+          "costAtMost": 289
+        },
+        {
+          "path": "restaurant: allergy override log naming a staff member (audit record)",
+          "costAtMost": 574
+        },
+        {
+          "path": "restaurant: create a reservation (reservations board)",
+          "costAtMost": 424
+        },
+        {
+          "path": "restaurant: seat a reservation (reservations board)",
+          "costAtMost": 349
+        },
+        {
+          "path": "restaurant: seat a waiting party at a table (waitlist)",
+          "costAtMost": 316
+        },
+        {
+          "path": "restaurant: edit a guest profile (guest profiles)",
+          "costAtMost": 331
+        },
+        {
+          "path": "restaurant: add a staff member (settings)",
+          "costAtMost": 328
+        },
+        {
+          "path": "restaurant: list active orders with lines, dishes, table and server",
+          "costAtMost": 55
+        }
+      ]
+    },
+    "dataRehearsal": {
+      "status": "PASS",
+      "importedAt": "2026-09-15T16:10:20.036Z",
+      "reconciledAt": "2026-09-15T20:25:00.536Z",
+      "dualReadAt": "2026-09-15T20:25:25.002Z",
+      "totals": {
+        "tenants": 1,
+        "sourceRowsCompared": 26,
+        "matched": 26,
+        "missing": 0,
+        "unexpected": 0,
+        "fieldMismatches": 0,
+        "orderMismatches": 0,
+        "unknownColumns": 0,
+        "orphans": 0,
+        "sourceRowsInventoried": 78,
+        "migratedDocuments": 78,
+        "crossTenantAttempts": 18,
+        "crossTenantAllowed": 0,
+        "controlsApplicable": 12,
+        "controlsDetected": 12,
+        "restoredClean": true,
+        "derivedChecked": 28,
+        "derivedMismatches": 0
+      },
+      "additionalDualReads": []
+    },
+    "uiSmoke": {
+      "status": "PASS",
+      "smokeAt": "2026-09-15T16:37:15.520Z",
+      "flows": [
+        {
+          "name": "the English owner opens the restaurant home, orders from the migrated menu and sends the order to the kitchen",
+          "status": "passed"
+        },
+        {
+          "name": "the kitchen display shows the ticket and moves it to served",
+          "status": "passed"
+        },
+        {
+          "name": "a manager voids a saved line and applies a discount, approved with a Firebase account instead of a PIN",
+          "status": "passed"
+        },
+        {
+          "name": "the order is paid by card and closed, and the table has no open order afterwards",
+          "status": "passed"
+        },
+        {
+          "name": "analytics lists the closed order, edits it from its ledger and deletes it",
+          "status": "passed"
+        },
+        {
+          "name": "another restaurant signs in right-to-left in Hebrew and sees only its own table",
+          "status": "passed"
+        },
+        {
+          "name": "the Arabic owner adds a table and a staff member in the restaurant settings, without PIN or password fields",
+          "status": "passed"
+        }
+      ]
+    },
+    "search": {
+      "status": "PASS",
+      "surfaces": [
+        {
+          "surface": "Order modal menu search: name, Hebrew and Arabic names, description",
+          "class": "CLIENT_DERIVED",
+          "status": "PASS",
+          "files": [
+            "src/components/restaurant/OrderModal.tsx"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "Analytics order edit menu search",
+          "class": "CLIENT_DERIVED",
+          "status": "PASS",
+          "files": [
+            "src/components/analytics/EditRestaurantOrderModal.tsx"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "Kitchen display search: table, ticket id, dish or note",
+          "class": "CLIENT_DERIVED",
+          "status": "PASS",
+          "files": [
+            "src/components/restaurant/KitchenDisplaySystem.tsx"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "Guest search by name, phone or e-mail (ILIKE)",
+          "class": "CLIENT_DERIVED",
+          "status": "PASS",
+          "files": [
+            "src/components/restaurant/ReservationsBoard.tsx",
+            "src/hooks/useRestaurant.ts",
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "Order history search by order number or id",
+          "class": "FIRESTORE_QUERY",
+          "status": "PASS",
+          "files": [
+            "src/components/restaurant/OrderHistoryModal.tsx",
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
+          "verdict": "PASS"
+        }
+      ],
+      "blocked": 0,
+      "unknown": 0
+    },
+    "analytics": {
+      "status": "PASS",
+      "surfaces": [
+        {
+          "surface": "Restaurant analytics: revenue, orders and average check by day, month and year, with order detail, edit and delete",
+          "class": "CLIENT_DERIVED",
+          "status": "PASS",
+          "files": [
+            "src/components/analytics/RestaurantAnalytics.tsx",
+            "src/components/analytics/EditRestaurantOrderModal.tsx"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "Restaurant home: free tables, active orders and open value",
+          "class": "CLIENT_DERIVED",
+          "status": "PASS",
+          "files": [
+            "src/components/dashboards/RestaurantDashboard.tsx"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "Live KPIs: revenue today, covers, average check, pending tickets, 86 items",
+          "class": "FIRESTORE_QUERY",
+          "status": "PASS",
+          "files": [
+            "src/hooks/useRestaurant.ts",
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "Daily Z reports list",
+          "class": "FIRESTORE_QUERY",
+          "status": "PASS",
+          "files": [
+            "src/hooks/useRestaurant.ts",
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
+          "verdict": "PASS"
+        }
+      ],
+      "blocked": 0,
+      "unknown": 0
+    },
+    "rpc": {
+      "status": "PASS",
+      "surfaces": [
+        {
+          "surface": "verify_staff_pin_secure (PIN shift login)",
+          "class": "AUTH_REPLACED",
+          "status": "PASS",
+          "files": [
+            "src/contexts/RestaurantRoleContext.tsx",
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "authorize_staff_action (manager PIN approval)",
+          "class": "AUTH_REPLACED",
+          "status": "PASS",
+          "files": [
+            "src/data/firestore/FirestoreRestaurantRepository.ts",
+            "src/components/restaurant/ManagerApprovalPad.tsx"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "void_order_item_secure",
+          "class": "FIRESTORE_TRANSACTION",
+          "status": "PASS",
+          "files": [
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "apply_discount_secure",
+          "class": "FIRESTORE_TRANSACTION",
+          "status": "PASS",
+          "files": [
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "create_kitchen_ticket",
+          "class": "FIRESTORE_TRANSACTION",
+          "status": "PASS",
+          "files": [
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "delete_menu_item_secure",
+          "class": "FIRESTORE_TRANSACTION",
+          "status": "PASS",
+          "files": [
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "delete_staff_secure",
+          "class": "FIRESTORE_TRANSACTION",
+          "status": "PASS",
+          "files": [
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "log_business_activity_v2 (order cancellation)",
+          "class": "FIRESTORE_TRANSACTION",
+          "status": "PASS",
+          "files": [
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "log_business_activity_v2 (refund)",
+          "class": "FIRESTORE_TRANSACTION",
+          "status": "PASS",
+          "files": [
+            "src/components/restaurant/RefundModal.tsx",
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "log_business_activity_v2 (allergy override)",
+          "class": "FIRESTORE_TRANSACTION",
+          "status": "PASS",
+          "files": [
+            "src/components/restaurant/OrderEntry.tsx",
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "close_business_day_secure",
+          "class": "LEGACY_UNREACHABLE",
+          "status": "LEGACY_UNREACHABLE",
+          "files": [
+            "src/components/restaurant/CloseDayWizard.tsx"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "get_server_time",
+          "class": "CLIENT_DERIVED",
+          "status": "PASS",
+          "files": [
+            "src/components/restaurant/ReservationsBoard.tsx",
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
+          "verdict": "PASS"
+        }
+      ],
+      "blocked": 0,
+      "unknown": 0
+    },
+    "realtime": {
+      "status": "PASS",
+      "surfaces": [
+        {
+          "surface": "restaurant_tables postgres_changes",
+          "class": "FIRESTORE_LISTENER",
+          "status": "PASS",
+          "files": [
+            "src/hooks/useRestaurant.ts",
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "restaurant_orders postgres_changes",
+          "class": "FIRESTORE_LISTENER",
+          "status": "PASS",
+          "files": [
+            "src/hooks/useRestaurant.ts",
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "restaurant_kitchen_tickets postgres_changes",
+          "class": "FIRESTORE_LISTENER",
+          "status": "PASS",
+          "files": [
+            "src/hooks/useRestaurant.ts",
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "restaurant_table_sessions postgres_changes",
+          "class": "FIRESTORE_LISTENER",
+          "status": "PASS",
+          "files": [
+            "src/hooks/useRestaurant.ts",
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "restaurant_reservations postgres_changes",
+          "class": "FIRESTORE_LISTENER",
+          "status": "PASS",
+          "files": [
+            "src/hooks/useRestaurant.ts",
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "restaurant_waitlist postgres_changes",
+          "class": "FIRESTORE_LISTENER",
+          "status": "PASS",
+          "files": [
+            "src/hooks/useRestaurant.ts",
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
+          "verdict": "PASS"
+        }
+      ],
+      "blocked": 0,
+      "unknown": 0
+    },
+    "edgeFunctions": {
+      "status": "PASS",
+      "surfaces": [],
+      "blocked": 0,
+      "unknown": 0
+    }
+  }
+}

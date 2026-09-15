@@ -18,8 +18,8 @@ import assert from 'node:assert/strict';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import { deleteApp, initializeApp } from 'firebase/app';
-import { connectAuthEmulator, getAuth, signOut } from 'firebase/auth';
-import { connectFirestoreEmulator, doc, getFirestore, setDoc } from 'firebase/firestore';
+import { connectAuthEmulator, getAuth, inMemoryPersistence, initializeAuth, signOut } from 'firebase/auth';
+import { collection, connectFirestoreEmulator, doc, getDocs, getFirestore, query, setDoc, where } from 'firebase/firestore';
 import { FirebaseSession } from '../src/data/firestore/FirebaseSession.ts';
 import { FirestoreAuthGateway } from '../src/data/firestore/FirestoreAuthGateway.ts';
 import { FirestoreProfileRepository } from '../src/data/firestore/FirestoreProfileRepository.ts';
@@ -27,6 +27,7 @@ import { FirestoreAdminRepository } from '../src/data/firestore/FirestoreAdminRe
 import { FirestoreSupermarketRepository } from '../src/data/firestore/FirestoreSupermarketRepository.ts';
 import { FirestoreAutoRepairRepository } from '../src/data/firestore/FirestoreAutoRepairRepository.ts';
 import { FirestoreCarPartsRepository } from '../src/data/firestore/FirestoreCarPartsRepository.ts';
+import { FirestoreRestaurantRepository } from '../src/data/firestore/FirestoreRestaurantRepository.ts';
 import { encodeInsert } from '../src/data/firestore/documentCodec.ts';
 import { RulesClient } from '../migration/firestore/lib/rules-client.mjs';
 import { EXPRESSION_LIMIT, allowExpression, conjuncts, measureRuleCost, outcome } from '../migration/firestore/lib/rules-budget.mjs';
@@ -46,6 +47,7 @@ const bypass = RulesClient.asAdminBypass({ host: FIRESTORE_HOST, projectId: PROJ
 const clients = [];
 const accounts = new Set();
 const tenants = new Set();
+const memberships = [];
 const results = [];
 let counter = 0;
 const next = () => { counter += 1; return counter; };
@@ -64,10 +66,20 @@ function clientFor(label) {
   connectAuthEmulator(auth, `http://${AUTH_HOST}`, { disableWarnings: true });
   const db = getFirestore(app);
   connectFirestoreEmulator(db, '127.0.0.1', 8080);
-  const session = new FirebaseSession({ mode: 'firestore-emulator', app, auth, db, ready: Promise.resolve(), maintenanceEnabled: false });
+  // The manager-approval sign-in: a second, in-memory identity in its own app, as src/data/firebaseClient.ts builds it.
+  const isolatedIdentity = () => {
+    const approverApp = initializeApp({ projectId: PROJECT, apiKey: 'emulator-only', authDomain: 'localhost' }, `budget-approver-${randomUUID()}`);
+    const approverAuth = initializeAuth(approverApp, { persistence: inMemoryPersistence });
+    connectAuthEmulator(approverAuth, `http://${AUTH_HOST}`, { disableWarnings: true });
+    const approverDb = getFirestore(approverApp);
+    connectFirestoreEmulator(approverDb, '127.0.0.1', 8080);
+    return { auth: approverAuth, db: approverDb, dispose: () => deleteApp(approverApp) };
+  };
+  const session = new FirebaseSession({ mode: 'firestore-emulator', app, auth, db, ready: Promise.resolve(), maintenanceEnabled: false, isolatedIdentity });
   const handle = { app, auth, db, session, gateway: new FirestoreAuthGateway(session), profiles: new FirestoreProfileRepository(session),
     admin: new FirestoreAdminRepository(session), market: new FirestoreSupermarketRepository(session),
-    repair: new FirestoreAutoRepairRepository(session), parts: new FirestoreCarPartsRepository(session) };
+    repair: new FirestoreAutoRepairRepository(session), parts: new FirestoreCarPartsRepository(session),
+    restaurant: new FirestoreRestaurantRepository(session) };
   clients.push(handle);
   return handle;
 }
@@ -104,6 +116,24 @@ const TARGET = {
   partsUpdate: { match: 'match /parts/{partId} {', allow: 'allow update: if ' },
   partsCreate: { match: 'match /parts/{partId} {', allow: 'allow create: if ' },
   partsDelete: { match: 'match /parts/{partId} {', allow: 'allow delete: if ' },
+  tablesCreate: { match: 'match /tables/{tableId} {', allow: 'allow create: if ' },
+  staffCreate: { match: 'match /restaurantStaff/{staffId} {', allow: 'allow create: if ' },
+  countersWrite: { match: 'match /restaurantCounters/{counterId} {', allow: 'allow create, update: if ' },
+  ordersRead: { match: 'match /orders/{orderId} {', allow: 'allow get, list: if ' },
+  ordersCreate: { match: 'match /orders/{orderId} {', allow: 'allow create: if ' },
+  ordersUpdate: { match: 'match /orders/{orderId} {', allow: 'allow update: if ' },
+  orderItemsCreate: { match: 'match /orderItems/{itemId} {', allow: 'allow create: if ' },
+  orderItemsUpdate: { match: 'match /orderItems/{itemId} {', allow: 'allow update: if ' },
+  orderItemsDelete: { match: 'match /orderItems/{itemId} {', allow: 'allow delete: if ' },
+  ticketsCreate: { match: 'match /kitchenTickets/{ticketId} {', allow: 'allow create: if ' },
+  ticketsUpdate: { match: 'match /kitchenTickets/{ticketId} {', allow: 'allow update: if ' },
+  ticketItemsCreate: { match: 'match /ticketItems/{ticketItemId} {', allow: 'allow create: if ' },
+  voidLogsCreate: { match: 'match /voidLogs/{logId} {', allow: 'allow create: if ' },
+  auditCreate: { match: 'match /restaurantAuditLogs/{logId} {', allow: 'allow create: if ' },
+  reservationsCreate: { match: 'match /reservations/{reservationId} {', allow: 'allow create: if ' },
+  reservationsUpdate: { match: 'match /reservations/{reservationId} {', allow: 'allow update: if ' },
+  waitlistUpdate: { match: 'match /waitlist/{entryId} {', allow: 'allow update: if ' },
+  guestsUpdate: { match: 'match /guestProfiles/{guestId} {', allow: 'allow update: if ' },
 };
 
 async function measure(path, target, attempt, { product = true } = {}) {
@@ -208,7 +238,8 @@ after(async () => {
     const businessId = index.ok ? index.body?.fields?.businessId?.stringValue : null;
     if (businessId) {
       for (const name of ['menuItems', 'menuCategories', 'marketTransactions', 'vehicles', 'vehiclePlates', 'repairOrders',
-        'repairOrderItems', 'repairServices', 'parts']) {
+        'repairOrderItems', 'repairServices', 'parts', 'tables', 'restaurantStaff', 'restaurantCounters', 'orders', 'orderItems',
+        'kitchenTickets', 'ticketItems', 'voidLogs', 'restaurantAuditLogs', 'reservations', 'waitlist', 'guestProfiles']) {
         let pageToken = '';
         do {
           const listing = await fetch(`${base}/businesses/${businessId}/${name}?pageSize=300${pageToken ? `&pageToken=${pageToken}` : ''}`,
@@ -222,6 +253,7 @@ after(async () => {
     await bypass.delete(`businessOwners/${uid}`);
     await bypass.delete(`users/${uid}`);
   }
+  for (const id of memberships) await bypass.delete(`restaurantMemberships/${id}`);
   for (const localId of accounts) {
     await fetch(`http://${AUTH_HOST}/identitytoolkit.googleapis.com/v1/projects/${PROJECT}/accounts:delete`, {
       method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' }, body: JSON.stringify({ localId }),
@@ -391,6 +423,142 @@ test('car parts: inventory create, edit, delete and list', async () => {
   ]);
 });
 
+test('restaurant: floor, orders and their ledger, kitchen, manager approval, analytics and staff', async () => {
+  const restaurant = s.owner.restaurant;
+  const uid = s.owner.uid;
+  const category = await restaurant.createCategory(uid, { name: 'Budget mains' });
+  const dishes = [];
+  for (let n = 0; n < 3; n += 1) dishes.push(await restaurant.createMenuItem({ category_id: category.id, name: `Budget dish ${n}`, name_he: `מנה ${n}`, price: 40.5 + n }));
+  const table = await restaurant.createTable(uid, { name: 'Budget table' });
+  const line = (dish, quantity = 1) => ({ item_id: dish.id, quantity, price_at_time: dish.price, notes: `note ${next()}` });
+  const openOrder = async (fire) => {
+    const order = await restaurant.createOrder(uid, { table_id: table.id, currency: 'ILS' });
+    await restaurant.saveOrderCart(order.id, [line(dishes[0], 2)], fire, null);
+    return order;
+  };
+  // A measurement repeats its request about ten times; prepared orders keep every attempt a fresh, allowed request
+  // whose setup never passes through the rule being measured.
+  const pool = async (count, fire) => { const orders = []; for (let i = 0; i < count; i += 1) orders.push(await openOrder(fire)); return orders; };
+  const take = (orders) => { const order = orders.shift(); if (!order) throw new Error('BUDGET_POOL_EXHAUSTED'); return order; };
+  const toSend = await pool(36, true);
+  const toPay = await pool(12, false);
+  const toVoid = await pool(36, false);
+  const toCancel = await pool(12, false);
+  const toDelete = await pool(12, false);
+  const growing = await openOrder(false);
+  const discounted = await openOrder(false);
+  const ticketOrder = await openOrder(true);
+  const ticketId = await restaurant.sendToKitchen(ticketOrder.id);
+  const closed = await openOrder(true);
+  await restaurant.closeOrderPaid(closed.id, { method: 'cash', total_amount: 81, tax_amount: 0 });
+  const window = [new Date(Date.now() - 3_600_000).toISOString(), new Date(Date.now() + 3_600_000).toISOString()];
+  const editable = (await restaurant.listClosedOrders(...window)).find((order) => order.id === closed.id);
+  const firstLine = async (order) => (await getDocs(query(collection(s.owner.db, 'businesses', s.owner.businessId, 'orderItems'),
+    where('orderId', '==', order.id)))).docs[0].id;
+  const approve = () => restaurant.authorizeStaffAction(uid, { email: email('owner'), password: PASSWORD }, 'manager');
+  const voidNext = async () => {
+    const itemId = await firstLine(take(toVoid));
+    const approval = await approve();
+    return outcome(() => restaurant.voidOrderItem({ itemId, reason: 'Budget', authStaffId: approval.staff_id }));
+  };
+
+  // A waiter is a synthetic staff identity: its own account and an active membership, so its requests pay for the
+  // membership checks an owner does not.
+  const waiter = clientFor('waiter');
+  const waiterUser = await waiter.gateway.signUp(email('waiter'), PASSWORD);
+  accounts.add(waiterUser.id);
+  const waiterStaff = await restaurant.createStaff(uid, { full_name: 'Budget waiter' });
+  const membershipId = `${s.owner.businessId}__${waiterUser.id}`;
+  await bypass.create('restaurantMemberships', membershipId, { uid: waiterUser.id, businessId: s.owner.businessId, staffId: waiterStaff.id,
+    role: 'waiter', status: 'active', enabled: true, schemaVersion: 1, approvedBy: uid });
+  memberships.push(membershipId);
+  const waiterOrder = await waiter.restaurant.createOrder(uid, { table_id: table.id, currency: 'ILS' });
+
+  // Reservations board, waitlist, guest profiles and refunds. Waitlist and guest rows have no mounted create flow, so
+  // they are seeded as the migration writes them.
+  const tomorrow = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
+  const booked = await restaurant.createReservation(uid, { guest_name: 'Budget guest', guest_phone: '0501234567', reservation_date: tomorrow, reservation_time: '21:00', party_size: 4 });
+  const seedCodec = { ...s.owner.session.codec(), serverTimestamp: () => new Date(), timestamp: (seconds, nanos) => new Date(seconds * 1000 + Math.floor(nanos / 1e6)) };
+  const seedRow = async (name, tableName, row) => {
+    const created = encodeInsert(tableName, { business_id: uid, ...row }, seedCodec, tenancy());
+    await bypass.create(`businesses/${s.owner.businessId}/${name}`, created.id, { ...created.data, legacyBusinessUserId: uid });
+    return created.id;
+  };
+  const waiting = await seedRow('waitlist', 'restaurant_waitlist', { guest_name: 'Budget walk-in', guest_phone: '0507654321', party_size: 2 });
+  const guestId = await seedRow('guestProfiles', 'restaurant_guest_profiles', { first_name: 'Budget', full_name: 'Budget Guest', phone: '0501234567' });
+  const refundable = await restaurant.createOrder(uid, { table_id: table.id, currency: 'ILS' });
+  await restaurant.saveOrderCart(refundable.id, [line(dishes[0], 2)], false, null);
+  await restaurant.closeOrderPaid(refundable.id, { method: 'cash', total_amount: 81, tax_amount: 0 });
+  const refundNext = async () => {
+    const approval = await approve();
+    return outcome(() => restaurant.refundOrder(uid, { orderId: refundable.id, itemIds: [], amount: 81, reason: `Budget ${next()}`, authStaffId: approval.staff_id }));
+  };
+  const guestRow = () => restaurant.listGuests().then((rows) => rows.find((row) => row.id === guestId));
+
+  let flip = false;
+  let discount = 0;
+  assertWithin([
+    await measure('restaurant: create a table (settings)', TARGET.tablesCreate,
+      () => outcome(() => restaurant.createTable(uid, { name: `Budget table ${next()}`, seats: 6, shape: 'square', zone: 'patio', rotation: 45 }))),
+    await measure('restaurant: add a category-scoped menu item (settings)', TARGET.itemsCreate,
+      () => outcome(() => restaurant.createMenuItem({ category_id: category.id, name: `Budget item ${next()}`, price: 12.5, cost_price: 4, description: 'desc', allergens: ['nuts'] }))),
+    await measure('restaurant: open an order (order)', TARGET.ordersCreate,
+      () => outcome(() => restaurant.createOrder(uid, { table_id: table.id, currency: 'ILS', is_rush: true }))),
+    await measure('restaurant: open an order (number counter)', TARGET.countersWrite,
+      () => outcome(() => restaurant.createOrder(uid, { table_id: table.id, currency: 'ILS' }))),
+    await measure('restaurant: add an order line (line)', TARGET.orderItemsCreate,
+      () => outcome(() => restaurant.saveOrderCart(growing.id, [line(dishes[1])], false, null))),
+    await measure('restaurant: add an order line (order ledger)', TARGET.ordersUpdate,
+      () => outcome(() => restaurant.saveOrderCart(growing.id, [line(dishes[2])], false, null))),
+    await measure('restaurant (waiter member): add an order line at the menu price', TARGET.orderItemsCreate,
+      () => outcome(() => waiter.restaurant.saveOrderCart(waiterOrder.id, [line(dishes[0])], false, null))),
+    await measure('restaurant: send to the kitchen (ticket)', TARGET.ticketsCreate, () => outcome(() => restaurant.sendToKitchen(take(toSend).id))),
+    await measure('restaurant: send to the kitchen (ticket line)', TARGET.ticketItemsCreate, () => outcome(() => restaurant.sendToKitchen(take(toSend).id))),
+    await measure('restaurant: send to the kitchen (line marked sent)', TARGET.orderItemsUpdate, () => outcome(() => restaurant.sendToKitchen(take(toSend).id))),
+    await measure('restaurant: kitchen display moves a ticket', TARGET.ticketsUpdate, () => {
+      flip = !flip;
+      return outcome(() => restaurant.updateTicketStatus(ticketId, flip ? 'in_progress' : 'ready'));
+    }),
+    await measure('restaurant: save an open order total (order modal)', TARGET.ordersUpdate,
+      () => outcome(() => restaurant.saveOrderCart(growing.id, [], false, { total_amount: 0, tax_amount: 0 }))),
+    await measure('restaurant: pay and close', TARGET.ordersUpdate,
+      () => outcome(() => restaurant.closeOrderPaid(take(toPay).id, { method: 'card', total_amount: 81, tax_amount: 0 }))),
+    await measure('restaurant: manager void (line)', TARGET.orderItemsUpdate, voidNext),
+    await measure('restaurant: manager void (void log)', TARGET.voidLogsCreate, voidNext),
+    await measure('restaurant: manager void (audit record)', TARGET.auditCreate, voidNext),
+    await measure('restaurant: manager discount (order)', TARGET.ordersUpdate, async () => {
+      discount += 1;
+      const approval = await approve();
+      return outcome(() => restaurant.applyDiscount({ orderId: discounted.id, discountAmount: 1 + (discount % 5), reason: `Budget ${discount}`, authStaffId: approval.staff_id }));
+    }),
+    await measure('restaurant: manager cancel (lines)', TARGET.orderItemsUpdate, async () => {
+      const order = take(toCancel);
+      const approval = await approve();
+      return outcome(() => restaurant.cancelOrderByManager(order.id, approval.staff_id));
+    }),
+    await measure('restaurant: analytics edit of a closed order (totals)', TARGET.ordersUpdate,
+      () => outcome(() => restaurant.saveOrderEdit(editable, editable.items.map((item) => ({ id: item.id, item_id: item.item_id, quantity: item.quantity,
+        price_at_time: item.price_at_time, notes: item.notes, status: item.status })), { total_amount: 0, subtotal_amount: 0, tax_amount: 0 }))),
+    await measure('restaurant: analytics delete an order (lines)', TARGET.orderItemsDelete, () => outcome(() => restaurant.deleteOrder(take(toDelete).id))),
+    await measure('restaurant: full refund (order marked refunded)', TARGET.ordersUpdate, refundNext),
+    await measure('restaurant: full refund (audit record)', TARGET.auditCreate, refundNext),
+    await measure('restaurant: allergy override log naming a staff member (audit record)', TARGET.auditCreate,
+      () => outcome(() => restaurant.logActivity({ p_business_id: uid, p_activity_type: 'ALLERGY_OVERRIDE', p_entity_type: 'order_item', p_entity_id: dishes[0].id,
+        p_details: { itemName: 'Budget dish', allergens: ['nuts'], reason: `Budget ${next()}`, method: 'verbal', orderId: 'NEW_ORDER' }, p_staff_id: waiterStaff.id }))),
+    await measure('restaurant: create a reservation (reservations board)', TARGET.reservationsCreate,
+      () => outcome(() => restaurant.createReservation(uid, { guest_name: `Budget guest ${next()}`, guest_phone: '0501234567', reservation_date: tomorrow, reservation_time: '20:00', party_size: 2 }))),
+    await measure('restaurant: seat a reservation (reservations board)', TARGET.reservationsUpdate,
+      () => outcome(() => restaurant.updateReservation(booked.id, { status: 'seated', seated_at: new Date().toISOString() }))),
+    await measure('restaurant: seat a waiting party at a table (waitlist)', TARGET.waitlistUpdate,
+      () => outcome(() => restaurant.updateWaitlist(waiting, { status: 'seated', seated_at: new Date().toISOString(), table_id: table.id }))),
+    await measure('restaurant: edit a guest profile (guest profiles)', TARGET.guestsUpdate,
+      async () => { const guest = await guestRow(); return outcome(() => restaurant.updateGuest(guestId, { ...guest, notes: `Budget ${next()}`, tags: ['vip'] })); }),
+    await measure('restaurant: add a staff member (settings)', TARGET.staffCreate,
+      () => outcome(() => restaurant.createStaff(uid, { full_name: `Budget staff ${next()}`, role: 'Waiter', hourly_rate: 38.5, email: `staff${next()}@example.com`, phone: '0501234567' }))),
+    await measure('restaurant: list active orders with lines, dishes, table and server', TARGET.ordersRead, () => outcome(() => restaurant.listActiveOrders(uid))),
+  ]);
+});
+
 test('the budget report is written', () => {
   writeFileSync(REPORT, `${JSON.stringify({
     limit: EXPRESSION_LIMIT, productCeiling: PRODUCT_CEILING, method: 'migration/firestore/lib/rules-budget.mjs',
@@ -398,5 +566,5 @@ test('the budget report is written', () => {
     paths: results.map(({ path, rule, product, withinLimit, costAtMost, costAbove, parts }) =>
       ({ path, rule, product, withinLimit, costAtMost, costAbove, ...(parts ? { parts } : {}) })),
   }, null, 2)}\n`);
-  assert.equal(results.length, 37, 'every measured path is reported');
+  assert.equal(results.length, 66, 'every measured path is reported');
 });
