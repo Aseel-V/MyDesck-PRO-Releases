@@ -40,9 +40,9 @@ Do not hand-edit outside the Design block.
 
 | Measure | Value |
 | --- | ---: |
-| Attributed source files | 63 |
+| Attributed source files | 67 |
 | Supabase database call sites | 39 |
-| Supabase RPC call sites | 25 |
+| Supabase RPC call sites | 26 |
 | Supabase database realtime call sites | 0 |
 | Supabase Storage call sites (allowed) | 0 |
 

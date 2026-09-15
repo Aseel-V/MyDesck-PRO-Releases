@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-15T07:33:49.095Z",
+  "generatedAt": "2026-09-15T10:49:09.178Z",
   "vertical": "supermarket",
   "decision": "PASS",
   "gates": {
@@ -35,7 +35,7 @@
           "label": "Rules evaluation budget",
           "file": "scripts/test-firestore-rules-budget.mjs",
           "outcome": "PASS",
-          "tests": 6
+          "tests": 7
         }
       ]
     },
@@ -88,9 +88,9 @@
     },
     "dataRehearsal": {
       "status": "PASS",
-      "importedAt": "2026-09-15T06:18:55.118Z",
-      "reconciledAt": "2026-09-15T06:18:56.599Z",
-      "dualReadAt": "2026-09-15T06:18:57.173Z",
+      "importedAt": "2026-09-15T10:23:26.967Z",
+      "reconciledAt": "2026-09-15T10:23:30.442Z",
+      "dualReadAt": "2026-09-15T10:23:32.387Z",
       "totals": {
         "tenants": 1,
         "sourceRowsCompared": 19,
@@ -101,17 +101,19 @@
         "orderMismatches": 0,
         "unknownColumns": 0,
         "orphans": 0,
+        "sourceRowsInventoried": 19,
         "migratedDocuments": 19,
         "crossTenantAttempts": 3,
         "crossTenantAllowed": 0,
         "controlsApplicable": 6,
         "controlsDetected": 6,
         "restoredClean": true
-      }
+      },
+      "additionalDualReads": []
     },
     "uiSmoke": {
       "status": "PASS",
-      "smokeAt": "2026-09-15T07:08:02.773Z",
+      "smokeAt": "2026-09-15T10:43:07.076Z",
       "flows": [
         {
           "name": "the Hebrew owner signs in on the Firebase root and the POS renders right-to-left",

@@ -11,13 +11,13 @@ Do not hand-edit outside the Design block.
 | Classification | **ACTIVE_WITH_DATA** |
 | Tenants (live `business_profiles`) | **1** |
 | Source rows (live) | **2** |
-| Firestore migrated | **NO** |
-| Reachable in a Firebase production root without Supabase database calls | **NO** |
-| Rules authored and within budget | NO |
-| Data rehearsal reconciled | NO |
-| UI parity proven | NO |
-| Search proven | NO |
-| Analytics proven | NO |
+| Firestore migrated | **YES** |
+| Reachable in a Firebase production root without Supabase database calls | **YES** |
+| Rules authored and within budget | YES |
+| Data rehearsal reconciled | YES |
+| UI parity proven | YES |
+| Search proven | YES |
+| Analytics proven | YES |
 | Retirement requires owner approval | YES |
 
 ## Source data (live counts, read-only)
@@ -31,7 +31,7 @@ Do not hand-edit outside the Design block.
 
 | Measure | Value |
 | --- | ---: |
-| Attributed source files | 11 |
+| Attributed source files | 14 |
 | Supabase database call sites | 16 |
 | Supabase RPC call sites | 1 |
 | Supabase database realtime call sites | 0 |
@@ -43,18 +43,113 @@ RPCs referenced: `add_repair_service_transaction`
 
 ## Parity evidence
 
-Gates from `migration/reports/vertical-parity-auto_repair.json`.
+Gates from `migration/reports/vertical-parity-auto_repair.json` (generated 2026-09-15T10:45:31.403Z, decision **PASS**).
 
 | Gate | Status |
 | --- | --- |
-| _not generated_ | FAIL |
+| firebaseRoot | PASS |
+| generatedSchema | PASS |
+| suites | PASS |
+| rulesBudget | PASS |
+| dataRehearsal | PASS |
+| uiSmoke | PASS |
+| search | PASS |
+| analytics | PASS |
+| rpc | PASS |
+| realtime | PASS |
+| edgeFunctions | PASS |
 
 <!-- DESIGN:BEGIN -->
 ## Design
 
-_Not authored yet._ Firestore collections, document IDs,
-relationships, Rules ownership model, transaction invariants, search and analytics
-strategy must be designed before this vertical can be migrated.
+### Collections and tenancy
+
+| Source | Firestore document | Id |
+| --- | --- | --- |
+| `customer_vehicles` | `businesses/{businessId}/vehicles/{id}` | source UUID |
+| `UNIQUE (business_id, plate_number)` | `businesses/{businessId}/vehiclePlates/{key}` | lowercase hex SHA-256 of the exact plate text |
+| `repair_orders` | `businesses/{businessId}/repairOrders/{id}` | source UUID |
+| `repair_order_items` | `businesses/{businessId}/repairOrderItems/{id}` | source UUID |
+| one `add_repair_service_transaction` call | `businesses/{businessId}/repairServices/{id}` | generated per call |
+| `car_parts` (the stock a service consumes) | `businesses/{businessId}/parts/{id}` | source UUID |
+
+The source scopes these tables by `business_id = business_profiles.id` and admits the owner through
+`business_profiles.user_id = auth.uid()`. Documents keep the column as `sourceBusinessId` and carry `ownerUid`
+and `businessId`; `repair_order_items` has no `business_id` and is scoped by its path. The plate index is
+derived by the rehearsal for every migrated vehicle, and a second vehicle with the same plate fails the run.
+
+### Repository
+
+`AutoRepairRepository` (`src/data/domain/autoRepair.ts`) is the only data path of Cars, NewCarForm and
+AddServiceModal. `SupabaseAutoRepairRepository` keeps the shipped requests verbatim;
+`FirestoreAutoRepairRepository` reproduces them.
+
+| UI call | Source | Firestore |
+| --- | --- | --- |
+| Cars list | `repair_orders` with `vehicle:customer_vehicles(*)` and `items:repair_order_items(*)`, newest first | orders by `createdAt` desc (bound 1,000), vehicles by id and items by order id in chunks of 30 |
+| Delete job | `DELETE repair_orders`, items cascade | one batch: the order, its items and its service records |
+| Register car | find the vehicle by plate, insert or update it, insert a working order: three requests | one transaction: plate index lookup, vehicle created with its index or updated, working order |
+| Parts picker | `car_parts` with `quantity > 0 ORDER BY part_name` | `quantity > 0` (bound 1,000), en-US collation as the source's `en_US.UTF-8`, id tie-break |
+| Add part and labor | RPC `add_repair_service_transaction` | one transaction writing the stock, the items, the order totals and an immutable `repairServices` record |
+
+### Transaction invariants
+
+- One part and one labor item at most per call, the only shape AddServiceModal builds; any other shape is
+  refused (`REPAIR_SERVICE_SHAPE_UNSUPPORTED`).
+- The function's refusals keep their messages: `Order not found`, `Part not found: <id>`,
+  `Insufficient stock for part. Available: X, Requested: Y`. A refused call changes nothing.
+- The part price and cost are the stored unit prices times the quantity in exact NUMERIC arithmetic. A
+  client price that differs is refused (`REPAIR_SERVICE_PART_PRICE_CHANGED`) instead of being trusted.
+- `parts_total`, `labor_total` and `total_amount` rise by exactly the service amounts.
+
+### Rules
+
+- Owner only (`isActiveOwner`), for every collection.
+- `vehicles`: create through the generated validator, id equal to the path, tenancy bound to the caller and
+  path, and its plate index created in the same write; update only the columns NewCarForm edits (never the
+  plate or tenancy); delete refused, as the source grants none and no screen deletes a vehicle.
+- `vehiclePlates`: readable by id only; created only with its vehicle under the hash of its plate; immutable.
+- `repairOrders`: created only as NewCarForm opens a job (working, unpaid, zero amounts, no customer, payment
+  or completion) on a vehicle of the business; the totals change only together with a new service record for
+  that order, with `updatedAt` the request time; the owner may delete.
+- `repairOrderItems` and `repairServices`: created only inside a service write whose record matches them;
+  immutable; deleted only with their order in the same write (`ON DELETE CASCADE`).
+- `repairServices` create recomputes everything from the documents before and after the write: the order
+  totals (`isSum2`, `isSum3` at the larger scale), the part stock (before minus quantity), and the price and
+  cost from the stored part (`isProduct`).
+- `parts`: readable by the owner; updated only as stock consumed by a service record in the same write.
+  Inventory create, edit and delete arrive with the car-parts vertical.
+
+### Search and analytics
+
+- Cars search (plate, model, owner) and the part picker search (name, description, serial number,
+  compatible car) filter complete lists whose equality to the source the dual read proves.
+- The auto_repair home is the travel dashboard. Its reads (`get_trip_years`, `get_trip_dashboard_items` with
+  each trip's `get_owned_trip_payment_summary`) run through `FirestoreTravelDashboardRepository`, proven by
+  `travel-dashboard-dual-read.mjs` against the production functions evaluated as each owner.
+- The Analytics page shows SalesAnalytics over `market_transactions`, the supermarket path.
+- `AutoRepairDashboard` (`customers_ledger`), `RepairOrderModal` and `RepairExportModal` are imported by no
+  module: `LEGACY_UNREACHABLE`. Classification: `migration/firestore/config/vertical-parity.json`.
+
+### Rules evaluation budget
+
+Every auto repair path is measured by `scripts/test-firestore-rules-budget.mjs`
+(`migration/reports/firestore-rules-budget.json`, paths prefixed `auto repair:`) against the 1,000-expression
+limit and the 850 product ceiling. Adding a part and labor is the widest write: its service record evaluates at
+most 814 expressions, the items 418, the order totals 430 and the part stock 133. Registering a car costs 286
+(vehicle), 151 (plate index) and 583 (working order); a known plate's vehicle update 241; reads 52; deleting an
+order 52 for the order and 70 each for its items and service records. The arithmetic is evaluated once, on the
+service record; the items, the order and the part only check that they match that record.
+
+### Source defects documented, not reproduced
+
+- The `repair_order_items` RLS policy compares the order's `business_id` with `auth.uid()`, so the owner's
+  own items never reached the Cars screen. The Firestore list returns the items the owner owns; the dual
+  read compares against the rows the query means for the owner.
+- `add_repair_service_transaction` checks no ownership of the order or the part and trusts the client's
+  floating-point prices. The Firestore write requires ownership and recomputes the prices.
+- NewCarForm's three requests were not atomic (a failed order left a registered vehicle) and ignored a failed
+  vehicle update. The Firestore registration commits all of it or nothing and reports a failure.
 
 <!-- DESIGN:END -->
 

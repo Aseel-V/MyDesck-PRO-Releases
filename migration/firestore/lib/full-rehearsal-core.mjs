@@ -242,3 +242,16 @@ export function businessOwnerIndexDocument(uid, businessId) {
   };
 }
 
+/** vehiclePlates/{key}: lowercase hex SHA-256 of the exact plate text, as FirestoreAutoRepairRepository derives it. */
+export function vehiclePlateKey(plateNumber) {
+  return createHash('sha256').update(String(plateNumber), 'utf8').digest('hex');
+}
+
+/**
+ * businesses/{businessId}/vehiclePlates/{key}: the index that stands in for UNIQUE(customer_vehicles.business_id,
+ * plate_number). Without it a migrated plate could be registered again as a second vehicle.
+ */
+export function vehiclePlateIndexDocument(plateNumber, vehicleId, businessId) {
+  return { plateNumber, vehicleId, businessId, schemaVersion: SCHEMA_VERSION };
+}
+

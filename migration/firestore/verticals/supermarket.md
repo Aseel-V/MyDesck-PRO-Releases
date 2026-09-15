@@ -42,7 +42,7 @@ RPCs referenced: _none detected_
 
 ## Parity evidence
 
-Gates from `migration/reports/vertical-parity-supermarket.json` (generated 2026-09-15T07:33:49.095Z, decision **PASS**).
+Gates from `migration/reports/vertical-parity-supermarket.json` (generated 2026-09-15T10:49:09.178Z, decision **PASS**).
 
 | Gate | Status |
 | --- | --- |

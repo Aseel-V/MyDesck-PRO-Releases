@@ -1,0 +1,55 @@
+{
+  "generatedAt": "2026-09-15T10:39:56.978Z",
+  "vertical": "auto_repair",
+  "root": "src/firebase-main.tsx",
+  "backendMode": "firestore-emulator",
+  "browser": "msedge",
+  "languages": [
+    "en",
+    "he"
+  ],
+  "expectedFlows": 5,
+  "flows": [
+    {
+      "name": "the English owner signs in to the travel home and opens an empty Cars page left-to-right",
+      "status": "passed",
+      "durationMs": 28498,
+      "supabaseRuntimeRequests": 0,
+      "pageErrors": 0,
+      "firestoreRequests": 13
+    },
+    {
+      "name": "a car is registered with its working job, found by plate and owner, and kept across a reload",
+      "status": "passed",
+      "durationMs": 7126,
+      "supabaseRuntimeRequests": 0,
+      "pageErrors": 0,
+      "firestoreRequests": 39
+    },
+    {
+      "name": "a part and labor are added to the job: exact totals, and the stock is consumed",
+      "status": "passed",
+      "durationMs": 6738,
+      "supabaseRuntimeRequests": 0,
+      "pageErrors": 0,
+      "firestoreRequests": 39
+    },
+    {
+      "name": "another tenant signs in right-to-left in Hebrew and sees none of the first tenant's cars",
+      "status": "passed",
+      "durationMs": 4307,
+      "supabaseRuntimeRequests": 0,
+      "pageErrors": 0,
+      "firestoreRequests": 13
+    },
+    {
+      "name": "the job is deleted and stays deleted after a reload",
+      "status": "passed",
+      "durationMs": 8929,
+      "supabaseRuntimeRequests": 0,
+      "pageErrors": 0,
+      "firestoreRequests": 42
+    }
+  ],
+  "decision": "PASS"
+}

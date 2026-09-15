@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-15T06:18:56.599Z",
+  "generatedAt": "2026-09-15T10:23:30.442Z",
   "status": "RECONCILED",
   "schemaVersion": 1,
   "transformVersion": "1.full.1",
@@ -17,8 +17,8 @@
     "applicationBehavioralParity": "SEE migration/reports/firestore-full-application-parity.json"
   },
   "coverage": {
-    "expectedDocuments": 1475,
-    "actualDocuments": 1475,
+    "expectedDocuments": 1476,
+    "actualDocuments": 1476,
     "missingDocuments": 0,
     "unexpectedDocuments": 0,
     "canonicalMismatches": 0,
@@ -145,6 +145,11 @@
       "canonicalMismatches": 0
     },
     "customer_vehicles": {
+      "expected": 1,
+      "found": 1,
+      "canonicalMismatches": 0
+    },
+    "customer_vehicles.plate_index": {
       "expected": 1,
       "found": 1,
       "canonicalMismatches": 0

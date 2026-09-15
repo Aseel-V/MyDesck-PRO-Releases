@@ -37,6 +37,7 @@ const END = '    // SCHEMA-VALIDATORS:END';
 export const APP_WRITE_TABLES = [
   'user_profiles', 'business_profiles',
   'restaurant_menu_items', 'restaurant_menu_categories', 'market_transactions',
+  'customer_vehicles', 'repair_orders', 'repair_order_items',
 ];
 
 /** Keys present on migrated documents in addition to the source columns (full-rehearsal-core extraFields). */
@@ -44,6 +45,10 @@ const COMMON_EXTRAS = ['schemaVersion', 'transformVersion', 'migrationTransformV
   'businessId', 'migrationExcludedFields', 'createdBy'];
 const TABLE_EXTRAS = {
   user_profiles: ['uid', 'legacyProfileId', 'migrationAuthOnly'],
+  // The service record that last changed the order's totals; the Rules require it with every totals change.
+  repair_orders: ['lastRepairServiceId'],
+  // The service record an item was added with.
+  repair_order_items: ['repairServiceId'],
 };
 
 /** Below these group sizes one check per column is cheaper than the group's fixed overhead. */

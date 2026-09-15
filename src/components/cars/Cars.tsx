@@ -9,7 +9,7 @@ import {
   Search,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../lib/supabase';
+import { getBackend } from '../../data/backend';
 import { AutoRepairOrder } from '../../types/autoRepair';
 import CarCard from './CarCard';
 import NewCarForm from './NewCarForm';
@@ -52,18 +52,7 @@ export default function Cars({ onToggleNavbar }: { onToggleNavbar?: (show: boole
     queryKey: ['repair-orders', user?.id],
     queryFn: async () => {
       if (!profile?.id) return [];
-      const { data, error } = await supabase
-        .from('repair_orders')
-        .select(`
-            *,
-            vehicle:customer_vehicles(*),
-            items:repair_order_items(*)
-        `)
-        .eq('business_id', profile.id)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data as unknown as AutoRepairOrder[];
+      return getBackend().autoRepair.listRepairOrders(profile.id);
     },
     enabled: !!profile?.id,
   });
@@ -205,13 +194,8 @@ export default function Cars({ onToggleNavbar }: { onToggleNavbar?: (show: boole
             onClose={() => setSelectedOrder(null)} 
             onDelete={async (id) => {
                 try {
-                    const { error } = await supabase
-                        .from('repair_orders')
-                        .delete()
-                        .eq('id', id);
-                    
-                    if (error) throw error;
-                    
+                    await getBackend().autoRepair.deleteRepairOrder(id);
+
                     toast.success('Order deleted successfully');
                     setSelectedOrder(null);
                     refetch();

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-15T07:33:51.474Z",
+  "generatedAt": "2026-09-15T10:49:10.701Z",
   "readOnly": true,
   "productionMutations": 0,
   "measurement": "TypeScript AST import graph (comments and strings are not code; @/ aliases resolved)",
@@ -24,8 +24,8 @@
     "shippedProduct": {
       "entry": "src/production-main.tsx",
       "present": true,
-      "reachableFiles": 213,
-      "runtimeReachableFiles": 207,
+      "reachableFiles": 217,
+      "runtimeReachableFiles": 209,
       "supabaseDatabase": 169,
       "supabaseRpc": 42,
       "supabaseAuth": 13,
@@ -41,10 +41,6 @@
           "line": 17
         },
         {
-          "file": "src/components/Dashboard.tsx",
-          "line": 4
-        },
-        {
           "file": "src/components/Settings.tsx",
           "line": 28
         },
@@ -58,18 +54,6 @@
         },
         {
           "file": "src/components/analytics/RestaurantOrderModal.tsx",
-          "line": 6
-        },
-        {
-          "file": "src/components/cars/AddServiceModal.tsx",
-          "line": 4
-        },
-        {
-          "file": "src/components/cars/Cars.tsx",
-          "line": 12
-        },
-        {
-          "file": "src/components/cars/NewCarForm.tsx",
           "line": 6
         },
         {
@@ -133,11 +117,19 @@
           "line": 2
         },
         {
+          "file": "src/data/supabase/SupabaseAutoRepairRepository.ts",
+          "line": 1
+        },
+        {
           "file": "src/data/supabase/SupabaseProfileRepository.ts",
           "line": 2
         },
         {
           "file": "src/data/supabase/SupabaseSupermarketRepository.ts",
+          "line": 1
+        },
+        {
+          "file": "src/data/supabase/SupabaseTravelDashboardRepository.ts",
           "line": 1
         },
         {
@@ -219,6 +211,16 @@
           "line": 5
         },
         {
+          "file": "src/data/supabase/createSupabaseBackend.ts",
+          "target": "src/data/supabase/SupabaseAutoRepairRepository.ts",
+          "line": 6
+        },
+        {
+          "file": "src/data/supabase/createSupabaseBackend.ts",
+          "target": "src/data/supabase/SupabaseTravelDashboardRepository.ts",
+          "line": 7
+        },
+        {
           "file": "src/production-main.tsx",
           "target": "src/data/supabase/createSupabaseBackend.ts",
           "line": 8
@@ -256,18 +258,6 @@
           {
             "file": "src/components/analytics/RestaurantOrderModal.tsx",
             "count": 1
-          },
-          {
-            "file": "src/components/cars/AddServiceModal.tsx",
-            "count": 1
-          },
-          {
-            "file": "src/components/cars/Cars.tsx",
-            "count": 2
-          },
-          {
-            "file": "src/components/cars/NewCarForm.tsx",
-            "count": 4
           },
           {
             "file": "src/components/parts/CarPartsInventory.tsx",
@@ -314,6 +304,10 @@
             "count": 4
           },
           {
+            "file": "src/data/supabase/SupabaseAutoRepairRepository.ts",
+            "count": 7
+          },
+          {
             "file": "src/data/supabase/SupabaseProfileRepository.ts",
             "count": 9
           },
@@ -356,14 +350,6 @@
         ],
         "rpc": [
           {
-            "file": "src/components/Dashboard.tsx",
-            "count": 1
-          },
-          {
-            "file": "src/components/cars/AddServiceModal.tsx",
-            "count": 1
-          },
-          {
             "file": "src/components/trips/DuplicateTripDialog.tsx",
             "count": 1
           },
@@ -381,6 +367,14 @@
           },
           {
             "file": "src/data/supabase/SupabaseAuthGateway.ts",
+            "count": 1
+          },
+          {
+            "file": "src/data/supabase/SupabaseAutoRepairRepository.ts",
+            "count": 1
+          },
+          {
+            "file": "src/data/supabase/SupabaseTravelDashboardRepository.ts",
             "count": 1
           },
           {
@@ -469,25 +463,21 @@
     "firebaseRoot": {
       "entry": "src/firebase-main.tsx",
       "present": true,
-      "reachableFiles": 220,
-      "runtimeReachableFiles": 214,
-      "supabaseDatabase": 145,
-      "supabaseRpc": 41,
+      "reachableFiles": 225,
+      "runtimeReachableFiles": 217,
+      "supabaseDatabase": 138,
+      "supabaseRpc": 39,
       "supabaseAuth": 1,
       "supabaseRealtime": 2,
       "supabaseEdgeFunctions": 1,
       "supabaseStorage": 7,
-      "forbiddenTotal": 190,
-      "firestoreImports": 6,
+      "forbiddenTotal": 181,
+      "firestoreImports": 8,
       "firebaseAuthImports": 3,
       "genericSupabaseClientImports": [
         {
           "file": "src/components/CommandPalette.tsx",
           "line": 17
-        },
-        {
-          "file": "src/components/Dashboard.tsx",
-          "line": 4
         },
         {
           "file": "src/components/Settings.tsx",
@@ -503,18 +493,6 @@
         },
         {
           "file": "src/components/analytics/RestaurantOrderModal.tsx",
-          "line": 6
-        },
-        {
-          "file": "src/components/cars/AddServiceModal.tsx",
-          "line": 4
-        },
-        {
-          "file": "src/components/cars/Cars.tsx",
-          "line": 12
-        },
-        {
-          "file": "src/components/cars/NewCarForm.tsx",
           "line": 6
         },
         {
@@ -661,18 +639,6 @@
             "count": 1
           },
           {
-            "file": "src/components/cars/AddServiceModal.tsx",
-            "count": 1
-          },
-          {
-            "file": "src/components/cars/Cars.tsx",
-            "count": 2
-          },
-          {
-            "file": "src/components/cars/NewCarForm.tsx",
-            "count": 4
-          },
-          {
             "file": "src/components/parts/CarPartsInventory.tsx",
             "count": 4
           },
@@ -746,14 +712,6 @@
           }
         ],
         "rpc": [
-          {
-            "file": "src/components/Dashboard.tsx",
-            "count": 1
-          },
-          {
-            "file": "src/components/cars/AddServiceModal.tsx",
-            "count": 1
-          },
           {
             "file": "src/components/trips/DuplicateTripDialog.tsx",
             "count": 1
@@ -847,23 +805,17 @@
     }
   },
   "firebaseRootActual": {
-    "supabaseDatabase": 145,
-    "supabaseRpc": 41,
+    "supabaseDatabase": 138,
+    "supabaseRpc": 39,
     "supabaseAuth": 1,
     "supabaseRealtime": 2,
     "supabaseEdgeFunctions": 1,
     "supabaseStorage": 7,
-    "firestore": 6,
-    "genericSupabaseClientImports": 36,
+    "firestore": 8,
+    "genericSupabaseClientImports": 32,
     "supabaseAdapterImports": 0
   },
   "firebaseRootSharedForbiddenCallSites": [
-    {
-      "file": "src/components/Dashboard.tsx",
-      "line": 190,
-      "kind": "rpc",
-      "target": "get_trip_years"
-    },
     {
       "file": "src/components/Settings.tsx",
       "line": 286,
@@ -885,18 +837,35 @@
       "rows": 2,
       "reachableInFirebaseRoot": true,
       "firebaseRootSurfaceFiles": 5,
-      "firebaseRootForbiddenCallSites": 8,
+      "firebaseRootForbiddenCallSites": 0,
       "firebaseRootForbiddenByCategory": {
-        "database": 7,
-        "rpc": 1,
+        "database": 0,
+        "rpc": 0,
         "auth": 0,
         "realtime": 0,
         "edgeFunctions": 0
       },
-      "shippedRootForbiddenCallSites": 8,
-      "evidence": "NOT_GENERATED",
-      "firestoreMigrated": false,
-      "blocksParity": true
+      "shippedRootForbiddenCallSites": 0,
+      "evidence": {
+        "path": "migration/reports/vertical-parity-auto_repair.json",
+        "generatedAt": "2026-09-15T10:45:31.403Z",
+        "pass": true,
+        "gates": {
+          "firebaseRoot": "PASS",
+          "generatedSchema": "PASS",
+          "suites": "PASS",
+          "rulesBudget": "PASS",
+          "dataRehearsal": "PASS",
+          "uiSmoke": "PASS",
+          "search": "PASS",
+          "analytics": "PASS",
+          "rpc": "PASS",
+          "realtime": "PASS",
+          "edgeFunctions": "PASS"
+        }
+      },
+      "firestoreMigrated": true,
+      "blocksParity": false
     },
     {
       "vertical": "car_parts",
@@ -1016,7 +985,7 @@
       "shippedRootForbiddenCallSites": 0,
       "evidence": {
         "path": "migration/reports/vertical-parity-supermarket.json",
-        "generatedAt": "2026-09-15T07:33:49.095Z",
+        "generatedAt": "2026-09-15T10:49:09.178Z",
         "pass": true,
         "gates": {
           "firebaseRoot": "PASS",
@@ -1073,8 +1042,8 @@
     "supabaseEdgeFunctions": 0,
     "supabaseStorage": "INTENTIONAL_COUNT_BEHIND_StorageRepository"
   },
-  "verticalsSupported": 1,
-  "verticalsBlocking": 7,
+  "verticalsSupported": 2,
+  "verticalsBlocking": 6,
   "databaseRuntimeZeroInFirebaseRoot": false,
   "decision": "PRODUCT_PARITY_NO_GO"
 }

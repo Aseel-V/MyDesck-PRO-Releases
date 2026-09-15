@@ -15,8 +15,9 @@
  *   suites           the vertical's repository, Rules and malicious-client suites pass, with the validator
  *                    helper semantics and the Rules budget
  *   rulesBudget      every measured path of the vertical stays within the product ceiling
- *   dataRehearsal    vertical-dual-read.mjs ran after the latest verified and reconciled full rehearsal and
- *                    reports 0 mismatch, 0 orphan, 0 cross-tenant read and every applicable control detected
+ *   dataRehearsal    vertical-dual-read.mjs, and every additional dual read the vertical lists, ran after the latest
+ *                    verified and reconciled full rehearsal and reports 0 mismatch, 0 orphan, 0 cross-tenant read
+ *                    and every applicable control detected
  *   uiSmoke          the browser smoke of the vertical's screens on the Firebase root passed
  *   search, analytics, rpc, realtime, edgeFunctions
  *                    every exposed surface is classified in migration/firestore/config/vertical-parity.json
@@ -81,11 +82,16 @@ if (entry.budgetPathPrefixes.length) {
 const imported = readJson('migration/reports/firestore-full-import.json');
 const reconciled = readJson('migration/reports/firestore-full-reconciliation.json');
 const dualRead = readJson(`migration/reports/vertical-dual-read-${vertical}.json`);
+// Screens a vertical shares with another (the travel home of auto_repair) prove their reads in their own dual read.
+const additionalDualReads = (entry.additionalDualReads ?? []).map((path) => ({ path, report: readJson(path) }));
 gate('dataRehearsal', imported?.status === 'IMPORTED_AND_IMMEDIATELY_VERIFIED'
   && (reconciled?.status ?? reconciled?.decision) === 'RECONCILED' && notBefore(reconciled?.generatedAt, imported?.generatedAt)
-  && dualRead?.decision === 'PASS' && notBefore(dualRead?.generatedAt, imported?.generatedAt),
+  && [dualRead, ...additionalDualReads.map((item) => item.report)]
+    .every((report) => report?.decision === 'PASS' && notBefore(report?.generatedAt, imported?.generatedAt)),
 { importedAt: imported?.generatedAt ?? null, reconciledAt: reconciled?.generatedAt ?? null, dualReadAt: dualRead?.generatedAt ?? null,
-  totals: dualRead?.totals ?? null });
+  totals: dualRead?.totals ?? null,
+  additionalDualReads: additionalDualReads.map(({ path, report }) => ({ path, decision: report?.decision ?? null,
+    generatedAt: report?.generatedAt ?? null, totals: report?.totals ?? null })) });
 
 const smoke = readJson(`migration/reports/ui-smoke-${vertical}.json`);
 gate('uiSmoke', smoke?.decision === 'PASS' && smoke?.root === PRODUCT_ROOTS.firebase,

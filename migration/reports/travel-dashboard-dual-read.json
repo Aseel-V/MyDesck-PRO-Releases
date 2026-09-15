@@ -1,0 +1,200 @@
+{
+  "generatedAt": "2026-09-15T10:35:47.852Z",
+  "surface": "travel_dashboard",
+  "target": "firestore-emulator",
+  "readOnlySource": {
+    "start": {
+      "read_only": "on",
+      "isolation": "repeatable read"
+    },
+    "rejectedWriteSqlState": "25006",
+    "successfulWrites": 0,
+    "end": {
+      "read_only": "on",
+      "isolation": "repeatable read"
+    },
+    "transactionOutcome": "ROLLBACK"
+  },
+  "tenants": [
+    {
+      "businessHash": "4dbcb05fccc9",
+      "ownerHash": "2f93402fb0f7",
+      "years": {
+        "source": 1,
+        "match": true
+      },
+      "dashboards": {
+        "2026": {
+          "source": 2,
+          "target": 2,
+          "mismatched": 0
+        }
+      },
+      "tripsCompared": 2,
+      "mismatchedTrips": 0,
+      "missing": 0,
+      "unexpected": 0,
+      "orderMismatches": 0,
+      "tieOrderDifferences": 0,
+      "clean": true,
+      "restoredClean": true
+    },
+    {
+      "businessHash": "ba615a830ba8",
+      "ownerHash": "4ed545194685",
+      "years": {
+        "source": 2,
+        "match": true
+      },
+      "dashboards": {
+        "2025": {
+          "source": 44,
+          "target": 44,
+          "mismatched": 0
+        },
+        "2026": {
+          "source": 51,
+          "target": 51,
+          "mismatched": 0
+        }
+      },
+      "tripsCompared": 95,
+      "mismatchedTrips": 0,
+      "missing": 0,
+      "unexpected": 0,
+      "orderMismatches": 0,
+      "tieOrderDifferences": 1,
+      "clean": true,
+      "restoredClean": true
+    },
+    {
+      "businessHash": "0ed3bad7f4de",
+      "ownerHash": "a3d78f6c5a53",
+      "years": {
+        "source": 0,
+        "match": true
+      },
+      "dashboards": {
+        "2026": {
+          "source": 0,
+          "target": 0,
+          "mismatched": 0
+        }
+      },
+      "tripsCompared": 0,
+      "mismatchedTrips": 0,
+      "missing": 0,
+      "unexpected": 0,
+      "orderMismatches": 0,
+      "tieOrderDifferences": 0,
+      "clean": true,
+      "restoredClean": true
+    },
+    {
+      "businessHash": "ebfdffd17520",
+      "ownerHash": "6d65321887ee",
+      "years": {
+        "source": 1,
+        "match": true
+      },
+      "dashboards": {
+        "2026": {
+          "source": 2,
+          "target": 2,
+          "mismatched": 0
+        }
+      },
+      "tripsCompared": 2,
+      "mismatchedTrips": 0,
+      "missing": 0,
+      "unexpected": 0,
+      "orderMismatches": 0,
+      "tieOrderDifferences": 0,
+      "clean": true,
+      "restoredClean": true
+    }
+  ],
+  "corruptionControls": [
+    {
+      "name": "trip sale price changed",
+      "tenant": "4dbcb05fccc9",
+      "observed": true,
+      "status": "DETECTED"
+    },
+    {
+      "name": "installment expected amount changed",
+      "tenant": "4dbcb05fccc9",
+      "observed": true,
+      "status": "DETECTED"
+    },
+    {
+      "name": "live trip marked deleted",
+      "tenant": "4dbcb05fccc9",
+      "observed": true,
+      "status": "DETECTED"
+    },
+    {
+      "name": "trip sale price changed",
+      "tenant": "ba615a830ba8",
+      "observed": true,
+      "status": "DETECTED"
+    },
+    {
+      "name": "installment expected amount changed",
+      "tenant": "ba615a830ba8",
+      "status": "NOT_APPLICABLE_NO_ROWS"
+    },
+    {
+      "name": "live trip marked deleted",
+      "tenant": "ba615a830ba8",
+      "observed": true,
+      "status": "DETECTED"
+    },
+    {
+      "name": "trip sale price changed",
+      "tenant": "0ed3bad7f4de",
+      "status": "NOT_APPLICABLE_NO_ROWS"
+    },
+    {
+      "name": "installment expected amount changed",
+      "tenant": "0ed3bad7f4de",
+      "status": "NOT_APPLICABLE_NO_ROWS"
+    },
+    {
+      "name": "live trip marked deleted",
+      "tenant": "0ed3bad7f4de",
+      "status": "NOT_APPLICABLE_NO_ROWS"
+    },
+    {
+      "name": "trip sale price changed",
+      "tenant": "ebfdffd17520",
+      "observed": true,
+      "status": "DETECTED"
+    },
+    {
+      "name": "installment expected amount changed",
+      "tenant": "ebfdffd17520",
+      "observed": true,
+      "status": "DETECTED"
+    },
+    {
+      "name": "live trip marked deleted",
+      "tenant": "ebfdffd17520",
+      "observed": true,
+      "status": "DETECTED"
+    }
+  ],
+  "decision": "PASS",
+  "totals": {
+    "tenants": 4,
+    "yearsMatched": true,
+    "tripsCompared": 99,
+    "mismatchedTrips": 0,
+    "missing": 0,
+    "unexpected": 0,
+    "orderMismatches": 0,
+    "controlsApplicable": 8,
+    "controlsDetected": 8,
+    "restoredClean": true
+  }
+}

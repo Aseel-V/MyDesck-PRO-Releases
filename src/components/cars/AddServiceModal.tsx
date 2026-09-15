@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { X, Search, Plus, Wrench, Coins, Package } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { supabase } from '../../lib/supabase';
+import { getBackend } from '../../data/backend';
+import type { ServiceItemInput } from '../../data/domain/autoRepair';
 import { useAuth } from '../../contexts/AuthContext';
 import { CarPart } from '../../types/carParts';
 import { AutoRepairOrder } from '../../types/autoRepair';
@@ -29,14 +30,8 @@ export default function AddServiceModal({ order, onClose, onSuccess }: AddServic
     const fetchParts = useCallback(async () => {
         if (!profile?.id) return;
         try {
-            const { data, error } = await supabase
-                .from('car_parts')
-                .select('*')
-                .eq('business_id', profile.id)
-                .gt('quantity', 0) // Only show parts in stock
-                .order('part_name');
+            const data = await getBackend().autoRepair.listPartsInStock(profile.id); // Only parts in stock
             
-            if (error) throw error;
             setParts(data || []);
         } catch (err) {
             console.error('Error fetching parts:', err);
@@ -77,7 +72,7 @@ export default function AddServiceModal({ order, onClose, onSuccess }: AddServic
             const costTotal = unitCost * quantity;
 
             // Prepare items for RPC
-            const items = [];
+            const items: ServiceItemInput[] = [];
             
             // 1. Part Item
             if (selectedPart) {
@@ -104,12 +99,8 @@ export default function AddServiceModal({ order, onClose, onSuccess }: AddServic
             }
 
             // 3. Call RPC Transaction
-            const { error: rpcError } = await supabase.rpc('add_repair_service_transaction', {
-                p_order_id: order.id,
-                p_items: items
-            });
+            await getBackend().autoRepair.addServiceToOrder(order.id, items);
 
-            if (rpcError) throw rpcError;
 
             toast.success('Service added successfully');
             onSuccess();

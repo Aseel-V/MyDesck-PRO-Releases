@@ -3,12 +3,11 @@ import { X, Save, CarFront, User, Calendar, Palette, FileBadge, Info } from 'luc
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { supabase } from '../../lib/supabase';
+import { getBackend } from '../../data/backend';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'sonner';
 import { fetchVehicleByPlate } from '../../services/govData';
 import { Search, Loader2 } from 'lucide-react';
-import type { Database } from '../../types/supabase';
 
 interface NewCarFormProps {
   onClose: () => void;
@@ -30,7 +29,6 @@ const carSchema = z.object({
 });
 
 type CarFormValues = z.infer<typeof carSchema>;
-type CustomerVehicleInsert = Database['public']['Tables']['customer_vehicles']['Insert'];
 
 export default function NewCarForm({ onClose, onSave }: NewCarFormProps) {
   const { profile } = useAuth();
@@ -101,16 +99,6 @@ export default function NewCarForm({ onClose, onSave }: NewCarFormProps) {
     setLoading(true);
 
     try {
-      // 1. Upsert Vehicle (Identify by plate + business_id)
-      const { data: existingVehicle } = await supabase
-        .from('customer_vehicles')
-        .select('id')
-        .eq('business_id', profile.id)
-        .eq('plate_number', data.plate_number)
-        .maybeSingle();
-
-      let vehicleId = existingVehicle?.id;
-
       let testExpiryDate = null;
       if (data.test_expiry) {
           // Try to parse DD/MM/YYYY or YYYY-MM-DD
@@ -125,8 +113,8 @@ export default function NewCarForm({ onClose, onSave }: NewCarFormProps) {
           }
       }
 
-      const vehicleData = {
-            business_id: profile.id,
+      // Upsert the vehicle (identified by plate + business) and open a working repair order on it.
+      await getBackend().autoRepair.registerVehicleAndOpenOrder(profile.id, {
             plate_number: data.plate_number,
             model: data.model,
             owner_name: data.owner_name,
@@ -136,42 +124,11 @@ export default function NewCarForm({ onClose, onSave }: NewCarFormProps) {
             test_expiry: testExpiryDate, // Ensure DB accepts date or text. Plan said date.
             trim_level: data.trim_level,
             ownership: data.ownership,
-            updated_at: new Date().toISOString()
-      } as unknown as CustomerVehicleInsert;
-
-      if (!vehicleId) {
-        // Create new vehicle
-        const { data: newVehicle, error: vehicleError } = await supabase
-          .from('customer_vehicles')
-          .insert([{ ...vehicleData, created_at: new Date().toISOString() }])
-          .select()
-          .single();
-
-        if (vehicleError) throw vehicleError;
-        vehicleId = newVehicle.id;
-      } else {
-        // Update existing
-         await supabase
-          .from('customer_vehicles')
-          .update(vehicleData)
-          .eq('id', vehicleId);
-      }
-
-      // 2. Create Repair Order
-      const { error: orderError } = await supabase
-        .from('repair_orders')
-        .insert([{
-            business_id: profile.id,
-            vehicle_id: vehicleId,
-            status: 'working',
+      }, {
             odometer_reading: data.odometer,
             notes: data.notes,
-            total_amount: 0,
             currency: profile.preferred_currency || 'USD',
-            created_at: new Date().toISOString()
-        }]);
-
-      if (orderError) throw orderError;
+      });
 
       toast.success('New car added successfully');
       onSave(); // Refresh list

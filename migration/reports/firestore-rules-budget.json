@@ -163,6 +163,110 @@
       "withinLimit": true,
       "costAtMost": 52,
       "costAbove": 49
+    },
+    {
+      "path": "auto repair: register a car (vehicle)",
+      "rule": "/vehicles/{vehicleId} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 286,
+      "costAbove": 283
+    },
+    {
+      "path": "auto repair: register a car (plate index)",
+      "rule": "/vehiclePlates/{plateKey} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 151,
+      "costAbove": 148
+    },
+    {
+      "path": "auto repair: register a car (working order)",
+      "rule": "/repairOrders/{orderId} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 583,
+      "costAbove": 580
+    },
+    {
+      "path": "auto repair: register a known plate (vehicle update)",
+      "rule": "/vehicles/{vehicleId} allow update",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 241,
+      "costAbove": 238
+    },
+    {
+      "path": "auto repair: add a part and labor (service record)",
+      "rule": "/repairServices/{serviceId} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 814,
+      "costAbove": 811
+    },
+    {
+      "path": "auto repair: add a part and labor (items)",
+      "rule": "/repairOrderItems/{itemId} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 418,
+      "costAbove": 415
+    },
+    {
+      "path": "auto repair: add a part and labor (order totals)",
+      "rule": "/repairOrders/{orderId} allow update",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 430,
+      "costAbove": 427
+    },
+    {
+      "path": "auto repair: add a part and labor (part stock)",
+      "rule": "/parts/{partId} allow update",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 133,
+      "costAbove": 130
+    },
+    {
+      "path": "auto repair: list repair orders",
+      "rule": "/repairOrders/{orderId} allow get, list",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 52,
+      "costAbove": 49
+    },
+    {
+      "path": "auto repair: list parts in stock",
+      "rule": "/parts/{partId} allow get, list",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 52,
+      "costAbove": 49
+    },
+    {
+      "path": "auto repair: delete an order (order)",
+      "rule": "/repairOrders/{orderId} allow delete",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 52,
+      "costAbove": 49
+    },
+    {
+      "path": "auto repair: delete an order (items)",
+      "rule": "/repairOrderItems/{itemId} allow delete",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 70,
+      "costAbove": 67
+    },
+    {
+      "path": "auto repair: delete an order (service records)",
+      "rule": "/repairServices/{serviceId} allow delete",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 70,
+      "costAbove": 67
     }
   ]
 }

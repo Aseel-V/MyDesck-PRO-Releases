@@ -11,6 +11,7 @@ import { canonicalFromDocument, transformRow } from '../lib/transform.mjs';
 import { parseDecimalString, decimalStringToScaledInteger } from '../lib/exact-decimal.mjs';
 import {
   FULL_TRANSFORM_VERSION, authDerivedDocument, businessOwnerIndexDocument, credentialExclusions, documentId,
+  vehiclePlateIndexDocument, vehiclePlateKey,
   extraFields, indexRisk, migratableColumns, normalizePgArray, rawDocumentHash,
   resolveTenancy, sizeClass, sourceKey, sourcePk, targetPath, topologicalTables,
 } from '../lib/full-rehearsal-core.mjs';
@@ -136,6 +137,7 @@ try {
       FROM auth.users u ORDER BY u.id`)).rows;
 
     const profileUids = new Set();
+    const vehicleRows = [];
     const tableOrder = topologicalTables(catalog);
     let sourceRows = 0;
 
@@ -257,6 +259,9 @@ try {
             })), estimatedBytes: transformed.estimatedBytes, entityType: tableName };
           sourceMeta.set(key, meta);
           expected.push(meta);
+          if (tableName === 'customer_vehicles') {
+            vehicleRows.push({ id: row.id, plateNumber: row.plate_number, businessId: tenancy.businessId, ownerUid: tenancy.ownerUid });
+          }
           if (transformed.warnings.length) warnings.push({ entityType: tableName,
             path: redactPath(path), warnings: transformed.warnings });
 
@@ -336,6 +341,23 @@ try {
         docId: business.user_id, columns: [], sourceHash: rawHash, rawHash, ownerUid: business.user_id,
         businessId: business.id, foreignKeys: [], estimatedBytes: Buffer.byteLength(JSON.stringify(data)),
         entityType: 'businessOwners', rawOnly: true };
+      collisions.set(path, meta.key);
+      expected.push(meta);
+      written += 1;
+    }
+
+    // The plate index every vehicle needs under the Rules (UNIQUE(business_id, plate_number) in the source).
+    for (const vehicle of vehicleRows) {
+      if (!vehicle.businessId) throw new Error('VEHICLE_WITHOUT_BUSINESS');
+      const path = `businesses/${encodeURIComponent(vehicle.businessId)}/vehiclePlates/${vehiclePlateKey(vehicle.plateNumber)}`;
+      if (collisions.has(path)) throw new Error(`VEHICLE_PLATE_NOT_UNIQUE:${redactPath(path)}`);
+      const data = vehiclePlateIndexDocument(vehicle.plateNumber, vehicle.id, vehicle.businessId);
+      await target.db.doc(path).set(data);
+      const rawHash = rawDocumentHash(path, data);
+      const meta = { key: `vehiclePlates#${encodeURIComponent(vehicle.id)}`, sourceTable: 'customer_vehicles.plate_index', derived: true,
+        sourcePk: [vehicle.id], targetPath: path, docId: path.split('/').pop(), columns: [], sourceHash: rawHash, rawHash,
+        ownerUid: vehicle.ownerUid, businessId: vehicle.businessId, foreignKeys: [],
+        estimatedBytes: Buffer.byteLength(JSON.stringify(data)), entityType: 'vehiclePlates', rawOnly: true };
       collisions.set(path, meta.key);
       expected.push(meta);
       written += 1;

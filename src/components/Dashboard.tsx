@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../contexts/AuthContext";
-import { supabase } from "../lib/supabase";
 import { getBackend } from "../data/backend";
 import { Trip } from "../types/trip";
 import Navbar from "./Navbar";
@@ -21,7 +20,7 @@ import {
   isTripEligibleForAlert,
   isTripIncludedInDashboardStats,
 } from "../lib/tripStatus";
-import { fetchTripDashboardItems, fetchTripDetails } from "../lib/tripQueries";
+import { fetchTripDetails } from "../lib/tripQueries";
 
 // Lazy load components
 const Settings = lazy(() => import("./Settings"));
@@ -146,7 +145,7 @@ export default function Dashboard() {
     queryKey: ["trip-dashboard", user?.id, yearFilter],
     queryFn: async () => {
       if (!user) return [];
-      return fetchTripDashboardItems(yearFilter);
+      return getBackend().travelDashboard.listDashboardTrips(yearFilter);
     },
     enabled: !!user?.id && !isAdmin && showsTravelDashboard,
   });
@@ -186,11 +185,7 @@ export default function Dashboard() {
   // State for Year Filter
   const { data: storedYears = [] } = useQuery({
     queryKey: ['trip-years', user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_trip_years');
-      if (error) throw error;
-      return (data as { year: string }[]).map((item) => item.year);
-    },
+    queryFn: () => getBackend().travelDashboard.listTripYears(),
     enabled: !!user?.id && !isAdmin && showsTravelDashboard,
   });
 

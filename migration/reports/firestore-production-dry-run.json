@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-15T07:30:17.251Z",
+  "generatedAt": "2026-09-15T10:52:41.530Z",
   "migrationRunId": "harness-production-prep",
   "architecture": "FIREBASE_SPARK_ONLY",
   "mode": "dry-run",
@@ -15,11 +15,11 @@
     "firebaseProject": "mydesckpro",
     "firestoreDatabaseId": "default"
   },
-  "executableCommitSha": "2ba92b199fdf86b1ff53e6f4170734d36da413b0",
+  "executableCommitSha": "c3c18f66e2d9da6dfe7f67d9639bd7fc76a8ff6c",
   "configHashes": {
-    "firestoreRules": "ec6e79cfd89d5c7f5d9335e3e3f8235914e11a9401859d902a91f85070ebfdd3",
-    "indexes": "e99c690116f555a3a1906a15b69595460dc69e5d0e26d697c20c4c0706803f05",
-    "deltaMap": "df728c8e165f9cb6813bbdb2f36a3dd2cd32b1437acb2481ebb92fa05d7eab89"
+    "firestoreRules": "3f2fb9d33835e4c4c6a7b2c7cb137af85b6a47831366b9764a0b5dd1fda804f1",
+    "indexes": "c516b73728401cd577c3214efaf5a839b2a8cde65dc714c6a39d70300ee2bc39",
+    "deltaMap": "cf60c2b43faf32d30a5965e958a10d2226cc57e161095eff40342ba1d5d3db85"
   },
   "evidence": {
     "environment": {
@@ -62,7 +62,7 @@
             }
           ]
         },
-        "candidateSha256": "ec6e79cfd89d5c7f5d9335e3e3f8235914e11a9401859d902a91f85070ebfdd3",
+        "candidateSha256": "3f2fb9d33835e4c4c6a7b2c7cb137af85b6a47831366b9764a0b5dd1fda804f1",
         "rollback": {
           "release": "projects/mydesckpro/releases/cloud.firestore/default",
           "ruleset": "projects/mydesckpro/rulesets/c6fc85cd-4681-491c-bb7c-b879e5893a92",
@@ -412,7 +412,7 @@
       "status": "FAIL",
       "evidence": {
         "shippedEntry": "src/production-main.tsx",
-        "shippedReachableFiles": 213
+        "shippedReachableFiles": 217
       }
     },
     "secret": {
@@ -483,7 +483,7 @@
               }
             ]
           },
-          "candidateSha256": "ec6e79cfd89d5c7f5d9335e3e3f8235914e11a9401859d902a91f85070ebfdd3",
+          "candidateSha256": "3f2fb9d33835e4c4c6a7b2c7cb137af85b6a47831366b9764a0b5dd1fda804f1",
           "rollback": {
             "release": "projects/mydesckpro/releases/cloud.firestore/default",
             "ruleset": "projects/mydesckpro/rulesets/c6fc85cd-4681-491c-bb7c-b879e5893a92",
@@ -853,7 +853,7 @@
         "status": "FAIL",
         "evidence": {
           "shippedEntry": "src/production-main.tsx",
-          "shippedReachableFiles": 213
+          "shippedReachableFiles": 217
         }
       },
       {

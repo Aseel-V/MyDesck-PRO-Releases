@@ -5,6 +5,8 @@ import { FirestoreAdminRepository } from './FirestoreAdminRepository';
 import { FirestoreAuthGateway } from './FirestoreAuthGateway';
 import { FirestoreProfileRepository } from './FirestoreProfileRepository';
 import { FirestoreSupermarketRepository } from './FirestoreSupermarketRepository';
+import { FirestoreAutoRepairRepository } from './FirestoreAutoRepairRepository';
+import { FirestoreTravelDashboardRepository } from './FirestoreTravelDashboardRepository';
 
 /**
  * The Firebase production backend: Firebase Auth, Firestore and Rules. Supabase appears nowhere in
@@ -18,5 +20,7 @@ export function createFirestoreBackend(client: FirebaseClient): ProductBackend {
     profiles: new FirestoreProfileRepository(session),
     admin: new FirestoreAdminRepository(session),
     supermarket: new FirestoreSupermarketRepository(session),
+    autoRepair: new FirestoreAutoRepairRepository(session),
+    travelDashboard: new FirestoreTravelDashboardRepository(session),
   };
 }

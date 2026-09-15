@@ -1,11 +1,27 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import {
   FIRESTORE_MAX_DOCUMENT_BYTES, FULL_TRANSFORM_VERSION, authDerivedDocument, businessOwnerIndexDocument,
   credentialExclusions, documentId, indexRisk, sizeClass, sourceKey, targetPath,
-  topologicalTables,
+  topologicalTables, vehiclePlateIndexDocument, vehiclePlateKey,
 } from '../lib/full-rehearsal-core.mjs';
+
+const allowedKeys = (header) => {
+  const rules = readFileSync('migration/firestore/rules/firestore.rules', 'utf8');
+  const block = rules.slice(rules.indexOf(header));
+  return [...block.match(/hasOnly\(\[([^\]]+)\]\)/)[1].matchAll(/'([^']+)'/g)].map((match) => match[1]);
+};
+
+test('every migrated vehicle gets a plate index keyed by the plate hash, with exactly the keys the Rules allow', () => {
+  const plate = '12-345-67 חיפה';
+  assert.equal(vehiclePlateKey(plate), createHash('sha256').update(plate, 'utf8').digest('hex'));
+  assert.match(vehiclePlateKey(plate), /^[0-9a-f]{64}$/, 'lowercase hex, as the Rules compare it');
+  const doc = vehiclePlateIndexDocument(plate, 'vehicle-1', 'business-1');
+  assert.deepEqual(Object.keys(doc).sort(), [...allowedKeys('match /vehiclePlates/{plateKey} {')].sort());
+  assert.equal(doc.schemaVersion, 1);
+});
 
 test('credential fields are explicitly excluded instead of silently copied', () => {
   const fields = credentialExclusions('restaurant_staff', [

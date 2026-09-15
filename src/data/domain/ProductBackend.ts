@@ -10,6 +10,8 @@ import type { AuthGateway } from './auth';
 import type { ProfileRepository } from './profiles';
 import type { AdminRepository } from './admin';
 import type { SupermarketRepository } from './supermarket';
+import type { AutoRepairRepository } from './autoRepair';
+import type { TravelDashboardRepository } from './travelDashboard';
 
 export type BackendKind = 'supabase' | 'firestore' | 'firestore-emulator';
 
@@ -19,4 +21,6 @@ export interface ProductBackend {
   readonly profiles: ProfileRepository;
   readonly admin: AdminRepository;
   readonly supermarket: SupermarketRepository;
+  readonly autoRepair: AutoRepairRepository;
+  readonly travelDashboard: TravelDashboardRepository;
 }

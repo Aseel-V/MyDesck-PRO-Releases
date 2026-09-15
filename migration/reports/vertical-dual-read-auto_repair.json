@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-15T10:23:32.387Z",
-  "vertical": "supermarket",
+  "generatedAt": "2026-09-15T10:28:44.085Z",
+  "vertical": "auto_repair",
   "target": "firestore-emulator",
   "readOnlySource": {
     "start": {
@@ -17,13 +17,13 @@
   },
   "tenants": [
     {
-      "businessHash": "2ce413774b65",
-      "ownerHash": "14f005e47862",
+      "businessHash": "0ed3bad7f4de",
+      "ownerHash": "a3d78f6c5a53",
       "methods": {
-        "listAvailableProducts": {
-          "sourceRows": 2,
-          "targetRows": 2,
-          "matched": 2,
+        "listRepairOrders": {
+          "sourceRows": 0,
+          "targetRows": 0,
+          "matched": 0,
           "missing": 0,
           "unexpected": 0,
           "fieldMismatches": 0,
@@ -31,18 +31,7 @@
           "mismatchedColumns": {},
           "unknownColumns": []
         },
-        "listCategories": {
-          "sourceRows": 16,
-          "targetRows": 16,
-          "matched": 16,
-          "missing": 0,
-          "unexpected": 0,
-          "fieldMismatches": 0,
-          "orderMismatches": 0,
-          "mismatchedColumns": {},
-          "unknownColumns": []
-        },
-        "listSales": {
+        "listPartsInStock": {
           "sourceRows": 1,
           "targetRows": 1,
           "matched": 1,
@@ -55,21 +44,35 @@
         }
       },
       "inventory": {
-        "menuCategories": {
-          "sourceRows": 16,
-          "targetDocuments": 16,
+        "vehicles": {
+          "sourceRows": 1,
+          "targetDocuments": 1,
           "missing": 0,
           "unexpected": 0,
           "orphans": 0
         },
-        "menuItems": {
-          "sourceRows": 2,
-          "targetDocuments": 2,
+        "vehiclePlates": {
+          "sourceRows": 1,
+          "targetDocuments": 1,
           "missing": 0,
           "unexpected": 0,
           "orphans": 0
         },
-        "marketTransactions": {
+        "repairOrders": {
+          "sourceRows": 0,
+          "targetDocuments": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "repairOrderItems": {
+          "sourceRows": 0,
+          "targetDocuments": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "parts": {
           "sourceRows": 1,
           "targetDocuments": 1,
           "missing": 0,
@@ -78,8 +81,8 @@
         }
       },
       "crossTenant": {
-        "attempts": 3,
-        "denied": 3
+        "attempts": 4,
+        "denied": 4
       },
       "restoredClean": true,
       "clean": true
@@ -87,43 +90,36 @@
   ],
   "corruptionControls": [
     {
-      "name": "sale amount changed",
-      "tenant": "2ce413774b65",
+      "name": "part moved to another business",
+      "tenant": "0ed3bad7f4de",
+      "metric": "orphans",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "part selling price changed",
+      "tenant": "0ed3bad7f4de",
       "metric": "fieldMismatches",
       "observed": 1,
       "status": "DETECTED"
     },
     {
-      "name": "sale deleted",
-      "tenant": "2ce413774b65",
+      "name": "vehicle deleted",
+      "tenant": "0ed3bad7f4de",
       "metric": "missing",
       "observed": 1,
       "status": "DETECTED"
     },
     {
-      "name": "sale duplicated under a new id",
-      "tenant": "2ce413774b65",
-      "metric": "unexpected",
-      "observed": 1,
+      "name": "vehicle plate changed under its index",
+      "tenant": "0ed3bad7f4de",
+      "metric": "orphans",
+      "observed": 2,
       "status": "DETECTED"
     },
     {
-      "name": "sale moved to another owner",
-      "tenant": "2ce413774b65",
-      "metric": "missing",
-      "observed": 1,
-      "status": "DETECTED"
-    },
-    {
-      "name": "category that the source does not have",
-      "tenant": "2ce413774b65",
-      "metric": "unexpected",
-      "observed": 1,
-      "status": "DETECTED"
-    },
-    {
-      "name": "available product that the source does not have",
-      "tenant": "2ce413774b65",
+      "name": "repair order that the source does not have",
+      "tenant": "0ed3bad7f4de",
       "metric": "unexpected",
       "observed": 1,
       "status": "DETECTED"
@@ -132,20 +128,20 @@
   "decision": "PASS",
   "totals": {
     "tenants": 1,
-    "sourceRowsCompared": 19,
-    "matched": 19,
+    "sourceRowsCompared": 1,
+    "matched": 1,
     "missing": 0,
     "unexpected": 0,
     "fieldMismatches": 0,
     "orderMismatches": 0,
     "unknownColumns": 0,
     "orphans": 0,
-    "sourceRowsInventoried": 19,
-    "migratedDocuments": 19,
-    "crossTenantAttempts": 3,
+    "sourceRowsInventoried": 3,
+    "migratedDocuments": 3,
+    "crossTenantAttempts": 4,
     "crossTenantAllowed": 0,
-    "controlsApplicable": 6,
-    "controlsDetected": 6,
+    "controlsApplicable": 5,
+    "controlsDetected": 5,
     "restoredClean": true
   }
 }

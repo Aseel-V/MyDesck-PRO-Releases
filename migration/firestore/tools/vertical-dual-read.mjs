@@ -33,6 +33,7 @@ import { writeReport } from '../../tools/lib/write-report.mjs';
 import { RulesClient } from '../lib/rules-client.mjs';
 import { FirebaseSession } from '../../../src/data/firestore/FirebaseSession.ts';
 import { FirestoreSupermarketRepository } from '../../../src/data/firestore/FirestoreSupermarketRepository.ts';
+import { FirestoreAutoRepairRepository } from '../../../src/data/firestore/FirestoreAutoRepairRepository.ts';
 import { SOURCE_SCHEMA } from '../../../src/data/firestore/sourceSchema.generated.ts';
 import { encodeInsert } from '../../../src/data/firestore/documentCodec.ts';
 import { timestampToMicros } from '../../../src/data/firestore/exactValues.ts';
@@ -44,6 +45,7 @@ if (!FIRESTORE_HOST || !AUTH_HOST) throw new Error('EMULATOR_HOSTS_REQUIRED');
 const vertical = process.argv.find((arg) => arg.startsWith('--vertical='))?.slice('--vertical='.length);
 const bypass = RulesClient.asAdminBypass({ host: FIRESTORE_HOST, projectId: PROJECT });
 const hash = (value) => createHash('sha256').update(String(value)).digest('hex').slice(0, 12);
+const sha256hex = (value) => createHash('sha256').update(String(value), 'utf8').digest('hex');
 const RANGE = ['1970-01-01T00:00:00.000Z', '2999-12-31T23:59:59.999Z'];
 const agg = (inner) => `SELECT coalesce(json_agg(t), '[]'::json)::text AS rows FROM (${inner}) t`;
 const zero = (scale = 0) => ({ mapValue: { fields: { unitsText: { stringValue: '0' }, units: { integerValue: '0' }, scale: { integerValue: String(scale) }, decimal: { stringValue: '0' } } } });
@@ -98,6 +100,47 @@ const SPECS = {
         build: (tenant) => ({ table: 'restaurant_menu_categories', row: { business_id: tenant.uid, name: 'Corruption control', sort_order: 99 } }) },
       { name: 'available product that the source does not have', collection: 'menuItems', check: { method: 'listAvailableProducts' }, metric: 'unexpected', kind: 'synthetic',
         build: (tenant) => ({ table: 'restaurant_menu_items', row: { business_id: tenant.uid, name: 'Corruption control', price: 1, is_available: true } }) },
+    ],
+  },
+  auto_repair: {
+    businessType: 'auto_repair',
+    repository: (session) => new FirestoreAutoRepairRepository(session),
+    methods: [
+      { name: 'listRepairOrders', table: 'repair_orders', order: 'created_at',
+        embeds: { vehicle: { table: 'customer_vehicles', many: false }, items: { table: 'repair_order_items', many: true } },
+        sql: agg(`SELECT o.*, (SELECT to_json(v) FROM public.customer_vehicles v WHERE v.id = o.vehicle_id) AS vehicle,
+          COALESCE((SELECT json_agg(i) FROM public.repair_order_items i WHERE i.order_id = o.id), '[]'::json) AS items
+          FROM public.repair_orders o WHERE o.business_id = $1 ORDER BY o.created_at DESC LIMIT 1000`),
+        params: (tenant) => [tenant.businessId], call: (repo, tenant) => repo.listRepairOrders(tenant.businessId) },
+      { name: 'listPartsInStock', table: 'car_parts', order: 'part_name',
+        sql: agg('SELECT * FROM public.car_parts WHERE business_id = $1 AND quantity > 0 ORDER BY part_name LIMIT 1000'),
+        params: (tenant) => [tenant.businessId], call: (repo, tenant) => repo.listPartsInStock(tenant.businessId) },
+    ],
+    inventory: [
+      { collection: 'vehicles', tenancy: { field: 'sourceBusinessId', of: 'businessId', nullable: false },
+        sql: 'SELECT id::text AS id FROM public.customer_vehicles WHERE business_id = $1', params: (tenant) => [tenant.businessId] },
+      { collection: 'vehiclePlates', tenancy: null, derived: true,
+        sql: 'SELECT plate_number AS id FROM public.customer_vehicles WHERE business_id = $1', params: (tenant) => [tenant.businessId],
+        idOf: (row) => sha256hex(row.id) },
+      { collection: 'repairOrders', tenancy: { field: 'sourceBusinessId', of: 'businessId', nullable: false },
+        sql: 'SELECT id::text AS id FROM public.repair_orders WHERE business_id = $1', params: (tenant) => [tenant.businessId] },
+      { collection: 'repairOrderItems', tenancy: null,
+        sql: `SELECT i.id::text AS id FROM public.repair_order_items i JOIN public.repair_orders o ON o.id = i.order_id
+          WHERE o.business_id = $1`, params: (tenant) => [tenant.businessId] },
+      { collection: 'parts', tenancy: { field: 'sourceBusinessId', of: 'businessId', nullable: false },
+        sql: 'SELECT id::text AS id FROM public.car_parts WHERE business_id = $1', params: (tenant) => [tenant.businessId] },
+    ],
+    controls: [
+      { name: 'part moved to another business', collection: 'parts', check: { inventory: 'parts' }, metric: 'orphans', kind: 'patch',
+        mutate: (fields) => ({ ...fields, sourceBusinessId: { stringValue: 'corruption-control-business' } }) },
+      { name: 'part selling price changed', collection: 'parts', check: { method: 'listPartsInStock' }, metric: 'fieldMismatches', kind: 'patch',
+        mutate: (fields) => ({ ...fields, quantity: { integerValue: '7' }, sellingPriceUnit: differentDecimal(fields.sellingPriceUnit, 2) }),
+        alsoMetrics: ['unexpected'] },
+      { name: 'vehicle deleted', collection: 'vehicles', check: { inventory: 'vehicles' }, metric: 'missing', kind: 'delete' },
+      { name: 'vehicle plate changed under its index', collection: 'vehicles', check: { inventory: 'vehiclePlates' }, metric: 'orphans', kind: 'patch',
+        mutate: (fields) => ({ ...fields, plateNumber: { stringValue: 'CORRUPTION-CONTROL' } }) },
+      { name: 'repair order that the source does not have', collection: 'repairOrders', check: { method: 'listRepairOrders' }, metric: 'unexpected', kind: 'synthetic',
+        build: (tenant) => ({ table: 'repair_orders', row: { business_id: tenant.businessId, vehicle_id: randomUUID(), status: 'working', total_amount: 0 } }) },
     ],
   },
 };
@@ -215,17 +258,35 @@ const report = { generatedAt: new Date().toISOString(), vertical, target: 'fires
 const docId = (document) => decodeURIComponent(document.name.split('/').pop());
 
 async function inventoryOf(tenant, item) {
-  const documents = await listDocuments(`businesses/${encodeURIComponent(tenant.businessId)}/${item.collection}`);
+  const base = `businesses/${encodeURIComponent(tenant.businessId)}`;
+  const documents = await listDocuments(`${base}/${item.collection}`);
   const ids = documents.map(docId);
   const expected = new Set(tenant.inventory[item.collection]);
-  const orphans = documents.filter((document) => {
+  // A plate index document must agree with the source and with the migrated vehicle it names, and every migrated
+  // vehicle must be indexed under its own plate: the plate uniqueness the Rules enforce depends on both.
+  const vehicles = item.collection === 'vehiclePlates'
+    ? new Map((await listDocuments(`${base}/vehicles`)).map((document) => [docId(document), document.fields?.plateNumber?.stringValue]))
+    : null;
+  let orphans = documents.filter((document) => {
     const fields = document.fields ?? {};
     if (fields.businessId?.stringValue !== tenant.businessId) return true;
+    if (item.derived) {
+      if (item.collection === 'vehiclePlates') {
+        const vehicleId = fields.vehicleId?.stringValue;
+        const plate = fields.plateNumber?.stringValue;
+        return !tenant.vehiclePlates?.has(`${vehicleId}|${plate}`) || sha256hex(plate) !== docId(document) || vehicles.get(vehicleId) !== plate;
+      }
+      return false;
+    }
     if (fields.ownerUid?.stringValue !== tenant.uid) return true;
     if (!item.tenancy) return false;
     const value = fields[item.tenancy.field]?.stringValue ?? null;
     return value === null ? !item.tenancy.nullable : value !== tenant[item.tenancy.of];
   }).length;
+  if (vehicles) {
+    const indexed = new Set(documents.map((document) => `${document.fields?.vehicleId?.stringValue}|${docId(document)}`));
+    orphans += [...vehicles].filter(([vehicleId, plate]) => !indexed.has(`${vehicleId}|${sha256hex(plate)}`)).length;
+  }
   return { sourceRows: expected.size, targetDocuments: ids.length, missing: [...expected].filter((id) => !ids.includes(id)).length,
     unexpected: ids.filter((id) => !expected.has(id)).length, orphans };
 }
@@ -244,6 +305,10 @@ try {
       }
       for (const item of spec.inventory) {
         tenant.inventory[item.collection] = (await select(item.sql, item.params(tenant))).rows.map((row) => (item.idOf ? item.idOf(row) : row.id)).sort();
+      }
+      if (spec.inventory.some((item) => item.collection === 'vehiclePlates')) {
+        tenant.vehiclePlates = new Set((await select(`SELECT id::text AS id, plate_number FROM public.customer_vehicles WHERE business_id = $1`,
+          [tenant.businessId])).rows.map((row) => `${row.id}|${row.plate_number}`));
       }
       tenants.push(tenant);
     }

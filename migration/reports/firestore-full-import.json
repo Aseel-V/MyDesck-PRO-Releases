@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-15T06:18:55.118Z",
+  "generatedAt": "2026-09-15T10:23:26.967Z",
   "status": "IMPORTED_AND_IMMEDIATELY_VERIFIED",
   "sourceSnapshot": {
     "readOnly": true,
@@ -13,7 +13,7 @@
     "mode": "emulator",
     "project": "mydesck-migration-proof",
     "productionWrites": 0,
-    "documents": 1475,
+    "documents": 1476,
     "schemaVersion": 1,
     "transformVersion": "1.full.1"
   },
@@ -87,7 +87,7 @@
     "immediateRoundTripMismatches": 0
   },
   "migration": {
-    "written": 1475,
+    "written": 1476,
     "reusedVerified": 0,
     "failed": 0,
     "skipped": 8,

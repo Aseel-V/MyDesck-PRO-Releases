@@ -343,6 +343,117 @@ service cloud.firestore {
         !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
       ].hasOnly([true]));
     }
+    function sv_customer_vehicles(d) {
+      return d.keys().hasOnly(['businessId', 'color', 'createdAt', 'createdAtMicros', 'createdBy', 'id', 'isDeleted', 'lastOdometer', 'migrationExcludedFields', 'migrationTransformVersion', 'model', 'notes', 'ownerName', 'ownerPhone', 'ownerUid', 'ownership', 'plateNumber', 'schemaVersion', 'sourceBusinessId', 'testExpiry', 'transformVersion', 'trimLevel', 'updatedAt', 'updatedAtMicros', 'vin', 'year']) && [
+        d.id is string,
+        d.sourceBusinessId is string,
+        d.plateNumber is string,
+        d.ownerName is string,
+        d.ownerPhone is string,
+        d.createdAt is timestamp,
+        d.get('createdAtMicros', '0').matches('-?[0-9]+'),
+        d.updatedAt is timestamp,
+        d.get('updatedAtMicros', '0').matches('-?[0-9]+'),
+        d.testExpiry == null || d.testExpiry.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}'),
+        sfStrings([d.model, d.vin, d.color, d.notes, d.trimLevel, d.ownership]),
+        d.year == null || d.year is int,
+        d.lastOdometer == null || d.lastOdometer is int,
+        d.get('schemaVersion', 1) == 1
+      ].hasOnly([true]);
+    }
+    function svu_customer_vehicles(changed, d) {
+      return changed.hasOnly(['businessId', 'color', 'createdAt', 'createdAtMicros', 'createdBy', 'id', 'isDeleted', 'lastOdometer', 'migrationExcludedFields', 'migrationTransformVersion', 'model', 'notes', 'ownerName', 'ownerPhone', 'ownerUid', 'ownership', 'plateNumber', 'schemaVersion', 'sourceBusinessId', 'testExpiry', 'transformVersion', 'trimLevel', 'updatedAt', 'updatedAtMicros', 'vin', 'year']) && (changed.size() > 8 ? sv_customer_vehicles(d) : [
+        !('id' in changed) || (d.id is string),
+        !('sourceBusinessId' in changed) || (d.sourceBusinessId is string),
+        !('plateNumber' in changed) || (d.plateNumber is string),
+        !('ownerName' in changed) || (d.ownerName is string),
+        !('ownerPhone' in changed) || (d.ownerPhone is string),
+        !changed.hasAny(['createdAt', 'createdAtMicros']) || ((d.createdAt is timestamp) && (d.get('createdAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['updatedAt', 'updatedAtMicros']) || ((d.updatedAt is timestamp) && (d.get('updatedAtMicros', '0').matches('-?[0-9]+'))),
+        !('testExpiry' in changed) || (d.testExpiry == null || d.testExpiry.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')),
+        !changed.hasAny(['model', 'vin', 'color', 'notes', 'trimLevel', 'ownership']) || (sfStrings([d.model, d.vin, d.color, d.notes, d.trimLevel, d.ownership])),
+        !('year' in changed) || (d.year == null || d.year is int),
+        !('lastOdometer' in changed) || (d.lastOdometer == null || d.lastOdometer is int),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
+    function sv_repair_orders(d) {
+      return d.keys().hasOnly(['businessId', 'completedAt', 'completedAtMicros', 'createdAt', 'createdAtMicros', 'createdBy', 'currency', 'customerId', 'discount', 'estimatedCompletion', 'estimatedCompletionMicros', 'id', 'isDeleted', 'laborTotal', 'lastRepairServiceId', 'migrationExcludedFields', 'migrationTransformVersion', 'notes', 'odometerReading', 'ownerUid', 'paidAmount', 'partsTotal', 'paymentMethod', 'paymentStatus', 'problemDescription', 'schemaVersion', 'sourceBusinessId', 'status', 'technicianNotes', 'totalAmount', 'transformVersion', 'updatedAt', 'updatedAtMicros', 'vehicleId']) && [
+        d.id is string,
+        d.sourceBusinessId is string,
+        d.vehicleId is string,
+        d.status in [null, 'pending', 'diagnostics', 'waiting_parts', 'working', 'completed', 'cancelled'],
+        d.estimatedCompletion == null || d.estimatedCompletion is timestamp,
+        d.get('estimatedCompletionMicros', '0').matches('-?[0-9]+'),
+        d.completedAt == null || d.completedAt is timestamp,
+        d.get('completedAtMicros', '0').matches('-?[0-9]+'),
+        d.partsTotal == null || sfDecimal(d.partsTotal),
+        d.laborTotal == null || sfDecimal(d.laborTotal),
+        d.discount == null || sfDecimal(d.discount),
+        d.totalAmount == null || sfDecimal(d.totalAmount),
+        d.paidAmount == null || sfDecimal(d.paidAmount),
+        d.paymentStatus in [null, 'paid', 'partial', 'unpaid'],
+        d.createdAt is timestamp,
+        d.get('createdAtMicros', '0').matches('-?[0-9]+'),
+        d.updatedAt is timestamp,
+        d.get('updatedAtMicros', '0').matches('-?[0-9]+'),
+        sfStrings([d.customerId, d.problemDescription, d.technicianNotes, d.paymentMethod, d.currency, d.notes]),
+        d.odometerReading == null || d.odometerReading is int,
+        d.get('schemaVersion', 1) == 1
+      ].hasOnly([true]);
+    }
+    function svu_repair_orders(changed, d) {
+      return changed.hasOnly(['businessId', 'completedAt', 'completedAtMicros', 'createdAt', 'createdAtMicros', 'createdBy', 'currency', 'customerId', 'discount', 'estimatedCompletion', 'estimatedCompletionMicros', 'id', 'isDeleted', 'laborTotal', 'lastRepairServiceId', 'migrationExcludedFields', 'migrationTransformVersion', 'notes', 'odometerReading', 'ownerUid', 'paidAmount', 'partsTotal', 'paymentMethod', 'paymentStatus', 'problemDescription', 'schemaVersion', 'sourceBusinessId', 'status', 'technicianNotes', 'totalAmount', 'transformVersion', 'updatedAt', 'updatedAtMicros', 'vehicleId']) && (changed.size() > 9 ? sv_repair_orders(d) : [
+        !('id' in changed) || (d.id is string),
+        !('sourceBusinessId' in changed) || (d.sourceBusinessId is string),
+        !('vehicleId' in changed) || (d.vehicleId is string),
+        !('status' in changed) || (d.status in [null, 'pending', 'diagnostics', 'waiting_parts', 'working', 'completed', 'cancelled']),
+        !changed.hasAny(['estimatedCompletion', 'estimatedCompletionMicros']) || ((d.estimatedCompletion == null || d.estimatedCompletion is timestamp) && (d.get('estimatedCompletionMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['completedAt', 'completedAtMicros']) || ((d.completedAt == null || d.completedAt is timestamp) && (d.get('completedAtMicros', '0').matches('-?[0-9]+'))),
+        !('partsTotal' in changed) || (d.partsTotal == null || sfDecimal(d.partsTotal)),
+        !('laborTotal' in changed) || (d.laborTotal == null || sfDecimal(d.laborTotal)),
+        !('discount' in changed) || (d.discount == null || sfDecimal(d.discount)),
+        !('totalAmount' in changed) || (d.totalAmount == null || sfDecimal(d.totalAmount)),
+        !('paidAmount' in changed) || (d.paidAmount == null || sfDecimal(d.paidAmount)),
+        !('paymentStatus' in changed) || (d.paymentStatus in [null, 'paid', 'partial', 'unpaid']),
+        !changed.hasAny(['createdAt', 'createdAtMicros']) || ((d.createdAt is timestamp) && (d.get('createdAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['updatedAt', 'updatedAtMicros']) || ((d.updatedAt is timestamp) && (d.get('updatedAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['customerId', 'problemDescription', 'technicianNotes', 'paymentMethod', 'currency', 'notes']) || (sfStrings([d.customerId, d.problemDescription, d.technicianNotes, d.paymentMethod, d.currency, d.notes])),
+        !('odometerReading' in changed) || (d.odometerReading == null || d.odometerReading is int),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
+    function sv_repair_order_items(d) {
+      return d.keys().hasOnly(['businessId', 'cost', 'createdAt', 'createdAtMicros', 'createdBy', 'id', 'inventoryItemId', 'isDeleted', 'mechanicId', 'migrationExcludedFields', 'migrationTransformVersion', 'name', 'orderId', 'ownerUid', 'price', 'quantity', 'repairServiceId', 'schemaVersion', 'transformVersion', 'type', 'warrantyDays']) && [
+        d.id is string,
+        d.orderId is string,
+        d.type in ['part', 'labor'],
+        d.name is string,
+        d.quantity == null || sfDecimal(d.quantity),
+        d.cost == null || sfDecimal(d.cost),
+        d.price == null || sfDecimal(d.price),
+        d.createdAt is timestamp,
+        d.get('createdAtMicros', '0').matches('-?[0-9]+'),
+        sfStrings([d.inventoryItemId, d.mechanicId]),
+        d.warrantyDays == null || d.warrantyDays is int,
+        d.get('schemaVersion', 1) == 1
+      ].hasOnly([true]);
+    }
+    function svu_repair_order_items(changed, d) {
+      return changed.hasOnly(['businessId', 'cost', 'createdAt', 'createdAtMicros', 'createdBy', 'id', 'inventoryItemId', 'isDeleted', 'mechanicId', 'migrationExcludedFields', 'migrationTransformVersion', 'name', 'orderId', 'ownerUid', 'price', 'quantity', 'repairServiceId', 'schemaVersion', 'transformVersion', 'type', 'warrantyDays']) && (changed.size() > 8 ? sv_repair_order_items(d) : [
+        !('id' in changed) || (d.id is string),
+        !('orderId' in changed) || (d.orderId is string),
+        !('type' in changed) || (d.type in ['part', 'labor']),
+        !('name' in changed) || (d.name is string),
+        !('quantity' in changed) || (d.quantity == null || sfDecimal(d.quantity)),
+        !('cost' in changed) || (d.cost == null || sfDecimal(d.cost)),
+        !('price' in changed) || (d.price == null || sfDecimal(d.price)),
+        !changed.hasAny(['createdAt', 'createdAtMicros']) || ((d.createdAt is timestamp) && (d.get('createdAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['inventoryItemId', 'mechanicId']) || (sfStrings([d.inventoryItemId, d.mechanicId])),
+        !('warrantyDays' in changed) || (d.warrantyDays == null || d.warrantyDays is int),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
     // SCHEMA-VALIDATORS:END
 
     // users/{uid} holds the user_profiles row; the document id is the Firebase uid.
@@ -545,6 +656,168 @@ service cloud.firestore {
       match /inventoryBatches/{batchId} { allow get, list, delete: if isActiveOwner(businessId); }
       match /itemModifierGroups/{linkId} { allow get, list, delete: if isActiveOwner(businessId); }
       match /recipes/{recipeId} { allow get, list, delete: if isActiveOwner(businessId); }
+
+      // ---- Auto repair (customer_vehicles, repair_orders, repair_order_items, car_parts stock) -------------------
+      // The source scopes these tables by business_id = the owner's business_profiles.id and admits the owner through
+      // business_profiles.user_id = auth.uid(): the owner only. Every multi-document write is checked against the
+      // documents before and after it, so no amount or stock level is taken from the client on trust.
+      function scopedPath(name, id) { return /databases/$(database)/documents/businesses/$(businessId)/$(name)/$(id); }
+      function newBusinessTenancy(d) {
+        return d.businessId == businessId && d.ownerUid == request.auth.uid && d.sourceBusinessId == businessId && d.isDeleted == false;
+      }
+      function decimalOrZero(v) { return v == null ? { 'unitsText': '0', 'scale': 0 } : v; }
+      function pow10(n) { return [1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000][n]; }
+      function aligned(v, scale) { return int(v.unitsText) * pow10(scale - v.scale); }
+      // NUMERIC arithmetic as PostgreSQL does it: exact, at the larger scale of the operands.
+      function isSum2(result, a, b) {
+        return result.scale == (a.scale > b.scale ? a.scale : b.scale)
+          && int(result.unitsText) == aligned(a, result.scale) + aligned(b, result.scale);
+      }
+      function isSum3(result, a, b, c) {
+        let scale = a.scale > b.scale ? (a.scale > c.scale ? a.scale : c.scale) : (b.scale > c.scale ? b.scale : c.scale);
+        return result.scale == scale && int(result.unitsText) == aligned(a, scale) + aligned(b, scale) + aligned(c, scale);
+      }
+      function isProduct(result, unit, quantity) {
+        return result.scale == unit.scale && int(result.unitsText) == int(unit.unitsText) * quantity;
+      }
+
+      // One vehicle per plate: vehiclePlates/{sha256(plate)} is created with the vehicle and never changes.
+      match /vehicles/{vehicleId} {
+        function plateKeyOf(plate) { return hashing.sha256(plate).toHexString().lower(); }
+        function validVehicleEdit(changed, d) {
+          return changed.hasOnly(['model', 'ownerName', 'ownerPhone', 'color', 'year', 'testExpiry', 'trimLevel', 'ownership',
+              'updatedAt', 'updatedAtMicros'])
+            && svu_customer_vehicles(changed, d);
+        }
+        allow get, list: if isActiveOwner(businessId);
+        allow create: if isActiveOwner(businessId)
+          && sv_customer_vehicles(request.resource.data)
+          && request.resource.data.id == vehicleId
+          && newBusinessTenancy(request.resource.data)
+          && !exists(scopedPath('vehiclePlates', plateKeyOf(request.resource.data.plateNumber)))
+          && getAfter(scopedPath('vehiclePlates', plateKeyOf(request.resource.data.plateNumber))).data.vehicleId == vehicleId;
+        allow update: if isActiveOwner(businessId)
+          && validVehicleEdit(request.resource.data.diff(resource.data).affectedKeys(), request.resource.data);
+        // The source grants no delete on customer_vehicles, and no screen deletes a vehicle.
+        allow delete: if false;
+      }
+      match /vehiclePlates/{plateKey} {
+        allow get: if isActiveOwner(businessId);
+        allow list: if false;
+        allow create: if isActiveOwner(businessId)
+          && request.resource.data.keys().hasOnly(['plateNumber', 'vehicleId', 'businessId', 'schemaVersion'])
+          && request.resource.data.plateNumber is string
+          && request.resource.data.vehicleId is string
+          && request.resource.data.businessId == businessId
+          && request.resource.data.schemaVersion == 1
+          && plateKey == hashing.sha256(request.resource.data.plateNumber).toHexString().lower()
+          && !exists(scopedPath('vehicles', request.resource.data.vehicleId))
+          && getAfter(scopedPath('vehicles', request.resource.data.vehicleId)).data.plateNumber == request.resource.data.plateNumber;
+        allow update, delete: if false;
+      }
+
+      match /repairOrders/{orderId} {
+        // NewCarForm opens a job as 'working', unpaid and with zero amounts, on a vehicle of this business.
+        function openedOrder(d) {
+          return d.status == 'working' && d.customerId == null && d.completedAt == null && d.paymentMethod == null
+            && d.paymentStatus == 'unpaid' && d.get('lastRepairServiceId', null) == null
+            && int(d.partsTotal.unitsText) == 0 && int(d.laborTotal.unitsText) == 0 && int(d.discount.unitsText) == 0
+            && int(d.totalAmount.unitsText) == 0 && int(d.paidAmount.unitsText) == 0;
+        }
+        // The only reachable change to a job is add_repair_service_transaction: totals move only together with a new,
+        // immutable service record in the same write, whose rule recomputes every amount.
+        function validServiceTotals(orderId, changed, d) {
+          return changed.hasOnly(['partsTotal', 'laborTotal', 'totalAmount', 'updatedAt', 'updatedAtMicros', 'lastRepairServiceId'])
+            && 'lastRepairServiceId' in changed
+            && svu_repair_orders(changed, d)
+            && d.updatedAt == request.time
+            && !exists(scopedPath('repairServices', d.lastRepairServiceId))
+            && getAfter(scopedPath('repairServices', d.lastRepairServiceId)).data.orderId == orderId;
+        }
+        allow get, list: if isActiveOwner(businessId);
+        allow create: if isActiveOwner(businessId)
+          && sv_repair_orders(request.resource.data)
+          && request.resource.data.id == orderId
+          && newBusinessTenancy(request.resource.data)
+          && existsAfter(scopedPath('vehicles', request.resource.data.vehicleId))
+          && openedOrder(request.resource.data);
+        allow update: if isActiveOwner(businessId)
+          && validServiceTotals(orderId, request.resource.data.diff(resource.data).affectedKeys(), request.resource.data);
+        allow delete: if isActiveOwner(businessId);
+      }
+
+      match /repairOrderItems/{itemId} {
+        function validServiceItem(itemId, d) {
+          let record = getAfter(scopedPath('repairServices', d.repairServiceId)).data;
+          return sv_repair_order_items(d)
+            && d.id == itemId && d.businessId == businessId && d.ownerUid == request.auth.uid && d.isDeleted == false
+            && !exists(scopedPath('repairServices', d.repairServiceId))
+            && d.orderId == record.orderId && d.warrantyDays == 0 && d.mechanicId == null
+            && d.quantity.scale == 0
+            && (d.type == 'part'
+              ? record.partItemId == itemId && d.inventoryItemId == record.partId
+                && int(d.quantity.unitsText) == record.partQuantity && d.price == record.partPrice && d.cost == record.partCost
+              : record.laborItemId == itemId && d.inventoryItemId == null && d.quantity.unitsText == '1' && d.price == record.laborPrice);
+        }
+        allow get, list: if isActiveOwner(businessId);
+        allow create: if isActiveOwner(businessId) && validServiceItem(itemId, request.resource.data);
+        allow update: if false;
+        // Items go only with their order (ON DELETE CASCADE).
+        allow delete: if isActiveOwner(businessId) && !existsAfter(scopedPath('repairOrders', resource.data.orderId));
+      }
+
+      // repairServices/{id}: one immutable record per add_repair_service_transaction call.
+      match /repairServices/{serviceId} {
+        function validServicePart(serviceId, d) {
+          let part = d.partId == null ? null : get(scopedPath('parts', d.partId)).data;
+          let partAfter = d.partId == null ? null : getAfter(scopedPath('parts', d.partId)).data;
+          return d.partId == null
+            ? d.partQuantity == 0 && d.partItemId == null && int(d.partPrice.unitsText) == 0 && int(d.partCost.unitsText) == 0
+            : d.partQuantity is int && d.partQuantity > 0 && part.quantity >= d.partQuantity
+              && partAfter.quantity == part.quantity - d.partQuantity && partAfter.lastRepairServiceId == serviceId
+              && isProduct(d.partPrice, decimalOrZero(part.get('sellingPriceUnit', null)), d.partQuantity)
+              && isProduct(d.partCost, decimalOrZero(part.get('purchasePriceUnit', null)), d.partQuantity)
+              && d.partItemId is string
+              && getAfter(scopedPath('repairOrderItems', d.partItemId)).data.repairServiceId == serviceId;
+        }
+        function validRepairService(serviceId, d) {
+          let before = get(scopedPath('repairOrders', d.orderId)).data;
+          let after = getAfter(scopedPath('repairOrders', d.orderId)).data;
+          return d.keys().hasOnly(['id', 'orderId', 'actorUid', 'businessId', 'ownerUid', 'partId', 'partQuantity', 'partPrice',
+              'partCost', 'laborPrice', 'partItemId', 'laborItemId', 'createdAt', 'schemaVersion'])
+            && d.id == serviceId && d.businessId == businessId && d.ownerUid == request.auth.uid && d.actorUid == request.auth.uid
+            && d.createdAt == request.time && d.schemaVersion == 1
+            && sfDecimal(d.partPrice) && sfDecimal(d.partCost) && sfDecimal(d.laborPrice)
+            && after.lastRepairServiceId == serviceId
+            && isSum2(after.partsTotal, decimalOrZero(before.get('partsTotal', null)), d.partPrice)
+            && isSum2(after.laborTotal, decimalOrZero(before.get('laborTotal', null)), d.laborPrice)
+            && isSum3(after.totalAmount, decimalOrZero(before.get('totalAmount', null)), d.partPrice, d.laborPrice)
+            && validServicePart(serviceId, d)
+            && (d.laborItemId == null
+              ? int(d.laborPrice.unitsText) == 0
+              : d.laborItemId is string
+                && getAfter(scopedPath('repairOrderItems', d.laborItemId)).data.repairServiceId == serviceId);
+        }
+        allow get, list: if isActiveOwner(businessId);
+        allow create: if isActiveOwner(businessId) && validRepairService(serviceId, request.resource.data);
+        allow update: if false;
+        allow delete: if isActiveOwner(businessId) && !existsAfter(scopedPath('repairOrders', resource.data.orderId));
+      }
+
+      // car_parts: stock consumed by a service. Inventory management arrives with the car-parts vertical.
+      match /parts/{partId} {
+        function consumedByService(partId, changed, d) {
+          return changed.hasOnly(['quantity', 'updatedAt', 'updatedAtMicros', 'lastRepairServiceId'])
+            && 'lastRepairServiceId' in changed
+            && d.quantity is int && d.quantity >= 0
+            && d.updatedAt == request.time
+            && !exists(scopedPath('repairServices', d.lastRepairServiceId))
+            && getAfter(scopedPath('repairServices', d.lastRepairServiceId)).data.partId == partId;
+        }
+        allow get, list: if isActiveOwner(businessId);
+        allow update: if isActiveOwner(businessId)
+          && consumedByService(partId, request.resource.data.diff(resource.data).affectedKeys(), request.resource.data);
+      }
     }
 
     match /sparkOperations/{operationId} {

@@ -37,6 +37,8 @@ const suites = [
   ['schema validator helper semantics', 'scripts/test-firestore-schema-validators.mjs'],
   ['supermarket repository, Rules and malicious clients', 'scripts/test-firestore-supermarket.mjs',
     ['scripts/run-typescript-source-test.mjs', 'scripts/test-firestore-supermarket.mjs']],
+  ['auto repair repository, Rules and malicious clients', 'scripts/test-firestore-auto-repair.mjs',
+    ['scripts/run-typescript-source-test.mjs', 'scripts/test-firestore-auto-repair.mjs']],
   ['Rules evaluation budget', 'scripts/test-firestore-rules-budget.mjs',
     ['scripts/run-typescript-source-test.mjs', 'scripts/test-firestore-rules-budget.mjs']],
   ['trip transaction', 'migration/firestore/tests/save-trip-transaction.test.mjs'],

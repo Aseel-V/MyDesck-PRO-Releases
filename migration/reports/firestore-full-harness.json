@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-15T07:30:17.327Z",
+  "generatedAt": "2026-09-15T10:52:41.558Z",
   "status": "PASS",
   "suites": [
     {
@@ -42,7 +42,7 @@
       "label": "full rehearsal core",
       "file": "migration/firestore/tests/full-rehearsal-core.test.mjs",
       "outcome": "PASS",
-      "tests": 7
+      "tests": 8
     },
     {
       "label": "secret scanner regression",
@@ -159,10 +159,16 @@
       "tests": 10
     },
     {
+      "label": "auto repair repository, Rules and malicious clients",
+      "file": "scripts/test-firestore-auto-repair.mjs",
+      "outcome": "PASS",
+      "tests": 8
+    },
+    {
       "label": "Rules evaluation budget",
       "file": "scripts/test-firestore-rules-budget.mjs",
       "outcome": "PASS",
-      "tests": 6
+      "tests": 7
     },
     {
       "label": "trip transaction",
@@ -202,11 +208,11 @@
     }
   ],
   "totals": {
-    "steps": 34,
-    "passed": 34,
+    "steps": 35,
+    "passed": 35,
     "failed": 0,
-    "nodeTestCases": 281,
-    "assertionCallSites": 956,
+    "nodeTestCases": 291,
+    "assertionCallSites": 1025,
     "fullCorpusApplicationAssertions": 1023,
     "searchCorpusCases": 12,
     "fullCorpusSecurityChecks": 50,

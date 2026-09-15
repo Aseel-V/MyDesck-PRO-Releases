@@ -16,6 +16,7 @@
 import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, writeFileSync } from 'node:fs';
+import { randomUUID } from 'node:crypto';
 import { deleteApp, initializeApp } from 'firebase/app';
 import { connectAuthEmulator, getAuth, signOut } from 'firebase/auth';
 import { connectFirestoreEmulator, doc, getFirestore, setDoc } from 'firebase/firestore';
@@ -24,11 +25,13 @@ import { FirestoreAuthGateway } from '../src/data/firestore/FirestoreAuthGateway
 import { FirestoreProfileRepository } from '../src/data/firestore/FirestoreProfileRepository.ts';
 import { FirestoreAdminRepository } from '../src/data/firestore/FirestoreAdminRepository.ts';
 import { FirestoreSupermarketRepository } from '../src/data/firestore/FirestoreSupermarketRepository.ts';
+import { FirestoreAutoRepairRepository } from '../src/data/firestore/FirestoreAutoRepairRepository.ts';
 import { encodeInsert } from '../src/data/firestore/documentCodec.ts';
 import { RulesClient } from '../migration/firestore/lib/rules-client.mjs';
 import { EXPRESSION_LIMIT, allowExpression, conjuncts, measureRuleCost, outcome } from '../migration/firestore/lib/rules-budget.mjs';
 
-const PROJECT = 'mydesck-migration-proof';
+/** MYDESCK_TEST_PROJECT isolates a run in its own emulator project, so it can run beside other suites. */
+const PROJECT = process.env.MYDESCK_TEST_PROJECT ?? 'mydesck-migration-proof';
 const FIRESTORE_HOST = process.env.FIRESTORE_EMULATOR_HOST ?? '127.0.0.1:8080';
 const AUTH_HOST = process.env.FIREBASE_AUTH_EMULATOR_HOST ?? '127.0.0.1:9099';
 const RUN = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
@@ -62,7 +65,8 @@ function clientFor(label) {
   connectFirestoreEmulator(db, '127.0.0.1', 8080);
   const session = new FirebaseSession({ mode: 'firestore-emulator', app, auth, db, ready: Promise.resolve(), maintenanceEnabled: false });
   const handle = { app, auth, db, session, gateway: new FirestoreAuthGateway(session), profiles: new FirestoreProfileRepository(session),
-    admin: new FirestoreAdminRepository(session), market: new FirestoreSupermarketRepository(session) };
+    admin: new FirestoreAdminRepository(session), market: new FirestoreSupermarketRepository(session),
+    repair: new FirestoreAutoRepairRepository(session) };
   clients.push(handle);
   return handle;
 }
@@ -84,6 +88,19 @@ const TARGET = {
   salesCreate: { match: 'match /marketTransactions/{transactionId} {', allow: 'allow create: if ' },
   salesUpdate: { match: 'match /marketTransactions/{transactionId} {', allow: 'allow update: if ' },
   salesDelete: { match: 'match /marketTransactions/{transactionId} {', allow: 'allow delete: if ' },
+  vehiclesCreate: { match: 'match /vehicles/{vehicleId} {', allow: 'allow create: if ' },
+  vehiclesUpdate: { match: 'match /vehicles/{vehicleId} {', allow: 'allow update: if ' },
+  platesCreate: { match: 'match /vehiclePlates/{plateKey} {', allow: 'allow create: if ' },
+  repairOrdersRead: { match: 'match /repairOrders/{orderId} {', allow: 'allow get, list: if ' },
+  repairOrdersCreate: { match: 'match /repairOrders/{orderId} {', allow: 'allow create: if ' },
+  repairOrdersUpdate: { match: 'match /repairOrders/{orderId} {', allow: 'allow update: if ' },
+  repairOrdersDelete: { match: 'match /repairOrders/{orderId} {', allow: 'allow delete: if ' },
+  repairItemsCreate: { match: 'match /repairOrderItems/{itemId} {', allow: 'allow create: if ' },
+  repairItemsDelete: { match: 'match /repairOrderItems/{itemId} {', allow: 'allow delete: if ' },
+  repairServicesCreate: { match: 'match /repairServices/{serviceId} {', allow: 'allow create: if ' },
+  repairServicesDelete: { match: 'match /repairServices/{serviceId} {', allow: 'allow delete: if ' },
+  partsRead: { match: 'match /parts/{partId} {', allow: 'allow get, list: if ' },
+  partsUpdate: { match: 'match /parts/{partId} {', allow: 'allow update: if ' },
 };
 
 async function measure(path, target, attempt, { product = true } = {}) {
@@ -187,7 +204,8 @@ after(async () => {
     const index = await bypass.get(`businessOwners/${uid}`);
     const businessId = index.ok ? index.body?.fields?.businessId?.stringValue : null;
     if (businessId) {
-      for (const name of ['menuItems', 'menuCategories', 'marketTransactions']) {
+      for (const name of ['menuItems', 'menuCategories', 'marketTransactions', 'vehicles', 'vehiclePlates', 'repairOrders',
+        'repairOrderItems', 'repairServices', 'parts']) {
         let pageToken = '';
         do {
           const listing = await fetch(`${base}/businesses/${businessId}/${name}?pageSize=300${pageToken ? `&pageToken=${pageToken}` : ''}`,
@@ -309,6 +327,50 @@ test('supermarket sales', async () => {
   ]);
 });
 
+test('auto repair: registration, services and deletion', async () => {
+  const restCodec = {
+    timestamp: (seconds, nanoseconds) => new Date(seconds * 1000 + Math.floor(nanoseconds / 1e6)),
+    serverTimestamp: () => new Date(), deleteField: () => { throw new Error('DELETE_FIELD_OVER_REST'); }, newId: () => randomUUID(),
+  };
+  const part = encodeInsert('car_parts', { business_id: s.owner.businessId, part_name: 'Budget part', quantity: 100000,
+    purchase_price_unit: 12.25, selling_price_unit: 19.99 }, restCodec, tenancy());
+  assert.ok((await bypass.set(`businesses/${s.owner.businessId}/parts/${part.id}`, part.data)).ok, 'part fixture');
+  const repair = s.owner.repair;
+  const car = (n) => ({ plate_number: `BUDGET-${RUN}-${n}`, model: 'Toyota Corolla', owner_name: 'Budget owner', owner_phone: '050-0000000',
+    color: 'White', year: 2020, test_expiry: '2027-01-01', trim_level: 'GLI', ownership: 'Private' });
+  const newestOrder = async () => (await repair.listRepairOrders(s.owner.businessId))[0].id;
+  await repair.registerVehicleAndOpenOrder(s.owner.businessId, car('known'), { currency: 'ILS' });
+  const register = () => outcome(() => repair.registerVehicleAndOpenOrder(s.owner.businessId, car(next()),
+    { odometer_reading: 1000, notes: 'Budget', currency: 'ILS' }));
+  const service = () => outcome(async () => repair.addServiceToOrder(await newestOrder(), [
+    { type: 'part', inventory_item_id: part.id, name: 'Budget part', quantity: 1, cost: 12.25, price: 19.99 },
+    { type: 'labor', inventory_item_id: null, name: 'Service Labor (Hand Cost)', quantity: 1, cost: 0, price: 150.5 },
+  ]));
+  const deletion = async () => {
+    await repair.registerVehicleAndOpenOrder(s.owner.businessId, car(`delete-${next()}`), { currency: 'ILS' });
+    const orderId = await newestOrder();
+    await repair.addServiceToOrder(orderId, [{ type: 'part', inventory_item_id: part.id, name: 'Budget part', quantity: 1, cost: 12.25, price: 19.99 },
+      { type: 'labor', inventory_item_id: null, name: 'Service Labor (Hand Cost)', quantity: 1, cost: 0, price: 10 }]);
+    return outcome(() => repair.deleteRepairOrder(orderId));
+  };
+  assertWithin([
+    await measure('auto repair: register a car (vehicle)', TARGET.vehiclesCreate, register),
+    await measure('auto repair: register a car (plate index)', TARGET.platesCreate, register),
+    await measure('auto repair: register a car (working order)', TARGET.repairOrdersCreate, register),
+    await measure('auto repair: register a known plate (vehicle update)', TARGET.vehiclesUpdate,
+      () => outcome(() => repair.registerVehicleAndOpenOrder(s.owner.businessId, { ...car('known'), model: `Model ${next()}` }, { currency: 'ILS' }))),
+    await measure('auto repair: add a part and labor (service record)', TARGET.repairServicesCreate, service),
+    await measure('auto repair: add a part and labor (items)', TARGET.repairItemsCreate, service),
+    await measure('auto repair: add a part and labor (order totals)', TARGET.repairOrdersUpdate, service),
+    await measure('auto repair: add a part and labor (part stock)', TARGET.partsUpdate, service),
+    await measure('auto repair: list repair orders', TARGET.repairOrdersRead, () => outcome(() => repair.listRepairOrders(s.owner.businessId))),
+    await measure('auto repair: list parts in stock', TARGET.partsRead, () => outcome(() => repair.listPartsInStock(s.owner.businessId))),
+    await measure('auto repair: delete an order (order)', TARGET.repairOrdersDelete, deletion),
+    await measure('auto repair: delete an order (items)', TARGET.repairItemsDelete, deletion),
+    await measure('auto repair: delete an order (service records)', TARGET.repairServicesDelete, deletion),
+  ]);
+});
+
 test('the budget report is written', () => {
   writeFileSync(REPORT, `${JSON.stringify({
     limit: EXPRESSION_LIMIT, productCeiling: PRODUCT_CEILING, method: 'migration/firestore/lib/rules-budget.mjs',
@@ -316,5 +378,5 @@ test('the budget report is written', () => {
     paths: results.map(({ path, rule, product, withinLimit, costAtMost, costAbove, parts }) =>
       ({ path, rule, product, withinLimit, costAtMost, costAbove, ...(parts ? { parts } : {}) })),
   }, null, 2)}\n`);
-  assert.equal(results.length, 20, 'every measured path is reported');
+  assert.equal(results.length, 33, 'every measured path is reported');
 });

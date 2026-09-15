@@ -3,8 +3,9 @@
  *
  * Each tenant is registered through the application's own FirestoreAuthGateway and
  * FirestoreProfileRepository, exactly as registration writes production documents; only the business type,
- * which no owner may change under the Rules, is then set over the emulator's operator path. `--cleanup`
- * removes every document and account the fixture created. Emulator only.
+ * which no owner may change under the Rules, is then set over the emulator's operator path. Auto repair
+ * tenants also get one part in stock over that path, because the service flow consumes inventory that the
+ * car-parts screens own. `--cleanup` removes every document and account the fixture created. Emulator only.
  *
  *   node scripts/run-typescript-source-test.mjs e2e/firebase/fixtures.mjs --create
  *   node scripts/run-typescript-source-test.mjs e2e/firebase/fixtures.mjs --cleanup
@@ -17,16 +18,22 @@ import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
 import { FirebaseSession } from '../../src/data/firestore/FirebaseSession.ts';
 import { FirestoreAuthGateway } from '../../src/data/firestore/FirestoreAuthGateway.ts';
 import { FirestoreProfileRepository } from '../../src/data/firestore/FirestoreProfileRepository.ts';
+import { encodeInsert } from '../../src/data/firestore/documentCodec.ts';
 import { RulesClient } from '../../migration/firestore/lib/rules-client.mjs';
 
 const PROJECT = 'mydesck-migration-proof';
 const FIRESTORE_HOST = process.env.FIRESTORE_EMULATOR_HOST ?? '127.0.0.1:8080';
 const AUTH_HOST = process.env.FIREBASE_AUTH_EMULATOR_HOST ?? '127.0.0.1:9099';
 const FIXTURE = 'migration/full-vertical.local/ui-smoke-fixture.json';
-const SUBCOLLECTIONS = ['menuItems', 'menuCategories', 'marketTransactions'];
+const SUBCOLLECTIONS = ['menuItems', 'menuCategories', 'marketTransactions',
+  'vehicles', 'vehiclePlates', 'repairOrders', 'repairOrderItems', 'repairServices', 'parts'];
 /** One tenant per interface language, so right-to-left and left-to-right rendering are both exercised. */
-const TENANTS = { supermarket: ['he', 'ar', 'en'] };
+const TENANTS = { supermarket: ['he', 'ar', 'en'], auto_repair: ['en', 'he'] };
 const bypass = RulesClient.asAdminBypass({ host: FIRESTORE_HOST, projectId: PROJECT });
+const restCodec = {
+  timestamp: (seconds, nanoseconds) => new Date(seconds * 1000 + Math.floor(nanoseconds / 1e6)),
+  serverTimestamp: () => new Date(), deleteField: () => { throw new Error('DELETE_FIELD_OVER_REST'); }, newId: () => randomUUID(),
+};
 
 async function create() {
   const run = `${Date.now().toString(36)}${randomUUID().slice(0, 4)}`;
@@ -50,7 +57,16 @@ async function create() {
         const business = await session.requireOwnedBusiness();
         const typed = await bypass.update(`businesses/${business.businessId}`, { businessType: vertical });
         if (!typed.ok) throw new Error(`BUSINESS_TYPE_NOT_SET:${typed.status}`);
-        fixture.tenants[vertical][language] = { email, uid: user.id, businessId: business.businessId };
+        const tenant = { email, uid: user.id, businessId: business.businessId };
+        if (vertical === 'auto_repair') {
+          tenant.partName = `Smoke brake pads ${run}`;
+          const part = encodeInsert('car_parts', { business_id: business.businessId, part_name: tenant.partName, quantity: 5,
+            purchase_price_unit: 12.25, selling_price_unit: 59.99, compatible_cars: ['Toyota Corolla'] },
+          restCodec, { ownerUid: user.id, businessId: business.businessId });
+          const seeded = await bypass.set(`businesses/${business.businessId}/parts/${part.id}`, part.data);
+          if (!seeded.ok) throw new Error(`PART_NOT_SEEDED:${seeded.status}`);
+        }
+        fixture.tenants[vertical][language] = tenant;
       } finally {
         await signOut(auth).catch(() => undefined);
         await deleteApp(app).catch(() => undefined);

@@ -1,0 +1,289 @@
+{
+  "generatedAt": "2026-09-15T10:45:31.403Z",
+  "vertical": "auto_repair",
+  "decision": "PASS",
+  "gates": {
+    "firebaseRoot": {
+      "status": "PASS",
+      "runtimeSurfaceFiles": 5,
+      "forbiddenCallSites": [],
+      "genericSupabaseClientImports": [],
+      "supabaseAdapterImports": [],
+      "supabaseJsImports": [],
+      "storageOutsideRepository": []
+    },
+    "generatedSchema": {
+      "status": "PASS",
+      "rulesValidators": "CURRENT"
+    },
+    "suites": {
+      "status": "PASS",
+      "suites": [
+        {
+          "label": "auto repair repository, Rules and malicious clients",
+          "file": "scripts/test-firestore-auto-repair.mjs",
+          "outcome": "PASS",
+          "tests": 8
+        },
+        {
+          "label": "schema validator helper semantics",
+          "file": "scripts/test-firestore-schema-validators.mjs",
+          "outcome": "PASS",
+          "tests": 9
+        },
+        {
+          "label": "Rules evaluation budget",
+          "file": "scripts/test-firestore-rules-budget.mjs",
+          "outcome": "PASS",
+          "tests": 7
+        }
+      ]
+    },
+    "rulesBudget": {
+      "status": "PASS",
+      "limit": 1000,
+      "productCeiling": 850,
+      "paths": [
+        {
+          "path": "auto repair: register a car (vehicle)",
+          "costAtMost": 286
+        },
+        {
+          "path": "auto repair: register a car (plate index)",
+          "costAtMost": 151
+        },
+        {
+          "path": "auto repair: register a car (working order)",
+          "costAtMost": 583
+        },
+        {
+          "path": "auto repair: register a known plate (vehicle update)",
+          "costAtMost": 241
+        },
+        {
+          "path": "auto repair: add a part and labor (service record)",
+          "costAtMost": 814
+        },
+        {
+          "path": "auto repair: add a part and labor (items)",
+          "costAtMost": 418
+        },
+        {
+          "path": "auto repair: add a part and labor (order totals)",
+          "costAtMost": 430
+        },
+        {
+          "path": "auto repair: add a part and labor (part stock)",
+          "costAtMost": 133
+        },
+        {
+          "path": "auto repair: list repair orders",
+          "costAtMost": 52
+        },
+        {
+          "path": "auto repair: list parts in stock",
+          "costAtMost": 52
+        },
+        {
+          "path": "auto repair: delete an order (order)",
+          "costAtMost": 52
+        },
+        {
+          "path": "auto repair: delete an order (items)",
+          "costAtMost": 70
+        },
+        {
+          "path": "auto repair: delete an order (service records)",
+          "costAtMost": 70
+        }
+      ]
+    },
+    "dataRehearsal": {
+      "status": "PASS",
+      "importedAt": "2026-09-15T10:23:26.967Z",
+      "reconciledAt": "2026-09-15T10:23:30.442Z",
+      "dualReadAt": "2026-09-15T10:28:44.085Z",
+      "totals": {
+        "tenants": 1,
+        "sourceRowsCompared": 1,
+        "matched": 1,
+        "missing": 0,
+        "unexpected": 0,
+        "fieldMismatches": 0,
+        "orderMismatches": 0,
+        "unknownColumns": 0,
+        "orphans": 0,
+        "sourceRowsInventoried": 3,
+        "migratedDocuments": 3,
+        "crossTenantAttempts": 4,
+        "crossTenantAllowed": 0,
+        "controlsApplicable": 5,
+        "controlsDetected": 5,
+        "restoredClean": true
+      },
+      "additionalDualReads": [
+        {
+          "path": "migration/reports/travel-dashboard-dual-read.json",
+          "decision": "PASS",
+          "generatedAt": "2026-09-15T10:35:47.852Z",
+          "totals": {
+            "tenants": 4,
+            "yearsMatched": true,
+            "tripsCompared": 99,
+            "mismatchedTrips": 0,
+            "missing": 0,
+            "unexpected": 0,
+            "orderMismatches": 0,
+            "controlsApplicable": 8,
+            "controlsDetected": 8,
+            "restoredClean": true
+          }
+        }
+      ]
+    },
+    "uiSmoke": {
+      "status": "PASS",
+      "smokeAt": "2026-09-15T10:39:56.978Z",
+      "flows": [
+        {
+          "name": "the English owner signs in to the travel home and opens an empty Cars page left-to-right",
+          "status": "passed"
+        },
+        {
+          "name": "a car is registered with its working job, found by plate and owner, and kept across a reload",
+          "status": "passed"
+        },
+        {
+          "name": "a part and labor are added to the job: exact totals, and the stock is consumed",
+          "status": "passed"
+        },
+        {
+          "name": "another tenant signs in right-to-left in Hebrew and sees none of the first tenant's cars",
+          "status": "passed"
+        },
+        {
+          "name": "the job is deleted and stays deleted after a reload",
+          "status": "passed"
+        }
+      ]
+    },
+    "search": {
+      "status": "PASS",
+      "surfaces": [
+        {
+          "surface": "Cars list search: plate, model or owner name substring",
+          "class": "CLIENT_DERIVED",
+          "status": "PASS",
+          "files": [
+            "src/components/cars/Cars.tsx"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "Service part picker search: part name, description, serial number or compatible car",
+          "class": "CLIENT_DERIVED",
+          "status": "PASS",
+          "files": [
+            "src/components/cars/AddServiceModal.tsx"
+          ],
+          "verdict": "PASS"
+        }
+      ],
+      "blocked": 0,
+      "unknown": 0
+    },
+    "analytics": {
+      "status": "PASS",
+      "surfaces": [
+        {
+          "surface": "Home screen travel dashboard (the auto_repair home): trips of the selected year, the year filter, alerts and payment summaries",
+          "class": "FIRESTORE_QUERY",
+          "status": "PASS",
+          "files": [
+            "src/components/Dashboard.tsx",
+            "src/data/firestore/FirestoreTravelDashboardRepository.ts",
+            "src/data/firestore/tripPaymentPlanSummary.ts"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "Analytics page for a non-tourism business (SalesAnalytics over market_transactions)",
+          "class": "FIRESTORE_QUERY",
+          "status": "PASS",
+          "files": [
+            "src/components/market/SalesAnalytics.tsx"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "Debtors panel and smart reception (AutoRepairDashboard over customers_ledger) with the repair order and export modals",
+          "class": "LEGACY_UNREACHABLE",
+          "status": "LEGACY_UNREACHABLE",
+          "files": [
+            "src/components/dashboards/AutoRepairDashboard.tsx",
+            "src/components/repair/RepairOrderModal.tsx",
+            "src/components/repair/RepairExportModal.tsx"
+          ],
+          "verdict": "PASS"
+        }
+      ],
+      "blocked": 0,
+      "unknown": 0
+    },
+    "rpc": {
+      "status": "PASS",
+      "surfaces": [
+        {
+          "surface": "add_repair_service_transaction",
+          "class": "FIRESTORE_TRANSACTION",
+          "status": "PASS",
+          "files": [
+            "src/data/firestore/FirestoreAutoRepairRepository.ts"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "get_trip_years (travel home year filter)",
+          "class": "FIRESTORE_QUERY",
+          "status": "PASS",
+          "files": [
+            "src/data/firestore/FirestoreTravelDashboardRepository.ts"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "get_trip_dashboard_items (travel home trips of a year)",
+          "class": "FIRESTORE_QUERY",
+          "status": "PASS",
+          "files": [
+            "src/data/firestore/FirestoreTravelDashboardRepository.ts"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "get_owned_trip_payment_summary (the payment_plan_summary of every dashboard trip)",
+          "class": "CLIENT_DERIVED",
+          "status": "PASS",
+          "files": [
+            "src/data/firestore/tripPaymentPlanSummary.ts"
+          ],
+          "verdict": "PASS"
+        }
+      ],
+      "blocked": 0,
+      "unknown": 0
+    },
+    "realtime": {
+      "status": "PASS",
+      "surfaces": [],
+      "blocked": 0,
+      "unknown": 0
+    },
+    "edgeFunctions": {
+      "status": "PASS",
+      "surfaces": [],
+      "blocked": 0,
+      "unknown": 0
+    }
+  }
+}
