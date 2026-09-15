@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { ChevronDown, ChevronUp, BarChart3, Receipt, Trash2, Edit, FileText, Download, Printer, X } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { getBackend } from '../../data/backend';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { toast } from 'sonner';
@@ -96,16 +96,7 @@ export default function SalesAnalytics() {
         endDate.setHours(23, 59, 59, 999);
       }
 
-      const { data, error } = await supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('market_transactions' as any)
-        .select('*')
-        .eq('business_id', user!.id)
-        .gte('created_at', startDate.toISOString())
-        .lte('created_at', endDate.toISOString())
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
+      const data = await getBackend().supermarket.listSales(user!.id, startDate.toISOString(), endDate.toISOString());
       setTransactions(((data as unknown) as Transaction[]) || []);
     } catch (error) {
       console.error('Error fetching sales:', error);
@@ -132,13 +123,8 @@ export default function SalesAnalytics() {
       console.log('Deleting transaction:', deleteConfirmationId);
 
       // DEBUG: Check transaction ownership
-      const { data: checkData } = await supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('market_transactions' as any)
-        .select('id, business_id')
-        .eq('id', deleteConfirmationId)
-        .single();
-      
+      const checkData = await getBackend().supermarket.getSaleOwner(deleteConfirmationId);
+
       if (checkData) {
         const tx = checkData as unknown as Transaction;
         if (tx.business_id !== user.id) {
@@ -149,14 +135,10 @@ export default function SalesAnalytics() {
          console.warn('Transaction not found during check');
       }
       
-      const { error } = await supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('market_transactions' as any)
-        .delete()
-        .eq('id', deleteConfirmationId);
-
-      if (error) {
-        console.error('Supabase delete error:', error);
+      try {
+        await getBackend().supermarket.deleteSale(deleteConfirmationId);
+      } catch (error) {
+        console.error('Delete error:', error);
         throw error;
       }
       

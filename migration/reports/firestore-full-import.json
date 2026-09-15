@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-11T12:04:38.888Z",
+  "generatedAt": "2026-09-15T06:18:55.118Z",
   "status": "IMPORTED_AND_IMMEDIATELY_VERIFIED",
   "sourceSnapshot": {
     "readOnly": true,
@@ -13,14 +13,14 @@
     "mode": "emulator",
     "project": "mydesck-migration-proof",
     "productionWrites": 0,
-    "documents": 1439,
+    "documents": 1475,
     "schemaVersion": 1,
     "transformVersion": "1.full.1"
   },
   "sourceCoverage": {
     "tables": 77,
-    "rows": 1444,
-    "migrated": 1436,
+    "rows": 1474,
+    "migrated": 1466,
     "excluded": 8,
     "unknown": 0,
     "conservationMatches": true
@@ -35,7 +35,7 @@
     "accounted": 10
   },
   "sizes": {
-    "SAFE": 1436,
+    "SAFE": 1466,
     "NEAR_LIMIT": 0,
     "TOO_LARGE": 0,
     "largest": {
@@ -72,12 +72,12 @@
     ]
   },
   "relationships": {
-    "checked": 3047,
+    "checked": 3116,
     "sourceOrphans": 0,
     "crossTenantReferences": 0
   },
   "finance": {
-    "valuesChecked": 1447,
+    "valuesChecked": 1462,
     "currencies": [
       "EUR",
       "ILS",
@@ -87,17 +87,17 @@
     "immediateRoundTripMismatches": 0
   },
   "migration": {
-    "written": 1439,
+    "written": 1475,
     "reusedVerified": 0,
     "failed": 0,
     "skipped": 8,
-    "processed": 1444,
+    "processed": 1474,
     "ledger": {
-      "total": 1444,
+      "total": 1474,
       "byState": {
         "PENDING": 0,
         "COPIED": 0,
-        "VERIFIED": 1436,
+        "VERIFIED": 1466,
         "FAILED": 0,
         "SKIPPED_WITH_REASON": 8
       },
@@ -139,8 +139,8 @@
           "skipped": 0
         },
         "trip_activity_log": {
-          "total": 489,
-          "verified": 489,
+          "total": 501,
+          "verified": 501,
           "failed": 0,
           "skipped": 0
         },
@@ -157,8 +157,8 @@
           "skipped": 8
         },
         "trips": {
-          "total": 99,
-          "verified": 99,
+          "total": 100,
+          "verified": 100,
           "failed": 0,
           "skipped": 0
         },
@@ -193,20 +193,20 @@
           "skipped": 0
         },
         "trip_financial_audit": {
-          "total": 452,
-          "verified": 452,
+          "total": 465,
+          "verified": 465,
           "failed": 0,
           "skipped": 0
         },
         "trip_payment_plans": {
-          "total": 99,
-          "verified": 99,
+          "total": 100,
+          "verified": 100,
           "failed": 0,
           "skipped": 0
         },
         "trip_write_requests": {
-          "total": 108,
-          "verified": 108,
+          "total": 111,
+          "verified": 111,
           "failed": 0,
           "skipped": 0
         },
@@ -501,12 +501,12 @@
     {
       "table": "trip_activity_log",
       "disposition": "TOP_LEVEL_COLLECTION",
-      "sourceRows": 489,
-      "eligibleRows": 489,
+      "sourceRows": 501,
+      "eligibleRows": 501,
       "excludedRows": 0,
       "exclusionReason": null,
       "target": "tripActivityLog/{activityId}",
-      "targetDocuments": 489,
+      "targetDocuments": 501,
       "skippedAlreadyVerified": 0,
       "skipped": 0
     },
@@ -597,12 +597,12 @@
     {
       "table": "trips",
       "disposition": "TOP_LEVEL_COLLECTION",
-      "sourceRows": 99,
-      "eligibleRows": 99,
+      "sourceRows": 100,
+      "eligibleRows": 100,
       "excludedRows": 0,
       "exclusionReason": null,
       "target": "trips/{tripId}",
-      "targetDocuments": 99,
+      "targetDocuments": 100,
       "skippedAlreadyVerified": 0,
       "skipped": 0
     },
@@ -825,12 +825,12 @@
     {
       "table": "trip_financial_audit",
       "disposition": "TOP_LEVEL_COLLECTION",
-      "sourceRows": 452,
-      "eligibleRows": 452,
+      "sourceRows": 465,
+      "eligibleRows": 465,
       "excludedRows": 0,
       "exclusionReason": null,
       "target": "tripFinancialAudit/{auditId}",
-      "targetDocuments": 452,
+      "targetDocuments": 465,
       "skippedAlreadyVerified": 0,
       "skipped": 0
     },
@@ -849,24 +849,24 @@
     {
       "table": "trip_payment_plans",
       "disposition": "TOP_LEVEL_COLLECTION",
-      "sourceRows": 99,
-      "eligibleRows": 99,
+      "sourceRows": 100,
+      "eligibleRows": 100,
       "excludedRows": 0,
       "exclusionReason": null,
       "target": "tripPaymentPlans/{planId}",
-      "targetDocuments": 99,
+      "targetDocuments": 100,
       "skippedAlreadyVerified": 0,
       "skipped": 0
     },
     {
       "table": "trip_write_requests",
       "disposition": "TOP_LEVEL_COLLECTION",
-      "sourceRows": 108,
-      "eligibleRows": 108,
+      "sourceRows": 111,
+      "eligibleRows": 111,
       "excludedRows": 0,
       "exclusionReason": null,
       "target": "idempotency/{ownerUid}__{clientRequestId}",
-      "targetDocuments": 108,
+      "targetDocuments": 111,
       "skippedAlreadyVerified": 0,
       "skipped": 0
     },

@@ -134,6 +134,10 @@ export default function Dashboard() {
     setEditingTrip(undefined);
   };
 
+  // The travel dashboard (trips of the selected year, alerts, the year filter) is rendered only for these
+  // business types. Other verticals never show it, so its queries do not run for them.
+  const showsTravelDashboard = !profile?.business_type || profile.business_type === 'tourism' || profile.business_type === 'auto_repair';
+
   // 🧭 Load Trips (For regular business profiles)
   const {
     data: trips = [],
@@ -144,7 +148,7 @@ export default function Dashboard() {
       if (!user) return [];
       return fetchTripDashboardItems(yearFilter);
     },
-    enabled: !!user?.id && !isAdmin,
+    enabled: !!user?.id && !isAdmin && showsTravelDashboard,
   });
 
   // 👑 Platform Admin Stats
@@ -187,7 +191,7 @@ export default function Dashboard() {
       if (error) throw error;
       return (data as { year: string }[]).map((item) => item.year);
     },
-    enabled: !!user?.id && !isAdmin,
+    enabled: !!user?.id && !isAdmin && showsTravelDashboard,
   });
 
   const availableYears = useMemo(() => {

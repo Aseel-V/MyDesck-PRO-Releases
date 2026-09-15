@@ -12,8 +12,9 @@ Do not hand-edit outside the Design block.
 | Tenants (live `business_profiles`) | **1** |
 | Source rows (live) | **94** |
 | Firestore migrated | **NO** |
-| Reachable in a Firebase production root | **NO** |
-| Rules authored | NO |
+| Reachable in a Firebase production root without Supabase database calls | **NO** |
+| Rules authored and within budget | NO |
+| Data rehearsal reconciled | NO |
 | UI parity proven | NO |
 | Search proven | NO |
 | Analytics proven | NO |
@@ -33,7 +34,7 @@ Do not hand-edit outside the Design block.
 | `restaurant_tables` | 13 |
 | `restaurant_ticket_items` | 17 |
 
-## Source runtime surface
+## Source runtime surface (current tree)
 
 | Measure | Value |
 | --- | ---: |
@@ -46,6 +47,14 @@ Do not hand-edit outside the Design block.
 Tables referenced directly: `business_profiles`, `business_settings`, `restaurant_daily_reports`, `restaurant_guest_profiles`, `restaurant_kitchen_tickets`, `restaurant_menu_categories`, `restaurant_menu_items`, `restaurant_modifier_groups`, `restaurant_modifiers`, `restaurant_order_item_modifiers`, `restaurant_order_items`, `restaurant_orders`, `restaurant_payments`, `restaurant_reservations`, `restaurant_staff`, `restaurant_table_sessions`, `restaurant_tables`, `restaurant_ticket_items`, `restaurant_waitlist`
 
 RPCs referenced: `apply_discount_secure`, `authorize_staff_action`, `close_business_day_secure`, `create_kitchen_ticket`, `delete_menu_item_secure`, `delete_staff_secure`, `log_business_activity_v2`, `void_order_item_secure`
+
+## Parity evidence
+
+Gates from `migration/reports/vertical-parity-restaurant.json`.
+
+| Gate | Status |
+| --- | --- |
+| _not generated_ | FAIL |
 
 <!-- DESIGN:BEGIN -->
 ## Design

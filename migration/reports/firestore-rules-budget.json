@@ -1,0 +1,168 @@
+{
+  "limit": 1000,
+  "productCeiling": 850,
+  "method": "migration/firestore/lib/rules-budget.mjs",
+  "decision": "PASS",
+  "paths": [
+    {
+      "path": "registration: user profile",
+      "rule": "/users/{uid} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 283,
+      "costAbove": 280
+    },
+    {
+      "path": "registration: business",
+      "rule": "/businesses/{businessId} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 316,
+      "costAbove": 313
+    },
+    {
+      "path": "registration: owner index",
+      "rule": "/businessOwners/{ownerUid} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 106,
+      "costAbove": 103
+    },
+    {
+      "path": "admin create user: user profile",
+      "rule": "/users/{uid} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 406,
+      "costAbove": 403
+    },
+    {
+      "path": "admin create user: business",
+      "rule": "/businesses/{businessId} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 406,
+      "costAbove": 403
+    },
+    {
+      "path": "admin create user: owner index",
+      "rule": "/businessOwners/{ownerUid} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 193,
+      "costAbove": 190
+    },
+    {
+      "path": "settings: save user profile",
+      "rule": "/users/{uid} allow update",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 205,
+      "costAbove": 202
+    },
+    {
+      "path": "settings: save business profile",
+      "rule": "/businesses/{businessId} allow update",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 298,
+      "costAbove": 295
+    },
+    {
+      "path": "supermarket: seed default categories (batch of 8)",
+      "rule": "/menuCategories/{categoryId} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 214,
+      "costAbove": 211
+    },
+    {
+      "path": "supermarket: list categories",
+      "rule": "/menuCategories/{categoryId} allow get, list",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 52,
+      "costAbove": 49
+    },
+    {
+      "path": "supermarket: list available products",
+      "rule": "/menuItems/{itemId} allow get, list",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 52,
+      "costAbove": 49
+    },
+    {
+      "path": "supermarket: create product (product modal)",
+      "rule": "/menuItems/{itemId} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 574,
+      "costAbove": 571
+    },
+    {
+      "path": "supermarket: update product (product modal)",
+      "rule": "/menuItems/{itemId} allow update",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 421,
+      "costAbove": 418
+    },
+    {
+      "path": "supermarket: delete product (foreign-key checks and cascade)",
+      "rule": "/menuItems/{itemId} allow delete",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 52,
+      "costAbove": 49
+    },
+    {
+      "path": "menu item create, every optional column populated",
+      "rule": "/menuItems/{itemId} allow create",
+      "product": false,
+      "withinLimit": true,
+      "costAtMost": 583,
+      "costAbove": 580
+    },
+    {
+      "path": "menu item update, every mutable column changed",
+      "rule": "/menuItems/{itemId} allow update",
+      "product": false,
+      "withinLimit": true,
+      "costAtMost": 634,
+      "costAbove": 631
+    },
+    {
+      "path": "supermarket: checkout (40-line cart)",
+      "rule": "/marketTransactions/{transactionId} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 391,
+      "costAbove": 388
+    },
+    {
+      "path": "supermarket: sales analytics range",
+      "rule": "/marketTransactions/{transactionId} allow get, list",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 52,
+      "costAbove": 49
+    },
+    {
+      "path": "supermarket: edit sale",
+      "rule": "/marketTransactions/{transactionId} allow update",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 331,
+      "costAbove": 328
+    },
+    {
+      "path": "supermarket: delete sale",
+      "rule": "/marketTransactions/{transactionId} allow delete",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 52,
+      "costAbove": 49
+    }
+  ]
+}

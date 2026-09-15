@@ -32,6 +32,13 @@ const suites = [
   ['restaurant staff membership Rules', 'migration/firestore/tests/restaurant-staff-rules.test.mjs'],
   ['identity, profiles and administration', 'scripts/test-firestore-identity.mjs',
     ['scripts/run-typescript-source-test.mjs', 'scripts/test-firestore-identity.mjs']],
+  ['generated Rules validators are current', 'migration/firestore/tools/generate-rules-schema.mjs',
+    ['migration/firestore/tools/generate-rules-schema.mjs', '--check']],
+  ['schema validator helper semantics', 'scripts/test-firestore-schema-validators.mjs'],
+  ['supermarket repository, Rules and malicious clients', 'scripts/test-firestore-supermarket.mjs',
+    ['scripts/run-typescript-source-test.mjs', 'scripts/test-firestore-supermarket.mjs']],
+  ['Rules evaluation budget', 'scripts/test-firestore-rules-budget.mjs',
+    ['scripts/run-typescript-source-test.mjs', 'scripts/test-firestore-rules-budget.mjs']],
   ['trip transaction', 'migration/firestore/tests/save-trip-transaction.test.mjs'],
   ['payment/installment/state transactions', 'migration/firestore/tests/travel-operations.test.mjs'],
   ['Storage Rules', 'migration/firestore/tests/storage-rules.test.mjs'],
@@ -54,7 +61,8 @@ for (const [label, file, args = ['--test', file]] of suites) {
       continue;
     }
   }
-  const run = spawnSync(process.execPath, args, { encoding: 'utf8', env: process.env, timeout: 120000 });
+  // The Rules budget suite reloads the Rules for every measurement; it needs more than two minutes.
+  const run = spawnSync(process.execPath, args, { encoding: 'utf8', env: process.env, timeout: 600000 });
   process.stdout.write(run.stdout ?? '');
   process.stderr.write(run.stderr ?? '');
   const tests = Number((run.stdout ?? '').match(/^(?:#|ℹ) tests (\d+)$/m)?.[1] ?? 0);

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-14T22:51:46.052Z",
+  "generatedAt": "2026-09-15T07:30:17.327Z",
   "status": "PASS",
   "suites": [
     {
@@ -42,7 +42,7 @@
       "label": "full rehearsal core",
       "file": "migration/firestore/tests/full-rehearsal-core.test.mjs",
       "outcome": "PASS",
-      "tests": 6
+      "tests": 7
     },
     {
       "label": "secret scanner regression",
@@ -141,6 +141,30 @@
       "tests": 13
     },
     {
+      "label": "generated Rules validators are current",
+      "file": "migration/firestore/tools/generate-rules-schema.mjs",
+      "outcome": "PASS",
+      "tests": 0
+    },
+    {
+      "label": "schema validator helper semantics",
+      "file": "scripts/test-firestore-schema-validators.mjs",
+      "outcome": "PASS",
+      "tests": 9
+    },
+    {
+      "label": "supermarket repository, Rules and malicious clients",
+      "file": "scripts/test-firestore-supermarket.mjs",
+      "outcome": "PASS",
+      "tests": 10
+    },
+    {
+      "label": "Rules evaluation budget",
+      "file": "scripts/test-firestore-rules-budget.mjs",
+      "outcome": "PASS",
+      "tests": 6
+    },
+    {
       "label": "trip transaction",
       "file": "migration/firestore/tests/save-trip-transaction.test.mjs",
       "outcome": "PASS",
@@ -178,11 +202,11 @@
     }
   ],
   "totals": {
-    "steps": 30,
-    "passed": 30,
+    "steps": 34,
+    "passed": 34,
     "failed": 0,
-    "nodeTestCases": 255,
-    "assertionCallSites": 893,
+    "nodeTestCases": 281,
+    "assertionCallSites": 956,
     "fullCorpusApplicationAssertions": 1023,
     "searchCorpusCases": 12,
     "fullCorpusSecurityChecks": 50,

@@ -3,10 +3,25 @@
  * Firestore Rules schema validators, generated from the same source schema as the document codec.
  *
  * Authorization (who may write) stays hand-written in firestore.rules. Shape (what a document may
- * contain) is generated here, so the Rules and the codec cannot drift: every application-written
- * collection gets `sv_<table>(d)`, which requires the exact key set the migration and the codec
- * produce, a value of the right kind for every source column, NOT NULL, and the CHECK enumerations,
- * integer ranges and text lengths the source enforced.
+ * contain) is generated here, so the Rules and the codec cannot drift. Every application-written
+ * collection gets two validators:
+ *
+ *   sv_<table>(d)            create: the exact key set, a value of the right type for every source
+ *                            column, NOT NULL, and the CHECK enumerations, ranges and lengths the
+ *                            source enforced
+ *   svu_<table>(changed, d)  update: the key allowlist over the changed keys, and the same checks for
+ *                            the columns the write changes (all of them once most keys change)
+ *
+ * Firestore evaluates at most 1,000 expressions per request, so the shape of the generated code is
+ * chosen from measurements (migration/firestore/lib/rules-budget.mjs; scripts/test-firestore-rules-budget.mjs
+ * keeps every product path under its ceiling):
+ *   - checks are elements of one list tested with hasOnly([true]) instead of a && chain: `&&` costs 2
+ *     per operand, and a left-nested chain stops compiling at about 100 operands
+ *   - columns of one type are checked together where a single list operation can do it strictly
+ *     (sfStrings, sfBools, sfInts): twelve nullable text columns cost 40 expressions instead of 142
+ *   - an enumeration or a small integer range is a typed `in` list, which also checks the type
+ *     (`in` compares strictly: 1.0 is not in [1], '1' is not in [1])
+ * The helpers' allow/deny behaviour is locked by scripts/test-firestore-schema-validators.mjs.
  *
  * The block between SCHEMA-VALIDATORS:BEGIN and SCHEMA-VALIDATORS:END in firestore.rules is replaced
  * in place. `--check` fails instead of writing when the committed Rules are stale.
@@ -31,87 +46,186 @@ const TABLE_EXTRAS = {
   user_profiles: ['uid', 'legacyProfileId', 'migrationAuthOnly'],
 };
 
-const snapshot = JSON.parse(readFileSync('migration/firestore/config/source-schema.json', 'utf8'));
-const schema = buildSchema(snapshot);
+/** Below these group sizes one check per column is cheaper than the group's fixed overhead. */
+const GROUP_MIN = { strings: 2, bools: 2, ints: 8 };
+/** An integer range with at most this many values is checked as a typed `in` list. */
+const SMALL_RANGE = 8;
 
 const quote = (value) => `'${String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
 
-function columnCheck(column) {
-  const f = `d.${column.field}`;
-  const nullable = column.nullable;
-  const wrap = (expression) => (nullable ? `(${f} == null || ${expression})` : `(${f} != null && ${expression})`);
-  const extra = [];
-  switch (column.kind) {
-    case 'string':
-      if (column.enumValues) extra.push(`${f} in [${column.enumValues.map(quote).join(', ')}]`);
-      if (column.minLength !== undefined) extra.push(`${f}.size() >= ${column.minLength}`);
-      if (column.maxLength !== undefined) extra.push(`${f}.size() <= ${column.maxLength}`);
-      return wrap([`${f} is string`, ...extra].join(' && '));
-    case 'int':
-      if (column.min !== undefined) extra.push(`${f} ${column.minExclusive ? '>' : '>='} ${column.min}`);
-      if (column.max !== undefined) extra.push(`${f} <= ${column.max}`);
-      return wrap([`${f} is int`, ...extra].join(' && '));
-    case 'decimal': return wrap(`sfDecimal(${f})`);
-    case 'bool': return wrap(`${f} is bool`);
-    case 'timestamp': return `${wrap(`${f} is timestamp`)} && sfShadow(d, ${quote(column.field)})`;
-    case 'date': return wrap(`sfDate(${f})`);
-    case 'time': return wrap(`${f} is string`);
-    case 'array': return wrap(`${f} is list`);
-    case 'bytes': return wrap(`${f} is string`);
-    case 'json': return nullable ? `sfJson(d, ${quote(column.field)})` : `sfJsonRequired(d, ${quote(column.field)})`;
-    default: throw new Error(`UNSUPPORTED_KIND:${column.kind}`);
-  }
+/** The document keys a column occupies; a change to any of them re-validates the column. */
+function columnKeys(column) {
+  if (column.kind === 'timestamp') return [column.field, `${column.field}Micros`];
+  if (column.kind === 'json') return [column.field, `${column.field}Encoding`, `${column.field}Json`, `${column.field}TextReason`];
+  return [column.field];
 }
 
-function validator(tableName) {
+function allowedKeys(spec, tableName) {
+  const keys = new Set([...COMMON_EXTRAS, ...(TABLE_EXTRAS[tableName] ?? [])]);
+  for (const column of spec.columns) for (const key of columnKeys(column)) keys.add(key);
+  return [...keys].sort().map(quote).join(', ');
+}
+
+/** Every column covered by exactly one type check, plus its constraint checks: [{ keys, checks }]. */
+function validationItems(spec) {
+  const items = [];
+  const add = (keys, ...checks) => items.push({ keys, checks });
+  const groups = { strings: [], bools: [], requiredBools: [], ints: [] };
+  for (const column of spec.columns) {
+    const v = `d.${column.field}`;
+    const orNull = (expression) => (column.nullable ? `${v} == null || ${expression}` : expression);
+    const nullable = column.nullable ? ['null'] : [];
+    switch (column.kind) {
+      case 'string': case 'time': case 'bytes':
+        if (column.enumValues) add([column.field], `${v} in [${[...nullable, ...column.enumValues.map(quote)].join(', ')}]`);
+        else if (column.nullable) groups.strings.push(column);
+        else add([column.field], `${v} is string`);
+        if (column.minLength !== undefined) add([column.field], orNull(`${v}.size() >= ${column.minLength}`));
+        if (column.maxLength !== undefined) add([column.field], orNull(`${v}.size() <= ${column.maxLength}`));
+        break;
+      case 'int': {
+        const low = column.min === undefined ? undefined : column.minExclusive ? column.min + 1 : column.min;
+        if (low !== undefined && column.max !== undefined && column.max - low + 1 <= SMALL_RANGE) {
+          const values = Array.from({ length: column.max - low + 1 }, (_, i) => String(low + i));
+          add([column.field], `${v} in [${[...nullable, ...values].join(', ')}]`);
+          break;
+        }
+        if (column.nullable) groups.ints.push(column);
+        else add([column.field], `${v} is int`);
+        const bounds = [low === undefined ? null : `${v} >= ${low}`, column.max === undefined ? null : `${v} <= ${column.max}`].filter(Boolean);
+        if (bounds.length) add([column.field], orNull(bounds.length === 1 ? bounds[0] : `(${bounds.join(' && ')})`));
+        break;
+      }
+      case 'decimal': {
+        const scaled = Number.isInteger(column.precision) && Number.isInteger(column.scale);
+        add([column.field], orNull(scaled
+          ? `sfDecimalScaled(${v}, ${column.scale}, '-?[0-9]{1,${column.precision}}')`
+          : `sfDecimal(${v})`));
+        const bounds = [
+          column.min === undefined ? null : `sfDecimalValue(${v}) ${column.minExclusive ? '>' : '>='} ${column.min}`,
+          column.max === undefined ? null : `sfDecimalValue(${v}) <= ${column.max}`,
+        ].filter(Boolean);
+        if (bounds.length) add([column.field], orNull(bounds.length === 1 ? bounds[0] : `(${bounds.join(' && ')})`));
+        break;
+      }
+      case 'bool':
+        (column.nullable ? groups.bools : groups.requiredBools).push(column);
+        break;
+      case 'timestamp':
+        add(columnKeys(column), orNull(`${v} is timestamp`), `d.get('${column.field}Micros', '0').matches('-?[0-9]+')`);
+        break;
+      case 'date':
+        add([column.field], orNull(`${v}.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')`));
+        break;
+      case 'array':
+        add([column.field], orNull(`${v} is list`));
+        break;
+      case 'json': {
+        const get = (suffix) => `d.get('${column.field}${suffix}', null)`;
+        add(columnKeys(column), `${column.nullable ? 'sfJson' : 'sfJsonRequired'}(${get('Encoding')}, ${get('')}, ${get('Json')})`);
+        break;
+      }
+      default:
+        throw new Error(`UNSUPPORTED_KIND:${column.kind}`);
+    }
+  }
+  const grouped = (columns, minimum, helper, single) => {
+    if (columns.length >= minimum) {
+      add(columns.map((column) => column.field), `${helper}([${columns.map((column) => `d.${column.field}`).join(', ')}])`);
+    } else {
+      for (const column of columns) add([column.field], single(`d.${column.field}`));
+    }
+  };
+  grouped(groups.strings, GROUP_MIN.strings, 'sfStrings', (v) => `${v} == null || ${v} is string`);
+  grouped(groups.bools, GROUP_MIN.bools, 'sfBools', (v) => `${v} == null || ${v} is bool`);
+  grouped(groups.requiredBools, GROUP_MIN.bools, 'sfBoolsRequired', (v) => `${v} is bool`);
+  grouped(groups.ints, GROUP_MIN.ints, 'sfInts', (v) => `${v} == null || ${v} is int`);
+  add(['schemaVersion'], "d.get('schemaVersion', 1) == 1");
+  return items;
+}
+
+function validators(tableName, schema) {
   const spec = schema[tableName];
   if (!spec) throw new Error(`UNKNOWN_TABLE:${tableName}`);
-  const keys = new Set([...COMMON_EXTRAS, ...(TABLE_EXTRAS[tableName] ?? [])]);
-  for (const column of spec.columns) {
-    keys.add(column.field);
-    if (column.kind === 'timestamp') keys.add(`${column.field}Micros`);
-    if (column.kind === 'json') for (const suffix of ['Encoding', 'Json', 'TextReason']) keys.add(`${column.field}${suffix}`);
-  }
-  const checks = spec.columns.map(columnCheck);
+  const keys = allowedKeys(spec, tableName);
+  const items = validationItems(spec);
+  const checks = items.flatMap((item) => item.checks);
+  const gated = items.map(({ keys: itemKeys, checks: itemChecks }) => {
+    const gate = itemKeys.length === 1 ? `!(${quote(itemKeys[0])} in changed)` : `!changed.hasAny([${itemKeys.map(quote).join(', ')}])`;
+    const body = itemChecks.length === 1 ? itemChecks[0] : itemChecks.map((check) => `(${check})`).join(' && ');
+    return `${gate} || (${body})`;
+  });
+  // Past this many changed keys the gates cost more than validating every column.
+  const fullAbove = Math.max(8, Math.ceil(items.length / 2));
   return [
     `    function sv_${tableName}(d) {`,
-    `      return d.keys().hasOnly([${[...keys].sort().map(quote).join(', ')}])`,
-    ...checks.map((check) => `        && ${check}`),
-    '        && d.get(\'schemaVersion\', 1) == 1;',
+    `      return d.keys().hasOnly([${keys}]) && [`,
+    checks.map((check) => `        ${check}`).join(',\n'),
+    '      ].hasOnly([true]);',
+    '    }',
+    `    function svu_${tableName}(changed, d) {`,
+    `      return changed.hasOnly([${keys}]) && (changed.size() > ${fullAbove} ? sv_${tableName}(d) : [`,
+    gated.map((line) => `        ${line}`).join(',\n'),
+    '      ].hasOnly([true]));',
     '    }',
   ].join('\n');
 }
 
-const helpers = `    // Exact decimal object, field for field what the migration and the codec write.
+const HELPERS = `    // Every non-null value is a string: joining on U+FFFF (a Unicode noncharacter, reserved for
+    // internal use) and splitting again returns the same list only when every element is a string
+    // that does not contain it. join() alone would accept numbers, booleans and null.
+    function sfStrings(values) {
+      let l = values.removeAll([null]).concat(['end']);
+      return l.join('\\uffff').split('\\uffff') == l;
+    }
+    function sfBools(values) { return values.removeAll([true, false, null]).size() == 0; }
+    function sfBoolsRequired(values) { return values.removeAll([true, false]).size() == 0; }
+    // Every non-null value is an integer: the joined text holds only integers, it splits into one
+    // piece per value (no value contains the separator), and no value is itself a digit string.
+    function sfInts(values) {
+      let l = values.removeAll([null]).concat([0]);
+      let pieces = l.join('\\uffff').split('\\uffff');
+      return l.join('\\uffff').matches('-?[0-9]+(\\uffff-?[0-9]+)*') && pieces.size() == l.size() && !l.hasAny(pieces);
+    }
+    // Exact decimal as the migration and the codec write it: unitsText is authoritative, scale is an
+    // integer, units is null or the same integer, and there are no other keys. A value whose units do
+    // not fit int64 is refused here (the codec marks it exceedsInt64; no product column holds one).
     function sfDecimal(v) {
-      return v is map
-        && v.keys().hasOnly(['unitsText', 'units', 'scale', 'decimal', 'exceedsInt64'])
-        && v.unitsText is string && v.unitsText.matches('^-?[0-9]+$')
-        && v.scale is int && v.scale >= 0 && v.scale <= 32
-        && v.decimal is string
-        && (v.get('units', null) == null || v.units is int);
+      return [v.size() == 4, v.scale is int, v.scale >= 0, v.scale <= 32, v.unitsText.matches('-?[0-9]{1,40}'),
+        v.decimal is string, v.units in [null, int(v.unitsText)]].hasOnly([true]);
     }
-    function sfDate(v) { return v is string && v.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$'); }
-    function sfShadow(d, f) { return d.get(f + 'Micros', null) == null || d.get(f + 'Micros', null).matches('^-?[0-9]+$'); }
+    // NUMERIC(p,s): the codec rounds to scale s and refuses more than p digits.
+    function sfDecimalScaled(v, scale, digits) {
+      return [v.size() == 4, v.scale == scale, v.unitsText.matches(digits), v.decimal is string,
+        v.units in [null, int(v.unitsText)]].hasOnly([true]);
+    }
+    function sfDecimalValue(v) { return float(v.unitsText) / math.pow(10, v.scale); }
     // JSON is native, or text when Firestore cannot hold the shape; a SQL NULL has no encoding marker.
-    function sfJsonRequired(d, f) {
-      return d.get(f + 'Encoding', null) == 'native'
-        || (d.get(f + 'Encoding', null) == 'text' && d.get(f, null) == null && d.get(f + 'Json', null) is string);
+    function sfJsonRequired(encoding, value, text) {
+      return encoding == 'native' || (encoding == 'text' && value == null && text is string);
     }
-    function sfJson(d, f) {
-      return sfJsonRequired(d, f) || (d.get(f + 'Encoding', null) == null && d.get(f, null) == null);
+    function sfJson(encoding, value, text) {
+      return sfJsonRequired(encoding, value, text) || (encoding == null && value == null);
     }`;
 
-const block = [BEGIN, helpers, ...APP_WRITE_TABLES.map(validator), END].join('\n');
-const rules = readFileSync(RULES, 'utf8');
-const start = rules.indexOf(BEGIN);
-const stop = rules.indexOf(END);
-if (start < 0 || stop < 0 || stop < start) throw new Error('SCHEMA_VALIDATOR_MARKERS_MISSING');
-const next = `${rules.slice(0, start)}${block}${rules.slice(stop + END.length)}`;
-if (process.argv.includes('--check')) {
-  if (next !== rules) { console.error('RULES_SCHEMA_VALIDATORS_STALE'); process.exitCode = 1; }
-  else console.log('RULES_SCHEMA_VALIDATORS_CURRENT');
-} else {
-  writeFileSync(RULES, next);
-  console.log(JSON.stringify({ tables: APP_WRITE_TABLES, bytes: Buffer.byteLength(next) }));
+export function generateBlock(schema) {
+  return [BEGIN, HELPERS, ...APP_WRITE_TABLES.map((table) => validators(table, schema)), END].join('\n');
+}
+
+const isMain = process.argv[1] && import.meta.url.endsWith(process.argv[1].replace(/\\/g, '/').split('/').pop());
+if (isMain) {
+  const snapshot = JSON.parse(readFileSync('migration/firestore/config/source-schema.json', 'utf8'));
+  const block = generateBlock(buildSchema(snapshot));
+  const rules = readFileSync(RULES, 'utf8');
+  const start = rules.indexOf(BEGIN);
+  const stop = rules.indexOf(END);
+  if (start < 0 || stop < 0 || stop < start) throw new Error('SCHEMA_VALIDATOR_MARKERS_MISSING');
+  const next = `${rules.slice(0, start)}${block}${rules.slice(stop + END.length)}`;
+  if (process.argv.includes('--check')) {
+    if (next !== rules) { console.error('RULES_SCHEMA_VALIDATORS_STALE'); process.exitCode = 1; }
+    else console.log('RULES_SCHEMA_VALIDATORS_CURRENT');
+  } else {
+    writeFileSync(RULES, next);
+    console.log(JSON.stringify({ tables: APP_WRITE_TABLES, bytes: Buffer.byteLength(next) }));
+  }
 }

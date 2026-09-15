@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import {
-  FIRESTORE_MAX_DOCUMENT_BYTES, FULL_TRANSFORM_VERSION, authDerivedDocument,
+  FIRESTORE_MAX_DOCUMENT_BYTES, FULL_TRANSFORM_VERSION, authDerivedDocument, businessOwnerIndexDocument,
   credentialExclusions, documentId, indexRisk, sizeClass, sourceKey, targetPath,
   topologicalTables,
 } from '../lib/full-rehearsal-core.mjs';
@@ -51,5 +52,17 @@ test('derived auth document preserves UID and transform version', () => {
   assert.equal(doc.userId, 'uid-1');
   assert.equal(doc.ownerUid, 'uid-1');
   assert.equal(doc.migrationTransformVersion, FULL_TRANSFORM_VERSION);
+});
+
+test('every migrated business gets an owner index with exactly the keys the Rules allow', () => {
+  const doc = businessOwnerIndexDocument('uid-1', 'business-1');
+  assert.equal(doc.uid, 'uid-1');
+  assert.equal(doc.businessId, 'business-1');
+  assert.equal(doc.schemaVersion, 1, 'the Rules accept only schemaVersion 1 on an index document');
+  assert.equal(doc.migrationTransformVersion, FULL_TRANSFORM_VERSION);
+  const rules = readFileSync('migration/firestore/rules/firestore.rules', 'utf8');
+  const block = rules.slice(rules.indexOf('match /businessOwners/{ownerUid} {'));
+  const allowed = [...block.match(/hasOnly\(\[([^\]]+)\]\)/)[1].matchAll(/'([^']+)'/g)].map((match) => match[1]);
+  assert.deepEqual(Object.keys(doc).filter((key) => !allowed.includes(key)), []);
 });
 

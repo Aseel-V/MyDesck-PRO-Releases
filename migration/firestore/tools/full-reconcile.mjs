@@ -91,7 +91,8 @@ for (const item of state.expected) {
 }
 
 const unexpectedDocuments = [...actualPaths].filter((path) => !expectedPaths.has(path)).length;
-const expectedPublicRows = state.expected.filter((item) => item.sourceTable !== 'auth.users');
+// Derived documents (the auth-only profiles and the business-owner index) have no source row in the ledger.
+const expectedPublicRows = state.expected.filter((item) => item.sourceTable !== 'auth.users' && !item.derived);
 const ledgerByKey = new Map(ledger.entries.map((entry) => [entry.key, entry]));
 let ledgerMismatches = 0;
 for (const item of expectedPublicRows) {

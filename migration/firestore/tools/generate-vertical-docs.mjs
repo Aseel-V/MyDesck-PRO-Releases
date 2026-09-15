@@ -68,6 +68,14 @@ for (const entry of inventory.verticals) {
       'relationships, Rules ownership model, transaction invariants, search and analytics',
       'strategy must be designed before this vertical can be migrated.', '', '<!-- DESIGN:END -->'].join('\n');
 
+  const evidencePath = `migration/reports/vertical-parity-${entry.vertical}.json`;
+  const evidence = existsSync(evidencePath) ? JSON.parse(readFileSync(evidencePath, 'utf8')) : null;
+  const passed = (gate) => (evidence?.gates?.[gate]?.status === 'PASS' ? 'YES' : 'NO');
+  const measured = (parity.verticals ?? []).find((item) => item.vertical === entry.vertical);
+  const supportedRoot = measured?.reachableInFirebaseRoot && measured?.firebaseRootForbiddenCallSites === 0 ? 'YES' : 'NO';
+  const evidenceRows = evidence
+    ? Object.entries(evidence.gates).map(([gate, value]) => `| ${gate} | ${value.status} |`).join('\n')
+    : '| _not generated_ | FAIL |';
   const rows = entry.tables.length
     ? entry.tables.map((t) => `| \`${t.table}\` | ${t.rows} |`).join('\n')
     : '| _none_ | 0 |';
@@ -84,12 +92,13 @@ Do not hand-edit outside the Design block.
 | Classification | **${entry.classification}** |
 | Tenants (live \`business_profiles\`) | **${entry.tenants}** |
 | Source rows (live) | **${entry.rows}** |
-| Firestore migrated | **NO** |
-| Reachable in a Firebase production root | **NO** |
-| Rules authored | NO |
-| UI parity proven | NO |
-| Search proven | NO |
-| Analytics proven | NO |
+| Firestore migrated | **${evidence?.decision === 'PASS' ? 'YES' : 'NO'}** |
+| Reachable in a Firebase production root without Supabase database calls | **${supportedRoot}** |
+| Rules authored and within budget | ${passed('suites') === 'YES' && passed('rulesBudget') === 'YES' ? 'YES' : 'NO'} |
+| Data rehearsal reconciled | ${passed('dataRehearsal')} |
+| UI parity proven | ${passed('uiSmoke')} |
+| Search proven | ${passed('search')} |
+| Analytics proven | ${passed('analytics')} |
 | Retirement requires owner approval | YES |
 
 ## Source data (live counts, read-only)
@@ -98,7 +107,7 @@ Do not hand-edit outside the Design block.
 | --- | ---: |
 ${rows}
 
-## Source runtime surface
+## Source runtime surface (current tree)
 
 | Measure | Value |
 | --- | ---: |
@@ -111,6 +120,14 @@ ${rows}
 Tables referenced directly: ${attributed.tables.length ? attributed.tables.map((t) => `\`${t}\``).join(', ') : '_none detected_'}
 
 RPCs referenced: ${attributed.rpcs.length ? attributed.rpcs.map((r) => `\`${r}\``).join(', ') : '_none detected_'}
+
+## Parity evidence
+
+Gates from \`${evidencePath}\`${evidence ? ` (generated ${evidence.generatedAt}, decision **${evidence.decision}**)` : ''}.
+
+| Gate | Status |
+| --- | --- |
+${evidenceRows}
 
 ${design}
 

@@ -12,8 +12,9 @@ Do not hand-edit outside the Design block.
 | Tenants (live `business_profiles`) | **3** |
 | Source rows (live) | **1339** |
 | Firestore migrated | **NO** |
-| Reachable in a Firebase production root | **NO** |
-| Rules authored | NO |
+| Reachable in a Firebase production root without Supabase database calls | **NO** |
+| Rules authored and within budget | NO |
+| Data rehearsal reconciled | NO |
 | UI parity proven | NO |
 | Search proven | NO |
 | Analytics proven | NO |
@@ -35,7 +36,7 @@ Do not hand-edit outside the Design block.
 | `trip_write_requests` | 111 |
 | `trips` | 100 |
 
-## Source runtime surface
+## Source runtime surface (current tree)
 
 | Measure | Value |
 | --- | ---: |
@@ -43,11 +44,19 @@ Do not hand-edit outside the Design block.
 | Supabase database call sites | 39 |
 | Supabase RPC call sites | 25 |
 | Supabase database realtime call sites | 0 |
-| Supabase Storage call sites (allowed) | 2 |
+| Supabase Storage call sites (allowed) | 0 |
 
 Tables referenced directly: `trip_attachment_cleanup_queue`, `trip_installment_events`, `trip_installments`, `trip_notification_settings`, `trip_notifications`, `trip_packing_lists`, `trip_payment_plans`, `trip_templates`, `trip_whatsapp_templates`, `trips`
 
 RPCs referenced: `create_trip_payment_plan`, `get_deleted_trips_page`, `get_travel_reports`, `get_trip_activity_page`, `get_trip_dashboard_items`, `get_trip_details`, `get_trip_financial_audit_page`, `get_trip_years`, `get_trips_page`, `log_trip_activity`, `mark_all_trip_notifications_read`, `materialize_due_visa_progress_events`, `permanently_delete_trips`, `recalculate_future_trip_installments`, `record_trip_cash_payment`, `record_trip_installment_payment`, `reschedule_trip_installment`, `restore_deleted_trips`, `retry_trip_attachment_cleanup`, `save_trip_transaction`, `use_trip_template`
+
+## Parity evidence
+
+Gates from `migration/reports/vertical-parity-tourism.json`.
+
+| Gate | Status |
+| --- | --- |
+| _not generated_ | FAIL |
 
 <!-- DESIGN:BEGIN -->
 ## Design

@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, Save, Trash2, Plus, Minus } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { getBackend } from '../../data/backend';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { toast } from 'sonner';
@@ -82,19 +82,15 @@ export default function EditTransactionModal({ transaction, onClose, onSuccess }
       console.log('Updating transaction:', transaction.id, { total, items });
 
       // 2. Update transaction in DB
-      const { error } = await supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('market_transactions' as any)
-        .update({
+      try {
+        await getBackend().supermarket.updateSale(transaction.id, {
           items: items,
           total_amount: total,
           subtotal: subtotal,
           vat_amount: vat
-        })
-        .eq('id', transaction.id);
-
-      if (error) {
-        console.error('Supabase update error:', error);
+        });
+      } catch (error) {
+        console.error('Update error:', error);
         throw error;
       }
 

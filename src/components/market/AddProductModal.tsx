@@ -1,7 +1,7 @@
 import { SupabaseStorageRepository } from '../../data/SupabaseStorageRepository';
 import { useState, useRef, useEffect } from 'react';
 import { X, Package, Scale, Camera, Barcode, ScanBarcode } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { getBackend } from '../../data/backend';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'sonner';
 
@@ -68,30 +68,18 @@ export default function AddProductModal({ onClose, onSuccess, product, initialBa
     const fetchCategories = async () => {
       if (!user) return;
       try {
-        const { data: existing, error } = await supabase
-          .from('restaurant_menu_categories')
-          .select('*')
-          .eq('business_id', user.id)
-          .order('sort_order', { ascending: true });
-
-        if (error) throw error;
+        const existing = await getBackend().supermarket.listCategories(user.id);
 
         if (!existing || existing.length === 0) {
           // Seed defaults
           const inserts = DEFAULT_CATEGORIES.map(c => ({
-            business_id: user.id,
             name: c.name,
             name_he: c.nameHe,
             sort_order: c.sort_order,
             is_active: true
           }));
-          
-          const { data: created, error: createError } = await supabase
-            .from('restaurant_menu_categories')
-            .insert(inserts)
-            .select();
 
-          if (createError) throw createError;
+          const created = await getBackend().supermarket.seedDefaultCategories(user.id, inserts);
           setCategories(created || []);
           if (created && created.length > 0 && !product) {
              setFormData(prev => ({ ...prev, category: created[0].id }));
@@ -141,38 +129,26 @@ export default function AddProductModal({ onClose, onSuccess, product, initialBa
       }
 
        if (product) {
-          const { error: updateError } = await supabase
-            .from('restaurant_menu_items')
-            .update({
-              name: formData.name, 
-              description: formData.nameHe,
-              price: parseFloat(formData.price),
-              barcode: formData.barcode || null,
-              category_id: formData.category || null,
-              type: formData.type,
-              image_url: imageUrl || product.image_url, 
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            } as any)
-            .eq('id', product.id);
-           
-         if (updateError) throw updateError;
+          // An absent image stays absent (undefined leaves the column untouched), as before.
+          await getBackend().supermarket.updateProduct(product.id, {
+            name: formData.name,
+            description: formData.nameHe,
+            price: parseFloat(formData.price),
+            barcode: formData.barcode || null,
+            category_id: formData.category || null,
+            type: formData.type,
+            image_url: imageUrl || product.image_url,
+          });
       } else {
-         const { error: createError } = await supabase
-           .from('restaurant_menu_items')
-           .insert({
-             business_id: user.id,
-             name: formData.name, 
-             description: formData.nameHe,
-             price: parseFloat(formData.price),
-             barcode: formData.barcode || null,
-             category_id: formData.category || null,
-             type: formData.type,
-             image_url: imageUrl,
-             is_available: true
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-           } as any);
-           
-         if (createError) throw createError;
+         await getBackend().supermarket.createProduct(user.id, {
+           name: formData.name,
+           description: formData.nameHe,
+           price: parseFloat(formData.price),
+           barcode: formData.barcode || null,
+           category_id: formData.category || null,
+           type: formData.type,
+           image_url: imageUrl,
+         });
       }
 
       toast.success(product ? t('market.saveSuccess') : t('market.saveSuccess'));

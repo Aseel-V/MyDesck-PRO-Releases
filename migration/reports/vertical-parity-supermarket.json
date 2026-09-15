@@ -1,0 +1,222 @@
+{
+  "generatedAt": "2026-09-15T07:33:49.095Z",
+  "vertical": "supermarket",
+  "decision": "PASS",
+  "gates": {
+    "firebaseRoot": {
+      "status": "PASS",
+      "runtimeSurfaceFiles": 6,
+      "forbiddenCallSites": [],
+      "genericSupabaseClientImports": [],
+      "supabaseAdapterImports": [],
+      "supabaseJsImports": [],
+      "storageOutsideRepository": []
+    },
+    "generatedSchema": {
+      "status": "PASS",
+      "rulesValidators": "CURRENT"
+    },
+    "suites": {
+      "status": "PASS",
+      "suites": [
+        {
+          "label": "supermarket repository, Rules and malicious clients",
+          "file": "scripts/test-firestore-supermarket.mjs",
+          "outcome": "PASS",
+          "tests": 10
+        },
+        {
+          "label": "schema validator helper semantics",
+          "file": "scripts/test-firestore-schema-validators.mjs",
+          "outcome": "PASS",
+          "tests": 9
+        },
+        {
+          "label": "Rules evaluation budget",
+          "file": "scripts/test-firestore-rules-budget.mjs",
+          "outcome": "PASS",
+          "tests": 6
+        }
+      ]
+    },
+    "rulesBudget": {
+      "status": "PASS",
+      "limit": 1000,
+      "productCeiling": 850,
+      "paths": [
+        {
+          "path": "supermarket: seed default categories (batch of 8)",
+          "costAtMost": 214
+        },
+        {
+          "path": "supermarket: list categories",
+          "costAtMost": 52
+        },
+        {
+          "path": "supermarket: list available products",
+          "costAtMost": 52
+        },
+        {
+          "path": "supermarket: create product (product modal)",
+          "costAtMost": 574
+        },
+        {
+          "path": "supermarket: update product (product modal)",
+          "costAtMost": 421
+        },
+        {
+          "path": "supermarket: delete product (foreign-key checks and cascade)",
+          "costAtMost": 52
+        },
+        {
+          "path": "supermarket: checkout (40-line cart)",
+          "costAtMost": 391
+        },
+        {
+          "path": "supermarket: sales analytics range",
+          "costAtMost": 52
+        },
+        {
+          "path": "supermarket: edit sale",
+          "costAtMost": 331
+        },
+        {
+          "path": "supermarket: delete sale",
+          "costAtMost": 52
+        }
+      ]
+    },
+    "dataRehearsal": {
+      "status": "PASS",
+      "importedAt": "2026-09-15T06:18:55.118Z",
+      "reconciledAt": "2026-09-15T06:18:56.599Z",
+      "dualReadAt": "2026-09-15T06:18:57.173Z",
+      "totals": {
+        "tenants": 1,
+        "sourceRowsCompared": 19,
+        "matched": 19,
+        "missing": 0,
+        "unexpected": 0,
+        "fieldMismatches": 0,
+        "orderMismatches": 0,
+        "unknownColumns": 0,
+        "orphans": 0,
+        "migratedDocuments": 19,
+        "crossTenantAttempts": 3,
+        "crossTenantAllowed": 0,
+        "controlsApplicable": 6,
+        "controlsDetected": 6,
+        "restoredClean": true
+      }
+    },
+    "uiSmoke": {
+      "status": "PASS",
+      "smokeAt": "2026-09-15T07:08:02.773Z",
+      "flows": [
+        {
+          "name": "the Hebrew owner signs in on the Firebase root and the POS renders right-to-left",
+          "status": "passed"
+        },
+        {
+          "name": "a product is created with the default categories, found by name and barcode, and edited across a reload",
+          "status": "passed"
+        },
+        {
+          "name": "checkout saves the sale, and sales analytics lists it and deletes it",
+          "status": "passed"
+        },
+        {
+          "name": "another tenant signs in left-to-right in English and sees none of the first tenant's products",
+          "status": "passed"
+        },
+        {
+          "name": "the Arabic owner signs in right-to-left",
+          "status": "passed"
+        },
+        {
+          "name": "the product is deleted and stays deleted after a reload",
+          "status": "passed"
+        }
+      ]
+    },
+    "search": {
+      "status": "PASS",
+      "surfaces": [
+        {
+          "surface": "POS search box: name, Hebrew name or barcode substring",
+          "class": "CLIENT_DERIVED",
+          "status": "PASS",
+          "files": [
+            "src/components/dashboards/SupermarketDashboard.tsx"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "Barcode and PLU scan",
+          "class": "CLIENT_DERIVED",
+          "status": "PASS",
+          "files": [
+            "src/components/dashboards/SupermarketDashboard.tsx"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "Category chips and the product category picker",
+          "class": "CLIENT_DERIVED",
+          "status": "PASS",
+          "files": [
+            "src/components/dashboards/SupermarketDashboard.tsx",
+            "src/components/market/AddProductModal.tsx"
+          ],
+          "verdict": "PASS"
+        }
+      ],
+      "blocked": 0,
+      "unknown": 0
+    },
+    "analytics": {
+      "status": "PASS",
+      "surfaces": [
+        {
+          "surface": "Sales analytics: date-range list, cash/card/digital totals, edit and delete of a sale",
+          "class": "FIRESTORE_QUERY",
+          "status": "PASS",
+          "files": [
+            "src/components/market/SalesAnalytics.tsx",
+            "src/components/market/EditTransactionModal.tsx"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "SalesAnalyticsModal hourly, daily and monthly charts",
+          "class": "LEGACY_UNREACHABLE",
+          "status": "LEGACY_UNREACHABLE",
+          "files": [
+            "src/components/market/SalesAnalyticsModal.tsx"
+          ],
+          "verdict": "PASS"
+        }
+      ],
+      "blocked": 0,
+      "unknown": 0
+    },
+    "rpc": {
+      "status": "PASS",
+      "surfaces": [],
+      "blocked": 0,
+      "unknown": 0
+    },
+    "realtime": {
+      "status": "PASS",
+      "surfaces": [],
+      "blocked": 0,
+      "unknown": 0
+    },
+    "edgeFunctions": {
+      "status": "PASS",
+      "surfaces": [],
+      "blocked": 0,
+      "unknown": 0
+    }
+  }
+}

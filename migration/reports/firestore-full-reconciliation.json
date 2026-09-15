@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-11T12:05:46.720Z",
+  "generatedAt": "2026-09-15T06:18:56.599Z",
   "status": "RECONCILED",
   "schemaVersion": 1,
   "transformVersion": "1.full.1",
@@ -17,8 +17,8 @@
     "applicationBehavioralParity": "SEE migration/reports/firestore-full-application-parity.json"
   },
   "coverage": {
-    "expectedDocuments": 1439,
-    "actualDocuments": 1439,
+    "expectedDocuments": 1475,
+    "actualDocuments": 1475,
     "missingDocuments": 0,
     "unexpectedDocuments": 0,
     "canonicalMismatches": 0,
@@ -29,7 +29,7 @@
     "pkDocumentIdMismatches": 0
   },
   "relationships": {
-    "checked": 3047,
+    "checked": 3116,
     "relationshipMismatches": 0,
     "crossTenantReferences": 0,
     "migrationCreatedOrphans": 0
@@ -41,7 +41,7 @@
       "UNSPECIFIED",
       "USD"
     ],
-    "valuesChecked": 1447,
+    "valuesChecked": 1462,
     "perCurrencySourceDigests": [
       {
         "currency": "EUR",
@@ -50,8 +50,8 @@
       },
       {
         "currency": "ILS",
-        "values": 868,
-        "digest": "968114474c198a8784a9fac91e576180ad7b26103b30aae7bfe883e0448a676b"
+        "values": 883,
+        "digest": "d70af721a4ab826ed7d07ec51520cdd565632cc8fba002007857d5245a914c26"
       },
       {
         "currency": "UNSPECIFIED",
@@ -72,8 +72,8 @@
       },
       {
         "currency": "ILS",
-        "values": 868,
-        "digest": "968114474c198a8784a9fac91e576180ad7b26103b30aae7bfe883e0448a676b"
+        "values": 883,
+        "digest": "d70af721a4ab826ed7d07ec51520cdd565632cc8fba002007857d5245a914c26"
       },
       {
         "currency": "UNSPECIFIED",
@@ -88,24 +88,24 @@
     ],
     "perValueMismatches": 0,
     "digestMismatches": 0,
-    "derivedSummariesChecked": 198,
+    "derivedSummariesChecked": 200,
     "derivedSummaryMismatches": 0,
     "unexplainedDelta": 0
   },
   "events": {
-    "events": 953,
+    "events": 978,
     "missing": 0,
     "extra": 0,
     "orderingMismatches": 0,
     "amountMismatches": 0
   },
   "timestamps": {
-    "compared": 1784,
+    "compared": 1816,
     "precisionLossCases": 0,
     "unexplainedMismatches": 0
   },
   "json": {
-    "compared": 2025,
+    "compared": 2071,
     "sqlNullVsJsonNull": "PRESERVED",
     "numericLiteral": "PRESERVED_OR_TEXT_ENCODED",
     "mismatches": 0
@@ -115,7 +115,7 @@
     "tooLarge": 0
   },
   "ledger": {
-    "entries": 1444,
+    "entries": 1474,
     "mismatches": 0
   },
   "perTable": {
@@ -125,6 +125,11 @@
       "canonicalMismatches": 0
     },
     "business_profiles": {
+      "expected": 6,
+      "found": 6,
+      "canonicalMismatches": 0
+    },
+    "business_profiles.owner_index": {
       "expected": 6,
       "found": 6,
       "canonicalMismatches": 0
@@ -200,8 +205,8 @@
       "canonicalMismatches": 0
     },
     "trip_activity_log": {
-      "expected": 489,
-      "found": 489,
+      "expected": 501,
+      "found": 501,
       "canonicalMismatches": 0
     },
     "trip_attachment_cleanup_queue": {
@@ -210,8 +215,8 @@
       "canonicalMismatches": 0
     },
     "trip_financial_audit": {
-      "expected": 452,
-      "found": 452,
+      "expected": 465,
+      "found": 465,
       "canonicalMismatches": 0
     },
     "trip_installment_events": {
@@ -230,18 +235,18 @@
       "canonicalMismatches": 0
     },
     "trip_payment_plans": {
-      "expected": 99,
-      "found": 99,
+      "expected": 100,
+      "found": 100,
       "canonicalMismatches": 0
     },
     "trip_write_requests": {
-      "expected": 108,
-      "found": 108,
+      "expected": 111,
+      "found": 111,
       "canonicalMismatches": 0
     },
     "trips": {
-      "expected": 99,
-      "found": 99,
+      "expected": 100,
+      "found": 100,
       "canonicalMismatches": 0
     },
     "user_profiles": {

@@ -1,0 +1,150 @@
+{
+  "generatedAt": "2026-09-15T06:18:57.173Z",
+  "vertical": "supermarket",
+  "target": "firestore-emulator",
+  "readOnlySource": {
+    "start": {
+      "read_only": "on",
+      "isolation": "repeatable read"
+    },
+    "rejectedWriteSqlState": "25006",
+    "successfulWrites": 0,
+    "end": {
+      "read_only": "on",
+      "isolation": "repeatable read"
+    },
+    "transactionOutcome": "ROLLBACK"
+  },
+  "tenants": [
+    {
+      "businessHash": "2ce413774b65",
+      "ownerHash": "14f005e47862",
+      "methods": {
+        "listAvailableProducts": {
+          "sourceRows": 2,
+          "targetRows": 2,
+          "matched": 2,
+          "missing": 0,
+          "unexpected": 0,
+          "fieldMismatches": 0,
+          "orderMismatches": 0,
+          "mismatchedColumns": {},
+          "unknownColumns": []
+        },
+        "listCategories": {
+          "sourceRows": 16,
+          "targetRows": 16,
+          "matched": 16,
+          "missing": 0,
+          "unexpected": 0,
+          "fieldMismatches": 0,
+          "orderMismatches": 0,
+          "mismatchedColumns": {},
+          "unknownColumns": []
+        },
+        "listSales": {
+          "sourceRows": 1,
+          "targetRows": 1,
+          "matched": 1,
+          "missing": 0,
+          "unexpected": 0,
+          "fieldMismatches": 0,
+          "orderMismatches": 0,
+          "mismatchedColumns": {},
+          "unknownColumns": []
+        }
+      },
+      "inventory": {
+        "menuCategories": {
+          "sourceRows": 16,
+          "targetDocuments": 16,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "menuItems": {
+          "sourceRows": 2,
+          "targetDocuments": 2,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "marketTransactions": {
+          "sourceRows": 1,
+          "targetDocuments": 1,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        }
+      },
+      "crossTenant": {
+        "attempts": 3,
+        "denied": 3
+      },
+      "restoredClean": true,
+      "clean": true
+    }
+  ],
+  "corruptionControls": [
+    {
+      "name": "sale amount changed",
+      "tenant": "2ce413774b65",
+      "metric": "fieldMismatches",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "sale deleted",
+      "tenant": "2ce413774b65",
+      "metric": "missing",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "sale duplicated under a new id",
+      "tenant": "2ce413774b65",
+      "metric": "unexpected",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "sale moved to another owner",
+      "tenant": "2ce413774b65",
+      "metric": "missing",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "category that the source does not have",
+      "tenant": "2ce413774b65",
+      "metric": "unexpected",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "available product that the source does not have",
+      "tenant": "2ce413774b65",
+      "metric": "unexpected",
+      "observed": 1,
+      "status": "DETECTED"
+    }
+  ],
+  "decision": "PASS",
+  "totals": {
+    "tenants": 1,
+    "sourceRowsCompared": 19,
+    "matched": 19,
+    "missing": 0,
+    "unexpected": 0,
+    "fieldMismatches": 0,
+    "orderMismatches": 0,
+    "unknownColumns": 0,
+    "orphans": 0,
+    "migratedDocuments": 19,
+    "crossTenantAttempts": 3,
+    "crossTenantAllowed": 0,
+    "controlsApplicable": 6,
+    "controlsDetected": 6,
+    "restoredClean": true
+  }
+}

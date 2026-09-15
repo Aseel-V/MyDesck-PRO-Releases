@@ -10,7 +10,7 @@ import { canonicalHash, encode } from '../lib/canonical.mjs';
 import { canonicalFromDocument, transformRow } from '../lib/transform.mjs';
 import { parseDecimalString, decimalStringToScaledInteger } from '../lib/exact-decimal.mjs';
 import {
-  FULL_TRANSFORM_VERSION, authDerivedDocument, credentialExclusions, documentId,
+  FULL_TRANSFORM_VERSION, authDerivedDocument, businessOwnerIndexDocument, credentialExclusions, documentId,
   extraFields, indexRisk, migratableColumns, normalizePgArray, rawDocumentHash,
   resolveTenancy, sizeClass, sourceKey, sourcePk, targetPath, topologicalTables,
 } from '../lib/full-rehearsal-core.mjs';
@@ -322,6 +322,23 @@ try {
       const userDocument = expected.find((item) => item.targetPath === authPath);
       if (!userDocument) throw new Error('AUTH_USER_DOCUMENT_PLAN_MISSING');
       sourceMeta.set(`auth.users#${encodeURIComponent(row.uid)}`, userDocument);
+    }
+
+    // The owner-uniqueness index every business needs under the Rules (UNIQUE(user_id) in the source).
+    for (const business of businessRows) {
+      const path = `businessOwners/${encodeURIComponent(business.user_id)}`;
+      if (collisions.has(path)) throw new Error(`BUSINESS_OWNER_NOT_UNIQUE:${redactPath(path)}`);
+      const data = businessOwnerIndexDocument(business.user_id, business.id);
+      await target.db.doc(path).set(data);
+      const rawHash = rawDocumentHash(path, data);
+      const meta = { key: `businessOwners#${encodeURIComponent(business.user_id)}`,
+        sourceTable: 'business_profiles.owner_index', derived: true, sourcePk: [business.id], targetPath: path,
+        docId: business.user_id, columns: [], sourceHash: rawHash, rawHash, ownerUid: business.user_id,
+        businessId: business.id, foreignKeys: [], estimatedBytes: Buffer.byteLength(JSON.stringify(data)),
+        entityType: 'businessOwners', rawOnly: true };
+      collisions.set(path, meta.key);
+      expected.push(meta);
+      written += 1;
     }
 
     const sourceKeys = new Set(sourceMeta.keys());

@@ -227,3 +227,18 @@ export function authDerivedDocument(uid, businessId = null) {
   };
 }
 
+/**
+ * businessOwners/{uid}: the index that stands in for UNIQUE(business_profiles.user_id). The Rules let a
+ * business be created only while no index document exists for its owner, so every migrated business needs
+ * one or its owner could register a second business. The keys are exactly those the Rules allow.
+ */
+export function businessOwnerIndexDocument(uid, businessId) {
+  return {
+    uid,
+    businessId,
+    schemaVersion: SCHEMA_VERSION,
+    transformVersion: TRANSFORM_VERSION,
+    migrationTransformVersion: FULL_TRANSFORM_VERSION,
+  };
+}
+

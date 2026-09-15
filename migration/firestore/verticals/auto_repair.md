@@ -12,8 +12,9 @@ Do not hand-edit outside the Design block.
 | Tenants (live `business_profiles`) | **1** |
 | Source rows (live) | **2** |
 | Firestore migrated | **NO** |
-| Reachable in a Firebase production root | **NO** |
-| Rules authored | NO |
+| Reachable in a Firebase production root without Supabase database calls | **NO** |
+| Rules authored and within budget | NO |
+| Data rehearsal reconciled | NO |
 | UI parity proven | NO |
 | Search proven | NO |
 | Analytics proven | NO |
@@ -26,7 +27,7 @@ Do not hand-edit outside the Design block.
 | `car_parts` | 1 |
 | `customer_vehicles` | 1 |
 
-## Source runtime surface
+## Source runtime surface (current tree)
 
 | Measure | Value |
 | --- | ---: |
@@ -39,6 +40,14 @@ Do not hand-edit outside the Design block.
 Tables referenced directly: `car_parts`, `customer_vehicles`, `customers_ledger`, `repair_order_items`, `repair_orders`, `restaurant_menu_items`
 
 RPCs referenced: `add_repair_service_transaction`
+
+## Parity evidence
+
+Gates from `migration/reports/vertical-parity-auto_repair.json`.
+
+| Gate | Status |
+| --- | --- |
+| _not generated_ | FAIL |
 
 <!-- DESIGN:BEGIN -->
 ## Design

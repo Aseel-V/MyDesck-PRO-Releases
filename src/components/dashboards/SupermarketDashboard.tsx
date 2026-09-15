@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useLanguage } from "../../contexts/LanguageContext";
-import { supabase } from "../../lib/supabase";
+import { getBackend } from "../../data/backend";
 import AddProductModal from "../market/AddProductModal";
 import ReceiptModal from "../market/ReceiptModal";
 import { ConfirmationModal } from '../ui/ConfirmationModal';
@@ -442,26 +442,21 @@ export default function SupermarketDashboard() {
       if (!user) return;
       setLoadingProducts(true);
       
-      const [productsRes, categoriesRes] = await Promise.all([
-        supabase
-          .from('restaurant_menu_items')
-          .select('*')
-          .eq('business_id', user.id)
-          .eq('is_available', true),
-        supabase
-          .from('restaurant_menu_categories')
-          .select('*')
-          .eq('business_id', user.id)
-          .order('sort_order', { ascending: true })
+      // A failed product read fails the load; a failed category read falls back to "All",
+      // exactly as the screen behaved when it ignored the category query's error.
+      const [productsRes, categoriesRes] = await Promise.allSettled([
+        getBackend().supermarket.listAvailableProducts(user.id),
+        getBackend().supermarket.listCategories(user.id),
       ]);
 
-      if (productsRes.error) throw productsRes.error;
-      
+      if (productsRes.status === 'rejected') throw productsRes.reason;
+      const categoryRows = categoriesRes.status === 'fulfilled' ? (categoriesRes.value as unknown as Category[]) : null;
+
       // Update Categories
-      if (categoriesRes.data && categoriesRes.data.length > 0) {
+      if (categoryRows && categoryRows.length > 0) {
         // Deduplicate categories by name_he
         const uniqueCategories = [
-          ...new Map(categoriesRes.data.map((item: Category) => [item.name_he || item.name, item])).values() // Fallback to name if name_he is missing, though duplicates might still exist if mixed
+          ...new Map(categoryRows.map((item: Category) => [item.name_he || item.name, item])).values() // Fallback to name if name_he is missing, though duplicates might still exist if mixed
         ].filter(item => item.name_he || item.name); // Ensure valid items
 
         // Double check against 'General' if we want to handle it (but we commented it out)
@@ -476,7 +471,7 @@ export default function SupermarketDashboard() {
       }
 
       // Map DB items to Product interface
-      const productsData: Product[] = ((productsRes.data as unknown) as MenuItemResponse[] || []).map(item => ({
+      const productsData: Product[] = ((productsRes.value as unknown) as MenuItemResponse[] || []).map(item => ({
         id: item.id,
         barcode: item.barcode,
         name: item.name,
@@ -693,13 +688,8 @@ export default function SupermarketDashboard() {
   const confirmDeleteProduct = async () => {
     if (!deleteProductConfirmationId) return;
     try {
-      const { error } = await supabase
-        .from('restaurant_menu_items')
-        .delete()
-        .eq('id', deleteProductConfirmationId);
-        
-      if (error) throw error;
-      
+      await getBackend().supermarket.deleteProduct(deleteProductConfirmationId);
+
       setProducts(prev => prev.filter(p => p.id !== deleteProductConfirmationId));
       setDeleteProductConfirmationId(null);
       setDeleteProductConfirmationId(null);
@@ -715,9 +705,7 @@ export default function SupermarketDashboard() {
 
     try {
       // Insert into market_transactions
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await supabase.from('market_transactions' as any).insert({
-        business_id: user.id,
+      await getBackend().supermarket.recordSale(user.id, {
         receipt_number: completedTransaction.receiptNumber,
         items: completedTransaction.items,
         subtotal: completedTransaction.subtotal,
@@ -728,8 +716,6 @@ export default function SupermarketDashboard() {
         change_amount: completedTransaction.change,
         created_at: completedTransaction.timestamp.toISOString()
       });
-
-      if (error) throw error;
 
       if (print) {
         window.print();

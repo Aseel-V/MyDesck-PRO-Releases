@@ -11,12 +11,13 @@ Do not hand-edit outside the Design block.
 | Classification | **ACTIVE_WITH_DATA** |
 | Tenants (live `business_profiles`) | **1** |
 | Source rows (live) | **1** |
-| Firestore migrated | **NO** |
-| Reachable in a Firebase production root | **NO** |
-| Rules authored | NO |
-| UI parity proven | NO |
-| Search proven | NO |
-| Analytics proven | NO |
+| Firestore migrated | **YES** |
+| Reachable in a Firebase production root without Supabase database calls | **YES** |
+| Rules authored and within budget | YES |
+| Data rehearsal reconciled | YES |
+| UI parity proven | YES |
+| Search proven | YES |
+| Analytics proven | YES |
 | Retirement requires owner approval | YES |
 
 ## Source data (live counts, read-only)
@@ -25,26 +26,106 @@ Do not hand-edit outside the Design block.
 | --- | ---: |
 | `market_transactions` | 1 |
 
-## Source runtime surface
+## Source runtime surface (current tree)
 
 | Measure | Value |
 | --- | ---: |
-| Attributed source files | 15 |
-| Supabase database call sites | 9 |
+| Attributed source files | 19 |
+| Supabase database call sites | 12 |
 | Supabase RPC call sites | 0 |
 | Supabase database realtime call sites | 0 |
-| Supabase Storage call sites (allowed) | 2 |
+| Supabase Storage call sites (allowed) | 0 |
 
 Tables referenced directly: `market_transactions`, `restaurant_menu_categories`, `restaurant_menu_items`, `restaurant_orders`
 
 RPCs referenced: _none detected_
 
+## Parity evidence
+
+Gates from `migration/reports/vertical-parity-supermarket.json` (generated 2026-09-15T07:33:49.095Z, decision **PASS**).
+
+| Gate | Status |
+| --- | --- |
+| firebaseRoot | PASS |
+| generatedSchema | PASS |
+| suites | PASS |
+| rulesBudget | PASS |
+| dataRehearsal | PASS |
+| uiSmoke | PASS |
+| search | PASS |
+| analytics | PASS |
+| rpc | PASS |
+| realtime | PASS |
+| edgeFunctions | PASS |
+
 <!-- DESIGN:BEGIN -->
 ## Design
 
-_Not authored yet._ Firestore collections, document IDs,
-relationships, Rules ownership model, transaction invariants, search and analytics
-strategy must be designed before this vertical can be migrated.
+### Collections and tenancy
+
+| Source table | Firestore document | Id |
+| --- | --- | --- |
+| `restaurant_menu_categories` | `businesses/{businessId}/menuCategories/{id}` | source UUID |
+| `restaurant_menu_items` | `businesses/{businessId}/menuItems/{id}` | source UUID |
+| `market_transactions` | `businesses/{businessId}/marketTransactions/{id}` | source UUID |
+
+The source scopes all three tables by `business_id = auth.uid()`, the owner. Documents keep that column as
+`legacyBusinessUserId` and carry `ownerUid` and `businessId`; the path fixes the tenant. A migrated menu
+item whose `business_id` is NULL (tenancy through its category) is kept, stays readable and editable by
+the owner, and is excluded from the product list exactly as the source query excludes it.
+
+### Repository
+
+`SupermarketRepository` (`src/data/domain/supermarket.ts`) is the only data path of the POS, the product
+modal, sales analytics and the sale editor. `SupabaseSupermarketRepository` keeps the shipped queries
+verbatim; `FirestoreSupermarketRepository` reproduces them on the document codec.
+
+| UI call | Source | Firestore |
+| --- | --- | --- |
+| POS product grid | owner's items where `is_available` | `isAvailable == true`, bound 1,000, owner filter |
+| Categories | owner's categories `ORDER BY sort_order` | owner filter, NULLs last, id tie-break |
+| Seed default categories | `INSERT ... RETURNING` | one batch, read back in insertion order |
+| Create product | insert | codec insert |
+| Edit product, edit sale | `UPDATE ... WHERE id` | existence-checked transaction: a vanished row is a no-op, as an `UPDATE` affecting 0 rows |
+| Delete product | `DELETE` with foreign keys | NO ACTION references (order items, shrinkage records, stock-take items) refuse with 23503; CASCADE dependents (inventory batches, modifier links, recipes) are removed in the same atomic batch |
+| Checkout | insert sale | codec insert with exact decimals |
+| Sales analytics | range, newest first | `createdAt` range, `orderBy desc`, bound 1,000 |
+| Delete sale | `DELETE ... WHERE id` | delete |
+
+### Rules
+
+- Owner only (`isActiveOwner`): signed in, owner of the business, neither the owner profile nor the
+  business suspended. A linked user or restaurant staff member is not an owner, as in the source RLS.
+- Create: the generated schema validator (exact key set, types, NOT NULL, CHECK enumerations and ranges,
+  exact decimals), document id equal to the source id, tenancy bound to the caller and the path, the
+  category or parent category existing in the same business, and no inline `data:`/`blob:` image.
+- Update: changed columns are re-validated (every column once most keys change); tenancy keys are
+  immutable; category and image are re-checked when they change. A sale keeps its receipt number, time,
+  payment method and tender; only its items and totals change, as `EditTransactionModal` edits them.
+- The dependents of a product are owner-readable so the foreign keys can be reproduced, and only the
+  CASCADE dependents may be deleted; their other writes arrive with the vertical that owns them.
+- Hardening against the source: a client cannot create a menu item with a NULL `business_id`, which the
+  source RLS allowed through an owned category. No supermarket flow creates one.
+
+### Search and analytics
+
+Search is client-side over complete tenant lists whose equality to the source is proven by the dual read:
+POS search (name, Hebrew name, barcode), barcode and PLU scan, and category chips. Sales analytics is a
+bounded `createdAt` range query feeding the unchanged client reducer for cash, card and digital totals.
+`SalesAnalyticsModal` is imported by no module and is classified `LEGACY_UNREACHABLE`. The classification
+lives in `migration/firestore/config/vertical-parity.json`.
+
+### Rules evaluation budget
+
+`scripts/test-firestore-rules-budget.mjs` measures every path against the 1,000-expression limit with an
+850 product ceiling (`migration/reports/firestore-rules-budget.json`). A menu item with every optional
+column populated, the widest supermarket document, measured 583 expressions to create and 634 to update.
+
+### Source behaviour preserved as is
+
+- `EditTransactionModal` derives subtotal and VAT from the total with a fixed 17% rate and calls
+  `onSuccess` and `onClose` twice.
+- A failed category read falls back to the "All" chip; a failed product read fails the load.
 
 <!-- DESIGN:END -->
 
