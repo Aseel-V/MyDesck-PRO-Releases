@@ -30,7 +30,8 @@ const env = Object.fromEntries(readFileSync('migration/.env.local', 'utf8').spli
   .map((l) => [l.slice(0, l.indexOf('=')).trim(), l.slice(l.indexOf('=') + 1).trim()]));
 const ca = env.SUPABASE_CA_FILE ? readFileSync(env.SUPABASE_CA_FILE, 'utf8') : null;
 const client = new pg.Client({ connectionString: env.SUPABASE_DB_URL || env.PGURL,
-  ssl: ca ? { ca, rejectUnauthorized: true } : { rejectUnauthorized: false } });
+  // Certificate verification is never switched off: without SUPABASE_CA_FILE the system trust store is used.
+  ssl: { rejectUnauthorized: true, ...(ca ? { ca } : {}) } });
 const hash = (v) => (v === null ? null : createHash('sha256').update(v).digest('hex').slice(0, 12));
 
 /** Every business row's signature reference, so "nothing else moved" is provable, not asserted. */

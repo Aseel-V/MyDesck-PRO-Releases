@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-15T11:29:37.052Z",
+  "generatedAt": "2026-09-15T11:39:37.721Z",
   "status": "PASS",
   "suites": [
     {
@@ -73,6 +73,12 @@
       "file": "migration/firestore/tests/import-graph.test.mjs",
       "outcome": "PASS",
       "tests": 6
+    },
+    {
+      "label": "production source connection guards",
+      "file": "migration/firestore/tests/source-connection.test.mjs",
+      "outcome": "PASS",
+      "tests": 3
     },
     {
       "label": "storage identity wiring",
@@ -220,11 +226,11 @@
     }
   ],
   "totals": {
-    "steps": 37,
-    "passed": 37,
+    "steps": 38,
+    "passed": 38,
     "failed": 0,
-    "nodeTestCases": 308,
-    "assertionCallSites": 1088,
+    "nodeTestCases": 311,
+    "assertionCallSites": 1094,
     "fullCorpusApplicationAssertions": 1023,
     "searchCorpusCases": 12,
     "fullCorpusSecurityChecks": 50,

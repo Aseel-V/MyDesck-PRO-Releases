@@ -22,7 +22,8 @@ const migrationEnv = readEnv('migration/.env.local');
 const appEnv = readEnv('.env');
 const ca = migrationEnv.SUPABASE_CA_FILE ? readFileSync(migrationEnv.SUPABASE_CA_FILE, 'utf8') : null;
 const client = new pg.Client({ connectionString: migrationEnv.SUPABASE_DB_URL || migrationEnv.PGURL,
-  ssl: ca ? { ca, rejectUnauthorized: true } : { rejectUnauthorized: false } });
+  // Certificate verification is never switched off: without SUPABASE_CA_FILE the system trust store is used.
+  ssl: { rejectUnauthorized: true, ...(ca ? { ca } : {}) } });
 
 /**
  * Classifies an object by name, with one carve-out.

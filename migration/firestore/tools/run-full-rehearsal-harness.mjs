@@ -17,6 +17,7 @@ const suites = [
   ['application boundary', 'scripts/test-firestore-app-layer.mjs', ['scripts/run-typescript-source-test.mjs', 'scripts/test-firestore-app-layer.mjs']],
   ['Spark architecture guards', 'migration/firestore/tests/spark-architecture.test.mjs'],
   ['Firebase root call-site analysis', 'migration/firestore/tests/import-graph.test.mjs'],
+  ['production source connection guards', 'migration/firestore/tests/source-connection.test.mjs'],
   ['storage identity wiring', 'migration/firestore/tests/storage-identity.test.mjs'],
   ['PDF private signature', 'migration/firestore/tests/pdf-signature.test.mjs'],
   ['production preparation guards', 'migration/firestore/tests/production-preparation.test.mjs'],

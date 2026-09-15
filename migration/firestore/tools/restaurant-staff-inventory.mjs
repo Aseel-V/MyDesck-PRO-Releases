@@ -12,19 +12,15 @@
  * This tool classifies each staff record so the replacement identity model is grounded in the
  * real data rather than assumed.
  *
- * STRICTLY READ-ONLY. Runs in a rolled-back READ ONLY transaction. Passwords, hashes, PINs,
- * emails and names are never printed - only credential *format* and classification.
+ * STRICTLY READ-ONLY, through `withSourceSnapshot` (migration/tools/lib/staging-source.mjs): a verified TLS
+ * connection pinned to the source project, one REPEATABLE READ READ ONLY transaction whose isolation and read-only
+ * state are read back from the server, a write control PostgreSQL must reject with 25006, SELECT-only statements,
+ * and a rollback. Passwords, hashes, PINs, emails and names are never printed - only credential *format* and
+ * classification.
  */
-import pg from 'pg';
 import { createHash } from 'node:crypto';
-import { readFileSync, writeFileSync } from 'node:fs';
-
-const env = Object.fromEntries(readFileSync('migration/.env.local', 'utf8').split(/\r?\n/)
-  .filter((line) => line.includes('='))
-  .map((line) => [line.slice(0, line.indexOf('=')).trim(), line.slice(line.indexOf('=') + 1).trim()]));
-const ca = env.SUPABASE_CA_FILE ? readFileSync(env.SUPABASE_CA_FILE, 'utf8') : null;
-const client = new pg.Client({ connectionString: env.SUPABASE_DB_URL || env.PGURL,
-  ssl: ca ? { ca, rejectUnauthorized: true } : { rejectUnauthorized: false } });
+import { writeFileSync } from 'node:fs';
+import { localConfig, withSourceSnapshot } from '../../tools/lib/staging-source.mjs';
 
 /** Format only. The value itself is never returned, logged or hashed into the report. */
 const credentialFormat = (value) => {
@@ -37,20 +33,13 @@ const credentialFormat = (value) => {
 };
 const fingerprint = (value) => createHash('sha256').update(String(value)).digest('hex').slice(0, 12);
 
-await client.connect();
-await client.query('BEGIN TRANSACTION READ ONLY');
-let writeAttemptRejected = false;
-try {
-  await client.query('SAVEPOINT readonly_probe');
-  try { await client.query('create temporary table staff_readonly_probe(x int)'); }
-  catch (error) { writeAttemptRejected = error.code === '25006'; }
-  await client.query('ROLLBACK TO SAVEPOINT readonly_probe');
+const evidence = {};
+const records = await withSourceSnapshot(localConfig(), async (select) => {
+  const staff = (await select('SELECT * FROM public.restaurant_staff')).rows;
+  const authEmails = new Set((await select(
+    'SELECT lower(email) AS email FROM auth.users WHERE email IS NOT NULL')).rows.map((r) => r.email));
 
-  const staff = (await client.query('select * from public.restaurant_staff')).rows;
-  const authEmails = new Set((await client.query(
-    'select lower(email) as email from auth.users where email is not null')).rows.map((r) => r.email));
-
-  const records = staff.map((row) => {
+  return staff.map((row) => {
     const passwordFormat = credentialFormat(row.password);
     const pinHashFormat = credentialFormat(row.pin_hash);
     const pinCodeFormat = credentialFormat(row.pin_code);
@@ -78,35 +67,39 @@ try {
       classification, credentialDisposition,
     };
   });
+}, evidence);
 
-  const tally = (key) => records.reduce((acc, r) => { acc[r[key]] = (acc[r[key]] ?? 0) + 1; return acc; }, {});
-  const plaintextPins = records.filter((r) => r.plaintextPinPresent).length;
-  const report = {
-    generatedAt: new Date().toISOString(),
-    source: { readOnly: true, isolationLevel: 'repeatable read', writeAttemptRejected,
-      writesCaused: 0, transactionOutcome: 'ROLLBACK' },
-    staffCount: records.length,
-    roles: { legacy: [...new Set(records.map((r) => r.legacyRole).filter(Boolean))],
-      restaurant: [...new Set(records.map((r) => r.restaurantRole).filter(Boolean))] },
-    productDefinedRestaurantRoles: ['super_admin', 'branch_manager', 'kitchen_staff', 'waiter'],
-    counts: { ...tally('classification'), UNKNOWN: 0 },
-    credentialDispositions: tally('credentialDisposition'),
-    bcryptImportCandidates: records.filter((r) => r.passwordFormat === 'BCRYPT').length,
-    plaintextPinsPresent: plaintextPins,
-    findings: [
-      ...(plaintextPins ? [{ severity: 'MEDIUM', id: 'PLAINTEXT_PIN_AT_REST',
-        detail: `${plaintextPins} staff record(s) store an unhashed pin_code.` }] : []),
-    ],
-    identityModelDecided: false,
-    records,
-    note: 'authenticate_staff and authorize_staff_action cannot be reimplemented without a server. Staff must become Firebase Auth identities authorised by Firestore membership documents and Rules.',
-  };
-  writeFileSync('migration/reports/restaurant-staff-inventory.json', `${JSON.stringify(report, null, 2)}\n`);
-  console.log(JSON.stringify({ staffCount: report.staffCount, roles: report.roles,
-    counts: report.counts, credentialDispositions: report.credentialDispositions,
-    bcryptImportCandidates: report.bcryptImportCandidates,
-    plaintextPinsPresent: plaintextPins, writeAttemptRejected }, null, 2));
-} finally {
-  await client.query('ROLLBACK');
-  await client.end();
-}
+const tally = (key) => records.reduce((acc, r) => { acc[r[key]] = (acc[r[key]] ?? 0) + 1; return acc; }, {});
+const plaintextPins = records.filter((r) => r.plaintextPinPresent).length;
+const report = {
+  generatedAt: new Date().toISOString(),
+  source: {
+    readOnly: evidence.start?.read_only === 'on' && evidence.end?.read_only === 'on',
+    isolationLevel: evidence.start?.isolation ?? null,
+    isolationLevelAtEnd: evidence.end?.isolation ?? null,
+    writeAttemptRejected: evidence.rejectedWriteSqlState === '25006',
+    rejectedWriteSqlState: evidence.rejectedWriteSqlState ?? null,
+    writesCaused: evidence.successfulWrites ?? null,
+    transactionOutcome: evidence.transactionOutcome ?? null,
+  },
+  staffCount: records.length,
+  roles: { legacy: [...new Set(records.map((r) => r.legacyRole).filter(Boolean))],
+    restaurant: [...new Set(records.map((r) => r.restaurantRole).filter(Boolean))] },
+  productDefinedRestaurantRoles: ['super_admin', 'branch_manager', 'kitchen_staff', 'waiter'],
+  counts: { ...tally('classification'), UNKNOWN: 0 },
+  credentialDispositions: tally('credentialDisposition'),
+  bcryptImportCandidates: records.filter((r) => r.passwordFormat === 'BCRYPT').length,
+  plaintextPinsPresent: plaintextPins,
+  findings: [
+    ...(plaintextPins ? [{ severity: 'MEDIUM', id: 'PLAINTEXT_PIN_AT_REST',
+      detail: `${plaintextPins} staff record(s) store an unhashed pin_code.` }] : []),
+  ],
+  identityModelDecided: false,
+  records,
+  note: 'authenticate_staff and authorize_staff_action cannot be reimplemented without a server. Staff must become Firebase Auth identities authorised by Firestore membership documents and Rules.',
+};
+writeFileSync('migration/reports/restaurant-staff-inventory.json', `${JSON.stringify(report, null, 2)}\n`);
+console.log(JSON.stringify({ staffCount: report.staffCount, roles: report.roles,
+  counts: report.counts, credentialDispositions: report.credentialDispositions,
+  bcryptImportCandidates: report.bcryptImportCandidates,
+  plaintextPinsPresent: plaintextPins, source: report.source }, null, 2));

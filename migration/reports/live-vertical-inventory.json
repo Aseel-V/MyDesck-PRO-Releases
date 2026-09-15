@@ -1,9 +1,11 @@
 {
-  "generatedAt": "2026-09-14T19:52:02.584Z",
+  "generatedAt": "2026-09-15T11:34:47.009Z",
   "source": {
     "readOnly": true,
     "isolationLevel": "repeatable read",
+    "isolationLevelAtEnd": "repeatable read",
     "writeAttemptRejected": true,
+    "rejectedWriteSqlState": "25006",
     "writesCaused": 0,
     "transactionOutcome": "ROLLBACK"
   },

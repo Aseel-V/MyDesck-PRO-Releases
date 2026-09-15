@@ -34,7 +34,8 @@ const ANON = app.VITE_SUPABASE_ANON_KEY;
 const ca = mig.SUPABASE_CA_FILE ? readFileSync(mig.SUPABASE_CA_FILE, 'utf8') : null;
 
 const db = new pg.Client({ connectionString: mig.SUPABASE_DB_URL || mig.PGURL,
-  ssl: ca ? { ca, rejectUnauthorized: true } : { rejectUnauthorized: false } });
+  // Certificate verification is never switched off: without SUPABASE_CA_FILE the system trust store is used.
+  ssl: { rejectUnauthorized: true, ...(ca ? { ca } : {}) } });
 await db.connect();
 await db.query('BEGIN TRANSACTION READ ONLY');
 const target = (await db.query(
