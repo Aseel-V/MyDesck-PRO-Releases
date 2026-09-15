@@ -123,6 +123,8 @@ flow('a part and labor are added to the job: exact totals, and the stock is cons
   await expect(page.getByRole('heading', { name: 'Add Service / Part' })).toHaveCount(0, { timeout: 30_000 });
 
   // 2 x 59.99 + 150.50, computed by the transaction from the stored part price, not taken from the screen.
+  // Cars keeps the clicked order as a copy; it is reopened only once the refetched list carries the new total.
+  await expect(page.getByText(/270\.48/).first()).toBeVisible({ timeout: 30_000 });
   await page.getByText(PLATE).first().click();
   await expect(page.getByText('Service Labor (Hand Cost)')).toBeVisible({ timeout: 30_000 });
   await expect(page.getByRole('cell', { name: partName })).toBeVisible();

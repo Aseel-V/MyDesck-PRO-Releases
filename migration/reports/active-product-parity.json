@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-15T10:55:35.685Z",
+  "generatedAt": "2026-09-15T11:25:53.896Z",
   "readOnly": true,
   "productionMutations": 0,
   "measurement": "TypeScript AST import graph (comments and strings are not code; @/ aliases resolved)",
@@ -24,8 +24,8 @@
     "shippedProduct": {
       "entry": "src/production-main.tsx",
       "present": true,
-      "reachableFiles": 217,
-      "runtimeReachableFiles": 209,
+      "reachableFiles": 219,
+      "runtimeReachableFiles": 210,
       "supabaseDatabase": 169,
       "supabaseRpc": 45,
       "supabaseAuth": 13,
@@ -55,10 +55,6 @@
         {
           "file": "src/components/analytics/RestaurantOrderModal.tsx",
           "line": 6
-        },
-        {
-          "file": "src/components/parts/CarPartsInventory.tsx",
-          "line": 7
         },
         {
           "file": "src/components/restaurant/OrderEntry.tsx",
@@ -118,6 +114,10 @@
         },
         {
           "file": "src/data/supabase/SupabaseAutoRepairRepository.ts",
+          "line": 1
+        },
+        {
+          "file": "src/data/supabase/SupabaseCarPartsRepository.ts",
           "line": 1
         },
         {
@@ -221,6 +221,11 @@
           "line": 7
         },
         {
+          "file": "src/data/supabase/createSupabaseBackend.ts",
+          "target": "src/data/supabase/SupabaseCarPartsRepository.ts",
+          "line": 8
+        },
+        {
           "file": "src/production-main.tsx",
           "target": "src/data/supabase/createSupabaseBackend.ts",
           "line": 8
@@ -258,10 +263,6 @@
           {
             "file": "src/components/analytics/RestaurantOrderModal.tsx",
             "count": 1
-          },
-          {
-            "file": "src/components/parts/CarPartsInventory.tsx",
-            "count": 4
           },
           {
             "file": "src/components/restaurant/OrderEntry.tsx",
@@ -306,6 +307,10 @@
           {
             "file": "src/data/supabase/SupabaseAutoRepairRepository.ts",
             "count": 7
+          },
+          {
+            "file": "src/data/supabase/SupabaseCarPartsRepository.ts",
+            "count": 4
           },
           {
             "file": "src/data/supabase/SupabaseProfileRepository.ts",
@@ -475,16 +480,16 @@
     "firebaseRoot": {
       "entry": "src/firebase-main.tsx",
       "present": true,
-      "reachableFiles": 225,
-      "runtimeReachableFiles": 217,
-      "supabaseDatabase": 138,
+      "reachableFiles": 227,
+      "runtimeReachableFiles": 218,
+      "supabaseDatabase": 134,
       "supabaseRpc": 42,
       "supabaseAuth": 1,
       "supabaseRealtime": 2,
       "supabaseEdgeFunctions": 1,
       "supabaseStorage": 7,
-      "forbiddenTotal": 184,
-      "firestoreImports": 8,
+      "forbiddenTotal": 180,
+      "firestoreImports": 9,
       "firebaseAuthImports": 3,
       "genericSupabaseClientImports": [
         {
@@ -506,10 +511,6 @@
         {
           "file": "src/components/analytics/RestaurantOrderModal.tsx",
           "line": 6
-        },
-        {
-          "file": "src/components/parts/CarPartsInventory.tsx",
-          "line": 7
         },
         {
           "file": "src/components/restaurant/OrderEntry.tsx",
@@ -649,10 +650,6 @@
           {
             "file": "src/components/analytics/RestaurantOrderModal.tsx",
             "count": 1
-          },
-          {
-            "file": "src/components/parts/CarPartsInventory.tsx",
-            "count": 4
           },
           {
             "file": "src/components/restaurant/OrderEntry.tsx",
@@ -829,14 +826,14 @@
     }
   },
   "firebaseRootActual": {
-    "supabaseDatabase": 138,
+    "supabaseDatabase": 134,
     "supabaseRpc": 42,
     "supabaseAuth": 1,
     "supabaseRealtime": 2,
     "supabaseEdgeFunctions": 1,
     "supabaseStorage": 7,
-    "firestore": 8,
-    "genericSupabaseClientImports": 32,
+    "firestore": 9,
+    "genericSupabaseClientImports": 31,
     "supabaseAdapterImports": 0
   },
   "firebaseRootSharedForbiddenCallSites": [
@@ -872,7 +869,7 @@
       "shippedRootForbiddenCallSites": 0,
       "evidence": {
         "path": "migration/reports/vertical-parity-auto_repair.json",
-        "generatedAt": "2026-09-15T10:45:31.403Z",
+        "generatedAt": "2026-09-15T11:22:54.811Z",
         "pass": true,
         "gates": {
           "firebaseRoot": "PASS",
@@ -898,18 +895,35 @@
       "rows": 1,
       "reachableInFirebaseRoot": true,
       "firebaseRootSurfaceFiles": 3,
-      "firebaseRootForbiddenCallSites": 4,
+      "firebaseRootForbiddenCallSites": 0,
       "firebaseRootForbiddenByCategory": {
-        "database": 4,
+        "database": 0,
         "rpc": 0,
         "auth": 0,
         "realtime": 0,
         "edgeFunctions": 0
       },
-      "shippedRootForbiddenCallSites": 4,
-      "evidence": "NOT_GENERATED",
-      "firestoreMigrated": false,
-      "blocksParity": true
+      "shippedRootForbiddenCallSites": 0,
+      "evidence": {
+        "path": "migration/reports/vertical-parity-car_parts.json",
+        "generatedAt": "2026-09-15T11:19:18.764Z",
+        "pass": true,
+        "gates": {
+          "firebaseRoot": "PASS",
+          "generatedSchema": "PASS",
+          "suites": "PASS",
+          "rulesBudget": "PASS",
+          "dataRehearsal": "PASS",
+          "uiSmoke": "PASS",
+          "search": "PASS",
+          "analytics": "PASS",
+          "rpc": "PASS",
+          "realtime": "PASS",
+          "edgeFunctions": "PASS"
+        }
+      },
+      "firestoreMigrated": true,
+      "blocksParity": false
     },
     {
       "vertical": "clothes_shop",
@@ -1009,7 +1023,7 @@
       "shippedRootForbiddenCallSites": 0,
       "evidence": {
         "path": "migration/reports/vertical-parity-supermarket.json",
-        "generatedAt": "2026-09-15T10:49:09.178Z",
+        "generatedAt": "2026-09-15T11:25:52.504Z",
         "pass": true,
         "gates": {
           "firebaseRoot": "PASS",
@@ -1066,8 +1080,8 @@
     "supabaseEdgeFunctions": 0,
     "supabaseStorage": "INTENTIONAL_COUNT_BEHIND_StorageRepository"
   },
-  "verticalsSupported": 2,
-  "verticalsBlocking": 6,
+  "verticalsSupported": 3,
+  "verticalsBlocking": 5,
   "databaseRuntimeZeroInFirebaseRoot": false,
   "decision": "PRODUCT_PARITY_NO_GO"
 }

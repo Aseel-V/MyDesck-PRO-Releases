@@ -1,0 +1,186 @@
+{
+  "generatedAt": "2026-09-15T11:19:18.764Z",
+  "vertical": "car_parts",
+  "decision": "PASS",
+  "gates": {
+    "firebaseRoot": {
+      "status": "PASS",
+      "runtimeSurfaceFiles": 3,
+      "forbiddenCallSites": [],
+      "genericSupabaseClientImports": [],
+      "supabaseAdapterImports": [],
+      "supabaseJsImports": [],
+      "storageOutsideRepository": []
+    },
+    "generatedSchema": {
+      "status": "PASS",
+      "rulesValidators": "CURRENT"
+    },
+    "suites": {
+      "status": "PASS",
+      "suites": [
+        {
+          "label": "car parts repository, Rules and malicious clients",
+          "file": "scripts/test-firestore-car-parts.mjs",
+          "outcome": "PASS",
+          "tests": 10
+        },
+        {
+          "label": "auto repair repository, Rules and malicious clients",
+          "file": "scripts/test-firestore-auto-repair.mjs",
+          "outcome": "PASS",
+          "tests": 8
+        },
+        {
+          "label": "schema validator helper semantics",
+          "file": "scripts/test-firestore-schema-validators.mjs",
+          "outcome": "PASS",
+          "tests": 9
+        },
+        {
+          "label": "Rules evaluation budget",
+          "file": "scripts/test-firestore-rules-budget.mjs",
+          "outcome": "PASS",
+          "tests": 8
+        }
+      ]
+    },
+    "rulesBudget": {
+      "status": "PASS",
+      "limit": 1000,
+      "productCeiling": 850,
+      "paths": [
+        {
+          "path": "car parts: add a part (every form column)",
+          "costAtMost": 346
+        },
+        {
+          "path": "car parts: edit a part (every form column)",
+          "costAtMost": 370
+        },
+        {
+          "path": "car parts: list parts",
+          "costAtMost": 52
+        },
+        {
+          "path": "car parts: delete a part",
+          "costAtMost": 52
+        }
+      ]
+    },
+    "dataRehearsal": {
+      "status": "PASS",
+      "importedAt": "2026-09-15T10:23:26.967Z",
+      "reconciledAt": "2026-09-15T10:23:30.442Z",
+      "dualReadAt": "2026-09-15T11:06:11.391Z",
+      "totals": {
+        "tenants": 1,
+        "sourceRowsCompared": 1,
+        "matched": 1,
+        "missing": 0,
+        "unexpected": 0,
+        "fieldMismatches": 0,
+        "orderMismatches": 0,
+        "unknownColumns": 0,
+        "orphans": 0,
+        "sourceRowsInventoried": 1,
+        "migratedDocuments": 1,
+        "crossTenantAttempts": 1,
+        "crossTenantAllowed": 0,
+        "controlsApplicable": 5,
+        "controlsDetected": 5,
+        "restoredClean": true
+      },
+      "additionalDualReads": []
+    },
+    "uiSmoke": {
+      "status": "PASS",
+      "smokeAt": "2026-09-15T11:10:20.386Z",
+      "flows": [
+        {
+          "name": "the English auto_repair owner opens the parts inventory left-to-right with its migrated-shape part",
+          "status": "passed"
+        },
+        {
+          "name": "a part is added through the form and found by serial number, compatible car and stock filter",
+          "status": "passed"
+        },
+        {
+          "name": "the part is edited and the new price is kept across a reload",
+          "status": "passed"
+        },
+        {
+          "name": "another tenant signs in right-to-left in Hebrew and sees only its own parts",
+          "status": "passed"
+        },
+        {
+          "name": "the car_parts owner opens the car parts home right-to-left in Arabic, without the auto repair inventory page",
+          "status": "passed"
+        },
+        {
+          "name": "the part is deleted and stays deleted after a reload",
+          "status": "passed"
+        }
+      ]
+    },
+    "search": {
+      "status": "PASS",
+      "surfaces": [
+        {
+          "surface": "Parts inventory search: part name, serial number, description or compatible car",
+          "class": "CLIENT_DERIVED",
+          "status": "PASS",
+          "files": [
+            "src/components/parts/CarPartsInventory.tsx"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "Stock filter chips: all, in stock, low stock, out of stock",
+          "class": "CLIENT_DERIVED",
+          "status": "PASS",
+          "files": [
+            "src/components/parts/CarPartsInventory.tsx"
+          ],
+          "verdict": "PASS"
+        }
+      ],
+      "blocked": 0,
+      "unknown": 0
+    },
+    "analytics": {
+      "status": "PASS",
+      "surfaces": [
+        {
+          "surface": "Inventory summary: item count, total purchase value, low-stock and out-of-stock counts",
+          "class": "CLIENT_DERIVED",
+          "status": "PASS",
+          "files": [
+            "src/components/parts/CarPartsInventory.tsx"
+          ],
+          "verdict": "PASS"
+        }
+      ],
+      "blocked": 0,
+      "unknown": 0
+    },
+    "rpc": {
+      "status": "PASS",
+      "surfaces": [],
+      "blocked": 0,
+      "unknown": 0
+    },
+    "realtime": {
+      "status": "PASS",
+      "surfaces": [],
+      "blocked": 0,
+      "unknown": 0
+    },
+    "edgeFunctions": {
+      "status": "PASS",
+      "surfaces": [],
+      "blocked": 0,
+      "unknown": 0
+    }
+  }
+}

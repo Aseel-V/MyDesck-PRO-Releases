@@ -4,7 +4,7 @@ import {
   Plus, Search, Package, Edit2, Trash2, Car, Hash, 
   FileText, Loader2, AlertCircle
 } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { getBackend } from '../../data/backend';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -28,14 +28,9 @@ export default function CarPartsInventory() {
     if (!profile?.id) return;
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('car_parts')
-        .select('*')
-        .eq('business_id', profile.id)
-        .order('created_at', { ascending: false });
+      const data = await getBackend().carParts.listParts(profile.id);
       
-      if (error) throw error;
-      setParts((data as unknown as CarPart[]) || []);
+      setParts(data || []);
     } catch (error) {
       console.error('Error fetching parts:', error);
       toast.error(t('carParts.errorLoading'));
@@ -53,14 +48,9 @@ export default function CarPartsInventory() {
   const handleAddPart = async (partData: CarPartInput) => {
     if (!profile?.id) return;
     try {
-      const { data, error } = await supabase
-        .from('car_parts')
-        .insert({ ...partData, business_id: profile.id })
-        .select()
-        .single();
+      const data = await getBackend().carParts.createPart(profile.id, partData);
       
-      if (error) throw error;
-      setParts([(data as unknown as CarPart), ...parts]);
+      setParts([data, ...parts]);
       toast.success(t('carParts.addSuccess'));
       setShowAddModal(false);
     } catch (error) {
@@ -71,15 +61,9 @@ export default function CarPartsInventory() {
 
   const handleUpdatePart = async (id: string, partData: CarPartInput) => {
     try {
-      const { data, error } = await supabase
-        .from('car_parts')
-        .update(partData)
-        .eq('id', id)
-        .select()
-        .single();
+      const data = await getBackend().carParts.updatePart(id, partData);
       
-      if (error) throw error;
-      setParts(parts.map(p => p.id === id ? (data as unknown as CarPart) : p));
+      setParts(parts.map(p => p.id === id ? data : p));
       toast.success(t('carParts.updateSuccess'));
       setEditingPart(null);
     } catch (error) {
@@ -90,12 +74,8 @@ export default function CarPartsInventory() {
 
   const handleDeletePart = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('car_parts')
-        .delete()
-        .eq('id', id);
+      await getBackend().carParts.deletePart(id);
       
-      if (error) throw error;
       setParts(parts.filter(p => p.id !== id));
       toast.success(t('carParts.deleteSuccess'));
       setDeleteConfirm(null);

@@ -26,6 +26,7 @@ import { FirestoreProfileRepository } from '../src/data/firestore/FirestoreProfi
 import { FirestoreAdminRepository } from '../src/data/firestore/FirestoreAdminRepository.ts';
 import { FirestoreSupermarketRepository } from '../src/data/firestore/FirestoreSupermarketRepository.ts';
 import { FirestoreAutoRepairRepository } from '../src/data/firestore/FirestoreAutoRepairRepository.ts';
+import { FirestoreCarPartsRepository } from '../src/data/firestore/FirestoreCarPartsRepository.ts';
 import { encodeInsert } from '../src/data/firestore/documentCodec.ts';
 import { RulesClient } from '../migration/firestore/lib/rules-client.mjs';
 import { EXPRESSION_LIMIT, allowExpression, conjuncts, measureRuleCost, outcome } from '../migration/firestore/lib/rules-budget.mjs';
@@ -66,7 +67,7 @@ function clientFor(label) {
   const session = new FirebaseSession({ mode: 'firestore-emulator', app, auth, db, ready: Promise.resolve(), maintenanceEnabled: false });
   const handle = { app, auth, db, session, gateway: new FirestoreAuthGateway(session), profiles: new FirestoreProfileRepository(session),
     admin: new FirestoreAdminRepository(session), market: new FirestoreSupermarketRepository(session),
-    repair: new FirestoreAutoRepairRepository(session) };
+    repair: new FirestoreAutoRepairRepository(session), parts: new FirestoreCarPartsRepository(session) };
   clients.push(handle);
   return handle;
 }
@@ -101,6 +102,8 @@ const TARGET = {
   repairServicesDelete: { match: 'match /repairServices/{serviceId} {', allow: 'allow delete: if ' },
   partsRead: { match: 'match /parts/{partId} {', allow: 'allow get, list: if ' },
   partsUpdate: { match: 'match /parts/{partId} {', allow: 'allow update: if ' },
+  partsCreate: { match: 'match /parts/{partId} {', allow: 'allow create: if ' },
+  partsDelete: { match: 'match /parts/{partId} {', allow: 'allow delete: if ' },
 };
 
 async function measure(path, target, attempt, { product = true } = {}) {
@@ -371,6 +374,23 @@ test('auto repair: registration, services and deletion', async () => {
   ]);
 });
 
+test('car parts: inventory create, edit, delete and list', async () => {
+  const form = (n) => ({ part_name: `Budget part ${n}`, description: `Part ${n} description`, serial_number: `SKU-${n}`,
+    compatible_cars: ['Toyota Corolla', `Model ${n}`], quantity: 3 + n, purchase_price_unit: 12.25 + n, purchase_price_total: 49 + n,
+    selling_price_unit: 19.99 + n });
+  const parts = s.owner.parts;
+  const editable = await parts.createPart(s.owner.businessId, form(0));
+  assertWithin([
+    await measure('car parts: add a part (every form column)', TARGET.partsCreate, () => outcome(() => parts.createPart(s.owner.businessId, form(next())))),
+    await measure('car parts: edit a part (every form column)', TARGET.partsUpdate, () => outcome(() => parts.updatePart(editable.id, form(next())))),
+    await measure('car parts: list parts', TARGET.partsRead, () => outcome(() => parts.listParts(s.owner.businessId))),
+    await measure('car parts: delete a part', TARGET.partsDelete, async () => {
+      const part = await parts.createPart(s.owner.businessId, form(next()));
+      return outcome(() => parts.deletePart(part.id));
+    }),
+  ]);
+});
+
 test('the budget report is written', () => {
   writeFileSync(REPORT, `${JSON.stringify({
     limit: EXPRESSION_LIMIT, productCeiling: PRODUCT_CEILING, method: 'migration/firestore/lib/rules-budget.mjs',
@@ -378,5 +398,5 @@ test('the budget report is written', () => {
     paths: results.map(({ path, rule, product, withinLimit, costAtMost, costAbove, parts }) =>
       ({ path, rule, product, withinLimit, costAtMost, costAbove, ...(parts ? { parts } : {}) })),
   }, null, 2)}\n`);
-  assert.equal(results.length, 33, 'every measured path is reported');
+  assert.equal(results.length, 37, 'every measured path is reported');
 });

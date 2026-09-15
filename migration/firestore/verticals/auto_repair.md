@@ -61,7 +61,7 @@ RPCs referenced: `add_repair_service_transaction`
 
 ## Parity evidence
 
-Gates from `migration/reports/vertical-parity-auto_repair.json` (generated 2026-09-15T10:45:31.403Z, decision **PASS**).
+Gates from `migration/reports/vertical-parity-auto_repair.json` (generated 2026-09-15T11:22:54.811Z, decision **PASS**).
 
 | Gate | Status |
 | --- | --- |
@@ -135,8 +135,8 @@ AddServiceModal. `SupabaseAutoRepairRepository` keeps the shipped requests verba
 - `repairServices` create recomputes everything from the documents before and after the write: the order
   totals (`isSum2`, `isSum3` at the larger scale), the part stock (before minus quantity), and the price and
   cost from the stored part (`isProduct`).
-- `parts`: readable by the owner; updated only as stock consumed by a service record in the same write.
-  Inventory create, edit and delete arrive with the car-parts vertical.
+- `parts`: readable by the owner; a service consumes stock only through a service record in the same write.
+  Inventory create, edit and delete are the car-parts vertical's (`car_parts.md`).
 
 ### Search and analytics
 
@@ -154,10 +154,18 @@ AddServiceModal. `SupabaseAutoRepairRepository` keeps the shipped requests verba
 Every auto repair path is measured by `scripts/test-firestore-rules-budget.mjs`
 (`migration/reports/firestore-rules-budget.json`, paths prefixed `auto repair:`) against the 1,000-expression
 limit and the 850 product ceiling. Adding a part and labor is the widest write: its service record evaluates at
-most 814 expressions, the items 418, the order totals 430 and the part stock 133. Registering a car costs 286
+most 814 expressions, the items 418, the order totals 430 and the part stock 157 (133 before the part update rule
+also admitted car-parts inventory edits). Registering a car costs 286
 (vehicle), 151 (plate index) and 583 (working order); a known plate's vehicle update 241; reads 52; deleting an
 order 52 for the order and 70 each for its items and service records. The arithmetic is evaluated once, on the
 service record; the items, the order and the part only check that they match that record.
+
+### Source behaviour preserved as is
+
+- Cars opens a job from a copy of the list row. After a service is added the list refetches, but a job reopened
+  before that refetch completes still shows the copy taken earlier (no items, the old total) until it is opened
+  again. The same component serves both composition roots; the browser smoke reopens the job only after the list
+  shows the new total.
 
 ### Source defects documented, not reproduced
 

@@ -1,0 +1,64 @@
+{
+  "generatedAt": "2026-09-15T11:10:20.386Z",
+  "vertical": "car_parts",
+  "root": "src/firebase-main.tsx",
+  "backendMode": "firestore-emulator",
+  "browser": "msedge",
+  "languages": [
+    "en",
+    "he",
+    "ar"
+  ],
+  "expectedFlows": 6,
+  "flows": [
+    {
+      "name": "the English auto_repair owner opens the parts inventory left-to-right with its migrated-shape part",
+      "status": "passed",
+      "durationMs": 8830,
+      "supabaseRuntimeRequests": 0,
+      "pageErrors": 0,
+      "firestoreRequests": 13
+    },
+    {
+      "name": "a part is added through the form and found by serial number, compatible car and stock filter",
+      "status": "passed",
+      "durationMs": 5337,
+      "supabaseRuntimeRequests": 0,
+      "pageErrors": 0,
+      "firestoreRequests": 21
+    },
+    {
+      "name": "the part is edited and the new price is kept across a reload",
+      "status": "passed",
+      "durationMs": 8758,
+      "supabaseRuntimeRequests": 0,
+      "pageErrors": 0,
+      "firestoreRequests": 35
+    },
+    {
+      "name": "another tenant signs in right-to-left in Hebrew and sees only its own parts",
+      "status": "passed",
+      "durationMs": 4611,
+      "supabaseRuntimeRequests": 0,
+      "pageErrors": 0,
+      "firestoreRequests": 13
+    },
+    {
+      "name": "the car_parts owner opens the car parts home right-to-left in Arabic, without the auto repair inventory page",
+      "status": "passed",
+      "durationMs": 2387,
+      "supabaseRuntimeRequests": 0,
+      "pageErrors": 0,
+      "firestoreRequests": 5
+    },
+    {
+      "name": "the part is deleted and stays deleted after a reload",
+      "status": "passed",
+      "durationMs": 8563,
+      "supabaseRuntimeRequests": 0,
+      "pageErrors": 0,
+      "firestoreRequests": 33
+    }
+  ],
+  "decision": "PASS"
+}

@@ -11,13 +11,13 @@ Do not hand-edit outside the Design block.
 | Classification | **ACTIVE_EMPTY** |
 | Tenants (live `business_profiles`) | **0** |
 | Source rows (live) | **1** |
-| Firestore migrated | **NO** |
-| Reachable in a Firebase production root without Supabase database calls | **NO** |
-| Rules authored and within budget | NO |
-| Data rehearsal reconciled | NO |
-| UI parity proven | NO |
-| Search proven | NO |
-| Analytics proven | NO |
+| Firestore migrated | **YES** |
+| Reachable in a Firebase production root without Supabase database calls | **YES** |
+| Rules authored and within budget | YES |
+| Data rehearsal reconciled | YES |
+| UI parity proven | YES |
+| Search proven | YES |
+| Analytics proven | YES |
 | Retirement requires owner approval | YES |
 
 ## Source data (live counts, read-only)
@@ -34,12 +34,12 @@ Runtime-reachable files of `src/firebase-main.tsx` attributed to this vertical, 
 | Measure | Value |
 | --- | ---: |
 | Reachable surface files | 3 |
-| Supabase database call sites | 4 |
+| Supabase database call sites | 0 |
 | Supabase RPC call sites | 0 |
 | Supabase Auth call sites | 0 |
 | Supabase database realtime call sites | 0 |
 | Supabase Edge Function call sites | 0 |
-| Forbidden call sites in the shipped Supabase root | 4 |
+| Forbidden call sites in the shipped Supabase root | 0 |
 
 ## Whole source tree, attributed by file name
 
@@ -48,7 +48,7 @@ adapters and legacy code no root imports. A text count: it shows what still refe
 
 | Measure | Value |
 | --- | ---: |
-| Attributed source files | 4 |
+| Attributed source files | 7 |
 | Supabase database call sites | 4 |
 | Supabase RPC call sites | 0 |
 | Supabase database realtime call sites | 0 |
@@ -60,18 +60,83 @@ RPCs referenced: _none detected_
 
 ## Parity evidence
 
-Gates from `migration/reports/vertical-parity-car_parts.json`.
+Gates from `migration/reports/vertical-parity-car_parts.json` (generated 2026-09-15T11:19:18.764Z, decision **PASS**).
 
 | Gate | Status |
 | --- | --- |
-| _not generated_ | FAIL |
+| firebaseRoot | PASS |
+| generatedSchema | PASS |
+| suites | PASS |
+| rulesBudget | PASS |
+| dataRehearsal | PASS |
+| uiSmoke | PASS |
+| search | PASS |
+| analytics | PASS |
+| rpc | PASS |
+| realtime | PASS |
+| edgeFunctions | PASS |
 
 <!-- DESIGN:BEGIN -->
 ## Design
 
-_Not authored yet._ Firestore collections, document IDs,
-relationships, Rules ownership model, transaction invariants, search and analytics
-strategy must be designed before this vertical can be migrated.
+### Collections and tenancy
+
+| Source | Firestore document | Id |
+| --- | --- | --- |
+| `car_parts` | `businesses/{businessId}/parts/{id}` | source UUID |
+
+The source scopes `car_parts` by `business_id = business_profiles.id`, and its RLS policies admit the owner through
+`business_profiles.user_id = auth.uid()` for select, insert, update and delete. Documents keep the column as
+`sourceBusinessId` and carry `ownerUid` and `businessId`. No table references `car_parts`: repair order items
+keep an `inventory_item_id` without a foreign key, so deleting a part changes nothing else.
+
+Reachability: the inventory screen (`CarPartsInventory`) is a Dashboard page shown only to auto_repair owners. A
+car_parts owner's home is `CarPartsDashboard`, a static placeholder with no data access.
+
+### Repository
+
+`CarPartsRepository` (`src/data/domain/carParts.ts`) is the only data path of `CarPartsInventory`.
+`SupabaseCarPartsRepository` keeps the shipped requests verbatim; `FirestoreCarPartsRepository` reproduces them.
+
+| UI call | Source | Firestore |
+| --- | --- | --- |
+| Inventory list | `car_parts WHERE business_id ORDER BY created_at DESC` (max_rows 1,000) | undated parts first, then `createdAt` desc, bound 1,000 |
+| Add part | `INSERT ... RETURNING *` | codec insert with column defaults (`quantity` 0, `created_at`/`updated_at` now), read back |
+| Edit part | `UPDATE ... WHERE id RETURNING *` with `.single()` | transaction: a missing part fails with PGRST116 and nothing is written; `updated_at` is the server time, as the touch trigger sets it |
+| Delete part | `DELETE ... WHERE id` | delete; a missing part is not an error |
+
+Values keep PostgreSQL semantics: `NUMERIC(10,2)` rounds half away from zero, a value past the precision fails
+with `NUMERIC_FIELD_OVERFLOW` before any write, and a form field left undefined is not sent.
+
+### Rules
+
+- Owner only (`isActiveOwner`), for reads, creates, edits and deletes.
+- Create: the generated schema validator, a document id equal to the part id, tenancy bound to the caller and
+  the path, no `lastRepairServiceId`.
+- Update: either an inventory edit (only the columns PartFormModal saves, re-validated, with `updatedAt` equal to
+  the request time), or stock consumed by a repair service record written in the same request.
+- Delete: owner.
+
+### Search and analytics
+
+Search (name, serial number, description, compatible car), the stock filter chips and the inventory summary (item
+count, purchase value, low and out-of-stock counts) all run client-side over the complete `listParts` result, whose
+equality to the source the dual read proves.
+
+### Rules evaluation budget
+
+Measured by `scripts/test-firestore-rules-budget.mjs` (`migration/reports/firestore-rules-budget.json`, paths
+prefixed `car parts:`) against the 1,000-expression limit and the 850 product ceiling: adding a part with every
+form column populated evaluates at most 346 expressions, editing every column 370, listing and deleting 52. The
+part update rule now admits an inventory edit or a service's stock consumption, which raises the service's part
+stock update from 133 to 157.
+
+### Source behaviour preserved as is
+
+- With a search or a stock filter active, the empty state's second line is built from the first word of
+  `carParts.errorLoading` and `carParts.noParts`, so it reads "Failed no parts found" although nothing failed. The
+  migration changes no screen copy.
+- The inventory summary adds `quantity * purchase_price_unit` in floating point for display, as before.
 
 <!-- DESIGN:END -->
 

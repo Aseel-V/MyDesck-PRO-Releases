@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-15T10:52:41.558Z",
+  "generatedAt": "2026-09-15T11:29:37.052Z",
   "status": "PASS",
   "suites": [
     {
@@ -67,6 +67,12 @@
       "file": "migration/firestore/tests/spark-architecture.test.mjs",
       "outcome": "PASS",
       "tests": 5
+    },
+    {
+      "label": "Firebase root call-site analysis",
+      "file": "migration/firestore/tests/import-graph.test.mjs",
+      "outcome": "PASS",
+      "tests": 6
     },
     {
       "label": "storage identity wiring",
@@ -165,10 +171,16 @@
       "tests": 8
     },
     {
+      "label": "car parts repository, Rules and malicious clients",
+      "file": "scripts/test-firestore-car-parts.mjs",
+      "outcome": "PASS",
+      "tests": 10
+    },
+    {
       "label": "Rules evaluation budget",
       "file": "scripts/test-firestore-rules-budget.mjs",
       "outcome": "PASS",
-      "tests": 7
+      "tests": 8
     },
     {
       "label": "trip transaction",
@@ -208,11 +220,11 @@
     }
   ],
   "totals": {
-    "steps": 35,
-    "passed": 35,
+    "steps": 37,
+    "passed": 37,
     "failed": 0,
-    "nodeTestCases": 291,
-    "assertionCallSites": 1025,
+    "nodeTestCases": 308,
+    "assertionCallSites": 1088,
     "fullCorpusApplicationAssertions": 1023,
     "searchCorpusCases": 12,
     "fullCorpusSecurityChecks": 50,

@@ -5,6 +5,7 @@ import { SupabaseProfileRepository } from './SupabaseProfileRepository';
 import { SupabaseSupermarketRepository } from './SupabaseSupermarketRepository';
 import { SupabaseAutoRepairRepository } from './SupabaseAutoRepairRepository';
 import { SupabaseTravelDashboardRepository } from './SupabaseTravelDashboardRepository';
+import { SupabaseCarPartsRepository } from './SupabaseCarPartsRepository';
 
 /**
  * The shipped product's backend until cutover. Imported only by `src/production-main.tsx`; the
@@ -19,5 +20,6 @@ export function createSupabaseBackend(): ProductBackend {
     supermarket: new SupabaseSupermarketRepository(),
     autoRepair: new SupabaseAutoRepairRepository(),
     travelDashboard: new SupabaseTravelDashboardRepository(),
+    carParts: new SupabaseCarPartsRepository(),
   };
 }

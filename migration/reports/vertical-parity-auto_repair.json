@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-15T10:45:31.403Z",
+  "generatedAt": "2026-09-15T11:22:54.811Z",
   "vertical": "auto_repair",
   "decision": "PASS",
   "gates": {
@@ -35,7 +35,7 @@
           "label": "Rules evaluation budget",
           "file": "scripts/test-firestore-rules-budget.mjs",
           "outcome": "PASS",
-          "tests": 7
+          "tests": 8
         }
       ]
     },
@@ -74,7 +74,7 @@
         },
         {
           "path": "auto repair: add a part and labor (part stock)",
-          "costAtMost": 133
+          "costAtMost": 157
         },
         {
           "path": "auto repair: list repair orders",
@@ -143,7 +143,7 @@
     },
     "uiSmoke": {
       "status": "PASS",
-      "smokeAt": "2026-09-15T10:39:56.978Z",
+      "smokeAt": "2026-09-15T11:15:36.140Z",
       "flows": [
         {
           "name": "the English owner signs in to the travel home and opens an empty Cars page left-to-right",

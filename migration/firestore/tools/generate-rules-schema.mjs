@@ -38,6 +38,7 @@ export const APP_WRITE_TABLES = [
   'user_profiles', 'business_profiles',
   'restaurant_menu_items', 'restaurant_menu_categories', 'market_transactions',
   'customer_vehicles', 'repair_orders', 'repair_order_items',
+  'car_parts',
 ];
 
 /** Keys present on migrated documents in addition to the source columns (full-rehearsal-core extraFields). */
@@ -49,6 +50,8 @@ const TABLE_EXTRAS = {
   repair_orders: ['lastRepairServiceId'],
   // The service record an item was added with.
   repair_order_items: ['repairServiceId'],
+  // The service record that last consumed the part's stock.
+  car_parts: ['lastRepairServiceId'],
 };
 
 /** Below these group sizes one check per column is cheaper than the group's fixed overhead. */

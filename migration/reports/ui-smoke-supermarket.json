@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-15T10:43:07.076Z",
+  "generatedAt": "2026-09-15T11:17:07.404Z",
   "vertical": "supermarket",
   "root": "src/firebase-main.tsx",
   "backendMode": "firestore-emulator",
@@ -14,7 +14,7 @@
     {
       "name": "the Hebrew owner signs in on the Firebase root and the POS renders right-to-left",
       "status": "passed",
-      "durationMs": 6731,
+      "durationMs": 7406,
       "supabaseRuntimeRequests": 0,
       "pageErrors": 0,
       "firestoreRequests": 9
@@ -22,23 +22,23 @@
     {
       "name": "a product is created with the default categories, found by name and barcode, and edited across a reload",
       "status": "passed",
-      "durationMs": 10341,
+      "durationMs": 8701,
       "supabaseRuntimeRequests": 0,
       "pageErrors": 0,
-      "firestoreRequests": 55
+      "firestoreRequests": 54
     },
     {
       "name": "checkout saves the sale, and sales analytics lists it and deletes it",
       "status": "passed",
-      "durationMs": 7639,
+      "durationMs": 11029,
       "supabaseRuntimeRequests": 0,
       "pageErrors": 0,
-      "firestoreRequests": 28
+      "firestoreRequests": 27
     },
     {
       "name": "another tenant signs in left-to-right in English and sees none of the first tenant's products",
       "status": "passed",
-      "durationMs": 2693,
+      "durationMs": 2493,
       "supabaseRuntimeRequests": 0,
       "pageErrors": 0,
       "firestoreRequests": 9
@@ -46,7 +46,7 @@
     {
       "name": "the Arabic owner signs in right-to-left",
       "status": "passed",
-      "durationMs": 2308,
+      "durationMs": 2561,
       "supabaseRuntimeRequests": 0,
       "pageErrors": 0,
       "firestoreRequests": 9
@@ -54,10 +54,10 @@
     {
       "name": "the product is deleted and stays deleted after a reload",
       "status": "passed",
-      "durationMs": 8133,
+      "durationMs": 9637,
       "supabaseRuntimeRequests": 0,
       "pageErrors": 0,
-      "firestoreRequests": 32
+      "firestoreRequests": 31
     }
   ],
   "decision": "PASS"

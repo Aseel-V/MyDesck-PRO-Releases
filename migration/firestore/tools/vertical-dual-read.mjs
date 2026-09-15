@@ -34,6 +34,7 @@ import { RulesClient } from '../lib/rules-client.mjs';
 import { FirebaseSession } from '../../../src/data/firestore/FirebaseSession.ts';
 import { FirestoreSupermarketRepository } from '../../../src/data/firestore/FirestoreSupermarketRepository.ts';
 import { FirestoreAutoRepairRepository } from '../../../src/data/firestore/FirestoreAutoRepairRepository.ts';
+import { FirestoreCarPartsRepository } from '../../../src/data/firestore/FirestoreCarPartsRepository.ts';
 import { SOURCE_SCHEMA } from '../../../src/data/firestore/sourceSchema.generated.ts';
 import { encodeInsert } from '../../../src/data/firestore/documentCodec.ts';
 import { timestampToMicros } from '../../../src/data/firestore/exactValues.ts';
@@ -143,6 +144,30 @@ const SPECS = {
         build: (tenant) => ({ table: 'repair_orders', row: { business_id: tenant.businessId, vehicle_id: randomUUID(), status: 'working', total_amount: 0 } }) },
     ],
   },
+  car_parts: {
+    // The inventory screen is reachable for auto_repair owners; car_parts owners get a placeholder home.
+    businessTypes: ['car_parts', 'auto_repair'],
+    repository: (session) => new FirestoreCarPartsRepository(session),
+    methods: [
+      { name: 'listParts', table: 'car_parts', order: 'created_at',
+        sql: agg('SELECT * FROM public.car_parts WHERE business_id = $1 ORDER BY created_at DESC LIMIT 1000'),
+        params: (tenant) => [tenant.businessId], call: (repo, tenant) => repo.listParts(tenant.businessId) },
+    ],
+    inventory: [
+      { collection: 'parts', tenancy: { field: 'sourceBusinessId', of: 'businessId', nullable: false },
+        sql: 'SELECT id::text AS id FROM public.car_parts WHERE business_id = $1', params: (tenant) => [tenant.businessId] },
+    ],
+    controls: [
+      { name: 'part purchase price changed', collection: 'parts', check: { method: 'listParts' }, metric: 'fieldMismatches', kind: 'patch',
+        mutate: (fields) => ({ ...fields, purchasePriceUnit: differentDecimal(fields.purchasePriceUnit, 2) }) },
+      { name: 'part deleted', collection: 'parts', check: { method: 'listParts' }, metric: 'missing', kind: 'delete' },
+      { name: 'part duplicated under a new id', collection: 'parts', check: { method: 'listParts' }, metric: 'unexpected', kind: 'copy' },
+      { name: 'part moved to another business', collection: 'parts', check: { method: 'listParts' }, metric: 'missing', kind: 'patch',
+        mutate: (fields) => ({ ...fields, sourceBusinessId: { stringValue: 'corruption-control-business' } }) },
+      { name: 'part that the source does not have', collection: 'parts', check: { method: 'listParts' }, metric: 'unexpected', kind: 'synthetic',
+        build: (tenant) => ({ table: 'car_parts', row: { business_id: tenant.businessId, part_name: 'Corruption control', quantity: 1 } }) },
+    ],
+  },
 };
 
 const spec = SPECS[vertical];
@@ -225,7 +250,8 @@ function compare(method, sourceRows, targetRows) {
   for (const key of target.keys()) if (!source.has(key)) result.unexpected += 1;
   if (method.order && result.missing === 0 && result.unexpected === 0) {
     const sequence = (rows) => rows.map((row) => (method.order === 'created_at'
-      ? String(timestampToMicros(String(row.created_at))) : String(row[method.order] ?? 'NULL')));
+      ? (row.created_at === null || row.created_at === undefined ? 'NULL' : String(timestampToMicros(String(row.created_at))))
+      : String(row[method.order] ?? 'NULL')));
     if (stable(sequence(sourceRows)) !== stable(sequence(targetRows))) result.orderMismatches += 1;
   }
   return result;
@@ -293,10 +319,12 @@ async function inventoryOf(tenant, item) {
 
 try {
   const source = await withSourceSnapshot(localConfig(), async (select) => {
+    // A screen can serve several business types (the parts inventory belongs to auto_repair owners).
+    const types = spec.businessTypes ?? [spec.businessType];
     const businesses = (await select(`SELECT id::text AS id, user_id::text AS user_id FROM public.business_profiles
-      WHERE business_type = $1 ORDER BY id`, [spec.businessType])).rows;
+      WHERE business_type::text = ANY($1::text[]) ORDER BY id`, [types])).rows;
     const other = (await select(`SELECT id::text AS id, user_id::text AS user_id FROM public.business_profiles
-      WHERE business_type IS DISTINCT FROM $1 ORDER BY id LIMIT 1`, [spec.businessType])).rows[0] ?? null;
+      WHERE NOT (coalesce(business_type::text, '') = ANY($1::text[])) ORDER BY id LIMIT 1`, [types])).rows[0] ?? null;
     const tenants = [];
     for (const business of businesses) {
       const tenant = { businessId: business.id, uid: business.user_id, methods: {}, inventory: {} };

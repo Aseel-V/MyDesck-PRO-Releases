@@ -28,7 +28,7 @@ const FIXTURE = 'migration/full-vertical.local/ui-smoke-fixture.json';
 const SUBCOLLECTIONS = ['menuItems', 'menuCategories', 'marketTransactions',
   'vehicles', 'vehiclePlates', 'repairOrders', 'repairOrderItems', 'repairServices', 'parts'];
 /** One tenant per interface language, so right-to-left and left-to-right rendering are both exercised. */
-const TENANTS = { supermarket: ['he', 'ar', 'en'], auto_repair: ['en', 'he'] };
+const TENANTS = { supermarket: ['he', 'ar', 'en'], auto_repair: ['en', 'he'], car_parts: ['ar'] };
 const bypass = RulesClient.asAdminBypass({ host: FIRESTORE_HOST, projectId: PROJECT });
 const restCodec = {
   timestamp: (seconds, nanoseconds) => new Date(seconds * 1000 + Math.floor(nanoseconds / 1e6)),
@@ -59,7 +59,8 @@ async function create() {
         if (!typed.ok) throw new Error(`BUSINESS_TYPE_NOT_SET:${typed.status}`);
         const tenant = { email, uid: user.id, businessId: business.businessId };
         if (vertical === 'auto_repair') {
-          tenant.partName = `Smoke brake pads ${run}`;
+          // Unique per tenant: an isolation check that looks for another tenant's part by name must not match its own.
+          tenant.partName = `Smoke brake pads ${language} ${run}`;
           const part = encodeInsert('car_parts', { business_id: business.businessId, part_name: tenant.partName, quantity: 5,
             purchase_price_unit: 12.25, selling_price_unit: 59.99, compatible_cars: ['Toyota Corolla'] },
           restCodec, { ownerUid: user.id, businessId: business.businessId });

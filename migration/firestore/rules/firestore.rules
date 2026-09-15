@@ -454,6 +454,38 @@ service cloud.firestore {
         !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
       ].hasOnly([true]));
     }
+    function sv_car_parts(d) {
+      return d.keys().hasOnly(['businessId', 'compatibleCars', 'createdAt', 'createdAtMicros', 'createdBy', 'description', 'id', 'isDeleted', 'lastRepairServiceId', 'migrationExcludedFields', 'migrationTransformVersion', 'ownerUid', 'partName', 'purchasePriceTotal', 'purchasePriceUnit', 'quantity', 'schemaVersion', 'sellingPriceUnit', 'serialNumber', 'sourceBusinessId', 'transformVersion', 'updatedAt', 'updatedAtMicros']) && [
+        d.id is string,
+        d.partName is string,
+        d.compatibleCars == null || d.compatibleCars is list,
+        d.purchasePriceUnit == null || sfDecimalScaled(d.purchasePriceUnit, 2, '-?[0-9]{1,10}'),
+        d.purchasePriceTotal == null || sfDecimalScaled(d.purchasePriceTotal, 2, '-?[0-9]{1,10}'),
+        d.sellingPriceUnit == null || sfDecimalScaled(d.sellingPriceUnit, 2, '-?[0-9]{1,10}'),
+        d.createdAt == null || d.createdAt is timestamp,
+        d.get('createdAtMicros', '0').matches('-?[0-9]+'),
+        d.updatedAt == null || d.updatedAt is timestamp,
+        d.get('updatedAtMicros', '0').matches('-?[0-9]+'),
+        sfStrings([d.sourceBusinessId, d.description, d.serialNumber]),
+        d.quantity == null || d.quantity is int,
+        d.get('schemaVersion', 1) == 1
+      ].hasOnly([true]);
+    }
+    function svu_car_parts(changed, d) {
+      return changed.hasOnly(['businessId', 'compatibleCars', 'createdAt', 'createdAtMicros', 'createdBy', 'description', 'id', 'isDeleted', 'lastRepairServiceId', 'migrationExcludedFields', 'migrationTransformVersion', 'ownerUid', 'partName', 'purchasePriceTotal', 'purchasePriceUnit', 'quantity', 'schemaVersion', 'sellingPriceUnit', 'serialNumber', 'sourceBusinessId', 'transformVersion', 'updatedAt', 'updatedAtMicros']) && (changed.size() > 8 ? sv_car_parts(d) : [
+        !('id' in changed) || (d.id is string),
+        !('partName' in changed) || (d.partName is string),
+        !('compatibleCars' in changed) || (d.compatibleCars == null || d.compatibleCars is list),
+        !('purchasePriceUnit' in changed) || (d.purchasePriceUnit == null || sfDecimalScaled(d.purchasePriceUnit, 2, '-?[0-9]{1,10}')),
+        !('purchasePriceTotal' in changed) || (d.purchasePriceTotal == null || sfDecimalScaled(d.purchasePriceTotal, 2, '-?[0-9]{1,10}')),
+        !('sellingPriceUnit' in changed) || (d.sellingPriceUnit == null || sfDecimalScaled(d.sellingPriceUnit, 2, '-?[0-9]{1,10}')),
+        !changed.hasAny(['createdAt', 'createdAtMicros']) || ((d.createdAt == null || d.createdAt is timestamp) && (d.get('createdAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['updatedAt', 'updatedAtMicros']) || ((d.updatedAt == null || d.updatedAt is timestamp) && (d.get('updatedAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['sourceBusinessId', 'description', 'serialNumber']) || (sfStrings([d.sourceBusinessId, d.description, d.serialNumber])),
+        !('quantity' in changed) || (d.quantity == null || d.quantity is int),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
     // SCHEMA-VALIDATORS:END
 
     // users/{uid} holds the user_profiles row; the document id is the Firebase uid.
@@ -804,7 +836,8 @@ service cloud.firestore {
         allow delete: if isActiveOwner(businessId) && !existsAfter(scopedPath('repairOrders', resource.data.orderId));
       }
 
-      // car_parts: stock consumed by a service. Inventory management arrives with the car-parts vertical.
+      // car_parts: CarPartsInventory creates, edits and deletes the business's parts; a repair service consumes stock only
+      // through its service record. The source grants the owner every operation on these rows, with no CHECK beyond types.
       match /parts/{partId} {
         function consumedByService(partId, changed, d) {
           return changed.hasOnly(['quantity', 'updatedAt', 'updatedAtMicros', 'lastRepairServiceId'])
@@ -814,9 +847,26 @@ service cloud.firestore {
             && !exists(scopedPath('repairServices', d.lastRepairServiceId))
             && getAfter(scopedPath('repairServices', d.lastRepairServiceId)).data.partId == partId;
         }
+        // PartFormModal saves the columns it shows; the update_car_parts_updated_at trigger stamps updated_at.
+        function validPartEdit(changed, d) {
+          return changed.hasOnly(['partName', 'description', 'serialNumber', 'compatibleCars', 'quantity', 'purchasePriceUnit',
+              'purchasePriceTotal', 'sellingPriceUnit', 'updatedAt', 'updatedAtMicros'])
+            && svu_car_parts(changed, d)
+            && d.updatedAt == request.time;
+        }
+        function validPartUpdate(partId, changed, d) {
+          return validPartEdit(changed, d) || consumedByService(partId, changed, d);
+        }
         allow get, list: if isActiveOwner(businessId);
+        allow create: if isActiveOwner(businessId)
+          && sv_car_parts(request.resource.data)
+          && request.resource.data.id == partId
+          && newBusinessTenancy(request.resource.data)
+          && request.resource.data.get('lastRepairServiceId', null) == null;
         allow update: if isActiveOwner(businessId)
-          && consumedByService(partId, request.resource.data.diff(resource.data).affectedKeys(), request.resource.data);
+          && validPartUpdate(partId, request.resource.data.diff(resource.data).affectedKeys(), request.resource.data);
+        // No table references car_parts; repair items keep their inventory_item_id, as in the source.
+        allow delete: if isActiveOwner(businessId);
       }
     }
 

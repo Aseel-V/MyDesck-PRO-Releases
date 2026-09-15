@@ -1,0 +1,108 @@
+{
+  "generatedAt": "2026-09-15T11:06:11.391Z",
+  "vertical": "car_parts",
+  "target": "firestore-emulator",
+  "readOnlySource": {
+    "start": {
+      "read_only": "on",
+      "isolation": "repeatable read"
+    },
+    "rejectedWriteSqlState": "25006",
+    "successfulWrites": 0,
+    "end": {
+      "read_only": "on",
+      "isolation": "repeatable read"
+    },
+    "transactionOutcome": "ROLLBACK"
+  },
+  "tenants": [
+    {
+      "businessHash": "0ed3bad7f4de",
+      "ownerHash": "a3d78f6c5a53",
+      "methods": {
+        "listParts": {
+          "sourceRows": 1,
+          "targetRows": 1,
+          "matched": 1,
+          "missing": 0,
+          "unexpected": 0,
+          "fieldMismatches": 0,
+          "orderMismatches": 0,
+          "mismatchedColumns": {},
+          "unknownColumns": []
+        }
+      },
+      "inventory": {
+        "parts": {
+          "sourceRows": 1,
+          "targetDocuments": 1,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        }
+      },
+      "crossTenant": {
+        "attempts": 1,
+        "denied": 1
+      },
+      "restoredClean": true,
+      "clean": true
+    }
+  ],
+  "corruptionControls": [
+    {
+      "name": "part purchase price changed",
+      "tenant": "0ed3bad7f4de",
+      "metric": "fieldMismatches",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "part deleted",
+      "tenant": "0ed3bad7f4de",
+      "metric": "missing",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "part duplicated under a new id",
+      "tenant": "0ed3bad7f4de",
+      "metric": "unexpected",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "part moved to another business",
+      "tenant": "0ed3bad7f4de",
+      "metric": "missing",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "part that the source does not have",
+      "tenant": "0ed3bad7f4de",
+      "metric": "unexpected",
+      "observed": 1,
+      "status": "DETECTED"
+    }
+  ],
+  "decision": "PASS",
+  "totals": {
+    "tenants": 1,
+    "sourceRowsCompared": 1,
+    "matched": 1,
+    "missing": 0,
+    "unexpected": 0,
+    "fieldMismatches": 0,
+    "orderMismatches": 0,
+    "unknownColumns": 0,
+    "orphans": 0,
+    "sourceRowsInventoried": 1,
+    "migratedDocuments": 1,
+    "crossTenantAttempts": 1,
+    "crossTenantAllowed": 0,
+    "controlsApplicable": 5,
+    "controlsDetected": 5,
+    "restoredClean": true
+  }
+}

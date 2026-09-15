@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-15T10:49:09.178Z",
+  "generatedAt": "2026-09-15T11:25:52.504Z",
   "vertical": "supermarket",
   "decision": "PASS",
   "gates": {
@@ -35,7 +35,7 @@
           "label": "Rules evaluation budget",
           "file": "scripts/test-firestore-rules-budget.mjs",
           "outcome": "PASS",
-          "tests": 7
+          "tests": 8
         }
       ]
     },
@@ -113,7 +113,7 @@
     },
     "uiSmoke": {
       "status": "PASS",
-      "smokeAt": "2026-09-15T10:43:07.076Z",
+      "smokeAt": "2026-09-15T11:17:07.404Z",
       "flows": [
         {
           "name": "the Hebrew owner signs in on the Firebase root and the POS renders right-to-left",
