@@ -107,7 +107,25 @@ Do not hand-edit outside the Design block.
 | --- | ---: |
 ${rows}
 
-## Source runtime surface (current tree)
+## Firebase production root (measured)
+
+Runtime-reachable files of \`src/firebase-main.tsx\` attributed to this vertical, counted on the TypeScript AST by
+\`migration/firestore/lib/import-graph.mjs\` (\`active-product-parity.json\`). This is what the product runs.
+
+| Measure | Value |
+| --- | ---: |
+| Reachable surface files | ${measured?.firebaseRootSurfaceFiles ?? 'n/a'} |
+| Supabase database call sites | ${measured?.firebaseRootForbiddenByCategory?.database ?? 'n/a'} |
+| Supabase RPC call sites | ${measured?.firebaseRootForbiddenByCategory?.rpc ?? 'n/a'} |
+| Supabase Auth call sites | ${measured?.firebaseRootForbiddenByCategory?.auth ?? 'n/a'} |
+| Supabase database realtime call sites | ${measured?.firebaseRootForbiddenByCategory?.realtime ?? 'n/a'} |
+| Supabase Edge Function call sites | ${measured?.firebaseRootForbiddenByCategory?.edgeFunctions ?? 'n/a'} |
+| Forbidden call sites in the shipped Supabase root | ${measured?.shippedRootForbiddenCallSites ?? 'n/a'} |
+
+## Whole source tree, attributed by file name
+
+Every \`src\` file whose path matches this vertical's name hints, reachable or not, including the shipped Supabase
+adapters and legacy code no root imports. A text count: it shows what still references Supabase, not what runs.
 
 | Measure | Value |
 | --- | ---: |

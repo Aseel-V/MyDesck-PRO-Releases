@@ -34,7 +34,25 @@ Do not hand-edit outside the Design block.
 | `restaurant_tables` | 13 |
 | `restaurant_ticket_items` | 17 |
 
-## Source runtime surface (current tree)
+## Firebase production root (measured)
+
+Runtime-reachable files of `src/firebase-main.tsx` attributed to this vertical, counted on the TypeScript AST by
+`migration/firestore/lib/import-graph.mjs` (`active-product-parity.json`). This is what the product runs.
+
+| Measure | Value |
+| --- | ---: |
+| Reachable surface files | 27 |
+| Supabase database call sites | 92 |
+| Supabase RPC call sites | 12 |
+| Supabase Auth call sites | 1 |
+| Supabase database realtime call sites | 2 |
+| Supabase Edge Function call sites | 0 |
+| Forbidden call sites in the shipped Supabase root | 107 |
+
+## Whole source tree, attributed by file name
+
+Every `src` file whose path matches this vertical's name hints, reachable or not, including the shipped Supabase
+adapters and legacy code no root imports. A text count: it shows what still references Supabase, not what runs.
 
 | Measure | Value |
 | --- | ---: |
