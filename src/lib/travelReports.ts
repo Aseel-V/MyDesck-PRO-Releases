@@ -1,7 +1,7 @@
 import type { Trip } from '../types/trip';
 import { escapeCsvCell } from './tripExport';
 import JSZip from 'jszip';
-import { supabase } from './supabase';
+import { getBackend } from '../data/backend';
 import { fromPaymentMinor, getCanonicalTripPayment } from './tripPaymentSummary';
 
 export interface CurrencyReport {
@@ -18,9 +18,7 @@ export interface TravelReportPayload {
 }
 
 export async function fetchTravelReports(input: { startDate: string; endDate: string; currency?: string; destination?: string; includeArchived?: boolean }): Promise<TravelReportPayload> {
-  const { data, error } = await supabase.rpc('get_travel_reports', { p_start_date: input.startDate, p_end_date: input.endDate, p_currency: input.currency || null, p_destination: input.destination || null, p_include_archived: input.includeArchived || false });
-  if (error) throw error;
-  const payload = (data || {}) as unknown as Partial<TravelReportPayload>;
+  const payload = await getBackend().travel.getTravelReports(input);
   return { monthly: payload.monthly || [], destinations: payload.destinations || [], repeat_clients: payload.repeat_clients || [], unpaid: payload.unpaid || [], currencies: payload.currencies || [], markups: payload.markups || [] };
 }
 

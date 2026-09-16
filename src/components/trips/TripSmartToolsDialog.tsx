@@ -3,9 +3,8 @@ import { CheckCircle2, Clipboard, ListChecks, Route, Sparkles, X } from 'lucide-
 import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { supabase } from '../../lib/supabase';
+import { getBackend } from '../../data/backend';
 import { buildTripSummary, checkTripCompleteness, generateInitialItinerary, generatePackingList, suggestPrice } from '../../lib/tripSmartTools';
-import type { Json } from '../../types/database';
 import type { Trip } from '../../types/trip';
 import { Button } from '../travel-ui/Button';
 
@@ -27,15 +26,14 @@ export function TripSmartToolsDialog({ trip, onClose, onUpdated }: Props) {
   const copy = async (value: unknown) => { await navigator.clipboard.writeText(JSON.stringify(value, null, 2)); toast.success(t('trips.smartTools.copied')); };
   const applyItinerary = async () => {
     if (!window.confirm(t('trips.smartTools.confirmItinerary'))) return;
-    const { error } = await supabase.from('trips').update({ itinerary: itinerary as unknown as Json, updated_at: new Date().toISOString() }).eq('id', trip.id);
-    if (error) { toast.error(t('trips.smartTools.saveFailed')); return; }
+    try { await getBackend().travel.updateTripItinerary(trip.id, itinerary); } catch { toast.error(t('trips.smartTools.saveFailed')); return; }
     toast.success(t('trips.smartTools.itinerarySaved')); onUpdated?.();
   };
   const savePacking = async () => {
     if (!user) return;
     const items = Object.entries(packing).flatMap(([category, values]) => values.map((label) => ({ category, label, checked: false })));
-    const { error } = await supabase.from('trip_packing_lists').insert({ user_id: user.id, trip_id: trip.id, name: `${trip.destination} ${trip.start_date}`, items: items as unknown as Json });
-    if (error) toast.error(t('trips.smartTools.saveFailed')); else toast.success(t('trips.smartTools.packingSaved'));
+    try { await getBackend().travel.createPackingList(user.id, trip.id, `${trip.destination} ${trip.start_date}`, items); toast.success(t('trips.smartTools.packingSaved')); }
+    catch { toast.error(t('trips.smartTools.saveFailed')); }
   };
   const tools: Array<{ id: Tool; icon: typeof Route }> = [
     { id: 'review', icon: CheckCircle2 }, { id: 'itinerary', icon: Route }, { id: 'packing', icon: ListChecks },

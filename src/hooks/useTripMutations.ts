@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { SupabaseTripRepository } from '../data/SupabaseTripRepository';
-const tripCommands = new SupabaseTripRepository();
+import { getBackend } from '../data/backend';
 import { TripFormData } from '../types/trip';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -17,6 +16,12 @@ import {
     type TripCacheSnapshot,
 } from '../lib/tripOptimisticCache';
 
+/** The Supabase repository's guard, kept at the call site: no command runs without a signed-in user. */
+function requireUserId(user: { id: string } | null): string {
+    if (!user?.id) throw new Error('USER_NOT_AUTHENTICATED');
+    return user.id;
+}
+
 export function useTripMutations() {
     const { user } = useAuth();
     const queryClient = useQueryClient();
@@ -24,7 +29,7 @@ export function useTripMutations() {
 
     const saveTripMutation = useMutation({
         mutationFn: async ({ formData, editTripId, clientRequestId }: { formData: TripFormData; editTripId?: string; clientRequestId?: string }) => {
-            return tripCommands.saveTrip(user, formData, editTripId, clientRequestId);
+            return getBackend().travel.saveTrip(requireUserId(user), formData, editTripId, clientRequestId);
         },
         onMutate: async ({ formData, editTripId }) => {
             await queryClient.cancelQueries({ queryKey: ['trips-page'] });
@@ -76,7 +81,7 @@ export function useTripMutations() {
 
     const restoreTripMutation = useMutation({
         mutationFn: async (id: string) => {
-            return tripCommands.restoreTrip(user, id);
+            return getBackend().travel.restoreTrip(requireUserId(user), id);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['trips-page'] });
@@ -93,7 +98,7 @@ export function useTripMutations() {
 
     const deleteTripMutation = useMutation({
         mutationFn: async (id: string) => {
-            return tripCommands.deleteTrip(user, id);
+            return getBackend().travel.deleteTrip(requireUserId(user), id);
         },
         onMutate: async (tripId) => {
             await queryClient.cancelQueries({ queryKey: ['trips-page'] });
@@ -122,7 +127,7 @@ export function useTripMutations() {
 
     const archiveTripMutation = useMutation({
         mutationFn: async ({ id, archived }: { id: string; archived: boolean }) => {
-            return tripCommands.archiveTrip(user, id, archived);
+            return getBackend().travel.archiveTrip(requireUserId(user), id, archived);
         },
         onMutate: async ({ id, archived }) => {
             await queryClient.cancelQueries({ queryKey: ['trips-page'] });
@@ -147,7 +152,7 @@ export function useTripMutations() {
 
     const toggleExportMutation = useMutation({
         mutationFn: async ({ id, value }: { id: string, value: boolean }) => {
-            return tripCommands.toggleExport(user, id, value);
+            return getBackend().travel.toggleExport(requireUserId(user), id, value);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['trips-page'] });

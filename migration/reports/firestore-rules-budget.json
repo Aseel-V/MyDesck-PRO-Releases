@@ -531,6 +531,118 @@
       "withinLimit": true,
       "costAtMost": 55,
       "costAbove": 52
+    },
+    {
+      "path": "tourism: save a trip (operation)",
+      "rule": "/sparkOperations/{operationId} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 226,
+      "costAbove": 223
+    },
+    {
+      "path": "tourism: save a trip (trip)",
+      "rule": "/trips/{tripId} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 640,
+      "costAbove": 637
+    },
+    {
+      "path": "tourism: save a trip (payment plan)",
+      "rule": "/tripPaymentPlans/{planId} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 577,
+      "costAbove": 574
+    },
+    {
+      "path": "tourism: save a trip (plan index)",
+      "rule": "/tripPlans/{tripId} allow create, update",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 256,
+      "costAbove": 253
+    },
+    {
+      "path": "tourism: save a trip (activity)",
+      "rule": "/tripActivityLog/{eventId} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 211,
+      "costAbove": 208
+    },
+    {
+      "path": "tourism: save a trip (financial audit)",
+      "rule": "/tripFinancialAudit/{eventId} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 280,
+      "costAbove": 277
+    },
+    {
+      "path": "tourism: save a trip (write request)",
+      "rule": "/idempotency/{id} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 295,
+      "costAbove": 292
+    },
+    {
+      "path": "tourism: save a card plan (instalment)",
+      "rule": "/tripInstallments/{installmentId} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 394,
+      "costAbove": 391
+    },
+    {
+      "path": "tourism: edit a trip (trip)",
+      "rule": "/trips/{tripId} allow update",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 652,
+      "costAbove": 649
+    },
+    {
+      "path": "tourism: record a Visa receipt (instalment)",
+      "rule": "/tripInstallments/{installmentId} allow update",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 466,
+      "costAbove": 463
+    },
+    {
+      "path": "tourism: record a Visa receipt (plan)",
+      "rule": "/tripPaymentPlans/{planId} allow update",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 628,
+      "costAbove": 625
+    },
+    {
+      "path": "tourism: notification settings",
+      "rule": "/settings/{notificationSettingsId} allow create, update",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 175,
+      "costAbove": 172
+    },
+    {
+      "path": "tourism: save a trip template",
+      "rule": "/tripTemplates/{templateId} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 370,
+      "costAbove": 367
+    },
+    {
+      "path": "tourism: create a packing list",
+      "rule": "/packingLists/{listId} allow create",
+      "product": true,
+      "withinLimit": true,
+      "costAtMost": 346,
+      "costAbove": 343
     }
   ]
 }

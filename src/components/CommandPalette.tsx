@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { getBackend } from '@/data/backend';
 import { Trip } from '@/types/trip';
 
 interface CommandPaletteProps {
@@ -33,13 +33,7 @@ export function CommandPalette({ isOpen, onClose, onNavigate, onSelectTrip, onCr
     queryKey: ['trips-search', user?.id],
     queryFn: async () => {
       if (!user?.id || isAdmin) return [];
-      const { data, error } = await supabase
-        .from('trips')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('start_date', { ascending: false });
-      if (error) throw error;
-      return data as unknown as Trip[];
+      return getBackend().travel.searchTrips(user.id);
     },
     enabled: !!user?.id && !isAdmin && isOpen,
   });

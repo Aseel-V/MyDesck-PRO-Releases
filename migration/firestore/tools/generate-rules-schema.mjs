@@ -43,6 +43,9 @@ export const APP_WRITE_TABLES = [
   'restaurant_tables', 'restaurant_staff', 'restaurant_table_sessions', 'restaurant_orders', 'restaurant_order_items',
   'restaurant_kitchen_tickets', 'restaurant_ticket_items', 'restaurant_void_logs', 'restaurant_audit_logs',
   'restaurant_reservations', 'restaurant_waitlist', 'restaurant_guest_profiles',
+  'trips', 'trip_payment_plans', 'trip_installments', 'trip_activity_log', 'trip_financial_audit',
+  'trip_payment_events', 'trip_installment_events', 'trip_write_requests', 'trip_attachment_cleanup_queue',
+  'trip_notifications', 'trip_notification_settings', 'trip_templates', 'trip_packing_lists', 'trip_whatsapp_templates',
 ];
 
 /** Keys present on migrated documents in addition to the source columns (full-rehearsal-core extraFields). */
@@ -61,6 +64,23 @@ const TABLE_EXTRAS = {
   restaurant_orders: ['itemsTotal', 'ledgerRevision', 'ledgerItemId', 'lastAuditId'],
   // The ticket line a fired order line was sent to the kitchen with.
   restaurant_order_items: ['ticketItemId'],
+  // A trip carries its money twice: the exact decimals of the source columns, and the minor units the Rules do the
+  // arithmetic in. `revision` and `lastOperationId` make each write provably one step of one operation document.
+  trips: ['moneyScale', 'salePriceMinor', 'wholesaleCostMinor', 'amountPaidMinor', 'amountDueMinor', 'profitMinor',
+    'revision', 'lastOperationId'],
+  // The canonical payment contract derives Visa collection from the schedule's dates, not from the receipt columns, so
+  // the trip's collected total cannot be recomputed inside a rule (it would mean reading every instalment and doing
+  // month arithmetic). The plan carries the two derived figures the Rules bound and the trip's total is bound to them.
+  trip_payment_plans: ['lastOperationId', 'visaConfirmedMinor', 'visaReceiptedMinor', 'cashConfirmedMinor'],
+  trip_installments: ['lastOperationId'],
+  // Event tables: the migrated `sequence`, the parent it orders within, and the operation that appended it.
+  trip_activity_log: ['sequence', 'sequenceParent', 'lastOperationId'],
+  trip_financial_audit: ['sequence', 'sequenceParent', 'lastOperationId'],
+  trip_payment_events: ['sequence', 'sequenceParent', 'lastOperationId'],
+  trip_installment_events: ['sequence', 'sequenceParent', 'lastOperationId'],
+  trip_attachment_cleanup_queue: ['sequence', 'sequenceParent', 'lastOperationId'],
+  trip_write_requests: ['lastOperationId'],
+  trip_notifications: ['lastOperationId'],
 };
 
 /** Below these group sizes one check per column is cheaper than the group's fixed overhead. */

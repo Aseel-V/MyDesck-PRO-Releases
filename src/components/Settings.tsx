@@ -25,7 +25,6 @@ import {
   Database,
   LogOut,
 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
 import { getBackend } from '../data/backend';
 import RestaurantSettings from './restaurant/RestaurantSettings';
 import { resizeImage } from '../lib/imageUtils';
@@ -283,8 +282,7 @@ export default function Settings() {
     }
 
     try {
-      const { data: trips, error } = await supabase.from('trips').select('*').eq('user_id', user.id);
-      if (error) throw error;
+      const trips = await getBackend().travel.exportTrips(user.id);
 
       const exportData = {
         backupSchemaVersion: '1.0.0',
@@ -334,8 +332,7 @@ export default function Settings() {
           for (const trip of data.trips) {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { id: _id, user_id: _uid, created_at: _ca, updated_at: _ua, ...tripData } = trip;
-            const { error } = await supabase.from('trips').insert([{ ...tripData, user_id: user.id }]);
-            if (error) throw error;
+            await getBackend().travel.importTrip(user.id, tripData);
           }
 
           showNotice('success', t('settings.messages.dataImported'));

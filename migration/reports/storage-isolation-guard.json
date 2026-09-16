@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-15T16:25:20.382Z",
+  "generatedAt": "2026-09-16T18:21:47.319Z",
   "readOnly": true,
   "productionMutations": 0,
   "allowlist": [
@@ -7,7 +7,7 @@
     "src/data/SupabaseStorageRepository.ts",
     "src/data/contracts.ts"
   ],
-  "scannedFiles": 299,
+  "scannedFiles": 307,
   "storageCallsTotal": 8,
   "storageCallsInsideAllowlist": 8,
   "storageCallsOutsideAllowlist": 0,

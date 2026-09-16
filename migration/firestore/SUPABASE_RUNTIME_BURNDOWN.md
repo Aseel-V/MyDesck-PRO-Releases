@@ -39,7 +39,7 @@ Live, read-only source inventory (`migration/reports/live-vertical-inventory.jso
 
 | Vertical | Tenants | Rows | Files | DB | RPC | DB realtime | Classification | Migrated |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
-| tourism | 3 | 1,339 | 63 | 39 | 25 | 0 | ACTIVE_WITH_DATA | Partial — reduced travel workspace only |
+| tourism | 3 | 1,339 | 63 | 39 | 25 | 0 | ACTIVE_WITH_DATA | **Yes** — Firestore repositories, Rules and write models |
 | restaurant | 1 | 94 | 35 | 95 | 8 | 2 | ACTIVE_WITH_DATA | **No** |
 | supermarket | 1 | 1 | 15 | 9 | 0 | 0 | ACTIVE_WITH_DATA | **No** |
 | auto_repair | 1 | 2 | 11 | 16 | 1 | 0 | ACTIVE_WITH_DATA | **No** |
@@ -54,6 +54,17 @@ MIGRATION_ONLY 0 · **unknown 0**.
 No vertical is proven unreachable, so none may be dropped without an explicit owner decision.
 
 ## Server-side logic still to be replaced
+
+**Tourism (updated 2026-09-16).** Every tourism surface now reaches Firestore through
+`FirestoreTravelRepository`: the trips workspace and its search, the trash, the payment ledger, activity and financial
+audit history, the notification bell and its settings, the Visa arrivals materialization, templates, packing lists,
+analytics and the travel reports. Measured from `src/firebase-main.tsx`, the vertical has **0** Supabase database,
+RPC, Auth or database-realtime calls (`firebase-root-guard.mjs`, `active-product-parity.mjs`). Its 25 RPCs are
+reproduced as pure write models proven statement by statement against a local PostgreSQL built from the migrations plus
+the production catalog overlay (`travel-write-parity.mjs`, `travel-command-parity.mjs`, `travel-side-parity.mjs`), and
+its reads are proven against production by `travel-full-dual-read.mjs`. Three source defects are preserved rather than
+repaired: `create_trip_payment_plan` fails with 42702 for a card or mixed plan, the Settings trip import is refused
+with 428C9, and the WhatsApp composer's columns do not exist in production.
 
 **35 RPCs.** Roughly 25 belong to tourism, 8 to restaurant, 1 to auto_repair, and
 `log_business_activity_v2` is shared. These are Postgres functions holding business

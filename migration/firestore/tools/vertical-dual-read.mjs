@@ -36,6 +36,7 @@ import { FirestoreSupermarketRepository } from '../../../src/data/firestore/Fire
 import { FirestoreAutoRepairRepository } from '../../../src/data/firestore/FirestoreAutoRepairRepository.ts';
 import { FirestoreCarPartsRepository } from '../../../src/data/firestore/FirestoreCarPartsRepository.ts';
 import { FirestoreRestaurantRepository } from '../../../src/data/firestore/FirestoreRestaurantRepository.ts';
+import { FirestoreTravelRepository } from '../../../src/data/firestore/FirestoreTravelRepository.ts';
 import { SOURCE_SCHEMA } from '../../../src/data/firestore/sourceSchema.generated.ts';
 import { encodeInsert } from '../../../src/data/firestore/documentCodec.ts';
 import { timestampToMicros } from '../../../src/data/firestore/exactValues.ts';
@@ -67,7 +68,78 @@ const differentDecimal = (value, scale) => decimalValue(value?.mapValue?.fields?
  * auth.users, `sourceBusinessId` holds the business id where it references business_profiles, and child tables
  * without business_id carry only the path tenancy.
  */
+/** Event tables are bigint identities in the source; the rehearsal writes them zero-padded to 19 digits. */
+const padEventId = (row) => String(row.id).padStart(19, '0');
+
 const SPECS = {
+  /**
+   * Tourism is owner-scoped rather than business-scoped: its tables key on user_id, so tenancy is `ownerUid`, and the
+   * event tables keep the padded document ids the rehearsal derives from their bigint identities.
+   */
+  tourism: {
+    businessType: 'tourism',
+    // Its tables carry businessIdField null and paths like trips/{id}: the collections are at the root, not under
+    // the business document, so the inventory, the cross-tenant probe and the controls all resolve them there.
+    rootCollections: true,
+    repository: (session) => new FirestoreTravelRepository(session),
+    methods: [
+      { name: 'searchTrips', table: 'trips', order: 'start_date',
+        sql: agg('SELECT * FROM public.trips WHERE user_id = $1 ORDER BY start_date DESC LIMIT 1000'),
+        params: (tenant) => [tenant.uid], call: (repo, tenant) => repo.searchTrips(tenant.uid) },
+      // The client list projects two columns and no id, so it states its own row identity: without one every row
+      // renders as the same key and a hundred rows would compare as one.
+      { name: 'listClientRows', table: 'trips', order: 'created_at', key: ['client_name', 'client_phone'],
+        sql: agg("SELECT client_name, client_phone FROM public.trips WHERE user_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 1000"),
+        params: (tenant) => [tenant.uid], call: (repo, tenant) => repo.listClientRows(tenant.uid) },
+      { name: 'listTripNotifications', table: 'trip_notifications', order: 'created_at',
+        sql: agg("SELECT id, trip_id, notification_type, title_key, body_key, params, read_at, snoozed_until, dismissed_at, completed_at, scheduled_for, created_at FROM public.trip_notifications WHERE user_id = $1 AND dismissed_at IS NULL ORDER BY created_at DESC LIMIT 100"),
+        params: (tenant) => [tenant.uid], call: (repo) => repo.listTripNotifications() },
+      { name: 'listTripTemplates', table: 'trip_templates', order: 'updated_at',
+        sql: agg("SELECT * FROM public.trip_templates WHERE user_id = $1 AND deleted_at IS NULL AND status = 'active' ORDER BY updated_at DESC LIMIT 1000"),
+        params: (tenant) => [tenant.uid], call: (repo) => repo.listTripTemplates('', undefined, false) },
+      { name: 'listFailedCleanupJobs', table: 'trip_attachment_cleanup_queue', order: 'created_at',
+        sql: agg("SELECT id, trip_id, status, attempts, last_error, next_retry_at, created_at FROM public.trip_attachment_cleanup_queue WHERE user_id = $1 AND status = 'failed' ORDER BY created_at DESC LIMIT 20"),
+        params: (tenant) => [tenant.uid], call: (repo) => repo.listFailedCleanupJobs() },
+    ],
+    inventory: [
+      { collection: 'trips', tenancy: { field: 'ownerUid', of: 'uid', nullable: false },
+        sql: 'SELECT id::text AS id FROM public.trips WHERE user_id = $1', params: (tenant) => [tenant.uid] },
+      { collection: 'tripPaymentPlans', tenancy: { field: 'ownerUid', of: 'uid', nullable: false },
+        sql: 'SELECT id::text AS id FROM public.trip_payment_plans WHERE user_id = $1', params: (tenant) => [tenant.uid] },
+      { collection: 'tripInstallments', tenancy: { field: 'ownerUid', of: 'uid', nullable: false },
+        sql: 'SELECT id::text AS id FROM public.trip_installments WHERE user_id = $1', params: (tenant) => [tenant.uid] },
+      { collection: 'tripActivityLog', tenancy: { field: 'ownerUid', of: 'uid', nullable: false }, idOf: padEventId,
+        sql: 'SELECT id FROM public.trip_activity_log WHERE user_id = $1', params: (tenant) => [tenant.uid] },
+      { collection: 'tripFinancialAudit', tenancy: { field: 'ownerUid', of: 'uid', nullable: false }, idOf: padEventId,
+        sql: 'SELECT id FROM public.trip_financial_audit WHERE user_id = $1', params: (tenant) => [tenant.uid] },
+      { collection: 'tripPaymentEvents', tenancy: { field: 'ownerUid', of: 'uid', nullable: false }, idOf: padEventId,
+        sql: 'SELECT id FROM public.trip_payment_events WHERE user_id = $1', params: (tenant) => [tenant.uid] },
+      { collection: 'tripInstallmentEvents', tenancy: { field: 'ownerUid', of: 'uid', nullable: false }, idOf: padEventId,
+        sql: 'SELECT id FROM public.trip_installment_events WHERE user_id = $1', params: (tenant) => [tenant.uid] },
+      { collection: 'tripNotifications', tenancy: { field: 'ownerUid', of: 'uid', nullable: false },
+        sql: 'SELECT id::text AS id FROM public.trip_notifications WHERE user_id = $1', params: (tenant) => [tenant.uid] },
+      { collection: 'tripTemplates', tenancy: { field: 'ownerUid', of: 'uid', nullable: false },
+        sql: 'SELECT id::text AS id FROM public.trip_templates WHERE user_id = $1', params: (tenant) => [tenant.uid] },
+      { collection: 'tripWhatsappTemplates', tenancy: { field: 'ownerUid', of: 'uid', nullable: false },
+        sql: 'SELECT id::text AS id FROM public.trip_whatsapp_templates WHERE user_id = $1', params: (tenant) => [tenant.uid] },
+      // The cleanup queue keeps its bigint identity as a plain id ('1'), unlike the four event tables the rehearsal
+      // zero-pads to 19 digits; padding it here invents ids the migration never wrote.
+      { collection: 'storageCleanupQueue', tenancy: { field: 'ownerUid', of: 'uid', nullable: false },
+        sql: 'SELECT id FROM public.trip_attachment_cleanup_queue WHERE user_id = $1', params: (tenant) => [tenant.uid] },
+    ],
+    controls: [
+      { name: 'trip sale price changed', collection: 'trips', check: { method: 'searchTrips' }, metric: 'fieldMismatches', kind: 'patch',
+        mutate: (fields) => ({ ...fields, salePrice: differentDecimal(fields.salePrice, 2) }) },
+      { name: 'trip deleted', collection: 'trips', check: { method: 'searchTrips' }, metric: 'missing', kind: 'delete' },
+      { name: 'trip duplicated under a new id', collection: 'trips', check: { method: 'searchTrips' }, metric: 'unexpected', kind: 'copy' },
+      { name: 'trip moved to another owner', collection: 'trips', check: { inventory: 'trips' }, metric: 'orphans', kind: 'patch',
+        mutate: (fields) => ({ ...fields, ownerUid: { stringValue: 'corruption-control-owner' } }) },
+      { name: 'instalment deleted', collection: 'tripInstallments', check: { inventory: 'tripInstallments' }, metric: 'missing', kind: 'delete' },
+      { name: 'financial audit record deleted', collection: 'tripFinancialAudit', check: { inventory: 'tripFinancialAudit' }, metric: 'missing', kind: 'delete' },
+      { name: 'trip that the source does not have', collection: 'trips', check: { method: 'searchTrips' }, metric: 'unexpected', kind: 'synthetic',
+        build: (tenant) => ({ table: 'trips', row: { user_id: tenant.uid, destination: 'Corruption control', client_name: 'Corruption control', travelers_count: 1, start_date: '2030-01-01', end_date: '2030-01-05', wholesale_cost: 1, sale_price: 2, amount_paid: 0, payment_status: 'unpaid', status: 'active', service_type: 'both' } }) },
+    ],
+  },
   supermarket: {
     businessType: 'supermarket',
     repository: (session) => new FirestoreSupermarketRepository(session),
@@ -382,8 +454,28 @@ function compare(method, sourceRows, targetRows) {
   const table = method.table;
   const known = new Set([...SOURCE_SCHEMA[table].columns.map((column) => column.name), ...Object.keys(method.embeds ?? {})]);
   const unknownColumns = new Set(sourceRows.flatMap((row) => Object.keys(row).filter((key) => !known.has(key))));
-  const source = new Map(sourceRows.map((row) => [keyOf(table, row), row]));
-  const target = new Map(targetRows.map((row) => [keyOf(table, row), row]));
+  /**
+   * A method that projects columns without the table's primary key has no key to match rows by: keyOf would
+   * render every row as "undefined" and the Map would keep only the last one, so a hundred rows would compare as
+   * one. Such a method states its own identity, and because a projection may legitimately repeat a value, rows
+   * are matched as a multiset: each row is its tuple plus how many identical tuples precede it. Position is
+   * deliberately not part of the key -- two orderings of the same rows are the same contents, and whether the
+   * order itself agrees is what the method's `order` check answers.
+   */
+  const identify = () => {
+    const seen = new Map();
+    return (row) => {
+      if (!method.key) return keyOf(table, row);
+      const tuple = method.key.map((column) => String(row[column])).join('|');
+      const occurrence = (seen.get(tuple) ?? 0) + 1;
+      seen.set(tuple, occurrence);
+      return `${tuple}#${occurrence}`;
+    };
+  };
+  const sourceIdentity = identify();
+  const targetIdentity = identify();
+  const source = new Map(sourceRows.map((row) => [sourceIdentity(row), row]));
+  const target = new Map(targetRows.map((row) => [targetIdentity(row), row]));
   const result = { sourceRows: source.size, targetRows: target.size, matched: 0, missing: 0, unexpected: 0, fieldMismatches: 0,
     orderMismatches: 0, mismatchedColumns: {}, unknownColumns: [...unknownColumns].sort() };
   for (const [key, row] of source) {
@@ -441,15 +533,33 @@ const report = { generatedAt: new Date().toISOString(), vertical, target: 'fires
 
 const docId = (document) => decodeURIComponent(document.name.split('/').pop());
 
+/**
+ * Where a vertical's documents live. Four verticals keep their collections under the business document, which is
+ * what sourceSchema.generated.ts spells as businesses/{businessId}/<collection>/{id}. Tourism is owner-scoped: its
+ * tables carry businessIdField null and paths like trips/{id}, so its collections are at the root. A spec says so
+ * once, here, rather than the inventory, the cross-tenant probe and the controls each assuming the business form.
+ */
+const basePathOf = (tenant) => (spec.rootCollections ? '' : `businesses/${encodeURIComponent(tenant.businessId)}`);
+const collectionPath = (tenant, name) => { const base = basePathOf(tenant); return base ? `${base}/${name}` : name; };
+
 async function inventoryOf(tenant, item) {
-  const base = `businesses/${encodeURIComponent(tenant.businessId)}`;
-  const documents = await listDocuments(`${base}/${item.collection}`);
-  const ids = documents.map(docId);
+  const base = basePathOf(tenant);
   const expected = new Set(tenant.inventory[item.collection]);
+  /**
+   * A business-scoped collection is already one tenant's, because the path says so. A root collection holds every
+   * tenant's documents, so this tenant's set is the documents it owns plus the ids it expects. Keeping the expected
+   * ids matters: the control that moves a trip to another owner rewrites exactly that field, and dropping the
+   * document for it would report the trip missing instead of orphaned, quietly turning a control into a no-op.
+   */
+  const all = await listDocuments(collectionPath(tenant, item.collection));
+  const documents = spec.rootCollections
+    ? all.filter((document) => document.fields?.ownerUid?.stringValue === tenant.uid || expected.has(docId(document)))
+    : all;
+  const ids = documents.map(docId);
   // A plate index document must agree with the source and with the migrated vehicle it names, and every migrated
   // vehicle must be indexed under its own plate: the plate uniqueness the Rules enforce depends on both.
   const vehicles = item.collection === 'vehiclePlates'
-    ? new Map((await listDocuments(`${base}/vehicles`)).map((document) => [docId(document), document.fields?.plateNumber?.stringValue]))
+    ? new Map((await listDocuments(collectionPath(tenant, 'vehicles'))).map((document) => [docId(document), document.fields?.plateNumber?.stringValue]))
     : null;
   let orphans = documents.filter((document) => {
     const fields = document.fields ?? {};
@@ -527,7 +637,9 @@ try {
       for (const item of spec.inventory.filter((candidate) => !candidate.derived)) {
         entry.crossTenant.attempts += 1;
         try {
-          await getDocs(collection(intruder.db, 'businesses', tenant.businessId, item.collection));
+          await getDocs(spec.rootCollections
+            ? collection(intruder.db, item.collection)
+            : collection(intruder.db, 'businesses', tenant.businessId, item.collection));
         } catch (error) {
           if (error?.code === 'permission-denied') entry.crossTenant.denied += 1; else throw error;
         }
@@ -535,7 +647,7 @@ try {
     }
 
     for (const control of spec.controls) {
-      const base = `businesses/${encodeURIComponent(tenant.businessId)}/${control.collection}`;
+      const base = collectionPath(tenant, control.collection);
       const existing = (await listDocuments(base)).filter((document) => tenant.inventory[control.collection].includes(docId(document)));
       if (control.kind !== 'synthetic' && existing.length === 0) {
         report.corruptionControls.push({ name: control.name, tenant: hash(tenant.businessId), status: 'NOT_APPLICABLE_NO_ROWS' });

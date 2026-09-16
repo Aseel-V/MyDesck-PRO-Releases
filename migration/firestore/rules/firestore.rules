@@ -53,31 +53,55 @@ service cloud.firestore {
       return activeTenant(data.businessId)
         && data.ownerUid == get(businessPath(data.businessId)).data.ownerUid;
     }
-    function op(id) { return getAfter(operationPath(id)).data; }
-    function operationMatches(id, types, businessId, tripId) {
-      let operation = getAfter(operationPath(id)).data;
-      return existsAfter(operationPath(id))
-        && operation.operationId == id
-        && operation.actorUid == request.auth.uid
-        && operation.businessId == businessId
-        && operation.tripId == tripId
-        && operation.type in types;
-    }
-    function changedOnly(fields) {
-      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
-    }
     function exactMoney(value, units, currency) {
       return value is map && value.units is int && value.units == units
         && value.unitsText is string && value.unitsText == string(units)
         && value.scale == 2
         && (!('currency' in value) || value.currency == currency);
     }
+    // ---- Tourism: the operation envelope and the trip ledger ------------------------------------
+    //
+    // Every trip write belongs to one immutable sparkOperations document written in the same commit.
+    // `createdAt == request.time` is what proves the operation belongs to THIS request: an operation
+    // that already exists cannot be pointed at again to authorise a later write.
+    function planIndexPath(id) { return /databases/$(database)/documents/tripPlans/$(id); }
+    function freshOperation(id) {
+      return existsAfter(operationPath(id))
+        && getAfter(operationPath(id)).data.operationId == id
+        && getAfter(operationPath(id)).data.actorUid == request.auth.uid
+        && getAfter(operationPath(id)).data.createdAt == request.time;
+    }
+    function tripOperation(data, tripId, types) {
+      let operation = getAfter(operationPath(data.lastOperationId)).data;
+      return freshOperation(data.lastOperationId)
+        && operation.ownerUid == data.ownerUid
+        && operation.businessId == data.businessId
+        && operation.tripId == tripId
+        && operation.type in types;
+    }
+    // A delete carries no document to read a request id from, so the purge operation's id is derived
+    // from the trip. permanently_delete_trips is the only statement that removes a trip or its rows.
+    function purgeOperation(tripId) {
+      let id = request.auth.uid + '__purge__' + tripId;
+      return freshOperation(id)
+        && getAfter(operationPath(id)).data.type == 'trip-purge'
+        && getAfter(operationPath(id)).data.tripId == tripId;
+    }
+    // For the rows a statement deletes while the trip itself survives (the unpaid schedule a new plan
+    // replaces): the operation the trip document ends this commit pointing at.
+    function commitOperation(tripId, types) {
+      return existsAfter(tripPath(tripId))
+        && tripOperation(getAfter(tripPath(tripId)).data, tripId, types);
+    }
+
+    // A trip carries its money twice: the source's exact NUMERIC columns and the minor units the Rules
+    // do arithmetic in. exactMoney binds the two, the GENERATED ALWAYS columns are recomputed here, and
+    // the collected total is checked against the payment ledger instead of being believed.
     function validTripMoney(data) {
       return data.moneyScale == 2
-        && data.salePriceMinor is int && data.salePriceMinor >= 0
-        && data.wholesaleCostMinor is int && data.wholesaleCostMinor >= 0
-        && data.amountPaidMinor is int && data.amountPaidMinor >= 0
-        && data.amountPaidMinor <= data.salePriceMinor
+        && data.salePriceMinor is int
+        && data.wholesaleCostMinor is int
+        && data.amountPaidMinor is int
         && data.amountDueMinor == data.salePriceMinor - data.amountPaidMinor
         && data.profitMinor == data.salePriceMinor - data.wholesaleCostMinor
         && exactMoney(data.salePrice, data.salePriceMinor, data.currency)
@@ -85,45 +109,73 @@ service cloud.firestore {
         && exactMoney(data.amountPaid, data.amountPaidMinor, data.currency)
         && exactMoney(data.amountDue, data.amountDueMinor, data.currency)
         && exactMoney(data.profit, data.profitMinor, data.currency)
-        && data.paymentStatus == (data.amountPaidMinor == 0 ? 'unpaid'
-          : (data.amountPaidMinor == data.salePriceMinor ? 'paid' : 'partial'));
+        && validSearchDocument(data)
+        && tripLedgerBound(data);
     }
-    function validTripUpdate(tripId) {
-      let operation = getAfter(operationPath(request.resource.data.lastOperationId)).data;
-      let structural = request.resource.data.ownerUid == resource.data.ownerUid
-        && request.resource.data.businessId == resource.data.businessId
-        && request.resource.data.id == resource.data.id
-        && request.resource.data.userId == resource.data.userId
-        && request.resource.data.schemaVersion == resource.data.schemaVersion
-        && request.resource.data.revision == resource.data.revision + 1
-        && operation.operationId == request.resource.data.lastOperationId
-        && operation.actorUid == request.auth.uid
-        && operation.businessId == resource.data.businessId
-        && operation.tripId == tripId
-        && operation.type in ['trip-edit','payment','installment-payment','trip-state']
-        && operation.beforeRevision == resource.data.revision
-        && operation.afterRevision == request.resource.data.revision
-        && validTripMoney(request.resource.data);
-      return structural && (
-        (operation.type == 'trip-edit'
-          && request.resource.data.amountPaidMinor == resource.data.amountPaidMinor
-          && request.resource.data.isDeleted == resource.data.isDeleted)
-        || (operation.type in ['payment','installment-payment']
-          && operation.currency == resource.data.currency
-          && operation.amountMinor is int && operation.amountMinor > 0
-          && request.resource.data.salePriceMinor == resource.data.salePriceMinor
-          && request.resource.data.wholesaleCostMinor == resource.data.wholesaleCostMinor
-          && request.resource.data.currency == resource.data.currency
-          && request.resource.data.amountPaidMinor
-            == resource.data.amountPaidMinor + operation.amountMinor
-          && request.resource.data.isDeleted == resource.data.isDeleted)
-        || (operation.type == 'trip-state'
-          && request.resource.data.salePriceMinor == resource.data.salePriceMinor
-          && request.resource.data.wholesaleCostMinor == resource.data.wholesaleCostMinor
-          && request.resource.data.amountPaidMinor == resource.data.amountPaidMinor
-          && changedOnly(['status','isDeleted','deletedAt','deletedBy','revision',
-            'lastOperationId','updatedAt','updatedAtMicros']))
-      );
+    // search_document GENERATED ALWAYS: destination, client, hotel, status and payment status, lowered.
+    function validSearchDocument(data) {
+      let hotel = data.get('hotelName', null) == null ? '' : data.hotelName;
+      return data.searchDocument
+        == (data.destination + ' ' + data.clientName + ' ' + hotel + ' ' + data.status + ' ' + data.paymentStatus).lower();
+    }
+    // tripPlans/{tripId} exists exactly when the trip has a live native plan. With one, the collected
+    // total is least(sale, cashConfirmed + visaConfirmed), the canonical summary's figure. Visa
+    // collection is date-driven in that contract - an instalment whose due date has passed counts,
+    // and the receipt columns are audit-only - so the two figures are carried on the plan and bounded
+    // there: a rule cannot recompute them without reading the whole schedule. Without a plan the
+    // payload's own amount stands, which is what the source stores for a legacy trip.
+    function tripLedgerBound(data) {
+      return !existsAfter(planIndexPath(data.id)) || tripLedgerDerived(data);
+    }
+    // The source writes the collected total by two paths: the payment sync uses the plan's receipts, and
+    // save_trip_transaction's last step uses the date-derived summary. Both are bounded by the plan's card total, and a
+    // write must equal one of them exactly.
+    function tripLedgerDerived(data) {
+      let plan = getAfter(planPath(getAfter(planIndexPath(data.id)).data.planId)).data;
+      let scheduled = plan.cashConfirmedMinor + plan.visaConfirmedMinor;
+      let receipted = plan.cashConfirmedMinor + plan.visaReceiptedMinor;
+      let confirmed = data.amountPaidMinor;
+      return plan.tripId == data.id
+        && plan.ownerUid == data.ownerUid
+        && confirmed <= data.salePriceMinor
+        && (confirmed == (data.salePriceMinor < scheduled ? data.salePriceMinor : scheduled)
+          || confirmed == (data.salePriceMinor < receipted ? data.salePriceMinor : receipted))
+        && data.paymentStatus == (confirmed <= 0 ? 'unpaid' : (confirmed >= data.salePriceMinor ? 'paid' : 'partial'));
+    }
+
+    // The plan's own CHECK constraints, and the cash rule enforce_cash_payment_plan_row applies.
+    function validPlanShape(d) {
+      return d.cardPaidMinor <= d.cardTotalMinor
+        && d.cashPaidMinor <= d.cashTotalMinor
+        && d.visaConfirmedMinor is int
+        && d.visaConfirmedMinor >= 0
+        && d.visaConfirmedMinor <= d.cardTotalMinor
+        && d.visaReceiptedMinor is int
+        && d.visaReceiptedMinor >= 0
+        && d.visaReceiptedMinor <= d.cardTotalMinor
+        && d.cashConfirmedMinor == (d.cashTotalMinor < d.cashPaidMinor ? d.cashTotalMinor : d.cashPaidMinor)
+        && (d.source == 'legacy' || d.cardTotalMinor + d.cashTotalMinor > 0)
+        && (d.source == 'legacy'
+          || (d.cardTotalMinor == 0 && d.installmentCount == 0)
+          || (d.cardTotalMinor > 0 && d.installmentCount >= 1))
+        && (d.paymentMethod != 'cash'
+          || (d.cardTotalMinor == 0 && d.installmentCount == 0 && d.cardPaidMinor == 0));
+    }
+    // The index is the source's UNIQUE (trip_id) WHERE deleted_at IS NULL AND status <> 'cancelled':
+    // a live plan must be the one the index names, so a second live plan cannot exist for a trip.
+    function planIndexNames(tripId, planId) {
+      return existsAfter(planIndexPath(tripId))
+        && getAfter(planIndexPath(tripId)).data.planId == planId
+        && getAfter(planIndexPath(tripId)).data.tripId == tripId
+        && getAfter(planIndexPath(tripId)).data.ownerUid == request.auth.uid;
+    }
+    function planIsLive(d) { return d.status != 'cancelled' && d.isDeleted == false && d.source == 'native'; }
+    // One installment changes per write, so the plan's receipt total moves by exactly its delta.
+    function receiptMoved(planId, before, after) {
+      return getAfter(planPath(planId)).data.cardPaidMinor
+        == get(planPath(planId)).data.cardPaidMinor
+          - (before.paidAt == null ? 0 : before.paidAmountMinor)
+          + (after.paidAt == null ? 0 : after.paidAmountMinor);
     }
 
     // SCHEMA-VALIDATORS:BEGIN (generated by migration/firestore/tools/generate-rules-schema.mjs; do not edit)
@@ -916,6 +968,570 @@ service cloud.firestore {
         !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
       ].hasOnly([true]));
     }
+    function sv_trips(d) {
+      return d.keys().hasOnly(['airlineName', 'amountDue', 'amountDueMinor', 'amountPaid', 'amountPaidMinor', 'arrivalAirport', 'arrivalDatetime', 'arrivalDatetimeMicros', 'attachments', 'attachmentsEncoding', 'attachmentsJson', 'attachmentsTextReason', 'boardBasis', 'bookingReference', 'businessId', 'cardPaidAmount', 'cashPaidAmount', 'checklistFlight', 'checklistHotel', 'checklistPayment', 'clientName', 'clientPhone', 'createdAt', 'createdAtMicros', 'createdBy', 'currency', 'deletedAt', 'deletedAtMicros', 'deletedBy', 'departureAirport', 'departureDatetime', 'departureDatetimeMicros', 'destination', 'endDate', 'exchangeRate', 'exportToPdf', 'flightNumber', 'hotelName', 'id', 'isDeleted', 'itinerary', 'itineraryEncoding', 'itineraryJson', 'itineraryTextReason', 'lastOperationId', 'migrationExcludedFields', 'migrationTransformVersion', 'moneyScale', 'notes', 'ownerUid', 'paymentDate', 'paymentMethod', 'paymentStatus', 'payments', 'paymentsEncoding', 'paymentsJson', 'paymentsTextReason', 'profit', 'profitMinor', 'profitPercentage', 'returnArrivalAirport', 'returnArrivalDatetime', 'returnArrivalDatetimeMicros', 'returnDepartureAirport', 'returnDepartureDatetime', 'returnDepartureDatetimeMicros', 'returnFlightNumber', 'revision', 'roomType', 'roomTypeEncoding', 'roomTypeJson', 'roomTypeTextReason', 'saleCurrency', 'saleOriginalAmount', 'salePrice', 'salePriceMinor', 'schemaVersion', 'searchDocument', 'serviceType', 'startDate', 'status', 'ticketClass', 'ticketCostIls', 'ticketNotes', 'transformVersion', 'travelers', 'travelersCount', 'travelersEncoding', 'travelersJson', 'travelersTextReason', 'tripType', 'updatedAt', 'updatedAtMicros', 'userId', 'wholesaleCost', 'wholesaleCostMinor', 'wholesaleCurrency', 'wholesaleOriginalAmount']) && [
+        d.id is string,
+        d.userId is string,
+        d.destination is string,
+        d.clientName is string,
+        d.travelersCount is int,
+        d.startDate.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}'),
+        d.endDate.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}'),
+        sfDecimalScaled(d.wholesaleCost, 2, '-?[0-9]{1,12}'),
+        sfDecimalScaled(d.salePrice, 2, '-?[0-9]{1,12}'),
+        d.profit == null || sfDecimalScaled(d.profit, 2, '-?[0-9]{1,12}'),
+        d.profitPercentage == null || sfDecimalScaled(d.profitPercentage, 2, '-?[0-9]{1,6}'),
+        d.paymentStatus in ['paid', 'partial', 'unpaid'],
+        sfDecimalScaled(d.amountPaid, 2, '-?[0-9]{1,12}'),
+        d.amountDue == null || sfDecimalScaled(d.amountDue, 2, '-?[0-9]{1,12}'),
+        d.status in ['active', 'completed', 'cancelled', 'archived'],
+        d.createdAt == null || d.createdAt is timestamp,
+        d.get('createdAtMicros', '0').matches('-?[0-9]+'),
+        d.updatedAt == null || d.updatedAt is timestamp,
+        d.get('updatedAtMicros', '0').matches('-?[0-9]+'),
+        d.currency in [null, 'USD', 'EUR', 'ILS'],
+        d.exchangeRate == null || sfDecimal(d.exchangeRate),
+        sfJson(d.get('attachmentsEncoding', null), d.get('attachments', null), d.get('attachmentsJson', null)),
+        sfJson(d.get('itineraryEncoding', null), d.get('itinerary', null), d.get('itineraryJson', null)),
+        sfJson(d.get('travelersEncoding', null), d.get('travelers', null), d.get('travelersJson', null)),
+        d.paymentDate == null || d.paymentDate.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}'),
+        sfJson(d.get('paymentsEncoding', null), d.get('payments', null), d.get('paymentsJson', null)),
+        d.wholesaleOriginalAmount == null || sfDecimal(d.wholesaleOriginalAmount),
+        d.saleOriginalAmount == null || sfDecimal(d.saleOriginalAmount),
+        sfJson(d.get('roomTypeEncoding', null), d.get('roomType', null), d.get('roomTypeJson', null)),
+        d.serviceType in ['ticket', 'hotel', 'both'],
+        d.tripType in [null, 'one_way', 'round_trip'],
+        d.departureDatetime == null || d.departureDatetime is timestamp,
+        d.get('departureDatetimeMicros', '0').matches('-?[0-9]+'),
+        d.arrivalDatetime == null || d.arrivalDatetime is timestamp,
+        d.get('arrivalDatetimeMicros', '0').matches('-?[0-9]+'),
+        d.returnDepartureDatetime == null || d.returnDepartureDatetime is timestamp,
+        d.get('returnDepartureDatetimeMicros', '0').matches('-?[0-9]+'),
+        d.returnArrivalDatetime == null || d.returnArrivalDatetime is timestamp,
+        d.get('returnArrivalDatetimeMicros', '0').matches('-?[0-9]+'),
+        d.ticketClass in [null, 'economy', 'premium_economy', 'business', 'first'],
+        d.ticketCostIls == null || sfDecimal(d.ticketCostIls),
+        d.paymentMethod in [null, 'card', 'cash', 'mixed'],
+        d.cardPaidAmount == null || sfDecimal(d.cardPaidAmount),
+        d.cardPaidAmount == null || sfDecimalValue(d.cardPaidAmount) >= 0,
+        d.cashPaidAmount == null || sfDecimal(d.cashPaidAmount),
+        d.cashPaidAmount == null || sfDecimalValue(d.cashPaidAmount) >= 0,
+        d.deletedAt == null || d.deletedAt is timestamp,
+        d.get('deletedAtMicros', '0').matches('-?[0-9]+'),
+        sfStrings([d.notes, d.boardBasis, d.clientPhone, d.wholesaleCurrency, d.saleCurrency, d.hotelName, d.airlineName, d.flightNumber, d.bookingReference, d.departureAirport, d.arrivalAirport, d.returnFlightNumber, d.returnDepartureAirport, d.returnArrivalAirport, d.ticketNotes, d.deletedBy, d.searchDocument]),
+        sfBools([d.exportToPdf, d.checklistFlight, d.checklistHotel, d.checklistPayment]),
+        d.get('schemaVersion', 1) == 1
+      ].hasOnly([true]);
+    }
+    function svu_trips(changed, d) {
+      return changed.hasOnly(['airlineName', 'amountDue', 'amountDueMinor', 'amountPaid', 'amountPaidMinor', 'arrivalAirport', 'arrivalDatetime', 'arrivalDatetimeMicros', 'attachments', 'attachmentsEncoding', 'attachmentsJson', 'attachmentsTextReason', 'boardBasis', 'bookingReference', 'businessId', 'cardPaidAmount', 'cashPaidAmount', 'checklistFlight', 'checklistHotel', 'checklistPayment', 'clientName', 'clientPhone', 'createdAt', 'createdAtMicros', 'createdBy', 'currency', 'deletedAt', 'deletedAtMicros', 'deletedBy', 'departureAirport', 'departureDatetime', 'departureDatetimeMicros', 'destination', 'endDate', 'exchangeRate', 'exportToPdf', 'flightNumber', 'hotelName', 'id', 'isDeleted', 'itinerary', 'itineraryEncoding', 'itineraryJson', 'itineraryTextReason', 'lastOperationId', 'migrationExcludedFields', 'migrationTransformVersion', 'moneyScale', 'notes', 'ownerUid', 'paymentDate', 'paymentMethod', 'paymentStatus', 'payments', 'paymentsEncoding', 'paymentsJson', 'paymentsTextReason', 'profit', 'profitMinor', 'profitPercentage', 'returnArrivalAirport', 'returnArrivalDatetime', 'returnArrivalDatetimeMicros', 'returnDepartureAirport', 'returnDepartureDatetime', 'returnDepartureDatetimeMicros', 'returnFlightNumber', 'revision', 'roomType', 'roomTypeEncoding', 'roomTypeJson', 'roomTypeTextReason', 'saleCurrency', 'saleOriginalAmount', 'salePrice', 'salePriceMinor', 'schemaVersion', 'searchDocument', 'serviceType', 'startDate', 'status', 'ticketClass', 'ticketCostIls', 'ticketNotes', 'transformVersion', 'travelers', 'travelersCount', 'travelersEncoding', 'travelersJson', 'travelersTextReason', 'tripType', 'updatedAt', 'updatedAtMicros', 'userId', 'wholesaleCost', 'wholesaleCostMinor', 'wholesaleCurrency', 'wholesaleOriginalAmount']) && (changed.size() > 22 ? sv_trips(d) : [
+        !('id' in changed) || (d.id is string),
+        !('userId' in changed) || (d.userId is string),
+        !('destination' in changed) || (d.destination is string),
+        !('clientName' in changed) || (d.clientName is string),
+        !('travelersCount' in changed) || (d.travelersCount is int),
+        !('startDate' in changed) || (d.startDate.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')),
+        !('endDate' in changed) || (d.endDate.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')),
+        !('wholesaleCost' in changed) || (sfDecimalScaled(d.wholesaleCost, 2, '-?[0-9]{1,12}')),
+        !('salePrice' in changed) || (sfDecimalScaled(d.salePrice, 2, '-?[0-9]{1,12}')),
+        !('profit' in changed) || (d.profit == null || sfDecimalScaled(d.profit, 2, '-?[0-9]{1,12}')),
+        !('profitPercentage' in changed) || (d.profitPercentage == null || sfDecimalScaled(d.profitPercentage, 2, '-?[0-9]{1,6}')),
+        !('paymentStatus' in changed) || (d.paymentStatus in ['paid', 'partial', 'unpaid']),
+        !('amountPaid' in changed) || (sfDecimalScaled(d.amountPaid, 2, '-?[0-9]{1,12}')),
+        !('amountDue' in changed) || (d.amountDue == null || sfDecimalScaled(d.amountDue, 2, '-?[0-9]{1,12}')),
+        !('status' in changed) || (d.status in ['active', 'completed', 'cancelled', 'archived']),
+        !changed.hasAny(['createdAt', 'createdAtMicros']) || ((d.createdAt == null || d.createdAt is timestamp) && (d.get('createdAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['updatedAt', 'updatedAtMicros']) || ((d.updatedAt == null || d.updatedAt is timestamp) && (d.get('updatedAtMicros', '0').matches('-?[0-9]+'))),
+        !('currency' in changed) || (d.currency in [null, 'USD', 'EUR', 'ILS']),
+        !('exchangeRate' in changed) || (d.exchangeRate == null || sfDecimal(d.exchangeRate)),
+        !changed.hasAny(['attachments', 'attachmentsEncoding', 'attachmentsJson', 'attachmentsTextReason']) || (sfJson(d.get('attachmentsEncoding', null), d.get('attachments', null), d.get('attachmentsJson', null))),
+        !changed.hasAny(['itinerary', 'itineraryEncoding', 'itineraryJson', 'itineraryTextReason']) || (sfJson(d.get('itineraryEncoding', null), d.get('itinerary', null), d.get('itineraryJson', null))),
+        !changed.hasAny(['travelers', 'travelersEncoding', 'travelersJson', 'travelersTextReason']) || (sfJson(d.get('travelersEncoding', null), d.get('travelers', null), d.get('travelersJson', null))),
+        !('paymentDate' in changed) || (d.paymentDate == null || d.paymentDate.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')),
+        !changed.hasAny(['payments', 'paymentsEncoding', 'paymentsJson', 'paymentsTextReason']) || (sfJson(d.get('paymentsEncoding', null), d.get('payments', null), d.get('paymentsJson', null))),
+        !('wholesaleOriginalAmount' in changed) || (d.wholesaleOriginalAmount == null || sfDecimal(d.wholesaleOriginalAmount)),
+        !('saleOriginalAmount' in changed) || (d.saleOriginalAmount == null || sfDecimal(d.saleOriginalAmount)),
+        !changed.hasAny(['roomType', 'roomTypeEncoding', 'roomTypeJson', 'roomTypeTextReason']) || (sfJson(d.get('roomTypeEncoding', null), d.get('roomType', null), d.get('roomTypeJson', null))),
+        !('serviceType' in changed) || (d.serviceType in ['ticket', 'hotel', 'both']),
+        !('tripType' in changed) || (d.tripType in [null, 'one_way', 'round_trip']),
+        !changed.hasAny(['departureDatetime', 'departureDatetimeMicros']) || ((d.departureDatetime == null || d.departureDatetime is timestamp) && (d.get('departureDatetimeMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['arrivalDatetime', 'arrivalDatetimeMicros']) || ((d.arrivalDatetime == null || d.arrivalDatetime is timestamp) && (d.get('arrivalDatetimeMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['returnDepartureDatetime', 'returnDepartureDatetimeMicros']) || ((d.returnDepartureDatetime == null || d.returnDepartureDatetime is timestamp) && (d.get('returnDepartureDatetimeMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['returnArrivalDatetime', 'returnArrivalDatetimeMicros']) || ((d.returnArrivalDatetime == null || d.returnArrivalDatetime is timestamp) && (d.get('returnArrivalDatetimeMicros', '0').matches('-?[0-9]+'))),
+        !('ticketClass' in changed) || (d.ticketClass in [null, 'economy', 'premium_economy', 'business', 'first']),
+        !('ticketCostIls' in changed) || (d.ticketCostIls == null || sfDecimal(d.ticketCostIls)),
+        !('paymentMethod' in changed) || (d.paymentMethod in [null, 'card', 'cash', 'mixed']),
+        !('cardPaidAmount' in changed) || (d.cardPaidAmount == null || sfDecimal(d.cardPaidAmount)),
+        !('cardPaidAmount' in changed) || (d.cardPaidAmount == null || sfDecimalValue(d.cardPaidAmount) >= 0),
+        !('cashPaidAmount' in changed) || (d.cashPaidAmount == null || sfDecimal(d.cashPaidAmount)),
+        !('cashPaidAmount' in changed) || (d.cashPaidAmount == null || sfDecimalValue(d.cashPaidAmount) >= 0),
+        !changed.hasAny(['deletedAt', 'deletedAtMicros']) || ((d.deletedAt == null || d.deletedAt is timestamp) && (d.get('deletedAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['notes', 'boardBasis', 'clientPhone', 'wholesaleCurrency', 'saleCurrency', 'hotelName', 'airlineName', 'flightNumber', 'bookingReference', 'departureAirport', 'arrivalAirport', 'returnFlightNumber', 'returnDepartureAirport', 'returnArrivalAirport', 'ticketNotes', 'deletedBy', 'searchDocument']) || (sfStrings([d.notes, d.boardBasis, d.clientPhone, d.wholesaleCurrency, d.saleCurrency, d.hotelName, d.airlineName, d.flightNumber, d.bookingReference, d.departureAirport, d.arrivalAirport, d.returnFlightNumber, d.returnDepartureAirport, d.returnArrivalAirport, d.ticketNotes, d.deletedBy, d.searchDocument])),
+        !changed.hasAny(['exportToPdf', 'checklistFlight', 'checklistHotel', 'checklistPayment']) || (sfBools([d.exportToPdf, d.checklistFlight, d.checklistHotel, d.checklistPayment])),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
+    function sv_trip_payment_plans(d) {
+      return d.keys().hasOnly(['businessId', 'cardPaidMinor', 'cardTotalMinor', 'cashConfirmedMinor', 'cashPaidMinor', 'cashTotalMinor', 'createdAt', 'createdAtMicros', 'createdBy', 'currency', 'deletedAt', 'deletedAtMicros', 'firstInstallmentDate', 'id', 'installmentCount', 'isDeleted', 'lastOperationId', 'migrationExcludedFields', 'migrationTransformVersion', 'notes', 'ownerUid', 'paymentMethod', 'schemaVersion', 'source', 'status', 'transformVersion', 'tripId', 'updatedAt', 'updatedAtMicros', 'userId', 'visaConfirmedMinor', 'visaReceiptedMinor']) && [
+        d.id is string,
+        d.tripId is string,
+        d.userId is string,
+        d.paymentMethod in ['card', 'cash', 'mixed'],
+        d.currency is string,
+        d.currency.size() >= 3,
+        d.currency.size() <= 8,
+        d.cardTotalMinor is int,
+        d.cardTotalMinor >= 0,
+        d.cashTotalMinor is int,
+        d.cashTotalMinor >= 0,
+        d.cardPaidMinor is int,
+        d.cardPaidMinor >= 0,
+        d.cashPaidMinor is int,
+        d.cashPaidMinor >= 0,
+        d.installmentCount is int,
+        (d.installmentCount >= 0 && d.installmentCount <= 120),
+        d.firstInstallmentDate == null || d.firstInstallmentDate.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}'),
+        d.source in ['native', 'legacy'],
+        d.status in ['active', 'completed', 'cancelled'],
+        d.deletedAt == null || d.deletedAt is timestamp,
+        d.get('deletedAtMicros', '0').matches('-?[0-9]+'),
+        d.createdAt is timestamp,
+        d.get('createdAtMicros', '0').matches('-?[0-9]+'),
+        d.updatedAt is timestamp,
+        d.get('updatedAtMicros', '0').matches('-?[0-9]+'),
+        d.notes == null || d.notes is string,
+        d.get('schemaVersion', 1) == 1
+      ].hasOnly([true]);
+    }
+    function svu_trip_payment_plans(changed, d) {
+      return changed.hasOnly(['businessId', 'cardPaidMinor', 'cardTotalMinor', 'cashConfirmedMinor', 'cashPaidMinor', 'cashTotalMinor', 'createdAt', 'createdAtMicros', 'createdBy', 'currency', 'deletedAt', 'deletedAtMicros', 'firstInstallmentDate', 'id', 'installmentCount', 'isDeleted', 'lastOperationId', 'migrationExcludedFields', 'migrationTransformVersion', 'notes', 'ownerUid', 'paymentMethod', 'schemaVersion', 'source', 'status', 'transformVersion', 'tripId', 'updatedAt', 'updatedAtMicros', 'userId', 'visaConfirmedMinor', 'visaReceiptedMinor']) && (changed.size() > 13 ? sv_trip_payment_plans(d) : [
+        !('id' in changed) || (d.id is string),
+        !('tripId' in changed) || (d.tripId is string),
+        !('userId' in changed) || (d.userId is string),
+        !('paymentMethod' in changed) || (d.paymentMethod in ['card', 'cash', 'mixed']),
+        !('currency' in changed) || (d.currency is string),
+        !('currency' in changed) || (d.currency.size() >= 3),
+        !('currency' in changed) || (d.currency.size() <= 8),
+        !('cardTotalMinor' in changed) || (d.cardTotalMinor is int),
+        !('cardTotalMinor' in changed) || (d.cardTotalMinor >= 0),
+        !('cashTotalMinor' in changed) || (d.cashTotalMinor is int),
+        !('cashTotalMinor' in changed) || (d.cashTotalMinor >= 0),
+        !('cardPaidMinor' in changed) || (d.cardPaidMinor is int),
+        !('cardPaidMinor' in changed) || (d.cardPaidMinor >= 0),
+        !('cashPaidMinor' in changed) || (d.cashPaidMinor is int),
+        !('cashPaidMinor' in changed) || (d.cashPaidMinor >= 0),
+        !('installmentCount' in changed) || (d.installmentCount is int),
+        !('installmentCount' in changed) || ((d.installmentCount >= 0 && d.installmentCount <= 120)),
+        !('firstInstallmentDate' in changed) || (d.firstInstallmentDate == null || d.firstInstallmentDate.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')),
+        !('source' in changed) || (d.source in ['native', 'legacy']),
+        !('status' in changed) || (d.status in ['active', 'completed', 'cancelled']),
+        !changed.hasAny(['deletedAt', 'deletedAtMicros']) || ((d.deletedAt == null || d.deletedAt is timestamp) && (d.get('deletedAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['createdAt', 'createdAtMicros']) || ((d.createdAt is timestamp) && (d.get('createdAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['updatedAt', 'updatedAtMicros']) || ((d.updatedAt is timestamp) && (d.get('updatedAtMicros', '0').matches('-?[0-9]+'))),
+        !('notes' in changed) || (d.notes == null || d.notes is string),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
+    function sv_trip_installments(d) {
+      return d.keys().hasOnly(['businessId', 'createdAt', 'createdAtMicros', 'createdBy', 'dueDate', 'expectedAmountMinor', 'id', 'installmentNumber', 'isDeleted', 'lastOperationId', 'migrationExcludedFields', 'migrationTransformVersion', 'notes', 'ownerUid', 'paidAmountMinor', 'paidAt', 'paidAtMicros', 'paymentPlanId', 'schemaVersion', 'status', 'transformVersion', 'tripId', 'updatedAt', 'updatedAtMicros', 'userId']) && [
+        d.id is string,
+        d.paymentPlanId is string,
+        d.tripId is string,
+        d.userId is string,
+        d.installmentNumber is int,
+        (d.installmentNumber >= 1 && d.installmentNumber <= 120),
+        d.dueDate.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}'),
+        d.expectedAmountMinor is int,
+        d.expectedAmountMinor >= 1,
+        d.paidAmountMinor is int,
+        d.paidAmountMinor >= 0,
+        d.paidAt == null || d.paidAt is timestamp,
+        d.get('paidAtMicros', '0').matches('-?[0-9]+'),
+        d.status in ['scheduled', 'paid', 'partially_paid', 'cancelled'],
+        d.createdAt is timestamp,
+        d.get('createdAtMicros', '0').matches('-?[0-9]+'),
+        d.updatedAt is timestamp,
+        d.get('updatedAtMicros', '0').matches('-?[0-9]+'),
+        d.notes == null || d.notes is string,
+        d.get('schemaVersion', 1) == 1
+      ].hasOnly([true]);
+    }
+    function svu_trip_installments(changed, d) {
+      return changed.hasOnly(['businessId', 'createdAt', 'createdAtMicros', 'createdBy', 'dueDate', 'expectedAmountMinor', 'id', 'installmentNumber', 'isDeleted', 'lastOperationId', 'migrationExcludedFields', 'migrationTransformVersion', 'notes', 'ownerUid', 'paidAmountMinor', 'paidAt', 'paidAtMicros', 'paymentPlanId', 'schemaVersion', 'status', 'transformVersion', 'tripId', 'updatedAt', 'updatedAtMicros', 'userId']) && (changed.size() > 9 ? sv_trip_installments(d) : [
+        !('id' in changed) || (d.id is string),
+        !('paymentPlanId' in changed) || (d.paymentPlanId is string),
+        !('tripId' in changed) || (d.tripId is string),
+        !('userId' in changed) || (d.userId is string),
+        !('installmentNumber' in changed) || (d.installmentNumber is int),
+        !('installmentNumber' in changed) || ((d.installmentNumber >= 1 && d.installmentNumber <= 120)),
+        !('dueDate' in changed) || (d.dueDate.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')),
+        !('expectedAmountMinor' in changed) || (d.expectedAmountMinor is int),
+        !('expectedAmountMinor' in changed) || (d.expectedAmountMinor >= 1),
+        !('paidAmountMinor' in changed) || (d.paidAmountMinor is int),
+        !('paidAmountMinor' in changed) || (d.paidAmountMinor >= 0),
+        !changed.hasAny(['paidAt', 'paidAtMicros']) || ((d.paidAt == null || d.paidAt is timestamp) && (d.get('paidAtMicros', '0').matches('-?[0-9]+'))),
+        !('status' in changed) || (d.status in ['scheduled', 'paid', 'partially_paid', 'cancelled']),
+        !changed.hasAny(['createdAt', 'createdAtMicros']) || ((d.createdAt is timestamp) && (d.get('createdAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['updatedAt', 'updatedAtMicros']) || ((d.updatedAt is timestamp) && (d.get('updatedAtMicros', '0').matches('-?[0-9]+'))),
+        !('notes' in changed) || (d.notes == null || d.notes is string),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
+    function sv_trip_activity_log(d) {
+      return d.keys().hasOnly(['activityType', 'actorUserId', 'businessId', 'createdAt', 'createdAtMicros', 'createdBy', 'id', 'isDeleted', 'lastOperationId', 'metadata', 'metadataEncoding', 'metadataJson', 'metadataTextReason', 'migrationExcludedFields', 'migrationTransformVersion', 'ownerUid', 'schemaVersion', 'sequence', 'sequenceParent', 'transformVersion', 'tripId', 'userId']) && [
+        d.id is int,
+        d.tripId is string,
+        d.userId is string,
+        d.activityType is string,
+        sfJsonRequired(d.get('metadataEncoding', null), d.get('metadata', null), d.get('metadataJson', null)),
+        d.createdAt is timestamp,
+        d.get('createdAtMicros', '0').matches('-?[0-9]+'),
+        d.actorUserId == null || d.actorUserId is string,
+        d.get('schemaVersion', 1) == 1
+      ].hasOnly([true]);
+    }
+    function svu_trip_activity_log(changed, d) {
+      return changed.hasOnly(['activityType', 'actorUserId', 'businessId', 'createdAt', 'createdAtMicros', 'createdBy', 'id', 'isDeleted', 'lastOperationId', 'metadata', 'metadataEncoding', 'metadataJson', 'metadataTextReason', 'migrationExcludedFields', 'migrationTransformVersion', 'ownerUid', 'schemaVersion', 'sequence', 'sequenceParent', 'transformVersion', 'tripId', 'userId']) && (changed.size() > 8 ? sv_trip_activity_log(d) : [
+        !('id' in changed) || (d.id is int),
+        !('tripId' in changed) || (d.tripId is string),
+        !('userId' in changed) || (d.userId is string),
+        !('activityType' in changed) || (d.activityType is string),
+        !changed.hasAny(['metadata', 'metadataEncoding', 'metadataJson', 'metadataTextReason']) || (sfJsonRequired(d.get('metadataEncoding', null), d.get('metadata', null), d.get('metadataJson', null))),
+        !changed.hasAny(['createdAt', 'createdAtMicros']) || ((d.createdAt is timestamp) && (d.get('createdAtMicros', '0').matches('-?[0-9]+'))),
+        !('actorUserId' in changed) || (d.actorUserId == null || d.actorUserId is string),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
+    function sv_trip_financial_audit(d) {
+      return d.keys().hasOnly(['actorUserId', 'businessId', 'changedAt', 'changedAtMicros', 'changedField', 'createdBy', 'id', 'isDeleted', 'lastOperationId', 'migrationExcludedFields', 'migrationTransformVersion', 'newValue', 'newValueEncoding', 'newValueJson', 'newValueTextReason', 'operationType', 'ownerUid', 'previousValue', 'previousValueEncoding', 'previousValueJson', 'previousValueTextReason', 'schemaVersion', 'sequence', 'sequenceParent', 'transformVersion', 'tripId', 'userId']) && [
+        d.id is int,
+        d.tripId is string,
+        d.userId is string,
+        d.changedAt is timestamp,
+        d.get('changedAtMicros', '0').matches('-?[0-9]+'),
+        d.changedField is string,
+        sfJson(d.get('previousValueEncoding', null), d.get('previousValue', null), d.get('previousValueJson', null)),
+        sfJson(d.get('newValueEncoding', null), d.get('newValue', null), d.get('newValueJson', null)),
+        d.operationType in ['insert', 'update'],
+        d.actorUserId == null || d.actorUserId is string,
+        d.get('schemaVersion', 1) == 1
+      ].hasOnly([true]);
+    }
+    function svu_trip_financial_audit(changed, d) {
+      return changed.hasOnly(['actorUserId', 'businessId', 'changedAt', 'changedAtMicros', 'changedField', 'createdBy', 'id', 'isDeleted', 'lastOperationId', 'migrationExcludedFields', 'migrationTransformVersion', 'newValue', 'newValueEncoding', 'newValueJson', 'newValueTextReason', 'operationType', 'ownerUid', 'previousValue', 'previousValueEncoding', 'previousValueJson', 'previousValueTextReason', 'schemaVersion', 'sequence', 'sequenceParent', 'transformVersion', 'tripId', 'userId']) && (changed.size() > 8 ? sv_trip_financial_audit(d) : [
+        !('id' in changed) || (d.id is int),
+        !('tripId' in changed) || (d.tripId is string),
+        !('userId' in changed) || (d.userId is string),
+        !changed.hasAny(['changedAt', 'changedAtMicros']) || ((d.changedAt is timestamp) && (d.get('changedAtMicros', '0').matches('-?[0-9]+'))),
+        !('changedField' in changed) || (d.changedField is string),
+        !changed.hasAny(['previousValue', 'previousValueEncoding', 'previousValueJson', 'previousValueTextReason']) || (sfJson(d.get('previousValueEncoding', null), d.get('previousValue', null), d.get('previousValueJson', null))),
+        !changed.hasAny(['newValue', 'newValueEncoding', 'newValueJson', 'newValueTextReason']) || (sfJson(d.get('newValueEncoding', null), d.get('newValue', null), d.get('newValueJson', null))),
+        !('operationType' in changed) || (d.operationType in ['insert', 'update']),
+        !('actorUserId' in changed) || (d.actorUserId == null || d.actorUserId is string),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
+    function sv_trip_payment_events(d) {
+      return d.keys().hasOnly(['actorUserId', 'businessId', 'createdAt', 'createdAtMicros', 'createdBy', 'eventType', 'id', 'isDeleted', 'lastOperationId', 'migrationExcludedFields', 'migrationTransformVersion', 'newState', 'newStateEncoding', 'newStateJson', 'newStateTextReason', 'ownerUid', 'paymentPlanId', 'previousState', 'previousStateEncoding', 'previousStateJson', 'previousStateTextReason', 'schemaVersion', 'sequence', 'sequenceParent', 'transformVersion', 'tripId', 'userId']) && [
+        d.id is int,
+        d.paymentPlanId is string,
+        d.tripId is string,
+        d.userId is string,
+        d.eventType in ['cash_paid', 'cash_corrected', 'cash_undone', 'plan_recalculated'],
+        sfJson(d.get('previousStateEncoding', null), d.get('previousState', null), d.get('previousStateJson', null)),
+        sfJson(d.get('newStateEncoding', null), d.get('newState', null), d.get('newStateJson', null)),
+        d.createdAt is timestamp,
+        d.get('createdAtMicros', '0').matches('-?[0-9]+'),
+        d.actorUserId == null || d.actorUserId is string,
+        d.get('schemaVersion', 1) == 1
+      ].hasOnly([true]);
+    }
+    function svu_trip_payment_events(changed, d) {
+      return changed.hasOnly(['actorUserId', 'businessId', 'createdAt', 'createdAtMicros', 'createdBy', 'eventType', 'id', 'isDeleted', 'lastOperationId', 'migrationExcludedFields', 'migrationTransformVersion', 'newState', 'newStateEncoding', 'newStateJson', 'newStateTextReason', 'ownerUid', 'paymentPlanId', 'previousState', 'previousStateEncoding', 'previousStateJson', 'previousStateTextReason', 'schemaVersion', 'sequence', 'sequenceParent', 'transformVersion', 'tripId', 'userId']) && (changed.size() > 8 ? sv_trip_payment_events(d) : [
+        !('id' in changed) || (d.id is int),
+        !('paymentPlanId' in changed) || (d.paymentPlanId is string),
+        !('tripId' in changed) || (d.tripId is string),
+        !('userId' in changed) || (d.userId is string),
+        !('eventType' in changed) || (d.eventType in ['cash_paid', 'cash_corrected', 'cash_undone', 'plan_recalculated']),
+        !changed.hasAny(['previousState', 'previousStateEncoding', 'previousStateJson', 'previousStateTextReason']) || (sfJson(d.get('previousStateEncoding', null), d.get('previousState', null), d.get('previousStateJson', null))),
+        !changed.hasAny(['newState', 'newStateEncoding', 'newStateJson', 'newStateTextReason']) || (sfJson(d.get('newStateEncoding', null), d.get('newState', null), d.get('newStateJson', null))),
+        !changed.hasAny(['createdAt', 'createdAtMicros']) || ((d.createdAt is timestamp) && (d.get('createdAtMicros', '0').matches('-?[0-9]+'))),
+        !('actorUserId' in changed) || (d.actorUserId == null || d.actorUserId is string),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
+    function sv_trip_installment_events(d) {
+      return d.keys().hasOnly(['actorUserId', 'businessId', 'createdAt', 'createdAtMicros', 'createdBy', 'eventType', 'id', 'installmentId', 'isDeleted', 'lastOperationId', 'migrationExcludedFields', 'migrationTransformVersion', 'newState', 'newStateEncoding', 'newStateJson', 'newStateTextReason', 'ownerUid', 'previousState', 'previousStateEncoding', 'previousStateJson', 'previousStateTextReason', 'schemaVersion', 'sequence', 'sequenceParent', 'transformVersion', 'tripId', 'userId']) && [
+        d.id is int,
+        d.installmentId is string,
+        d.tripId is string,
+        d.userId is string,
+        d.eventType in ['created', 'paid', 'corrected', 'payment_undone', 'rescheduled', 'recalculated', 'cancelled'],
+        sfJson(d.get('previousStateEncoding', null), d.get('previousState', null), d.get('previousStateJson', null)),
+        sfJson(d.get('newStateEncoding', null), d.get('newState', null), d.get('newStateJson', null)),
+        d.createdAt is timestamp,
+        d.get('createdAtMicros', '0').matches('-?[0-9]+'),
+        d.actorUserId == null || d.actorUserId is string,
+        d.get('schemaVersion', 1) == 1
+      ].hasOnly([true]);
+    }
+    function svu_trip_installment_events(changed, d) {
+      return changed.hasOnly(['actorUserId', 'businessId', 'createdAt', 'createdAtMicros', 'createdBy', 'eventType', 'id', 'installmentId', 'isDeleted', 'lastOperationId', 'migrationExcludedFields', 'migrationTransformVersion', 'newState', 'newStateEncoding', 'newStateJson', 'newStateTextReason', 'ownerUid', 'previousState', 'previousStateEncoding', 'previousStateJson', 'previousStateTextReason', 'schemaVersion', 'sequence', 'sequenceParent', 'transformVersion', 'tripId', 'userId']) && (changed.size() > 8 ? sv_trip_installment_events(d) : [
+        !('id' in changed) || (d.id is int),
+        !('installmentId' in changed) || (d.installmentId is string),
+        !('tripId' in changed) || (d.tripId is string),
+        !('userId' in changed) || (d.userId is string),
+        !('eventType' in changed) || (d.eventType in ['created', 'paid', 'corrected', 'payment_undone', 'rescheduled', 'recalculated', 'cancelled']),
+        !changed.hasAny(['previousState', 'previousStateEncoding', 'previousStateJson', 'previousStateTextReason']) || (sfJson(d.get('previousStateEncoding', null), d.get('previousState', null), d.get('previousStateJson', null))),
+        !changed.hasAny(['newState', 'newStateEncoding', 'newStateJson', 'newStateTextReason']) || (sfJson(d.get('newStateEncoding', null), d.get('newState', null), d.get('newStateJson', null))),
+        !changed.hasAny(['createdAt', 'createdAtMicros']) || ((d.createdAt is timestamp) && (d.get('createdAtMicros', '0').matches('-?[0-9]+'))),
+        !('actorUserId' in changed) || (d.actorUserId == null || d.actorUserId is string),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
+    function sv_trip_write_requests(d) {
+      return d.keys().hasOnly(['businessId', 'clientRequestId', 'createdAt', 'createdAtMicros', 'createdBy', 'isDeleted', 'lastOperationId', 'migrationExcludedFields', 'migrationTransformVersion', 'ownerUid', 'responsePayload', 'responsePayloadEncoding', 'responsePayloadJson', 'responsePayloadTextReason', 'schemaVersion', 'transformVersion', 'tripId', 'userId']) && [
+        d.clientRequestId is string,
+        d.userId is string,
+        sfJsonRequired(d.get('responsePayloadEncoding', null), d.get('responsePayload', null), d.get('responsePayloadJson', null)),
+        d.createdAt is timestamp,
+        d.get('createdAtMicros', '0').matches('-?[0-9]+'),
+        d.tripId == null || d.tripId is string,
+        d.get('schemaVersion', 1) == 1
+      ].hasOnly([true]);
+    }
+    function svu_trip_write_requests(changed, d) {
+      return changed.hasOnly(['businessId', 'clientRequestId', 'createdAt', 'createdAtMicros', 'createdBy', 'isDeleted', 'lastOperationId', 'migrationExcludedFields', 'migrationTransformVersion', 'ownerUid', 'responsePayload', 'responsePayloadEncoding', 'responsePayloadJson', 'responsePayloadTextReason', 'schemaVersion', 'transformVersion', 'tripId', 'userId']) && (changed.size() > 8 ? sv_trip_write_requests(d) : [
+        !('clientRequestId' in changed) || (d.clientRequestId is string),
+        !('userId' in changed) || (d.userId is string),
+        !changed.hasAny(['responsePayload', 'responsePayloadEncoding', 'responsePayloadJson', 'responsePayloadTextReason']) || (sfJsonRequired(d.get('responsePayloadEncoding', null), d.get('responsePayload', null), d.get('responsePayloadJson', null))),
+        !changed.hasAny(['createdAt', 'createdAtMicros']) || ((d.createdAt is timestamp) && (d.get('createdAtMicros', '0').matches('-?[0-9]+'))),
+        !('tripId' in changed) || (d.tripId == null || d.tripId is string),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
+    function sv_trip_attachment_cleanup_queue(d) {
+      return d.keys().hasOnly(['attachments', 'attachmentsEncoding', 'attachmentsJson', 'attachmentsTextReason', 'attempts', 'businessId', 'completedAt', 'completedAtMicros', 'createdAt', 'createdAtMicros', 'createdBy', 'id', 'isDeleted', 'lastAttemptedAt', 'lastAttemptedAtMicros', 'lastError', 'lastOperationId', 'migrationExcludedFields', 'migrationTransformVersion', 'nextRetryAt', 'nextRetryAtMicros', 'ownerUid', 'schemaVersion', 'sequence', 'sequenceParent', 'status', 'transformVersion', 'tripId', 'userId']) && [
+        d.id is int,
+        d.tripId is string,
+        d.userId is string,
+        sfJsonRequired(d.get('attachmentsEncoding', null), d.get('attachments', null), d.get('attachmentsJson', null)),
+        d.status in ['pending', 'processing', 'completed', 'failed'],
+        d.attempts is int,
+        d.createdAt is timestamp,
+        d.get('createdAtMicros', '0').matches('-?[0-9]+'),
+        d.completedAt == null || d.completedAt is timestamp,
+        d.get('completedAtMicros', '0').matches('-?[0-9]+'),
+        d.lastAttemptedAt == null || d.lastAttemptedAt is timestamp,
+        d.get('lastAttemptedAtMicros', '0').matches('-?[0-9]+'),
+        d.nextRetryAt is timestamp,
+        d.get('nextRetryAtMicros', '0').matches('-?[0-9]+'),
+        d.lastError == null || d.lastError is string,
+        d.get('schemaVersion', 1) == 1
+      ].hasOnly([true]);
+    }
+    function svu_trip_attachment_cleanup_queue(changed, d) {
+      return changed.hasOnly(['attachments', 'attachmentsEncoding', 'attachmentsJson', 'attachmentsTextReason', 'attempts', 'businessId', 'completedAt', 'completedAtMicros', 'createdAt', 'createdAtMicros', 'createdBy', 'id', 'isDeleted', 'lastAttemptedAt', 'lastAttemptedAtMicros', 'lastError', 'lastOperationId', 'migrationExcludedFields', 'migrationTransformVersion', 'nextRetryAt', 'nextRetryAtMicros', 'ownerUid', 'schemaVersion', 'sequence', 'sequenceParent', 'status', 'transformVersion', 'tripId', 'userId']) && (changed.size() > 8 ? sv_trip_attachment_cleanup_queue(d) : [
+        !('id' in changed) || (d.id is int),
+        !('tripId' in changed) || (d.tripId is string),
+        !('userId' in changed) || (d.userId is string),
+        !changed.hasAny(['attachments', 'attachmentsEncoding', 'attachmentsJson', 'attachmentsTextReason']) || (sfJsonRequired(d.get('attachmentsEncoding', null), d.get('attachments', null), d.get('attachmentsJson', null))),
+        !('status' in changed) || (d.status in ['pending', 'processing', 'completed', 'failed']),
+        !('attempts' in changed) || (d.attempts is int),
+        !changed.hasAny(['createdAt', 'createdAtMicros']) || ((d.createdAt is timestamp) && (d.get('createdAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['completedAt', 'completedAtMicros']) || ((d.completedAt == null || d.completedAt is timestamp) && (d.get('completedAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['lastAttemptedAt', 'lastAttemptedAtMicros']) || ((d.lastAttemptedAt == null || d.lastAttemptedAt is timestamp) && (d.get('lastAttemptedAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['nextRetryAt', 'nextRetryAtMicros']) || ((d.nextRetryAt is timestamp) && (d.get('nextRetryAtMicros', '0').matches('-?[0-9]+'))),
+        !('lastError' in changed) || (d.lastError == null || d.lastError is string),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
+    function sv_trip_notifications(d) {
+      return d.keys().hasOnly(['bodyKey', 'businessId', 'completedAt', 'completedAtMicros', 'createdAt', 'createdAtMicros', 'createdBy', 'dedupeKey', 'dismissedAt', 'dismissedAtMicros', 'id', 'isDeleted', 'lastOperationId', 'migrationExcludedFields', 'migrationTransformVersion', 'notificationType', 'ownerUid', 'params', 'paramsEncoding', 'paramsJson', 'paramsTextReason', 'readAt', 'readAtMicros', 'scheduledFor', 'scheduledForMicros', 'schemaVersion', 'snoozedUntil', 'snoozedUntilMicros', 'titleKey', 'transformVersion', 'tripId', 'userId']) && [
+        d.id is string,
+        d.userId is string,
+        d.notificationType is string,
+        d.titleKey is string,
+        d.bodyKey is string,
+        sfJsonRequired(d.get('paramsEncoding', null), d.get('params', null), d.get('paramsJson', null)),
+        d.dedupeKey is string,
+        d.readAt == null || d.readAt is timestamp,
+        d.get('readAtMicros', '0').matches('-?[0-9]+'),
+        d.scheduledFor is timestamp,
+        d.get('scheduledForMicros', '0').matches('-?[0-9]+'),
+        d.createdAt is timestamp,
+        d.get('createdAtMicros', '0').matches('-?[0-9]+'),
+        d.snoozedUntil == null || d.snoozedUntil is timestamp,
+        d.get('snoozedUntilMicros', '0').matches('-?[0-9]+'),
+        d.dismissedAt == null || d.dismissedAt is timestamp,
+        d.get('dismissedAtMicros', '0').matches('-?[0-9]+'),
+        d.completedAt == null || d.completedAt is timestamp,
+        d.get('completedAtMicros', '0').matches('-?[0-9]+'),
+        d.tripId == null || d.tripId is string,
+        d.get('schemaVersion', 1) == 1
+      ].hasOnly([true]);
+    }
+    function svu_trip_notifications(changed, d) {
+      return changed.hasOnly(['bodyKey', 'businessId', 'completedAt', 'completedAtMicros', 'createdAt', 'createdAtMicros', 'createdBy', 'dedupeKey', 'dismissedAt', 'dismissedAtMicros', 'id', 'isDeleted', 'lastOperationId', 'migrationExcludedFields', 'migrationTransformVersion', 'notificationType', 'ownerUid', 'params', 'paramsEncoding', 'paramsJson', 'paramsTextReason', 'readAt', 'readAtMicros', 'scheduledFor', 'scheduledForMicros', 'schemaVersion', 'snoozedUntil', 'snoozedUntilMicros', 'titleKey', 'transformVersion', 'tripId', 'userId']) && (changed.size() > 8 ? sv_trip_notifications(d) : [
+        !('id' in changed) || (d.id is string),
+        !('userId' in changed) || (d.userId is string),
+        !('notificationType' in changed) || (d.notificationType is string),
+        !('titleKey' in changed) || (d.titleKey is string),
+        !('bodyKey' in changed) || (d.bodyKey is string),
+        !changed.hasAny(['params', 'paramsEncoding', 'paramsJson', 'paramsTextReason']) || (sfJsonRequired(d.get('paramsEncoding', null), d.get('params', null), d.get('paramsJson', null))),
+        !('dedupeKey' in changed) || (d.dedupeKey is string),
+        !changed.hasAny(['readAt', 'readAtMicros']) || ((d.readAt == null || d.readAt is timestamp) && (d.get('readAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['scheduledFor', 'scheduledForMicros']) || ((d.scheduledFor is timestamp) && (d.get('scheduledForMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['createdAt', 'createdAtMicros']) || ((d.createdAt is timestamp) && (d.get('createdAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['snoozedUntil', 'snoozedUntilMicros']) || ((d.snoozedUntil == null || d.snoozedUntil is timestamp) && (d.get('snoozedUntilMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['dismissedAt', 'dismissedAtMicros']) || ((d.dismissedAt == null || d.dismissedAt is timestamp) && (d.get('dismissedAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['completedAt', 'completedAtMicros']) || ((d.completedAt == null || d.completedAt is timestamp) && (d.get('completedAtMicros', '0').matches('-?[0-9]+'))),
+        !('tripId' in changed) || (d.tripId == null || d.tripId is string),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
+    function sv_trip_notification_settings(d) {
+      return d.keys().hasOnly(['businessId', 'cleanupEnabled', 'createdBy', 'isDeleted', 'migrationExcludedFields', 'migrationTransformVersion', 'ownerUid', 'paymentEnabled', 'paymentReminderDays', 'retentionEnabled', 'schemaVersion', 'timezone', 'transformVersion', 'tripReminderDays', 'upcomingDays', 'upcomingEnabled', 'updatedAt', 'updatedAtMicros', 'userId']) && [
+        d.userId is string,
+        d.timezone is string,
+        d.upcomingDays is int,
+        (d.upcomingDays >= 1 && d.upcomingDays <= 90),
+        d.updatedAt is timestamp,
+        d.get('updatedAtMicros', '0').matches('-?[0-9]+'),
+        d.tripReminderDays is list,
+        d.paymentReminderDays is list,
+        sfBoolsRequired([d.upcomingEnabled, d.paymentEnabled, d.cleanupEnabled, d.retentionEnabled]),
+        d.get('schemaVersion', 1) == 1
+      ].hasOnly([true]);
+    }
+    function svu_trip_notification_settings(changed, d) {
+      return changed.hasOnly(['businessId', 'cleanupEnabled', 'createdBy', 'isDeleted', 'migrationExcludedFields', 'migrationTransformVersion', 'ownerUid', 'paymentEnabled', 'paymentReminderDays', 'retentionEnabled', 'schemaVersion', 'timezone', 'transformVersion', 'tripReminderDays', 'upcomingDays', 'upcomingEnabled', 'updatedAt', 'updatedAtMicros', 'userId']) && (changed.size() > 8 ? sv_trip_notification_settings(d) : [
+        !('userId' in changed) || (d.userId is string),
+        !('timezone' in changed) || (d.timezone is string),
+        !('upcomingDays' in changed) || (d.upcomingDays is int),
+        !('upcomingDays' in changed) || ((d.upcomingDays >= 1 && d.upcomingDays <= 90)),
+        !changed.hasAny(['updatedAt', 'updatedAtMicros']) || ((d.updatedAt is timestamp) && (d.get('updatedAtMicros', '0').matches('-?[0-9]+'))),
+        !('tripReminderDays' in changed) || (d.tripReminderDays is list),
+        !('paymentReminderDays' in changed) || (d.paymentReminderDays is list),
+        !changed.hasAny(['upcomingEnabled', 'paymentEnabled', 'cleanupEnabled', 'retentionEnabled']) || (sfBoolsRequired([d.upcomingEnabled, d.paymentEnabled, d.cleanupEnabled, d.retentionEnabled])),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
+    function sv_trip_templates(d) {
+      return d.keys().hasOnly(['businessId', 'createdAt', 'createdAtMicros', 'createdBy', 'deletedAt', 'deletedAtMicros', 'description', 'id', 'isDeleted', 'isFavorite', 'lastUsedAt', 'lastUsedAtMicros', 'migrationExcludedFields', 'migrationTransformVersion', 'name', 'ownerUid', 'schemaVersion', 'status', 'templateData', 'templateDataEncoding', 'templateDataJson', 'templateDataTextReason', 'templateType', 'transformVersion', 'updatedAt', 'updatedAtMicros', 'usageCount', 'userId']) && [
+        d.id is string,
+        d.userId is string,
+        d.name is string,
+        d.name.size() >= 1,
+        d.name.size() <= 120,
+        sfJsonRequired(d.get('templateDataEncoding', null), d.get('templateData', null), d.get('templateDataJson', null)),
+        d.status in ['active', 'archived'],
+        d.deletedAt == null || d.deletedAt is timestamp,
+        d.get('deletedAtMicros', '0').matches('-?[0-9]+'),
+        d.createdAt is timestamp,
+        d.get('createdAtMicros', '0').matches('-?[0-9]+'),
+        d.updatedAt is timestamp,
+        d.get('updatedAtMicros', '0').matches('-?[0-9]+'),
+        d.templateType in ['full_trip', 'itinerary', 'hotel', 'transportation', 'pricing', 'checklist', 'message'],
+        d.usageCount is int,
+        d.usageCount >= 0,
+        d.lastUsedAt == null || d.lastUsedAt is timestamp,
+        d.get('lastUsedAtMicros', '0').matches('-?[0-9]+'),
+        d.description == null || d.description is string,
+        d.isFavorite is bool,
+        d.get('schemaVersion', 1) == 1
+      ].hasOnly([true]);
+    }
+    function svu_trip_templates(changed, d) {
+      return changed.hasOnly(['businessId', 'createdAt', 'createdAtMicros', 'createdBy', 'deletedAt', 'deletedAtMicros', 'description', 'id', 'isDeleted', 'isFavorite', 'lastUsedAt', 'lastUsedAtMicros', 'migrationExcludedFields', 'migrationTransformVersion', 'name', 'ownerUid', 'schemaVersion', 'status', 'templateData', 'templateDataEncoding', 'templateDataJson', 'templateDataTextReason', 'templateType', 'transformVersion', 'updatedAt', 'updatedAtMicros', 'usageCount', 'userId']) && (changed.size() > 9 ? sv_trip_templates(d) : [
+        !('id' in changed) || (d.id is string),
+        !('userId' in changed) || (d.userId is string),
+        !('name' in changed) || (d.name is string),
+        !('name' in changed) || (d.name.size() >= 1),
+        !('name' in changed) || (d.name.size() <= 120),
+        !changed.hasAny(['templateData', 'templateDataEncoding', 'templateDataJson', 'templateDataTextReason']) || (sfJsonRequired(d.get('templateDataEncoding', null), d.get('templateData', null), d.get('templateDataJson', null))),
+        !('status' in changed) || (d.status in ['active', 'archived']),
+        !changed.hasAny(['deletedAt', 'deletedAtMicros']) || ((d.deletedAt == null || d.deletedAt is timestamp) && (d.get('deletedAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['createdAt', 'createdAtMicros']) || ((d.createdAt is timestamp) && (d.get('createdAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['updatedAt', 'updatedAtMicros']) || ((d.updatedAt is timestamp) && (d.get('updatedAtMicros', '0').matches('-?[0-9]+'))),
+        !('templateType' in changed) || (d.templateType in ['full_trip', 'itinerary', 'hotel', 'transportation', 'pricing', 'checklist', 'message']),
+        !('usageCount' in changed) || (d.usageCount is int),
+        !('usageCount' in changed) || (d.usageCount >= 0),
+        !changed.hasAny(['lastUsedAt', 'lastUsedAtMicros']) || ((d.lastUsedAt == null || d.lastUsedAt is timestamp) && (d.get('lastUsedAtMicros', '0').matches('-?[0-9]+'))),
+        !('description' in changed) || (d.description == null || d.description is string),
+        !('isFavorite' in changed) || (d.isFavorite is bool),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
+    function sv_trip_packing_lists(d) {
+      return d.keys().hasOnly(['businessId', 'createdAt', 'createdAtMicros', 'createdBy', 'deletedAt', 'deletedAtMicros', 'id', 'isDeleted', 'isTemplate', 'items', 'itemsEncoding', 'itemsJson', 'itemsTextReason', 'migrationExcludedFields', 'migrationTransformVersion', 'name', 'ownerUid', 'schemaVersion', 'transformVersion', 'tripId', 'updatedAt', 'updatedAtMicros', 'userId']) && [
+        d.id is string,
+        d.userId is string,
+        d.name is string,
+        d.name.size() >= 1,
+        d.name.size() <= 120,
+        sfJsonRequired(d.get('itemsEncoding', null), d.get('items', null), d.get('itemsJson', null)),
+        d.deletedAt == null || d.deletedAt is timestamp,
+        d.get('deletedAtMicros', '0').matches('-?[0-9]+'),
+        d.createdAt is timestamp,
+        d.get('createdAtMicros', '0').matches('-?[0-9]+'),
+        d.updatedAt is timestamp,
+        d.get('updatedAtMicros', '0').matches('-?[0-9]+'),
+        d.tripId == null || d.tripId is string,
+        d.isTemplate is bool,
+        d.get('schemaVersion', 1) == 1
+      ].hasOnly([true]);
+    }
+    function svu_trip_packing_lists(changed, d) {
+      return changed.hasOnly(['businessId', 'createdAt', 'createdAtMicros', 'createdBy', 'deletedAt', 'deletedAtMicros', 'id', 'isDeleted', 'isTemplate', 'items', 'itemsEncoding', 'itemsJson', 'itemsTextReason', 'migrationExcludedFields', 'migrationTransformVersion', 'name', 'ownerUid', 'schemaVersion', 'transformVersion', 'tripId', 'updatedAt', 'updatedAtMicros', 'userId']) && (changed.size() > 8 ? sv_trip_packing_lists(d) : [
+        !('id' in changed) || (d.id is string),
+        !('userId' in changed) || (d.userId is string),
+        !('name' in changed) || (d.name is string),
+        !('name' in changed) || (d.name.size() >= 1),
+        !('name' in changed) || (d.name.size() <= 120),
+        !changed.hasAny(['items', 'itemsEncoding', 'itemsJson', 'itemsTextReason']) || (sfJsonRequired(d.get('itemsEncoding', null), d.get('items', null), d.get('itemsJson', null))),
+        !changed.hasAny(['deletedAt', 'deletedAtMicros']) || ((d.deletedAt == null || d.deletedAt is timestamp) && (d.get('deletedAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['createdAt', 'createdAtMicros']) || ((d.createdAt is timestamp) && (d.get('createdAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['updatedAt', 'updatedAtMicros']) || ((d.updatedAt is timestamp) && (d.get('updatedAtMicros', '0').matches('-?[0-9]+'))),
+        !('tripId' in changed) || (d.tripId == null || d.tripId is string),
+        !('isTemplate' in changed) || (d.isTemplate is bool),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
+    function sv_trip_whatsapp_templates(d) {
+      return d.keys().hasOnly(['body', 'businessId', 'createdAt', 'createdAtMicros', 'createdBy', 'id', 'isDeleted', 'language', 'migrationExcludedFields', 'migrationTransformVersion', 'name', 'ownerUid', 'schemaVersion', 'transformVersion', 'updatedAt', 'updatedAtMicros', 'userId']) && [
+        d.id is string,
+        d.userId is string,
+        d.name is string,
+        d.name.size() >= 1,
+        d.name.size() <= 100,
+        d.body is string,
+        d.body.size() >= 1,
+        d.body.size() <= 2000,
+        d.language in ['en', 'he', 'ar'],
+        d.createdAt is timestamp,
+        d.get('createdAtMicros', '0').matches('-?[0-9]+'),
+        d.updatedAt is timestamp,
+        d.get('updatedAtMicros', '0').matches('-?[0-9]+'),
+        d.get('schemaVersion', 1) == 1
+      ].hasOnly([true]);
+    }
+    function svu_trip_whatsapp_templates(changed, d) {
+      return changed.hasOnly(['body', 'businessId', 'createdAt', 'createdAtMicros', 'createdBy', 'id', 'isDeleted', 'language', 'migrationExcludedFields', 'migrationTransformVersion', 'name', 'ownerUid', 'schemaVersion', 'transformVersion', 'updatedAt', 'updatedAtMicros', 'userId']) && (changed.size() > 8 ? sv_trip_whatsapp_templates(d) : [
+        !('id' in changed) || (d.id is string),
+        !('userId' in changed) || (d.userId is string),
+        !('name' in changed) || (d.name is string),
+        !('name' in changed) || (d.name.size() >= 1),
+        !('name' in changed) || (d.name.size() <= 100),
+        !('body' in changed) || (d.body is string),
+        !('body' in changed) || (d.body.size() >= 1),
+        !('body' in changed) || (d.body.size() <= 2000),
+        !('language' in changed) || (d.language in ['en', 'he', 'ar']),
+        !changed.hasAny(['createdAt', 'createdAtMicros']) || ((d.createdAt is timestamp) && (d.get('createdAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['updatedAt', 'updatedAtMicros']) || ((d.updatedAt is timestamp) && (d.get('updatedAtMicros', '0').matches('-?[0-9]+'))),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
     // SCHEMA-VALIDATORS:END
 
     // users/{uid} holds the user_profiles row; the document id is the Firebase uid.
@@ -967,6 +1583,22 @@ service cloud.firestore {
       allow update: if signedIn() && request.auth.uid == uid
         && validSelfEdit(request.resource.data.diff(resource.data).affectedKeys());
       allow delete: if false;
+
+      // trip_notification_settings: one row per user, keyed by the user. The reminder-day arrays keep
+      // the source's trip_reminder_days_are_safe() bounds, which the generated validator carries.
+      match /settings/{notificationSettingsId} {
+        allow get, list: if signedIn() && request.auth.uid == uid;
+        allow create, update: if signedIn() && request.auth.uid == uid
+          && notificationSettingsId == uid
+          && sv_trip_notification_settings(request.resource.data)
+          && request.resource.data.userId == uid
+          && request.resource.data.ownerUid == uid
+          && request.resource.data.tripReminderDays.size() >= 1
+          && request.resource.data.tripReminderDays.size() <= 20
+          && request.resource.data.paymentReminderDays.size() >= 1
+          && request.resource.data.paymentReminderDays.size() <= 20;
+        allow delete: if false;
+      }
     }
 
     // One business per owner: the replacement for UNIQUE(business_profiles.user_id). A business can
@@ -1784,8 +2416,11 @@ service cloud.firestore {
         && request.resource.data.operationId == operationId
         && request.resource.data.actorUid == request.auth.uid
         && request.resource.data.ownerUid == get(businessPath(request.resource.data.businessId)).data.ownerUid
-        && request.resource.data.type in ['trip-create','trip-edit','payment',
-          'installment-payment','trip-state']
+        && request.resource.data.type in ['trip-create','trip-edit','payment','installment-payment',
+          'trip-state','plan-create','plan-recalculate','installment-reschedule','trip-purge',
+          'trip-activity','trip-side']
+        && (request.resource.data.type != 'trip-purge'
+          || operationId == request.auth.uid + '__purge__' + request.resource.data.tripId)
         && request.resource.data.beforeRevision is int
         && request.resource.data.afterRevision == request.resource.data.beforeRevision + 1
         && request.resource.data.fingerprint is string
@@ -1797,187 +2432,211 @@ service cloud.firestore {
       allow get: if adminReadOnly()
         || (signedIn() && (!exists(tripPath(tripId)) || owns(resource.data)));
       allow list: if adminReadOnly() || owns(resource.data);
-      allow create: if request.resource.data.ownerUid
-          == op(request.resource.data.lastOperationId).ownerUid
+      allow create: if signedIn() && request.resource.data.ownerUid == request.auth.uid
         && request.resource.data.id == tripId
         && request.resource.data.userId == request.resource.data.ownerUid
-        && request.resource.data.businessId != null
-        && request.resource.data.schemaVersion == 1
+        && request.resource.data.get('schemaVersion', 1) == 1
         && request.resource.data.revision == 1
         && request.resource.data.isDeleted == false
-        && validTripMoney(request.resource.data)
-        && operationMatches(request.resource.data.lastOperationId, ['trip-create'],
-          request.resource.data.businessId, tripId)
-        && op(request.resource.data.lastOperationId).beforeRevision == 0
-        && op(request.resource.data.lastOperationId).afterRevision == 1;
-      allow update: if validTripUpdate(tripId);
-      allow delete: if false;
-    }
-
-    function scheduleComplete(plan) {
-      return (plan.installmentCount < 1 || existsAfter(installmentPath(plan.scheduleIds[0])))
-        && (plan.installmentCount < 2 || existsAfter(installmentPath(plan.scheduleIds[1])))
-        && (plan.installmentCount < 3 || existsAfter(installmentPath(plan.scheduleIds[2])))
-        && (plan.installmentCount < 4 || existsAfter(installmentPath(plan.scheduleIds[3])))
-        && (plan.installmentCount < 5 || existsAfter(installmentPath(plan.scheduleIds[4])))
-        && (plan.installmentCount < 6 || existsAfter(installmentPath(plan.scheduleIds[5])))
-        && (plan.installmentCount < 7 || existsAfter(installmentPath(plan.scheduleIds[6])))
-        && (plan.installmentCount < 8 || existsAfter(installmentPath(plan.scheduleIds[7])));
-    }
-    function validPlan(data) {
-      return data.schemaVersion == 1 && data.status == 'active' && data.isDeleted == false
-        && data.currency == getAfter(tripPath(data.tripId)).data.currency
-        && data.cardTotalMinor is int && data.cashTotalMinor is int
-        && data.cardPaidMinor is int && data.cashPaidMinor is int
-        && data.cardTotalMinor >= 0 && data.cashTotalMinor >= 0
-        && data.cardPaidMinor >= 0 && data.cardPaidMinor <= data.cardTotalMinor
-        && data.cashPaidMinor >= 0 && data.cashPaidMinor <= data.cashTotalMinor
-        && data.cardTotalMinor + data.cashTotalMinor
-          == getAfter(tripPath(data.tripId)).data.salePriceMinor
-        && data.installmentCount is int
-        && data.installmentCount >= 0 && data.installmentCount <= 8
-        && data.scheduleIds is list && data.scheduleIds.size() == data.installmentCount
-        && data.scheduleIds.toSet().size() == data.installmentCount
-        && data.installmentBaseMinor is int && data.installmentRemainderMinor is int
-        && data.installmentBaseMinor >= 0 && data.installmentRemainderMinor >= 0
-        && (data.installmentCount == 0
-          ? data.cardTotalMinor == 0
-            && data.installmentBaseMinor == 0
-            && data.installmentRemainderMinor == 0
-          : data.installmentBaseMinor * data.installmentCount
-              + data.installmentRemainderMinor == data.cardTotalMinor
-            && data.installmentRemainderMinor < data.installmentCount);
-    }
-    function validPlanUpdate() {
-      let operation = getAfter(operationPath(request.resource.data.lastOperationId)).data;
-      return request.resource.data.ownerUid == resource.data.ownerUid
-        && request.resource.data.businessId == resource.data.businessId
-        && request.resource.data.tripId == resource.data.tripId
+        && request.resource.data.deletedAt == null
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && tripOperation(request.resource.data, tripId, ['trip-create'])
+        && validTripMoney(request.resource.data);
+      // The source's own updates carry a client timestamp for updated_at (PostgREST sets what the
+      // statement names), so updatedAt is not pinned to request.time here; the money is what is
+      // pinned, to the ledger and to the operation.
+      allow update: if signedIn() && resource.data.ownerUid == request.auth.uid
         && request.resource.data.id == resource.data.id
-        && operation.operationId == request.resource.data.lastOperationId
-        && operation.actorUid == request.auth.uid
-        && operation.businessId == resource.data.businessId
-        && operation.tripId == resource.data.tripId
-        && operation.type in ['payment','installment-payment']
-        && request.resource.data.cardTotalMinor == resource.data.cardTotalMinor
-        && request.resource.data.cashTotalMinor == resource.data.cashTotalMinor
-        && request.resource.data.currency == resource.data.currency
-        && (operation.type == 'payment'
-          ? request.resource.data.cashPaidMinor == resource.data.cashPaidMinor + operation.amountMinor
-            && request.resource.data.cardPaidMinor == resource.data.cardPaidMinor
-          : request.resource.data.cardPaidMinor == resource.data.cardPaidMinor + operation.amountMinor
-            && request.resource.data.cashPaidMinor == resource.data.cashPaidMinor)
-        && request.resource.data.cardPaidMinor <= resource.data.cardTotalMinor
-        && request.resource.data.cashPaidMinor <= resource.data.cashTotalMinor
-        && changedOnly(['cardPaidMinor','cashPaidMinor','lastOperationId','updatedAt']);
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.businessId == resource.data.businessId
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.revision == resource.data.get('revision', 0) + 1
+        && request.resource.data.isDeleted == (request.resource.data.deletedAt != null)
+        && tripOperation(request.resource.data, tripId, ['trip-create', 'trip-edit', 'trip-state',
+          'payment', 'installment-payment', 'plan-create', 'plan-recalculate', 'installment-reschedule', 'trip-side'])
+        && validTripMoney(request.resource.data);
+      // permanently_delete_trips: a soft-deleted trip, under its own derived purge operation.
+      allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid
+        && resource.data.deletedAt != null
+        && purgeOperation(tripId);
+
+      // trip_packing_lists: the owner's lists, under their trip.
+      match /packingLists/{listId} {
+        allow get, list: if adminReadOnly() || resource == null || owns(resource.data);
+        allow create: if signedIn() && request.resource.data.ownerUid == request.auth.uid
+          && owns(request.resource.data)
+          && sv_trip_packing_lists(request.resource.data)
+          && request.resource.data.id == listId
+          && request.resource.data.userId == request.resource.data.ownerUid
+          && request.resource.data.tripId == tripId
+          && exists(tripPath(tripId))
+          && request.resource.data.isTemplate == false
+          && request.resource.data.deletedAt == null
+          && request.resource.data.isDeleted == false
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.updatedAt == request.time;
+        allow update: if owns(resource.data) && owns(request.resource.data)
+          && svu_trip_packing_lists(request.resource.data.diff(resource.data).affectedKeys(), request.resource.data)
+          && request.resource.data.id == resource.data.id
+          && request.resource.data.tripId == resource.data.tripId
+          && request.resource.data.userId == resource.data.userId
+          && request.resource.data.createdAt == resource.data.createdAt
+          && request.resource.data.updatedAt == request.time;
+        allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid && purgeOperation(tripId);
+      }
     }
 
     match /tripPaymentPlans/{planId} {
-      allow get, list: if adminReadOnly() || owns(resource.data);
-      allow create: if request.resource.data.ownerUid
-          == op(request.resource.data.lastOperationId).ownerUid
+      allow get, list: if adminReadOnly() || resource == null || owns(resource.data);
+      allow create: if signedIn() && request.resource.data.ownerUid == request.auth.uid
+        && sv_trip_payment_plans(request.resource.data)
         && request.resource.data.id == planId
-        && operationMatches(request.resource.data.lastOperationId, ['trip-create'],
-          request.resource.data.businessId, request.resource.data.tripId)
-        && validPlan(request.resource.data)
-        && scheduleComplete(request.resource.data);
-      allow update: if validPlanUpdate();
-      allow delete: if false;
+        && request.resource.data.userId == request.resource.data.ownerUid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && validPlanShape(request.resource.data)
+        && tripOperation(request.resource.data, request.resource.data.tripId,
+          ['trip-create', 'trip-edit', 'plan-create'])
+        && (!planIsLive(request.resource.data) || planIndexNames(request.resource.data.tripId, planId));
+      allow update: if signedIn() && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && svu_trip_payment_plans(request.resource.data.diff(resource.data).affectedKeys(), request.resource.data)
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.tripId == resource.data.tripId
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.source == resource.data.source
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedAt == request.time
+        && validPlanShape(request.resource.data)
+        && tripOperation(request.resource.data, request.resource.data.tripId,
+          ['trip-create', 'trip-edit', 'plan-create', 'plan-recalculate', 'payment', 'installment-payment'])
+        && (!planIsLive(request.resource.data) || planIndexNames(request.resource.data.tripId, planId));
+      allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid && purgeOperation(resource.data.tripId);
+    }
+
+    // tripPlans/{tripId}: the trip's one live native plan, which is how the source's partial UNIQUE
+    // index survives here. It can only change in the same commit as the plan it names.
+    match /tripPlans/{tripId} {
+      allow get, list: if adminReadOnly() || resource == null || owns(resource.data);
+      allow create, update: if signedIn() && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['tripId', 'planId', 'ownerUid', 'businessId',
+          'lastOperationId', 'schemaVersion'])
+        && request.resource.data.tripId == tripId
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.schemaVersion == 1
+        && tripOperation(request.resource.data, tripId,
+          ['trip-create', 'trip-edit', 'plan-create', 'plan-recalculate'])
+        && existsAfter(planPath(request.resource.data.planId))
+        && getAfter(planPath(request.resource.data.planId)).data.tripId == tripId
+        && getAfter(planPath(request.resource.data.planId)).data.ownerUid == request.auth.uid
+        && planIsLive(getAfter(planPath(request.resource.data.planId)).data);
+      // The index goes when the plan it names stops being live, or with the trip itself.
+      allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid
+        && (purgeOperation(tripId)
+          || (commitOperation(tripId, ['trip-create', 'trip-edit', 'plan-create', 'plan-recalculate'])
+            && (!existsAfter(planPath(resource.data.planId))
+              || !planIsLive(getAfter(planPath(resource.data.planId)).data))));
     }
 
     match /tripInstallments/{installmentId} {
-      allow get, list: if adminReadOnly() || owns(resource.data);
-      allow create: if request.resource.data.ownerUid
-          == op(request.resource.data.lastOperationId).ownerUid
+      allow get, list: if adminReadOnly() || resource == null || owns(resource.data);
+      allow create: if signedIn() && request.resource.data.ownerUid == request.auth.uid
+        && sv_trip_installments(request.resource.data)
         && request.resource.data.id == installmentId
-        && operationMatches(request.resource.data.lastOperationId, ['trip-create'],
-          request.resource.data.businessId, request.resource.data.tripId)
-        && existsAfter(planPath(request.resource.data.paymentPlanId))
-        && request.resource.data.paymentPlanId
-          == getAfter(planPath(request.resource.data.paymentPlanId)).data.id
-        && request.resource.data.installmentNumber is int
-        && request.resource.data.installmentNumber >= 1
-        && request.resource.data.installmentNumber
-          <= getAfter(planPath(request.resource.data.paymentPlanId)).data.installmentCount
-        && getAfter(planPath(request.resource.data.paymentPlanId))
-          .data.scheduleIds[request.resource.data.installmentNumber - 1] == installmentId
-        && request.resource.data.expectedAmountMinor
-          == getAfter(planPath(request.resource.data.paymentPlanId)).data.installmentBaseMinor
-            + (request.resource.data.installmentNumber
-                == getAfter(planPath(request.resource.data.paymentPlanId)).data.installmentCount
-              ? getAfter(planPath(request.resource.data.paymentPlanId)).data.installmentRemainderMinor
-              : 0)
+        && request.resource.data.userId == request.resource.data.ownerUid
         && request.resource.data.paidAmountMinor == 0
-        && request.resource.data.status == 'scheduled';
-      allow update: if request.resource.data.ownerUid == resource.data.ownerUid
-        && request.resource.data.businessId == resource.data.businessId
+        && request.resource.data.paidAt == null
+        && request.resource.data.status == 'scheduled'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && existsAfter(planPath(request.resource.data.paymentPlanId))
+        && getAfter(planPath(request.resource.data.paymentPlanId)).data.tripId == request.resource.data.tripId
+        && getAfter(planPath(request.resource.data.paymentPlanId)).data.ownerUid == request.resource.data.ownerUid
+        && tripOperation(request.resource.data, request.resource.data.tripId,
+          ['trip-create', 'trip-edit', 'plan-create']);
+      // A receipt, a reschedule or a recalculation. The plan's card_paid_minor must move by exactly
+      // this installment's receipt delta, which is what keeps the trip's collected total verifiable.
+      allow update: if signedIn() && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && svu_trip_installments(request.resource.data.diff(resource.data).affectedKeys(), request.resource.data)
+        && request.resource.data.id == resource.data.id
         && request.resource.data.tripId == resource.data.tripId
         && request.resource.data.paymentPlanId == resource.data.paymentPlanId
-        && request.resource.data.id == resource.data.id
-        && request.resource.data.expectedAmountMinor == resource.data.expectedAmountMinor
-        && operationMatches(request.resource.data.lastOperationId,
-          ['installment-payment'], resource.data.businessId, resource.data.tripId)
-        && op(request.resource.data.lastOperationId).installmentId == installmentId
-        && request.resource.data.paidAmountMinor
-          == resource.data.paidAmountMinor + op(request.resource.data.lastOperationId).amountMinor
-        && request.resource.data.paidAmountMinor <= resource.data.expectedAmountMinor
-        && request.resource.data.status
-          == (request.resource.data.paidAmountMinor == resource.data.expectedAmountMinor
-            ? 'paid' : 'partial')
-        && changedOnly(['paidAmountMinor','status','paidAt','lastOperationId','updatedAt']);
-      allow delete: if false;
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.installmentNumber == resource.data.installmentNumber
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.paidAmountMinor <= request.resource.data.expectedAmountMinor
+        && (request.resource.data.paidAmountMinor == 0) == (request.resource.data.paidAt == null)
+        && receiptMoved(request.resource.data.paymentPlanId, resource.data, request.resource.data)
+        && tripOperation(request.resource.data, request.resource.data.tripId,
+          ['trip-create', 'trip-edit', 'installment-payment', 'installment-reschedule', 'plan-recalculate']);
+      // save_trip_transaction replaces an untouched schedule; a purge removes the whole trip.
+      allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid
+        && (purgeOperation(resource.data.tripId)
+          || (resource.data.paidAmountMinor == 0 && resource.data.status == 'scheduled'
+            && commitOperation(resource.data.tripId, ['trip-create', 'trip-edit'])));
     }
 
-    function validImmutableEvent(data, eventId) {
-      let operation = getAfter(operationPath(eventId)).data;
-      return operation.operationId == eventId
-        && operation.actorUid == request.auth.uid
-        && operation.type in ['payment','installment-payment']
-        && data.ownerUid == operation.ownerUid
-        && data.businessId == operation.businessId
-        && data.operationId == eventId && data.lastOperationId == eventId
-        && data.actorUserId == request.auth.uid
-        && data.tripId == operation.tripId
-        && data.amountMinor == operation.amountMinor
-        && data.currency == operation.currency
-        && (operation.type != 'installment-payment'
-          || data.installmentId == operation.installmentId);
-    }
-    function validActivity(data) {
-      let operation = getAfter(operationPath(data.lastOperationId)).data;
-      return operation.operationId == data.lastOperationId
-        && operation.actorUid == request.auth.uid
-        && operation.type in ['trip-create','trip-edit','payment','installment-payment','trip-state']
-        && data.ownerUid == operation.ownerUid
-        && data.businessId == operation.businessId
-        && data.tripId == operation.tripId
-        && data.actorUserId == request.auth.uid;
+    // ---- The append-only trip history -----------------------------------------------------------
+    //
+    // Event ids are bigint identities in the source. A client transaction allocates them as
+    // `Date.now() * 1000 + n` and writes them zero-padded to 19 digits, so the document id IS the row
+    // id and a rule can require the two to agree: an event cannot be written under a lower id to sit
+    // in front of history that already exists. Create-only means nothing can be rewritten afterwards.
+    // A history row is bound to the commit it belongs to: the operation it names must have been created by this actor
+    // in this same request. The heavier binding (business, trip and operation type) is not repeated per row, because a
+    // save appends up to a dozen of them and the request-wide evaluation budget is 1,000 expressions. A row whose
+    // businessId did not match its owner would be unreadable by every tenant, so nothing is exposed by not re-checking.
+    function validEvent(data, eventId) {
+      return data.ownerUid == request.auth.uid
+        && data.userId == data.ownerUid
+        && data.id == int(eventId)
+        && data.sequence == data.id
+        && freshOperation(data.lastOperationId);
     }
     match /tripPaymentEvents/{eventId} {
-      allow get, list: if adminReadOnly() || owns(resource.data);
-      allow create: if validImmutableEvent(request.resource.data, eventId);
-      allow update, delete: if false;
+      allow get, list: if adminReadOnly() || resource == null || owns(resource.data);
+      allow create: if sv_trip_payment_events(request.resource.data)
+        && validEvent(request.resource.data, eventId)
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.sequenceParent == request.resource.data.paymentPlanId
+        && existsAfter(planPath(request.resource.data.paymentPlanId));
+      allow update: if false;
+      allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid && purgeOperation(resource.data.tripId);
     }
     match /tripInstallmentEvents/{eventId} {
-      allow get, list: if adminReadOnly() || owns(resource.data);
-      allow create: if validImmutableEvent(request.resource.data, eventId)
-        && request.resource.data.eventType == 'installment';
-      allow update, delete: if false;
+      allow get, list: if adminReadOnly() || resource == null || owns(resource.data);
+      allow create: if sv_trip_installment_events(request.resource.data)
+        && validEvent(request.resource.data, eventId)
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.sequenceParent == request.resource.data.installmentId
+        && existsAfter(installmentPath(request.resource.data.installmentId));
+      allow update: if false;
+      allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid && purgeOperation(resource.data.tripId);
     }
     match /tripFinancialAudit/{eventId} {
-      allow get, list: if adminReadOnly() || owns(resource.data);
-      allow create: if validImmutableEvent(request.resource.data, eventId)
-        && request.resource.data.afterMinor
-          == request.resource.data.beforeMinor + request.resource.data.amountMinor;
-      allow update, delete: if false;
+      allow get, list: if adminReadOnly() || resource == null || owns(resource.data);
+      allow create: if sv_trip_financial_audit(request.resource.data)
+        && validEvent(request.resource.data, eventId)
+        && request.resource.data.changedAt == request.time
+        && request.resource.data.sequenceParent == request.resource.data.tripId;
+      allow update: if false;
+      allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid && purgeOperation(resource.data.tripId);
     }
     match /tripActivityLog/{eventId} {
-      allow get, list: if adminReadOnly() || owns(resource.data);
-      allow create: if validActivity(request.resource.data);
+      allow get, list: if adminReadOnly() || resource == null || owns(resource.data);
+      allow create: if sv_trip_activity_log(request.resource.data)
+        && validEvent(request.resource.data, eventId)
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.sequenceParent == request.resource.data.tripId;
+      // trip_activity_log has no foreign key to trips, so a purge leaves its rows where they are.
       allow update, delete: if false;
     }
     match /auditEvents/{eventId} {
-      allow get, list: if adminReadOnly() || owns(resource.data);
+      allow get, list: if adminReadOnly() || resource == null || owns(resource.data);
       allow write: if false;
     }
 
@@ -2054,8 +2713,150 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    match /idempotency/{id} { allow read, write: if false; }
-    match /storageCleanupQueue/{id} { allow read, write: if false; }
+    // ---- Tourism side tables --------------------------------------------------------------------
+    //
+    // No money lives here. The owner writes their own rows, the generated validators carry the
+    // source's CHECK constraints, and the one notification a client may create is the Visa schedule
+    // event, whose parameters are copied from documents the Rules read back: a forged payload cannot
+    // describe a collection that did not happen.
+    //
+    // Known deviation, recorded in the vertical report: the source also refuses a notification whose
+    // params text, or a template whose payload text, matches /passport|https?:\/\/|storage_path/ or
+    // names a sensitive key at any depth. Rules cannot scan a nested map, so the key set is pinned
+    // here at the top level and the full predicate stays in the write model. The exposure it leaves
+    // is an owner writing such text into their own tenant's rows, never another tenant's.
+    function visaParamsBound(d) {
+      let installment = get(installmentPath(d.params.installmentId)).data;
+      return d.params.keys().hasOnly(['destination', 'currency', 'amountMinor', 'previousVisaConfirmedMinor',
+          'visaConfirmedMinor', 'previousConfirmedTotalMinor', 'confirmedTotalMinor', 'previousUnpaidMinor',
+          'totalUnpaidMinor', 'previousConfirmedInstallments', 'confirmedInstallments', 'partialInstallments',
+          'installmentCount', 'installmentId', 'dueDate', 'eventKey'])
+        && d.params.eventKey == d.dedupeKey
+        && d.dedupeKey == 'visa-schedule:' + d.tripId + ':' + d.params.installmentId + ':' + d.params.dueDate
+        && d.params.destination == get(tripPath(d.tripId)).data.destination
+        && installment.tripId == d.tripId
+        && installment.dueDate == d.params.dueDate
+        && d.params.amountMinor == installment.expectedAmountMinor;
+    }
+    match /tripNotifications/{notificationId} {
+      allow get, list: if adminReadOnly() || resource == null || owns(resource.data);
+      allow create: if owns(request.resource.data)
+        && sv_trip_notifications(request.resource.data)
+        && request.resource.data.id == notificationId
+        && request.resource.data.userId == request.resource.data.ownerUid
+        && request.resource.data.notificationType == 'visa_schedule_collected'
+        && request.resource.data.titleKey == 'notifications.travel.visaScheduleProgressTitle'
+        && request.resource.data.bodyKey == 'notifications.travel.visaScheduleProgressBody'
+        && request.resource.data.readAt == null
+        && request.resource.data.dismissedAt == null
+        && request.resource.data.snoozedUntil == null
+        && request.resource.data.completedAt == null
+        && request.resource.data.createdAt == request.time
+        && visaParamsBound(request.resource.data);
+      // The bell menu: read, snooze, dismiss. Nothing else about a notification may change.
+      allow update: if owns(resource.data) && owns(request.resource.data)
+        && svu_trip_notifications(request.resource.data.diff(resource.data).affectedKeys(), request.resource.data)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readAt', 'readAtMicros',
+          'dismissedAt', 'dismissedAtMicros', 'snoozedUntil', 'snoozedUntilMicros', 'lastOperationId'])
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.dedupeKey == resource.data.dedupeKey;
+      allow delete: if false;
+    }
+
+    match /tripTemplates/{templateId} {
+      allow get, list: if adminReadOnly() || resource == null || owns(resource.data);
+      allow create: if owns(request.resource.data)
+        && sv_trip_templates(request.resource.data)
+        && request.resource.data.id == templateId
+        && request.resource.data.userId == request.resource.data.ownerUid
+        && request.resource.data.usageCount == 0
+        && request.resource.data.lastUsedAt == null
+        && request.resource.data.deletedAt == null
+        && request.resource.data.isDeleted == false
+        && request.resource.data.createdAt == request.time
+        && templatePayloadKeysSafe(request.resource.data);
+      allow update: if owns(resource.data) && owns(request.resource.data)
+        && svu_trip_templates(request.resource.data.diff(resource.data).affectedKeys(), request.resource.data)
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.isDeleted == (request.resource.data.deletedAt != null)
+        && templatePayloadKeysSafe(request.resource.data);
+      // The product soft-deletes a template; nothing removes the row.
+      allow delete: if false;
+    }
+    function templatePayloadKeysSafe(d) {
+      return d.get('templateDataEncoding', 'native') != 'native'
+        || !d.templateData.keys().hasAny(['passport_number', 'client_phone', 'payments', 'attachments',
+          'travelers', 'audit', 'user_id']);
+    }
+
+    match /tripWhatsappTemplates/{templateId} {
+      allow get, list: if adminReadOnly() || resource == null || owns(resource.data);
+      allow create: if owns(request.resource.data)
+        && sv_trip_whatsapp_templates(request.resource.data)
+        && request.resource.data.id == templateId
+        && request.resource.data.userId == request.resource.data.ownerUid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+      allow update: if owns(resource.data) && owns(request.resource.data)
+        && svu_trip_whatsapp_templates(request.resource.data.diff(resource.data).affectedKeys(), request.resource.data)
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if owns(resource.data);
+    }
+
+    // trip_write_requests: the idempotency ledger. A client may add its own request record inside the
+    // transaction that record describes, and may never read one: a client that could read it would
+    // learn whether a payment already happened, and one that could change it could replay or suppress
+    // a payment.
+    match /idempotency/{id} {
+      allow read: if false;
+      allow create: if signedIn()
+        && sv_trip_write_requests(request.resource.data)
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.userId == request.auth.uid
+        && id == request.auth.uid + '__' + request.resource.data.clientRequestId
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.tripId != null
+        && existsAfter(tripPath(request.resource.data.tripId))
+        && commitOperation(request.resource.data.tripId, ['trip-create', 'trip-edit']);
+      allow update: if false;
+      allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid
+        && resource.data.tripId != null && purgeOperation(resource.data.tripId);
+    }
+
+    // trip_attachment_cleanup_queue: the owner reads their jobs and may re-queue a failed one
+    // (retry_trip_attachment_cleanup); the queue is otherwise drained by operations tooling.
+    match /storageCleanupQueue/{id} {
+      allow get, list: if adminReadOnly() || resource == null || owns(resource.data);
+      allow create: if owns(request.resource.data)
+        && sv_trip_attachment_cleanup_queue(request.resource.data)
+        && request.resource.data.id == int(id)
+        && request.resource.data.userId == request.resource.data.ownerUid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.attempts == 0
+        && request.resource.data.lastError == null
+        && request.resource.data.completedAt == null
+        && request.resource.data.lastAttemptedAt == null
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.nextRetryAt == request.time
+        && purgeOperation(request.resource.data.tripId);
+      allow update: if owns(resource.data) && owns(request.resource.data)
+        && svu_trip_attachment_cleanup_queue(request.resource.data.diff(resource.data).affectedKeys(), request.resource.data)
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status', 'nextRetryAt', 'nextRetryAtMicros', 'lastError', 'lastOperationId'])
+        && resource.data.status == 'failed'
+        && resource.data.attempts < 10
+        && request.resource.data.status == 'pending'
+        && request.resource.data.lastError == null
+        && request.resource.data.nextRetryAt == request.time;
+      allow delete: if false;
+    }
+
     match /rateLimits/{id} { allow read, write: if false; }
     match /featureRollouts/{id} {
       allow get, list: if signedIn();

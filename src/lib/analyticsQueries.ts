@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from './supabase';
+import { getBackend } from '../data/backend';
 import { useAuth } from '../contexts/AuthContext';
 
 export interface AnalyticsSummaryFilters {
@@ -419,20 +419,8 @@ export async function fetchTravelAnalyticsSummary(filters: AnalyticsSummaryFilte
     p_start_date: filters.startDate || null,
     p_end_date: filters.endDate || null,
   };
-  const [summaryResult, paymentResult] = await Promise.all([
-    supabase.rpc('get_travel_analytics_summary', args),
-    supabase.rpc('get_travel_payment_analytics', args),
-  ]);
-
-  if (summaryResult.error) {
-    console.error('Analytics RPC fetch error:', summaryResult.error.message);
-    throw summaryResult.error;
-  }
-  if (paymentResult.error) {
-    console.error('Canonical payment analytics RPC fetch error:', paymentResult.error.message);
-    throw paymentResult.error;
-  }
-  return normalizeAnalyticsResponse(summaryResult.data, paymentResult.data);
+  const { summary, payment } = await getBackend().travel.getTravelAnalytics(args);
+  return normalizeAnalyticsResponse(summary, payment);
 }
 
 export function useTravelAnalyticsSummary(filters: AnalyticsSummaryFilters) {

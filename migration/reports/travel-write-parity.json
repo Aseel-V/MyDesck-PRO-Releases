@@ -1,0 +1,297 @@
+{
+  "generatedAt": "2026-09-16T14:24:37.499Z",
+  "oracle": "local PostgreSQL 17 (fixture + migrations + production overlay)",
+  "scenarios": [
+    {
+      "name": "create, cash, nothing confirmed",
+      "steps": [
+        {
+          "step": 0,
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        }
+      ],
+      "problems": []
+    },
+    {
+      "name": "create, cash, partly confirmed",
+      "steps": [
+        {
+          "step": 0,
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        }
+      ],
+      "problems": []
+    },
+    {
+      "name": "create, cash, fully confirmed",
+      "steps": [
+        {
+          "step": 0,
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        }
+      ],
+      "problems": []
+    },
+    {
+      "name": "create, card, three installments from a month end",
+      "steps": [
+        {
+          "step": 0,
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        }
+      ],
+      "problems": []
+    },
+    {
+      "name": "create, mixed",
+      "steps": [
+        {
+          "step": 0,
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        }
+      ],
+      "problems": []
+    },
+    {
+      "name": "create without a payment plan",
+      "steps": [
+        {
+          "step": 0,
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        }
+      ],
+      "problems": []
+    },
+    {
+      "name": "create, no request id",
+      "steps": [
+        {
+          "step": 0,
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        }
+      ],
+      "problems": []
+    },
+    {
+      "name": "idempotent replay",
+      "steps": [
+        {
+          "step": 0,
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        },
+        {
+          "step": 1,
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        }
+      ],
+      "problems": []
+    },
+    {
+      "name": "edit with no change",
+      "steps": [
+        {
+          "step": 0,
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        },
+        {
+          "step": 1,
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        }
+      ],
+      "problems": []
+    },
+    {
+      "name": "edit the sale price with the cash plan",
+      "steps": [
+        {
+          "step": 0,
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        },
+        {
+          "step": 1,
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        }
+      ],
+      "problems": []
+    },
+    {
+      "name": "edit from cash to card",
+      "steps": [
+        {
+          "step": 0,
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        },
+        {
+          "step": 1,
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        }
+      ],
+      "problems": []
+    },
+    {
+      "name": "edit the status and travelers",
+      "steps": [
+        {
+          "step": 0,
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        },
+        {
+          "step": 1,
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        }
+      ],
+      "problems": []
+    },
+    {
+      "name": "phone in international form",
+      "steps": [
+        {
+          "step": 0,
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        }
+      ],
+      "problems": []
+    },
+    {
+      "name": "invalid phone refused",
+      "steps": [
+        {
+          "step": 0,
+          "source": "error 22023",
+          "model": "error 22023",
+          "problems": 0
+        }
+      ],
+      "problems": []
+    },
+    {
+      "name": "split mismatch refused",
+      "steps": [
+        {
+          "step": 0,
+          "source": "error 22023",
+          "model": "error 22023",
+          "problems": 0
+        }
+      ],
+      "problems": []
+    },
+    {
+      "name": "confirmed cash above total refused",
+      "steps": [
+        {
+          "step": 0,
+          "source": "error 22023",
+          "model": "error 22023",
+          "problems": 0
+        }
+      ],
+      "problems": []
+    },
+    {
+      "name": "unknown currency refused",
+      "steps": [
+        {
+          "step": 0,
+          "source": "error 23514",
+          "model": "error 23514",
+          "problems": 0
+        }
+      ],
+      "problems": []
+    },
+    {
+      "name": "fractional travelers count refused",
+      "steps": [
+        {
+          "step": 0,
+          "source": "error 22P02",
+          "model": "error 22P02",
+          "problems": 0
+        }
+      ],
+      "problems": []
+    },
+    {
+      "name": "editing another owner trip refused",
+      "steps": [
+        {
+          "step": 0,
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        },
+        {
+          "step": 1,
+          "source": "error P0001",
+          "model": "error P0001",
+          "problems": 0
+        }
+      ],
+      "problems": []
+    }
+  ],
+  "controls": [
+    {
+      "scenario": "create, card, three installments from a month end",
+      "name": "an activity row missing",
+      "status": "DETECTED"
+    },
+    {
+      "scenario": "create, card, three installments from a month end",
+      "name": "the sale price at another scale",
+      "status": "DETECTED"
+    },
+    {
+      "scenario": "create, card, three installments from a month end",
+      "name": "an installment amount moved by one minor unit",
+      "status": "DETECTED"
+    }
+  ],
+  "decision": "PASS",
+  "migrations": 93,
+  "totals": {
+    "scenarios": 19,
+    "steps": 25,
+    "scenariosWithProblems": 0,
+    "problems": 0,
+    "controls": 3,
+    "controlsDetected": 3
+  }
+}

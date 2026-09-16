@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { getBackend } from '../data/backend';
 import { isMissingRpcError } from './queryRetryPolicy';
 import { getSafeDatabaseErrorDiagnostic } from './safeError';
 
@@ -17,8 +17,7 @@ export class PaymentContractCompatibilityError extends Error {
 }
 
 async function probeConnectedDatabase(): Promise<ContractProbeResult> {
-  const { data, error } = await supabase.rpc('get_travel_payment_contract_version');
-  return { data, error };
+  return getBackend().travel.probePaymentContractVersion();
 }
 
 let cachedProbe: Promise<void> | null = null;

@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AlertTriangle, RefreshCw, RotateCcw, Search, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { supabase } from '../../lib/supabase';
+import { getBackend } from '../../data/backend';
 import {
   fetchDeletedTripsPage,
   permanentlyDeleteTrips,
@@ -37,13 +37,7 @@ export function TripTrash({ onClose }: TripTrashProps) {
 
   const { data: cleanupJobs = [] } = useQuery({
     queryKey: ['trip-cleanup-issues'],
-    queryFn: async () => {
-      const result = await supabase.from('trip_attachment_cleanup_queue')
-        .select('id,trip_id,status,attempts,last_error,next_retry_at,created_at')
-        .eq('status', 'failed').order('created_at', { ascending: false }).limit(20);
-      if (result.error) throw result.error;
-      return result.data;
-    },
+    queryFn: () => getBackend().travel.listFailedCleanupJobs(),
   });
 
   const refresh = async () => {

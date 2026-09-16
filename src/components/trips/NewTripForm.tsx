@@ -9,7 +9,7 @@ import { createTripSchema, tripSchema } from '../../lib/schemas';
 import { cn } from '../../lib/utils';
 import { z } from 'zod';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '../../lib/supabase';
+import { getBackend } from '../../data/backend';
 import { formatRoomConfiguration, normalizeRoomConfiguration, serializeRoomConfiguration } from '../../lib/tripRoom';
 import { ConfirmationModal } from '../ui/ConfirmationModal';
 import { Button } from '../travel-ui/Button';
@@ -175,15 +175,7 @@ export default function NewTripForm({ onClose, onSave, editTrip }: NewTripFormPr
   const { data: distinctClients = [] } = useQuery({
     queryKey: ['distinct-clients', user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('trips')
-        .select('client_name, client_phone')
-        .eq('user_id', user!.id)
-        .is('deleted_at', null)
-        .order('created_at', { ascending: false })
-        .limit(1000);
-
-      if (error) throw error;
+      const data = await getBackend().travel.listClientRows(user!.id);
 
       // Deduplicate by client_name
       const unique = new Map<string, ExistingClient>();

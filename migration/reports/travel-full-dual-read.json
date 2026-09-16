@@ -1,0 +1,435 @@
+{
+  "generatedAt": "2026-09-15T21:58:59.443Z",
+  "surface": "tourism_reads",
+  "target": "firestore-emulator",
+  "readOnlySource": {
+    "start": {
+      "read_only": "on",
+      "isolation": "repeatable read"
+    },
+    "rejectedWriteSqlState": "25006",
+    "successfulWrites": 0,
+    "end": {
+      "read_only": "on",
+      "isolation": "repeatable read"
+    },
+    "transactionOutcome": "ROLLBACK"
+  },
+  "tenants": [
+    {
+      "businessHash": "4dbcb05fccc9",
+      "ownerHash": "2f93402fb0f7",
+      "trips": 2,
+      "checks": 67,
+      "mismatches": 0,
+      "byKind": {
+        "tripsPage": {
+          "checks": 30,
+          "mismatches": 0
+        },
+        "tripDetails": {
+          "checks": 2,
+          "mismatches": 0
+        },
+        "trash": {
+          "checks": 2,
+          "mismatches": 0
+        },
+        "activity": {
+          "checks": 2,
+          "mismatches": 0
+        },
+        "financialAudit": {
+          "checks": 2,
+          "mismatches": 0
+        },
+        "paymentPlan": {
+          "checks": 2,
+          "mismatches": 0
+        },
+        "installmentEvents": {
+          "checks": 3,
+          "mismatches": 0
+        },
+        "failedCleanupJobs": {
+          "checks": 1,
+          "mismatches": 0
+        },
+        "notifications": {
+          "checks": 1,
+          "mismatches": 0
+        },
+        "templates": {
+          "checks": 2,
+          "mismatches": 0
+        },
+        "searchTrips": {
+          "checks": 1,
+          "mismatches": 0
+        },
+        "clientRows": {
+          "checks": 1,
+          "mismatches": 0
+        },
+        "exportTrips": {
+          "checks": 1,
+          "mismatches": 0
+        },
+        "analytics": {
+          "checks": 12,
+          "mismatches": 0
+        },
+        "reports": {
+          "checks": 5,
+          "mismatches": 0
+        }
+      },
+      "firstMismatches": [],
+      "clean": true,
+      "restoredClean": true
+    },
+    {
+      "businessHash": "ba615a830ba8",
+      "ownerHash": "4ed545194685",
+      "trips": 96,
+      "checks": 484,
+      "mismatches": 0,
+      "byKind": {
+        "tripsPage": {
+          "checks": 31,
+          "mismatches": 0
+        },
+        "tripDetails": {
+          "checks": 96,
+          "mismatches": 0
+        },
+        "trash": {
+          "checks": 2,
+          "mismatches": 0
+        },
+        "activity": {
+          "checks": 102,
+          "mismatches": 0
+        },
+        "financialAudit": {
+          "checks": 101,
+          "mismatches": 0
+        },
+        "paymentPlan": {
+          "checks": 96,
+          "mismatches": 0
+        },
+        "installmentEvents": {
+          "checks": 31,
+          "mismatches": 0
+        },
+        "failedCleanupJobs": {
+          "checks": 1,
+          "mismatches": 0
+        },
+        "notifications": {
+          "checks": 1,
+          "mismatches": 0
+        },
+        "templates": {
+          "checks": 2,
+          "mismatches": 0
+        },
+        "searchTrips": {
+          "checks": 1,
+          "mismatches": 0
+        },
+        "clientRows": {
+          "checks": 1,
+          "mismatches": 0
+        },
+        "exportTrips": {
+          "checks": 1,
+          "mismatches": 0
+        },
+        "analytics": {
+          "checks": 13,
+          "mismatches": 0
+        },
+        "reports": {
+          "checks": 5,
+          "mismatches": 0
+        }
+      },
+      "firstMismatches": [],
+      "clean": true,
+      "restoredClean": true
+    },
+    {
+      "businessHash": "0ed3bad7f4de",
+      "ownerHash": "a3d78f6c5a53",
+      "trips": 0,
+      "checks": 48,
+      "mismatches": 0,
+      "byKind": {
+        "tripsPage": {
+          "checks": 26,
+          "mismatches": 0
+        },
+        "trash": {
+          "checks": 2,
+          "mismatches": 0
+        },
+        "failedCleanupJobs": {
+          "checks": 1,
+          "mismatches": 0
+        },
+        "notifications": {
+          "checks": 1,
+          "mismatches": 0
+        },
+        "templates": {
+          "checks": 2,
+          "mismatches": 0
+        },
+        "searchTrips": {
+          "checks": 1,
+          "mismatches": 0
+        },
+        "clientRows": {
+          "checks": 1,
+          "mismatches": 0
+        },
+        "exportTrips": {
+          "checks": 1,
+          "mismatches": 0
+        },
+        "analytics": {
+          "checks": 10,
+          "mismatches": 0
+        },
+        "reports": {
+          "checks": 3,
+          "mismatches": 0
+        }
+      },
+      "firstMismatches": [],
+      "clean": true,
+      "restoredClean": true
+    },
+    {
+      "businessHash": "ebfdffd17520",
+      "ownerHash": "6d65321887ee",
+      "trips": 2,
+      "checks": 67,
+      "mismatches": 0,
+      "byKind": {
+        "tripsPage": {
+          "checks": 30,
+          "mismatches": 0
+        },
+        "tripDetails": {
+          "checks": 2,
+          "mismatches": 0
+        },
+        "trash": {
+          "checks": 2,
+          "mismatches": 0
+        },
+        "activity": {
+          "checks": 2,
+          "mismatches": 0
+        },
+        "financialAudit": {
+          "checks": 2,
+          "mismatches": 0
+        },
+        "paymentPlan": {
+          "checks": 2,
+          "mismatches": 0
+        },
+        "installmentEvents": {
+          "checks": 3,
+          "mismatches": 0
+        },
+        "failedCleanupJobs": {
+          "checks": 1,
+          "mismatches": 0
+        },
+        "notifications": {
+          "checks": 1,
+          "mismatches": 0
+        },
+        "templates": {
+          "checks": 2,
+          "mismatches": 0
+        },
+        "searchTrips": {
+          "checks": 1,
+          "mismatches": 0
+        },
+        "clientRows": {
+          "checks": 1,
+          "mismatches": 0
+        },
+        "exportTrips": {
+          "checks": 1,
+          "mismatches": 0
+        },
+        "analytics": {
+          "checks": 12,
+          "mismatches": 0
+        },
+        "reports": {
+          "checks": 5,
+          "mismatches": 0
+        }
+      },
+      "firstMismatches": [],
+      "clean": true,
+      "restoredClean": true
+    }
+  ],
+  "corruptionControls": [
+    {
+      "name": "trip sale price changed",
+      "tenant": "4dbcb05fccc9",
+      "observed": true,
+      "status": "DETECTED"
+    },
+    {
+      "name": "trip moved to another owner",
+      "tenant": "4dbcb05fccc9",
+      "observed": true,
+      "status": "DETECTED"
+    },
+    {
+      "name": "installment expected amount changed",
+      "tenant": "4dbcb05fccc9",
+      "observed": true,
+      "status": "DETECTED"
+    },
+    {
+      "name": "deleted trip shown as live",
+      "tenant": "4dbcb05fccc9",
+      "status": "NOT_APPLICABLE_NO_ROWS"
+    },
+    {
+      "name": "activity entry retyped",
+      "tenant": "4dbcb05fccc9",
+      "observed": true,
+      "status": "DETECTED"
+    },
+    {
+      "name": "financial audit field renamed",
+      "tenant": "4dbcb05fccc9",
+      "observed": true,
+      "status": "DETECTED"
+    },
+    {
+      "name": "trip sale price changed",
+      "tenant": "ba615a830ba8",
+      "observed": true,
+      "status": "DETECTED"
+    },
+    {
+      "name": "trip moved to another owner",
+      "tenant": "ba615a830ba8",
+      "observed": true,
+      "status": "DETECTED"
+    },
+    {
+      "name": "installment expected amount changed",
+      "tenant": "ba615a830ba8",
+      "status": "NOT_APPLICABLE_NO_ROWS"
+    },
+    {
+      "name": "deleted trip shown as live",
+      "tenant": "ba615a830ba8",
+      "observed": true,
+      "status": "DETECTED"
+    },
+    {
+      "name": "activity entry retyped",
+      "tenant": "ba615a830ba8",
+      "observed": true,
+      "status": "DETECTED"
+    },
+    {
+      "name": "financial audit field renamed",
+      "tenant": "ba615a830ba8",
+      "observed": true,
+      "status": "DETECTED"
+    },
+    {
+      "name": "trip sale price changed",
+      "tenant": "0ed3bad7f4de",
+      "status": "NOT_APPLICABLE_NO_ROWS"
+    },
+    {
+      "name": "trip moved to another owner",
+      "tenant": "0ed3bad7f4de",
+      "status": "NOT_APPLICABLE_NO_ROWS"
+    },
+    {
+      "name": "installment expected amount changed",
+      "tenant": "0ed3bad7f4de",
+      "status": "NOT_APPLICABLE_NO_ROWS"
+    },
+    {
+      "name": "deleted trip shown as live",
+      "tenant": "0ed3bad7f4de",
+      "status": "NOT_APPLICABLE_NO_ROWS"
+    },
+    {
+      "name": "activity entry retyped",
+      "tenant": "0ed3bad7f4de",
+      "status": "NOT_APPLICABLE_NO_ROWS"
+    },
+    {
+      "name": "financial audit field renamed",
+      "tenant": "0ed3bad7f4de",
+      "status": "NOT_APPLICABLE_NO_ROWS"
+    },
+    {
+      "name": "trip sale price changed",
+      "tenant": "ebfdffd17520",
+      "observed": true,
+      "status": "DETECTED"
+    },
+    {
+      "name": "trip moved to another owner",
+      "tenant": "ebfdffd17520",
+      "observed": true,
+      "status": "DETECTED"
+    },
+    {
+      "name": "installment expected amount changed",
+      "tenant": "ebfdffd17520",
+      "observed": true,
+      "status": "DETECTED"
+    },
+    {
+      "name": "deleted trip shown as live",
+      "tenant": "ebfdffd17520",
+      "status": "NOT_APPLICABLE_NO_ROWS"
+    },
+    {
+      "name": "activity entry retyped",
+      "tenant": "ebfdffd17520",
+      "observed": true,
+      "status": "DETECTED"
+    },
+    {
+      "name": "financial audit field renamed",
+      "tenant": "ebfdffd17520",
+      "observed": true,
+      "status": "DETECTED"
+    }
+  ],
+  "decision": "PASS",
+  "totals": {
+    "tenants": 4,
+    "trips": 100,
+    "checks": 666,
+    "mismatches": 0,
+    "controlsApplicable": 15,
+    "controlsDetected": 15,
+    "restoredClean": true
+  }
+}

@@ -62,7 +62,11 @@ gate('generatedSchema', schema.status === 0, { rulesValidators: schema.status ==
 
 const suites = entry.suites.map(([label, file, runner]) => {
   const args = runner === 'typescript' ? ['scripts/run-typescript-source-test.mjs', file] : ['--test', '--test-reporter=spec', file];
-  const run = spawnSync(process.execPath, args, { encoding: 'utf8', env: process.env, timeout: 900000 });
+  // The Rules budget suite measures every product path by binary search, reloading the committed Rules after each
+  // probe, so it lengthens as verticals land: 66 paths when this cap was set, 80 with tourism, 1,473s measured on a
+  // run that owned the emulator. A cap below that would kill the suite mid-measurement, record a FAIL that says
+  // nothing about the Rules, and leave the emulator carrying a padded ruleset for whatever ran next.
+  const run = spawnSync(process.execPath, args, { encoding: 'utf8', env: process.env, timeout: 2400000 });
   const count = (name) => Number((run.stdout ?? '').match(new RegExp(`^(?:#|ℹ) ${name} (\\d+)$`, 'm'))?.[1] ?? 0);
   return { label, file, outcome: run.status === 0 && count('tests') > 0 && count('fail') === 0 ? 'PASS' : 'FAIL', tests: count('tests') };
 });

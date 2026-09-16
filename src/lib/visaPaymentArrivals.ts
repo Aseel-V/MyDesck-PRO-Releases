@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { getBackend } from '../data/backend';
 import type { Json } from '../types/database';
 
 export interface VisaPaymentArrival {
@@ -48,22 +48,10 @@ export function mapVisaPaymentArrival(row: { id: string; trip_id: string | null;
 }
 
 export async function fetchUnseenVisaPaymentArrivals(): Promise<VisaPaymentArrival[]> {
-  const { error: materializeError } = await supabase.rpc('materialize_due_visa_progress_events');
-  if (materializeError) throw materializeError;
-  const { data, error } = await supabase
-    .from('trip_notifications')
-    .select('id,trip_id,params,created_at,scheduled_for')
-    .eq('notification_type', 'visa_schedule_collected')
-    .is('read_at', null)
-    .is('dismissed_at', null)
-    .order('scheduled_for', { ascending: false })
-    .order('created_at', { ascending: false })
-    .limit(100);
-  if (error) throw error;
+  const data = await getBackend().travel.listUnseenVisaArrivalRows();
   return (data || []).flatMap((row) => mapVisaPaymentArrival(row) ?? []);
 }
 
 export async function markVisaPaymentArrivalSeen(id: string): Promise<void> {
-  const { error } = await supabase.from('trip_notifications').update({ read_at: new Date().toISOString() }).eq('id', id);
-  if (error) throw error;
+  await getBackend().travel.markTripNotificationRead(id);
 }

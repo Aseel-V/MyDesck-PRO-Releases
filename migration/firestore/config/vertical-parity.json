@@ -1,40 +1,81 @@
 {
   "$comment": "Per-vertical inputs for migration/firestore/tools/vertical-parity-evidence.mjs. Every search, analytics, RPC, realtime and Edge Function surface a vertical exposes is listed with its implementation class, its files and the evidence that proves it. Reachability is measured: a PASS surface's files must be reachable from src/firebase-main.tsx, a LEGACY_UNREACHABLE one's from neither composition root. BLOCKED, an unlisted class or an unlisted status fails the gate.",
   "classes": {
-    "search": ["FIRESTORE_QUERY", "CLIENT_DERIVED", "LEGACY_UNREACHABLE"],
-    "analytics": ["FIRESTORE_QUERY", "CLIENT_DERIVED", "LEGACY_UNREACHABLE"],
-    "rpc": ["FIRESTORE_TRANSACTION", "FIRESTORE_QUERY", "CLIENT_DERIVED", "AUTH_REPLACED", "LEGACY_UNREACHABLE"],
-    "realtime": ["FIRESTORE_LISTENER", "LEGACY_UNREACHABLE"],
-    "edgeFunctions": ["CLIENT_DERIVED", "LEGACY_UNREACHABLE"]
+    "search": [
+      "FIRESTORE_QUERY",
+      "CLIENT_DERIVED",
+      "LEGACY_UNREACHABLE"
+    ],
+    "analytics": [
+      "FIRESTORE_QUERY",
+      "CLIENT_DERIVED",
+      "LEGACY_UNREACHABLE"
+    ],
+    "rpc": [
+      "FIRESTORE_TRANSACTION",
+      "FIRESTORE_QUERY",
+      "CLIENT_DERIVED",
+      "AUTH_REPLACED",
+      "LEGACY_UNREACHABLE"
+    ],
+    "realtime": [
+      "FIRESTORE_LISTENER",
+      "LEGACY_UNREACHABLE"
+    ],
+    "edgeFunctions": [
+      "CLIENT_DERIVED",
+      "LEGACY_UNREACHABLE"
+    ]
   },
   "verticals": {
     "supermarket": {
       "suites": [
-        ["supermarket repository, Rules and malicious clients", "scripts/test-firestore-supermarket.mjs", "typescript"],
-        ["schema validator helper semantics", "scripts/test-firestore-schema-validators.mjs", "node-test"],
-        ["Rules evaluation budget", "scripts/test-firestore-rules-budget.mjs", "typescript"]
+        [
+          "supermarket repository, Rules and malicious clients",
+          "scripts/test-firestore-supermarket.mjs",
+          "typescript"
+        ],
+        [
+          "schema validator helper semantics",
+          "scripts/test-firestore-schema-validators.mjs",
+          "node-test"
+        ],
+        [
+          "Rules evaluation budget",
+          "scripts/test-firestore-rules-budget.mjs",
+          "typescript"
+        ]
       ],
-      "budgetPathPrefixes": ["supermarket:"],
+      "budgetPathPrefixes": [
+        "supermarket:"
+      ],
       "search": [
         {
           "surface": "POS search box: name, Hebrew name or barcode substring",
           "class": "CLIENT_DERIVED",
           "status": "PASS",
-          "files": ["src/components/dashboards/SupermarketDashboard.tsx"],
+          "files": [
+            "src/components/dashboards/SupermarketDashboard.tsx"
+          ],
           "evidence": "Filters the complete listAvailableProducts result; the dual read proves that result equal to the source query for every tenant."
         },
         {
           "surface": "Barcode and PLU scan",
           "class": "CLIENT_DERIVED",
           "status": "PASS",
-          "files": ["src/components/dashboards/SupermarketDashboard.tsx"],
+          "files": [
+            "src/components/dashboards/SupermarketDashboard.tsx"
+          ],
           "evidence": "Exact barcode or PLU-suffix match over the same listAvailableProducts result."
         },
         {
           "surface": "Category chips and the product category picker",
           "class": "CLIENT_DERIVED",
           "status": "PASS",
-          "files": ["src/components/dashboards/SupermarketDashboard.tsx", "src/components/market/AddProductModal.tsx"],
+          "files": [
+            "src/components/dashboards/SupermarketDashboard.tsx",
+            "src/components/market/AddProductModal.tsx"
+          ],
           "evidence": "listCategories dual read, including ORDER BY sort_order ASC with NULLs last."
         }
       ],
@@ -43,14 +84,19 @@
           "surface": "Sales analytics: date-range list, cash/card/digital totals, edit and delete of a sale",
           "class": "FIRESTORE_QUERY",
           "status": "PASS",
-          "files": ["src/components/market/SalesAnalytics.tsx", "src/components/market/EditTransactionModal.tsx"],
+          "files": [
+            "src/components/market/SalesAnalytics.tsx",
+            "src/components/market/EditTransactionModal.tsx"
+          ],
           "evidence": "listSales is a createdAt range query, newest first, with the source's 1,000-row bound; the dual read proves it equal to the source; the totals come from the unchanged client reducer, proven over Firestore rows in test-firestore-supermarket.mjs and in the browser smoke."
         },
         {
           "surface": "SalesAnalyticsModal hourly, daily and monthly charts",
           "class": "LEGACY_UNREACHABLE",
           "status": "LEGACY_UNREACHABLE",
-          "files": ["src/components/market/SalesAnalyticsModal.tsx"],
+          "files": [
+            "src/components/market/SalesAnalyticsModal.tsx"
+          ],
           "evidence": "No module imports it, so its Supabase query is outside both composition roots and cannot run."
         }
       ],
@@ -60,25 +106,45 @@
     },
     "auto_repair": {
       "suites": [
-        ["auto repair repository, Rules and malicious clients", "scripts/test-firestore-auto-repair.mjs", "typescript"],
-        ["schema validator helper semantics", "scripts/test-firestore-schema-validators.mjs", "node-test"],
-        ["Rules evaluation budget", "scripts/test-firestore-rules-budget.mjs", "typescript"]
+        [
+          "auto repair repository, Rules and malicious clients",
+          "scripts/test-firestore-auto-repair.mjs",
+          "typescript"
+        ],
+        [
+          "schema validator helper semantics",
+          "scripts/test-firestore-schema-validators.mjs",
+          "node-test"
+        ],
+        [
+          "Rules evaluation budget",
+          "scripts/test-firestore-rules-budget.mjs",
+          "typescript"
+        ]
       ],
-      "budgetPathPrefixes": ["auto repair:"],
-      "additionalDualReads": ["migration/reports/travel-dashboard-dual-read.json"],
+      "budgetPathPrefixes": [
+        "auto repair:"
+      ],
+      "additionalDualReads": [
+        "migration/reports/travel-dashboard-dual-read.json"
+      ],
       "search": [
         {
           "surface": "Cars list search: plate, model or owner name substring",
           "class": "CLIENT_DERIVED",
           "status": "PASS",
-          "files": ["src/components/cars/Cars.tsx"],
+          "files": [
+            "src/components/cars/Cars.tsx"
+          ],
           "evidence": "Filters the complete listRepairOrders result (orders with their vehicle and items), proven equal to the source by the dual read."
         },
         {
           "surface": "Service part picker search: part name, description, serial number or compatible car",
           "class": "CLIENT_DERIVED",
           "status": "PASS",
-          "files": ["src/components/cars/AddServiceModal.tsx"],
+          "files": [
+            "src/components/cars/AddServiceModal.tsx"
+          ],
           "evidence": "Filters listPartsInStock (quantity > 0, ORDER BY part_name), proven equal to the source by the dual read."
         }
       ],
@@ -87,21 +153,31 @@
           "surface": "Home screen travel dashboard (the auto_repair home): trips of the selected year, the year filter, alerts and payment summaries",
           "class": "FIRESTORE_QUERY",
           "status": "PASS",
-          "files": ["src/components/Dashboard.tsx", "src/data/firestore/FirestoreTravelDashboardRepository.ts", "src/data/firestore/tripPaymentPlanSummary.ts"],
+          "files": [
+            "src/components/Dashboard.tsx",
+            "src/data/firestore/FirestoreTravelDashboardRepository.ts",
+            "src/data/firestore/tripPaymentPlanSummary.ts"
+          ],
           "evidence": "travel-dashboard-dual-read.mjs compares listTripYears and listDashboardTrips, every payment_plan_summary field included, with the production functions evaluated as each owner; the browser smoke signs in to this home with no Supabase traffic."
         },
         {
           "surface": "Analytics page for a non-tourism business (SalesAnalytics over market_transactions)",
           "class": "FIRESTORE_QUERY",
           "status": "PASS",
-          "files": ["src/components/market/SalesAnalytics.tsx"],
+          "files": [
+            "src/components/market/SalesAnalytics.tsx"
+          ],
           "evidence": "The same repository path the supermarket vertical proves; the page is owner-scoped and bounded."
         },
         {
           "surface": "Debtors panel and smart reception (AutoRepairDashboard over customers_ledger) with the repair order and export modals",
           "class": "LEGACY_UNREACHABLE",
           "status": "LEGACY_UNREACHABLE",
-          "files": ["src/components/dashboards/AutoRepairDashboard.tsx", "src/components/repair/RepairOrderModal.tsx", "src/components/repair/RepairExportModal.tsx"],
+          "files": [
+            "src/components/dashboards/AutoRepairDashboard.tsx",
+            "src/components/repair/RepairOrderModal.tsx",
+            "src/components/repair/RepairExportModal.tsx"
+          ],
           "evidence": "No module imports AutoRepairDashboard; the auto_repair home renders the travel dashboard and the Cars page instead."
         }
       ],
@@ -110,28 +186,36 @@
           "surface": "add_repair_service_transaction",
           "class": "FIRESTORE_TRANSACTION",
           "status": "PASS",
-          "files": ["src/data/firestore/FirestoreAutoRepairRepository.ts"],
+          "files": [
+            "src/data/firestore/FirestoreAutoRepairRepository.ts"
+          ],
           "evidence": "One Firestore transaction writing an immutable repairServices record; the Rules recompute stock, prices and totals from the documents before and after (test-firestore-auto-repair.mjs, including a forged price)."
         },
         {
           "surface": "get_trip_years (travel home year filter)",
           "class": "FIRESTORE_QUERY",
           "status": "PASS",
-          "files": ["src/data/firestore/FirestoreTravelDashboardRepository.ts"],
+          "files": [
+            "src/data/firestore/FirestoreTravelDashboardRepository.ts"
+          ],
           "evidence": "Owner-constrained query over live trips, bounded at 5,000 and failing loudly past it instead of truncating; the travel dashboard dual read proves the year list equal for every owner."
         },
         {
           "surface": "get_trip_dashboard_items (travel home trips of a year)",
           "class": "FIRESTORE_QUERY",
           "status": "PASS",
-          "files": ["src/data/firestore/FirestoreTravelDashboardRepository.ts"],
+          "files": [
+            "src/data/firestore/FirestoreTravelDashboardRepository.ts"
+          ],
           "evidence": "Union of startDate and paymentDate range queries with the exact coalesce(payment_date, start_date) predicate, bounded at 2,000; compared field by field, in order, by the travel dashboard dual read."
         },
         {
           "surface": "get_owned_trip_payment_summary (the payment_plan_summary of every dashboard trip)",
           "class": "CLIENT_DERIVED",
           "status": "PASS",
-          "files": ["src/data/firestore/tripPaymentPlanSummary.ts"],
+          "files": [
+            "src/data/firestore/tripPaymentPlanSummary.ts"
+          ],
           "evidence": "Integer minor-unit reproduction of the SQL function over the trip, its plans and installments, with half-away-from-zero rounding and the Asia/Jerusalem business clock; every output field is compared by the travel dashboard dual read."
         }
       ],
@@ -140,25 +224,47 @@
     },
     "car_parts": {
       "suites": [
-        ["car parts repository, Rules and malicious clients", "scripts/test-firestore-car-parts.mjs", "typescript"],
-        ["auto repair repository, Rules and malicious clients", "scripts/test-firestore-auto-repair.mjs", "typescript"],
-        ["schema validator helper semantics", "scripts/test-firestore-schema-validators.mjs", "node-test"],
-        ["Rules evaluation budget", "scripts/test-firestore-rules-budget.mjs", "typescript"]
+        [
+          "car parts repository, Rules and malicious clients",
+          "scripts/test-firestore-car-parts.mjs",
+          "typescript"
+        ],
+        [
+          "auto repair repository, Rules and malicious clients",
+          "scripts/test-firestore-auto-repair.mjs",
+          "typescript"
+        ],
+        [
+          "schema validator helper semantics",
+          "scripts/test-firestore-schema-validators.mjs",
+          "node-test"
+        ],
+        [
+          "Rules evaluation budget",
+          "scripts/test-firestore-rules-budget.mjs",
+          "typescript"
+        ]
       ],
-      "budgetPathPrefixes": ["car parts:"],
+      "budgetPathPrefixes": [
+        "car parts:"
+      ],
       "search": [
         {
           "surface": "Parts inventory search: part name, serial number, description or compatible car",
           "class": "CLIENT_DERIVED",
           "status": "PASS",
-          "files": ["src/components/parts/CarPartsInventory.tsx"],
+          "files": [
+            "src/components/parts/CarPartsInventory.tsx"
+          ],
           "evidence": "Filters the complete listParts result, proven equal to the source by the dual read."
         },
         {
           "surface": "Stock filter chips: all, in stock, low stock, out of stock",
           "class": "CLIENT_DERIVED",
           "status": "PASS",
-          "files": ["src/components/parts/CarPartsInventory.tsx"],
+          "files": [
+            "src/components/parts/CarPartsInventory.tsx"
+          ],
           "evidence": "Quantity thresholds over the same listParts result; exercised by the browser smoke."
         }
       ],
@@ -167,7 +273,9 @@
           "surface": "Inventory summary: item count, total purchase value, low-stock and out-of-stock counts",
           "class": "CLIENT_DERIVED",
           "status": "PASS",
-          "files": ["src/components/parts/CarPartsInventory.tsx"],
+          "files": [
+            "src/components/parts/CarPartsInventory.tsx"
+          ],
           "evidence": "Reducers over listParts, whose rows and exact prices the dual read proves."
         }
       ],
@@ -177,46 +285,77 @@
     },
     "restaurant": {
       "suites": [
-        ["restaurant repository, Rules, staff roles and malicious clients", "scripts/test-firestore-restaurant.mjs", "typescript"],
-        ["restaurant staff membership Rules", "migration/firestore/tests/restaurant-staff-rules.test.mjs", "node-test"],
-        ["schema validator helper semantics", "scripts/test-firestore-schema-validators.mjs", "node-test"],
-        ["Rules evaluation budget", "scripts/test-firestore-rules-budget.mjs", "typescript"]
+        [
+          "restaurant repository, Rules, staff roles and malicious clients",
+          "scripts/test-firestore-restaurant.mjs",
+          "typescript"
+        ],
+        [
+          "restaurant staff membership Rules",
+          "migration/firestore/tests/restaurant-staff-rules.test.mjs",
+          "node-test"
+        ],
+        [
+          "schema validator helper semantics",
+          "scripts/test-firestore-schema-validators.mjs",
+          "node-test"
+        ],
+        [
+          "Rules evaluation budget",
+          "scripts/test-firestore-rules-budget.mjs",
+          "typescript"
+        ]
       ],
-      "budgetPathPrefixes": ["restaurant"],
+      "budgetPathPrefixes": [
+        "restaurant"
+      ],
       "search": [
         {
           "surface": "Order modal menu search: name, Hebrew and Arabic names, description",
           "class": "CLIENT_DERIVED",
           "status": "PASS",
-          "files": ["src/components/restaurant/OrderModal.tsx"],
+          "files": [
+            "src/components/restaurant/OrderModal.tsx"
+          ],
           "evidence": "Filters the listMenu result, proven equal to the source by the dual read; exercised by the browser smoke."
         },
         {
           "surface": "Analytics order edit menu search",
           "class": "CLIENT_DERIVED",
           "status": "PASS",
-          "files": ["src/components/analytics/EditRestaurantOrderModal.tsx"],
+          "files": [
+            "src/components/analytics/EditRestaurantOrderModal.tsx"
+          ],
           "evidence": "Filters listAvailableMenuItems, the owner-scoped source query."
         },
         {
           "surface": "Kitchen display search: table, ticket id, dish or note",
           "class": "CLIENT_DERIVED",
           "status": "PASS",
-          "files": ["src/components/restaurant/KitchenDisplaySystem.tsx"],
+          "files": [
+            "src/components/restaurant/KitchenDisplaySystem.tsx"
+          ],
           "evidence": "Filters listKitchenTickets, compared with the source by the dual read."
         },
         {
           "surface": "Guest search by name, phone or e-mail (ILIKE)",
           "class": "CLIENT_DERIVED",
           "status": "PASS",
-          "files": ["src/components/restaurant/ReservationsBoard.tsx", "src/hooks/useRestaurant.ts", "src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "files": [
+            "src/components/restaurant/ReservationsBoard.tsx",
+            "src/hooks/useRestaurant.ts",
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
           "evidence": "searchGuests applies the three case-insensitive substring filters to the business's bounded guest list, ten results. It is imported through the App.tsx staff route, which throws at runtime in the source for want of RestaurantRoleProvider; the implementation is proven by test-firestore-restaurant.mjs."
         },
         {
           "surface": "Order history search by order number or id",
           "class": "FIRESTORE_QUERY",
           "status": "PASS",
-          "files": ["src/components/restaurant/OrderHistoryModal.tsx", "src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "files": [
+            "src/components/restaurant/OrderHistoryModal.tsx",
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
           "evidence": "listOrderHistory: closed and cancelled orders, closed_at descending with NULLs first, paged, filtered by exact order number or id; a malformed term fails as PostgREST does. It is imported through the App.tsx staff route, which throws at runtime in the source for want of RestaurantRoleProvider; the implementation is proven by test-firestore-restaurant.mjs."
         }
       ],
@@ -225,28 +364,39 @@
           "surface": "Restaurant analytics: revenue, orders and average check by day, month and year, with order detail, edit and delete",
           "class": "CLIENT_DERIVED",
           "status": "PASS",
-          "files": ["src/components/analytics/RestaurantAnalytics.tsx", "src/components/analytics/EditRestaurantOrderModal.tsx"],
+          "files": [
+            "src/components/analytics/RestaurantAnalytics.tsx",
+            "src/components/analytics/EditRestaurantOrderModal.tsx"
+          ],
           "evidence": "Reducers over listClosedOrders, whose rows, lines, tables and exact amounts the dual read proves; edit and delete run through the order ledger (test-firestore-restaurant.mjs, browser smoke)."
         },
         {
           "surface": "Restaurant home: free tables, active orders and open value",
           "class": "CLIENT_DERIVED",
           "status": "PASS",
-          "files": ["src/components/dashboards/RestaurantDashboard.tsx"],
+          "files": [
+            "src/components/dashboards/RestaurantDashboard.tsx"
+          ],
           "evidence": "Counts and sums over listTables and listActiveOrders."
         },
         {
           "surface": "Live KPIs: revenue today, covers, average check, pending tickets, 86 items",
           "class": "FIRESTORE_QUERY",
           "status": "PASS",
-          "files": ["src/hooks/useRestaurant.ts", "src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "files": [
+            "src/hooks/useRestaurant.ts",
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
           "evidence": "getKpis runs the six source aggregates as bounded queries over the business's own collections. It is imported through the App.tsx staff route, which throws at runtime in the source for want of RestaurantRoleProvider; the implementation is proven by test-firestore-restaurant.mjs."
         },
         {
           "surface": "Daily Z reports list",
           "class": "FIRESTORE_QUERY",
           "status": "PASS",
-          "files": ["src/hooks/useRestaurant.ts", "src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "files": [
+            "src/hooks/useRestaurant.ts",
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
           "evidence": "listDailyReports: date descending, 30 rows, compared with the source by the dual read (no rows in production)."
         }
       ],
@@ -255,84 +405,113 @@
           "surface": "verify_staff_pin_secure (PIN shift login)",
           "class": "AUTH_REPLACED",
           "status": "PASS",
-          "files": ["src/contexts/RestaurantRoleContext.tsx", "src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "files": [
+            "src/contexts/RestaurantRoleContext.tsx",
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
           "evidence": "No PIN exists in Firestore: staff are Firebase accounts with restaurantMemberships (restaurant-staff-rules.test.mjs), and the Firebase method refuses with AUTH_REPLACED. Its only caller, StaffShiftScreen, is imported by nothing."
         },
         {
           "surface": "authorize_staff_action (manager PIN approval)",
           "class": "AUTH_REPLACED",
           "status": "PASS",
-          "files": ["src/data/firestore/FirestoreRestaurantRepository.ts", "src/components/restaurant/ManagerApprovalPad.tsx"],
+          "files": [
+            "src/data/firestore/FirestoreRestaurantRepository.ts",
+            "src/components/restaurant/ManagerApprovalPad.tsx"
+          ],
           "evidence": "The approver signs in with a Firebase account in an isolated in-memory app; the owner or an active manager membership approves one action, which runs under that identity. The production database cannot resolve the call the product makes (argument mismatch)."
         },
         {
           "surface": "void_order_item_secure",
           "class": "FIRESTORE_TRANSACTION",
           "status": "PASS",
-          "files": ["src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "files": [
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
           "evidence": "One transaction under the approver: line cancelled with the source note, ledger reduced, immutable void log and audit record; the Rules bind all four (firestore.rules orderItems, voidLogs, restaurantAuditLogs). The production function cannot complete."
         },
         {
           "surface": "apply_discount_secure",
           "class": "FIRESTORE_TRANSACTION",
           "status": "PASS",
-          "files": ["src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "files": [
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
           "evidence": "The source formula on subtotal_amount, exact, bound to its audit record by lastAuditId; forged totals are refused."
         },
         {
           "surface": "create_kitchen_ticket",
           "class": "FIRESTORE_TRANSACTION",
           "status": "PASS",
-          "files": ["src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "files": [
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
           "evidence": "Ticket and ticket lines written with each order line recording its ticketItemId, so no line is sent twice; three lines per write, inside the measured document-access limit."
         },
         {
           "surface": "delete_menu_item_secure",
           "class": "FIRESTORE_TRANSACTION",
           "status": "PASS",
-          "files": ["src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "files": [
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
           "evidence": "Atomic batch with the source foreign keys (NO ACTION refuses, CASCADE removes). The function is absent from the production database, where the call always fails."
         },
         {
           "surface": "delete_staff_secure",
           "class": "FIRESTORE_TRANSACTION",
           "status": "PASS",
-          "files": ["src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "files": [
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
           "evidence": "Atomic batch: audit references refuse, orders and void logs SET NULL. The function is absent from the production database."
         },
         {
           "surface": "log_business_activity_v2 (order cancellation)",
           "class": "FIRESTORE_TRANSACTION",
           "status": "PASS",
-          "files": ["src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "files": [
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
           "evidence": "ORDER_CANCELLED audit record written in the cancellation batch and bound to the order by lastAuditId. The function is absent from the production database."
         },
         {
           "surface": "log_business_activity_v2 (refund)",
           "class": "FIRESTORE_TRANSACTION",
           "status": "PASS",
-          "files": ["src/components/restaurant/RefundModal.tsx", "src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "files": [
+            "src/components/restaurant/RefundModal.tsx",
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
           "evidence": "refundOrder under the approver: an immutable REFUND audit record, and for a full refund the order marked refunded in the same transaction and bound to that record. It is imported through the App.tsx staff route, which throws at runtime in the source for want of RestaurantRoleProvider; the implementation is proven by test-firestore-restaurant.mjs."
         },
         {
           "surface": "log_business_activity_v2 (allergy override)",
           "class": "FIRESTORE_TRANSACTION",
           "status": "PASS",
-          "files": ["src/components/restaurant/OrderEntry.tsx", "src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "files": [
+            "src/components/restaurant/OrderEntry.tsx",
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
           "evidence": "logActivity writes an immutable ALLERGY_OVERRIDE audit record under the signed-in order taker, for a dish of the business. It is imported through the App.tsx staff route, which throws at runtime in the source for want of RestaurantRoleProvider; the implementation is proven by test-firestore-restaurant.mjs."
         },
         {
           "surface": "close_business_day_secure",
           "class": "LEGACY_UNREACHABLE",
           "status": "LEGACY_UNREACHABLE",
-          "files": ["src/components/restaurant/CloseDayWizard.tsx"],
+          "files": [
+            "src/components/restaurant/CloseDayWizard.tsx"
+          ],
           "evidence": "CloseDayWizard, its only caller, is imported by nothing. A client-computed Z report would be a client-authoritative financial total, so the Firebase method refuses."
         },
         {
           "surface": "get_server_time",
           "class": "CLIENT_DERIVED",
           "status": "PASS",
-          "files": ["src/components/restaurant/ReservationsBoard.tsx", "src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "files": [
+            "src/components/restaurant/ReservationsBoard.tsx",
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
           "evidence": "Offset 0, the source fallback when the function is missing (it is missing in production); reservation times are checked by the Rules against request.time."
         }
       ],
@@ -341,46 +520,148 @@
           "surface": "restaurant_tables postgres_changes",
           "class": "FIRESTORE_LISTENER",
           "status": "PASS",
-          "files": ["src/hooks/useRestaurant.ts", "src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "files": [
+            "src/hooks/useRestaurant.ts",
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
           "evidence": "Tenant-scoped onSnapshot listener on the screen query, invalidating the same query key once the listener holds the server view (test-firestore-restaurant.mjs)."
         },
         {
           "surface": "restaurant_orders postgres_changes",
           "class": "FIRESTORE_LISTENER",
           "status": "PASS",
-          "files": ["src/hooks/useRestaurant.ts", "src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "files": [
+            "src/hooks/useRestaurant.ts",
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
           "evidence": "Tenant-scoped onSnapshot listener on the screen query, invalidating the same query key once the listener holds the server view (test-firestore-restaurant.mjs)."
         },
         {
           "surface": "restaurant_kitchen_tickets postgres_changes",
           "class": "FIRESTORE_LISTENER",
           "status": "PASS",
-          "files": ["src/hooks/useRestaurant.ts", "src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "files": [
+            "src/hooks/useRestaurant.ts",
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
           "evidence": "Tenant-scoped onSnapshot listener on the screen query, invalidating the same query key once the listener holds the server view (test-firestore-restaurant.mjs)."
         },
         {
           "surface": "restaurant_table_sessions postgres_changes",
           "class": "FIRESTORE_LISTENER",
           "status": "PASS",
-          "files": ["src/hooks/useRestaurant.ts", "src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "files": [
+            "src/hooks/useRestaurant.ts",
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
           "evidence": "Tenant-scoped onSnapshot listener on the screen query, invalidating the same query key once the listener holds the server view (test-firestore-restaurant.mjs)."
         },
         {
           "surface": "restaurant_reservations postgres_changes",
           "class": "FIRESTORE_LISTENER",
           "status": "PASS",
-          "files": ["src/hooks/useRestaurant.ts", "src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "files": [
+            "src/hooks/useRestaurant.ts",
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
           "evidence": "Tenant-scoped onSnapshot listener on the screen query, invalidating the same query key once the listener holds the server view (test-firestore-restaurant.mjs)."
         },
         {
           "surface": "restaurant_waitlist postgres_changes",
           "class": "FIRESTORE_LISTENER",
           "status": "PASS",
-          "files": ["src/hooks/useRestaurant.ts", "src/data/firestore/FirestoreRestaurantRepository.ts"],
+          "files": [
+            "src/hooks/useRestaurant.ts",
+            "src/data/firestore/FirestoreRestaurantRepository.ts"
+          ],
           "evidence": "Tenant-scoped onSnapshot listener on the screen query, invalidating the same query key once the listener holds the server view (test-firestore-restaurant.mjs)."
         }
       ],
       "edgeFunctions": []
+    },
+    "tourism": {
+      "suites": [
+        [
+          "tourism repository, Rules and malicious clients",
+          "scripts/test-firestore-travel.mjs",
+          "typescript"
+        ],
+        [
+          "schema validator helper semantics",
+          "scripts/test-firestore-schema-validators.mjs",
+          "node-test"
+        ],
+        [
+          "Rules evaluation budget",
+          "scripts/test-firestore-rules-budget.mjs",
+          "typescript"
+        ]
+      ],
+      "budgetPathPrefixes": [
+        "tourism:"
+      ],
+      "search": [
+        {
+          "surface": "Trips list search (destination, client, hotel) with the year, month, status and destination filters",
+          "class": "FIRESTORE_QUERY",
+          "status": "PASS",
+          "files": [
+            "src/lib/tripQueries.ts",
+            "src/components/trips/Trips.tsx",
+            "src/data/firestore/FirestoreTravelRepository.ts"
+          ],
+          "evidence": "get_trips_page is ported over bounded owner-scoped queries, including the LIKE tokens and the sort keys with NULLS LAST and id DESC; the full dual read proves every page equal to the source."
+        },
+        {
+          "surface": "Command palette trip lookup",
+          "class": "CLIENT_DERIVED",
+          "status": "PASS",
+          "files": [
+            "src/components/CommandPalette.tsx"
+          ],
+          "evidence": "Filters the owner-scoped searchTrips result, which the dual read proves equal to the source query."
+        },
+        {
+          "surface": "Trash search over deleted trips",
+          "class": "FIRESTORE_QUERY",
+          "status": "PASS",
+          "files": [
+            "src/lib/tripTrashQueries.ts",
+            "src/components/trips/TripTrash.tsx"
+          ],
+          "evidence": "get_deleted_trips_page ported with its purge date and cleanup status; proven by the dual read."
+        }
+      ],
+      "analytics": [
+        {
+          "surface": "Travel analytics summary and payment analytics",
+          "class": "FIRESTORE_QUERY",
+          "status": "PASS",
+          "files": [
+            "src/lib/analyticsQueries.ts",
+            "src/components/analytics/Analytics.tsx",
+            "src/data/firestore/FirestoreTravelRepository.ts"
+          ],
+          "evidence": "get_travel_analytics_summary and get_travel_payment_analytics are ported with PostgreSQL division and rounding semantics (pgDiv, pgAvg, percent); the dual read compares every figure against the source."
+        },
+        {
+          "surface": "Travel reports panel (monthly, destinations, clients)",
+          "class": "FIRESTORE_QUERY",
+          "status": "PASS",
+          "files": [
+            "src/lib/travelReports.ts",
+            "src/components/analytics/TravelReportsPanel.tsx"
+          ],
+          "evidence": "get_travel_reports ported, including the repeat-client aggregate; proven equal by the dual read."
+        }
+      ],
+      "rpc": [],
+      "realtime": [],
+      "edgeFunctions": [],
+      "additionalDualReads": [
+        "migration/reports/travel-full-dual-read.json",
+        "migration/reports/travel-dashboard-dual-read.json"
+      ]
     }
   }
 }

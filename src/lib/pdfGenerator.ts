@@ -1,14 +1,14 @@
 ﻿import { resolvePrivateSignature } from './businessImages';
 import { Trip } from '../types/trip';
 import { RestaurantOrder, RestaurantTable, DailyReport } from '../types/restaurant';
-import { supabase, type BusinessProfile } from './supabase';
+import type { BusinessProfile } from '../data/domain/profiles';
+import { getBackend } from '../data/backend';
 import { formatRoomConfiguration } from './tripRoom';
 import { formatCurrency, formatDate, getTextDirection } from '../utils/localeFormatting';
 import { safeImageSrc } from './safeUrl';
 import { calculateTripFinancials } from './tripFinancials';
 import { fromPaymentMinor, getCanonicalTripPayment } from './tripPaymentSummary';
 import { getSafeErrorCode } from './safeError';
-import { generateTripPdfOnServer } from './tripPdfClient';
 
 type Language = 'en' | 'ar' | 'he';
 type PdfMode = 'invoice' | 'summary' | 'receipt' | 'report';
@@ -569,9 +569,8 @@ export const generateTripInvoice = async (
   language: Language
 ): Promise<Uint8Array> => {
   try {
-    const result = await generateTripPdfOnServer({ tripId: trip.id, language });
-    void supabase.rpc('log_trip_activity', { p_trip_id: trip.id, p_activity_type: 'pdf_generated', p_metadata: { renderer: 'server' } });
-    void supabase.rpc('create_trip_event_notification', { p_trip_id: trip.id, p_event_type: 'pdf_export_completion' });
+    const result = await getBackend().travel.generateServerTripPdf({ tripId: trip.id, language });
+    getBackend().travel.recordServerPdfGenerated(trip.id);
     return result;
   } catch (error) {
     console.warn('Server PDF unavailable; temporary browser fallback used:', getSafeErrorCode(error));

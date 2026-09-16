@@ -28,7 +28,7 @@ import {
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
-import { supabase } from '../../lib/supabase';
+import { getBackend } from '../../data/backend';
 import { Trip } from '../../types/trip';
 import { useTripMutations } from '../../hooks/useTripMutations';
 import TripCard from './TripCard';
@@ -225,14 +225,14 @@ export default function Trips({ filters, onFiltersChange, initialViewTrip, onEdi
     queryFn: async () => {
       if (!user?.id) return [];
 
-      const { data, error } = await supabase.rpc('get_trip_years');
-
-      if (error) {
+      let years: string[];
+      try {
+        years = await getBackend().travelDashboard.listTripYears();
+      } catch (error) {
         console.error('Error fetching trip years:', getSafeErrorCode(error));
         return [new Date().getFullYear().toString()];
       }
 
-      const years = (data as { year: string }[]).map((item) => item.year);
       const currentYear = new Date().getFullYear().toString();
       if (!years.includes(currentYear)) {
         years.unshift(currentYear);

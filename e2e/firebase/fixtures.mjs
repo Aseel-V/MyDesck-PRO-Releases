@@ -25,11 +25,16 @@ const PROJECT = 'mydesck-migration-proof';
 const FIRESTORE_HOST = process.env.FIRESTORE_EMULATOR_HOST ?? '127.0.0.1:8080';
 const AUTH_HOST = process.env.FIREBASE_AUTH_EMULATOR_HOST ?? '127.0.0.1:9099';
 const FIXTURE = 'migration/full-vertical.local/ui-smoke-fixture.json';
+/** Tourism's own collections: top-level, and cleaned up by owner. */
+const TOURISM_COLLECTIONS = ['trips', 'tripPaymentPlans', 'tripInstallments', 'tripActivityLog', 'tripFinancialAudit',
+  'tripPaymentEvents', 'tripInstallmentEvents', 'tripNotifications', 'tripTemplates', 'tripWhatsappTemplates',
+  'storageCleanupQueue', 'tripPlans', 'sparkOperations', 'idempotency'];
 const SUBCOLLECTIONS = ['menuItems', 'menuCategories', 'marketTransactions',
   'vehicles', 'vehiclePlates', 'repairOrders', 'repairOrderItems', 'repairServices', 'parts',
   'tables', 'restaurantStaff', 'restaurantCounters', 'orders', 'orderItems', 'kitchenTickets', 'ticketItems', 'voidLogs', 'restaurantAuditLogs'];
 /** One tenant per interface language, so right-to-left and left-to-right rendering are both exercised. */
-const TENANTS = { supermarket: ['he', 'ar', 'en'], auto_repair: ['en', 'he'], car_parts: ['ar'], restaurant: ['en', 'he', 'ar'] };
+const TENANTS = { supermarket: ['he', 'ar', 'en'], auto_repair: ['en', 'he'], car_parts: ['ar'], restaurant: ['en', 'he', 'ar'],
+  tourism: ['en', 'he', 'ar'] };
 const bypass = RulesClient.asAdminBypass({ host: FIRESTORE_HOST, projectId: PROJECT });
 const restCodec = {
   timestamp: (seconds, nanoseconds) => new Date(seconds * 1000 + Math.floor(nanoseconds / 1e6)),
@@ -112,6 +117,28 @@ async function cleanup() {
           pageToken = listing.nextPageToken ?? '';
         } while (pageToken);
       }
+      // Tourism keeps its rows in top-level collections, so they are removed by owner rather than by path.
+      for (const name of TOURISM_COLLECTIONS) {
+        let pageToken = '';
+        do {
+          const listing = await fetch(`${base}/${name}?pageSize=300${pageToken ? `&pageToken=${pageToken}` : ''}`,
+            { headers: { Authorization: 'Bearer owner' } }).then((response) => response.json());
+          for (const document of listing.documents ?? []) {
+            const fields = document.fields ?? {};
+            const owner = fields.ownerUid?.stringValue ?? fields.actorUid?.stringValue ?? null;
+            if (owner !== tenant.uid) continue;
+            const path = document.name.split('/documents/')[1];
+            if (name === 'trips') {
+              const lists = await fetch(`${base}/${path}/packingLists?pageSize=300`, { headers: { Authorization: 'Bearer owner' } })
+                .then((response) => response.json()).catch(() => ({}));
+              for (const list of lists.documents ?? []) await bypass.delete(list.name.split('/documents/')[1]);
+            }
+            await bypass.delete(path);
+          }
+          pageToken = listing.nextPageToken ?? '';
+        } while (pageToken);
+      }
+      await bypass.delete(`users/${tenant.uid}/settings/${tenant.uid}`);
       await bypass.delete(`businesses/${tenant.businessId}`);
       await bypass.delete(`businessOwners/${tenant.uid}`);
       await bypass.delete(`users/${tenant.uid}`);

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-15T11:06:11.391Z",
+  "generatedAt": "2026-09-16T19:29:13.202Z",
   "vertical": "car_parts",
   "target": "firestore-emulator",
   "readOnlySource": {
@@ -44,6 +44,10 @@
       "crossTenant": {
         "attempts": 1,
         "denied": 1
+      },
+      "derived": {
+        "checked": 0,
+        "mismatches": 0
       },
       "restoredClean": true,
       "clean": true
@@ -103,6 +107,8 @@
     "crossTenantAllowed": 0,
     "controlsApplicable": 5,
     "controlsDetected": 5,
-    "restoredClean": true
+    "restoredClean": true,
+    "derivedChecked": 0,
+    "derivedMismatches": 0
   }
 }

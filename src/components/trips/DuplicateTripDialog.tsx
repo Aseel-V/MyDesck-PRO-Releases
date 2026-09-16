@@ -5,7 +5,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useTripMutations } from '../../hooks/useTripMutations';
 import { buildDuplicateTripForm, getDuplicateDatePreview, type TripDuplicateOptions } from '../../lib/tripDuplicate';
 import type { Trip } from '../../types/trip';
-import { supabase } from '../../lib/supabase';
+import { getBackend } from '../../data/backend';
 import { Button } from '../travel-ui/Button';
 
 interface Props { trip: Trip; onClose: () => void; onCreated?: () => void }
@@ -20,7 +20,8 @@ export function DuplicateTripDialog({ trip, onClose, onCreated }: Props) {
     if (options.endDate < options.startDate) { toast.error(t('trips.validation.endDateAfterStart')); return; }
     try {
       const created = await saveTrip({ formData: buildDuplicateTripForm(trip, options) });
-      await supabase.rpc('log_trip_activity', { p_trip_id: created.id, p_activity_type: 'trip_duplicated', p_metadata: { source_trip_id: trip.id } });
+      // The source ignored this call's error; so does the move.
+      await getBackend().travel.logTripActivity(created.id, 'trip_duplicated', { source_trip_id: trip.id }).catch(() => undefined);
       onCreated?.(); onClose();
     }
     catch { /* mutation owns localized error feedback */ }

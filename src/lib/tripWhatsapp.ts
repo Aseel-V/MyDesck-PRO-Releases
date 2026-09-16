@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { getBackend } from '../data/backend';
 import { getTripDuration } from './tripDates';
 import { fromMinorUnits } from './tripInstallments';
 import type { Trip } from '../types/trip';
@@ -206,34 +206,23 @@ export function createWhatsAppUrl(phone: string, message: string): string | null
   return `https://wa.me/${normalized.replace(/\D/g, '')}?text=${encodeURIComponent(trimmed)}`;
 }
 
-const TEMPLATE_FIELDS = 'id,name,body,language,category,is_favorite,is_archived,usage_count,last_used_at,created_at,updated_at';
-
 export async function fetchWhatsAppTemplates(): Promise<TripWhatsappTemplate[]> {
-  const { data, error } = await supabase.from('trip_whatsapp_templates').select(TEMPLATE_FIELDS).eq('is_archived', false).order('is_favorite', { ascending: false }).order('updated_at', { ascending: false });
-  if (error) throw error;
-  return data as unknown as TripWhatsappTemplate[];
+  return getBackend().travel.listWhatsappTemplates();
 }
 
 export async function saveWhatsAppTemplate(userId: string, template: Pick<TripWhatsappTemplate, 'name' | 'body' | 'language' | 'category'> & { id?: string }): Promise<void> {
   if (findUnknownWhatsappVariables(template.body).length) throw new Error('UNKNOWN_TEMPLATE_VARIABLE');
-  const values = { name: template.name.trim(), body: template.body.trim(), language: template.language, category: template.category, updated_at: new Date().toISOString() };
-  const { error } = template.id
-    ? await supabase.from('trip_whatsapp_templates').update(values).eq('id', template.id)
-    : await supabase.from('trip_whatsapp_templates').insert({ ...values, user_id: userId });
-  if (error) throw error;
+  await getBackend().travel.saveWhatsappTemplate(userId, template);
 }
 
 export async function updateWhatsappTemplateState(id: string, values: { is_favorite?: boolean; is_archived?: boolean }): Promise<void> {
-  const { error } = await supabase.from('trip_whatsapp_templates').update({ ...values, updated_at: new Date().toISOString() }).eq('id', id);
-  if (error) throw error;
+  await getBackend().travel.updateWhatsappTemplateState(id, values);
 }
 
 export async function markWhatsappTemplateUsed(id: string, usageCount: number): Promise<void> {
-  const { error } = await supabase.from('trip_whatsapp_templates').update({ usage_count: usageCount + 1, last_used_at: new Date().toISOString() }).eq('id', id);
-  if (error) throw error;
+  await getBackend().travel.markWhatsappTemplateUsed(id, usageCount);
 }
 
 export async function deleteWhatsAppTemplate(id: string): Promise<void> {
-  const { error } = await supabase.from('trip_whatsapp_templates').delete().eq('id', id);
-  if (error) throw error;
+  await getBackend().travel.deleteWhatsappTemplate(id);
 }

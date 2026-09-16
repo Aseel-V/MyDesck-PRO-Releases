@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { getBackend } from '../data/backend';
 import type { Database } from '../types/database';
 
 export type TripPaymentPlan = Database['public']['Tables']['trip_payment_plans']['Row'];
@@ -18,26 +18,14 @@ export interface TripPaymentPlanInput {
 }
 
 export async function fetchTripPaymentPlan(tripId: string): Promise<{ plan: TripPaymentPlan | null; installments: TripInstallment[] }> {
-  const { data: plan, error } = await supabase.from('trip_payment_plans').select('*').eq('trip_id', tripId).is('deleted_at', null).neq('status', 'cancelled').maybeSingle();
-  if (error) throw error;
-  if (!plan) return { plan: null, installments: [] };
-  const { data: installments, error: installmentError } = await supabase.from('trip_installments').select('*').eq('payment_plan_id', plan.id).order('installment_number');
-  if (installmentError) throw installmentError;
-  return { plan, installments: installments || [] };
+  return getBackend().travel.getTripPaymentPlan(tripId);
 }
 
 export async function createTripPaymentPlan(input: {
   tripId: string; method: 'card' | 'cash' | 'mixed'; currency: string;
   cardTotalMinor: number; cashTotalMinor: number; installmentCount: number; firstDate: string; notes?: string;
 }): Promise<string> {
-  const { data, error } = await supabase.rpc('create_trip_payment_plan', {
-    p_trip_id: input.tripId, p_payment_method: input.method, p_currency: input.currency,
-    p_card_total_minor: input.cardTotalMinor, p_cash_total_minor: input.cashTotalMinor,
-    p_installment_count: input.installmentCount, p_first_installment_date: input.firstDate,
-    p_notes: input.notes || null,
-  });
-  if (error) throw error;
-  return data;
+  return getBackend().travel.createTripPaymentPlan(input);
 }
 
 export async function syncTripPaymentPlan(tripId: string, input: TripPaymentPlanInput): Promise<string> {
@@ -68,29 +56,21 @@ export async function syncTripPaymentPlan(tripId: string, input: TripPaymentPlan
 }
 
 export async function recordInstallmentPayment(id: string, paidAmountMinor: number, paidAt: string, notes?: string): Promise<void> {
-  const { error } = await supabase.rpc('record_trip_installment_payment', {
-    p_installment_id: id, p_paid_amount_minor: paidAmountMinor, p_paid_at: paidAt, p_notes: notes || null,
-  });
-  if (error) throw error;
+  await getBackend().travel.recordInstallmentPayment(id, paidAmountMinor, paidAt, notes);
 }
 
 export async function rescheduleInstallment(id: string, dueDate: string): Promise<void> {
-  const { error } = await supabase.rpc('reschedule_trip_installment', { p_installment_id: id, p_due_date: dueDate });
-  if (error) throw error;
+  await getBackend().travel.rescheduleInstallment(id, dueDate);
 }
 
 export async function recordCashPayment(id: string, paidAmountMinor: number, paidAt: string, notes?: string): Promise<void> {
-  const { error } = await supabase.rpc('record_trip_cash_payment', { p_payment_plan_id: id, p_paid_amount_minor: paidAmountMinor, p_paid_at: paidAt, p_notes: notes || null });
-  if (error) throw error;
+  await getBackend().travel.recordCashPayment(id, paidAmountMinor, paidAt, notes);
 }
 
 export async function recalculateFutureInstallments(id: string, cardTotalMinor: number): Promise<void> {
-  const { error } = await supabase.rpc('recalculate_future_trip_installments', { p_payment_plan_id: id, p_new_card_total_minor: cardTotalMinor });
-  if (error) throw error;
+  await getBackend().travel.recalculateFutureInstallments(id, cardTotalMinor);
 }
 
 export async function fetchInstallmentEvents(id: string): Promise<TripInstallmentEvent[]> {
-  const { data, error } = await supabase.from('trip_installment_events').select('*').eq('installment_id', id).order('created_at', { ascending: false });
-  if (error) throw error;
-  return data || [];
+  return getBackend().travel.listInstallmentEvents(id);
 }

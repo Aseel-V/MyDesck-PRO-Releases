@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-15T20:37:36.426Z",
+  "generatedAt": "2026-09-16T14:03:06.615Z",
   "readOnly": true,
   "productionMutations": 0,
   "measurement": "TypeScript AST import graph (comments and strings are not code; @/ aliases resolved)",
@@ -24,54 +24,18 @@
     "shippedProduct": {
       "entry": "src/production-main.tsx",
       "present": true,
-      "reachableFiles": 222,
+      "reachableFiles": 223,
       "runtimeReachableFiles": 212,
-      "supabaseDatabase": 159,
-      "supabaseRpc": 34,
+      "supabaseDatabase": 157,
+      "supabaseRpc": 31,
       "supabaseAuth": 13,
       "supabaseRealtime": 2,
       "supabaseEdgeFunctions": 2,
       "supabaseStorage": 7,
-      "forbiddenTotal": 210,
+      "forbiddenTotal": 205,
       "firestoreImports": 0,
       "firebaseAuthImports": 0,
       "genericSupabaseClientImports": [
-        {
-          "file": "src/components/CommandPalette.tsx",
-          "line": 17
-        },
-        {
-          "file": "src/components/Settings.tsx",
-          "line": 28
-        },
-        {
-          "file": "src/components/trips/DuplicateTripDialog.tsx",
-          "line": 8
-        },
-        {
-          "file": "src/components/trips/NewTripForm.tsx",
-          "line": 12
-        },
-        {
-          "file": "src/components/trips/TripSmartToolsDialog.tsx",
-          "line": 6
-        },
-        {
-          "file": "src/components/trips/TripTrash.tsx",
-          "line": 6
-        },
-        {
-          "file": "src/components/trips/TripWhatsappDialog.tsx",
-          "line": 16
-        },
-        {
-          "file": "src/components/trips/Trips.tsx",
-          "line": 31
-        },
-        {
-          "file": "src/data/SupabaseTripRepository.ts",
-          "line": 1
-        },
         {
           "file": "src/data/supabase/SupabaseAdminRepository.ts",
           "line": 1
@@ -105,55 +69,11 @@
           "line": 1
         },
         {
-          "file": "src/lib/analyticsQueries.ts",
-          "line": 2
-        },
-        {
-          "file": "src/lib/paymentContractCompatibility.ts",
-          "line": 1
-        },
-        {
-          "file": "src/lib/pdfGenerator.ts",
-          "line": 4
-        },
-        {
-          "file": "src/lib/travelReports.ts",
-          "line": 4
-        },
-        {
-          "file": "src/lib/tripAuditQueries.ts",
-          "line": 1
-        },
-        {
-          "file": "src/lib/tripNotifications.ts",
-          "line": 1
-        },
-        {
-          "file": "src/lib/tripPayments.ts",
+          "file": "src/data/supabase/SupabaseTravelRepository.ts",
           "line": 1
         },
         {
           "file": "src/lib/tripPdfClient.ts",
-          "line": 1
-        },
-        {
-          "file": "src/lib/tripQueries.ts",
-          "line": 1
-        },
-        {
-          "file": "src/lib/tripTemplates.ts",
-          "line": 1
-        },
-        {
-          "file": "src/lib/tripTrashQueries.ts",
-          "line": 1
-        },
-        {
-          "file": "src/lib/tripWhatsapp.ts",
-          "line": 1
-        },
-        {
-          "file": "src/lib/visaPaymentArrivals.ts",
           "line": 1
         }
       ],
@@ -199,6 +119,11 @@
           "line": 9
         },
         {
+          "file": "src/data/supabase/createSupabaseBackend.ts",
+          "target": "src/data/supabase/SupabaseTravelRepository.ts",
+          "line": 10
+        },
+        {
           "file": "src/production-main.tsx",
           "target": "src/data/supabase/createSupabaseBackend.ts",
           "line": 8
@@ -217,34 +142,6 @@
       "storageOutsideAllowlist": [],
       "carriers": {
         "database": [
-          {
-            "file": "src/components/CommandPalette.tsx",
-            "count": 1
-          },
-          {
-            "file": "src/components/Settings.tsx",
-            "count": 2
-          },
-          {
-            "file": "src/components/trips/NewTripForm.tsx",
-            "count": 1
-          },
-          {
-            "file": "src/components/trips/TripSmartToolsDialog.tsx",
-            "count": 2
-          },
-          {
-            "file": "src/components/trips/TripTrash.tsx",
-            "count": 1
-          },
-          {
-            "file": "src/components/trips/TripWhatsappDialog.tsx",
-            "count": 1
-          },
-          {
-            "file": "src/data/SupabaseTripRepository.ts",
-            "count": 4
-          },
           {
             "file": "src/data/supabase/SupabaseAdminRepository.ts",
             "count": 4
@@ -270,51 +167,11 @@
             "count": 11
           },
           {
-            "file": "src/lib/tripNotifications.ts",
-            "count": 7
-          },
-          {
-            "file": "src/lib/tripPayments.ts",
-            "count": 3
-          },
-          {
-            "file": "src/lib/tripQueries.ts",
-            "count": 4
-          },
-          {
-            "file": "src/lib/tripTemplates.ts",
-            "count": 7
-          },
-          {
-            "file": "src/lib/tripTrashQueries.ts",
-            "count": 1
-          },
-          {
-            "file": "src/lib/tripWhatsapp.ts",
-            "count": 6
-          },
-          {
-            "file": "src/lib/visaPaymentArrivals.ts",
-            "count": 2
+            "file": "src/data/supabase/SupabaseTravelRepository.ts",
+            "count": 40
           }
         ],
         "rpc": [
-          {
-            "file": "src/components/trips/DuplicateTripDialog.tsx",
-            "count": 1
-          },
-          {
-            "file": "src/components/trips/TripWhatsappDialog.tsx",
-            "count": 1
-          },
-          {
-            "file": "src/components/trips/Trips.tsx",
-            "count": 1
-          },
-          {
-            "file": "src/data/SupabaseTripRepository.ts",
-            "count": 1
-          },
           {
             "file": "src/data/supabase/SupabaseAuthGateway.ts",
             "count": 1
@@ -332,48 +189,8 @@
             "count": 1
           },
           {
-            "file": "src/lib/analyticsQueries.ts",
-            "count": 2
-          },
-          {
-            "file": "src/lib/paymentContractCompatibility.ts",
-            "count": 1
-          },
-          {
-            "file": "src/lib/pdfGenerator.ts",
-            "count": 2
-          },
-          {
-            "file": "src/lib/travelReports.ts",
-            "count": 1
-          },
-          {
-            "file": "src/lib/tripAuditQueries.ts",
-            "count": 2
-          },
-          {
-            "file": "src/lib/tripNotifications.ts",
-            "count": 1
-          },
-          {
-            "file": "src/lib/tripPayments.ts",
-            "count": 5
-          },
-          {
-            "file": "src/lib/tripQueries.ts",
-            "count": 6
-          },
-          {
-            "file": "src/lib/tripTemplates.ts",
-            "count": 1
-          },
-          {
-            "file": "src/lib/tripTrashQueries.ts",
-            "count": 4
-          },
-          {
-            "file": "src/lib/visaPaymentArrivals.ts",
-            "count": 1
+            "file": "src/data/supabase/SupabaseTravelRepository.ts",
+            "count": 27
           }
         ],
         "auth": [
@@ -413,248 +230,31 @@
     "firebaseRoot": {
       "entry": "src/firebase-main.tsx",
       "present": true,
-      "reachableFiles": 230,
-      "runtimeReachableFiles": 220,
-      "supabaseDatabase": 42,
-      "supabaseRpc": 30,
+      "reachableFiles": 233,
+      "runtimeReachableFiles": 222,
+      "supabaseDatabase": 0,
+      "supabaseRpc": 0,
       "supabaseAuth": 0,
       "supabaseRealtime": 0,
-      "supabaseEdgeFunctions": 1,
+      "supabaseEdgeFunctions": 0,
       "supabaseStorage": 7,
-      "forbiddenTotal": 73,
-      "firestoreImports": 10,
+      "forbiddenTotal": 0,
+      "firestoreImports": 12,
       "firebaseAuthImports": 4,
-      "genericSupabaseClientImports": [
-        {
-          "file": "src/components/CommandPalette.tsx",
-          "line": 17
-        },
-        {
-          "file": "src/components/Settings.tsx",
-          "line": 28
-        },
-        {
-          "file": "src/components/trips/DuplicateTripDialog.tsx",
-          "line": 8
-        },
-        {
-          "file": "src/components/trips/NewTripForm.tsx",
-          "line": 12
-        },
-        {
-          "file": "src/components/trips/TripSmartToolsDialog.tsx",
-          "line": 6
-        },
-        {
-          "file": "src/components/trips/TripTrash.tsx",
-          "line": 6
-        },
-        {
-          "file": "src/components/trips/TripWhatsappDialog.tsx",
-          "line": 16
-        },
-        {
-          "file": "src/components/trips/Trips.tsx",
-          "line": 31
-        },
-        {
-          "file": "src/data/SupabaseTripRepository.ts",
-          "line": 1
-        },
-        {
-          "file": "src/lib/analyticsQueries.ts",
-          "line": 2
-        },
-        {
-          "file": "src/lib/paymentContractCompatibility.ts",
-          "line": 1
-        },
-        {
-          "file": "src/lib/pdfGenerator.ts",
-          "line": 4
-        },
-        {
-          "file": "src/lib/travelReports.ts",
-          "line": 4
-        },
-        {
-          "file": "src/lib/tripAuditQueries.ts",
-          "line": 1
-        },
-        {
-          "file": "src/lib/tripNotifications.ts",
-          "line": 1
-        },
-        {
-          "file": "src/lib/tripPayments.ts",
-          "line": 1
-        },
-        {
-          "file": "src/lib/tripPdfClient.ts",
-          "line": 1
-        },
-        {
-          "file": "src/lib/tripQueries.ts",
-          "line": 1
-        },
-        {
-          "file": "src/lib/tripTemplates.ts",
-          "line": 1
-        },
-        {
-          "file": "src/lib/tripTrashQueries.ts",
-          "line": 1
-        },
-        {
-          "file": "src/lib/tripWhatsapp.ts",
-          "line": 1
-        },
-        {
-          "file": "src/lib/visaPaymentArrivals.ts",
-          "line": 1
-        }
-      ],
+      "genericSupabaseClientImports": [],
       "supabaseAdapterImports": [],
-      "supabaseJsOutsideStorageClient": [
-        {
-          "file": "src/lib/supabase.ts",
-          "line": 1
-        }
-      ],
+      "supabaseJsOutsideStorageClient": [],
       "firebaseStorageImports": [],
       "firebaseFunctionsImports": [],
       "firebaseAdminImports": [],
       "storageIsolated": true,
       "storageOutsideAllowlist": [],
       "carriers": {
-        "database": [
-          {
-            "file": "src/components/CommandPalette.tsx",
-            "count": 1
-          },
-          {
-            "file": "src/components/Settings.tsx",
-            "count": 2
-          },
-          {
-            "file": "src/components/trips/NewTripForm.tsx",
-            "count": 1
-          },
-          {
-            "file": "src/components/trips/TripSmartToolsDialog.tsx",
-            "count": 2
-          },
-          {
-            "file": "src/components/trips/TripTrash.tsx",
-            "count": 1
-          },
-          {
-            "file": "src/components/trips/TripWhatsappDialog.tsx",
-            "count": 1
-          },
-          {
-            "file": "src/data/SupabaseTripRepository.ts",
-            "count": 4
-          },
-          {
-            "file": "src/lib/tripNotifications.ts",
-            "count": 7
-          },
-          {
-            "file": "src/lib/tripPayments.ts",
-            "count": 3
-          },
-          {
-            "file": "src/lib/tripQueries.ts",
-            "count": 4
-          },
-          {
-            "file": "src/lib/tripTemplates.ts",
-            "count": 7
-          },
-          {
-            "file": "src/lib/tripTrashQueries.ts",
-            "count": 1
-          },
-          {
-            "file": "src/lib/tripWhatsapp.ts",
-            "count": 6
-          },
-          {
-            "file": "src/lib/visaPaymentArrivals.ts",
-            "count": 2
-          }
-        ],
-        "rpc": [
-          {
-            "file": "src/components/trips/DuplicateTripDialog.tsx",
-            "count": 1
-          },
-          {
-            "file": "src/components/trips/TripWhatsappDialog.tsx",
-            "count": 1
-          },
-          {
-            "file": "src/components/trips/Trips.tsx",
-            "count": 1
-          },
-          {
-            "file": "src/data/SupabaseTripRepository.ts",
-            "count": 1
-          },
-          {
-            "file": "src/lib/analyticsQueries.ts",
-            "count": 2
-          },
-          {
-            "file": "src/lib/paymentContractCompatibility.ts",
-            "count": 1
-          },
-          {
-            "file": "src/lib/pdfGenerator.ts",
-            "count": 2
-          },
-          {
-            "file": "src/lib/travelReports.ts",
-            "count": 1
-          },
-          {
-            "file": "src/lib/tripAuditQueries.ts",
-            "count": 2
-          },
-          {
-            "file": "src/lib/tripNotifications.ts",
-            "count": 1
-          },
-          {
-            "file": "src/lib/tripPayments.ts",
-            "count": 5
-          },
-          {
-            "file": "src/lib/tripQueries.ts",
-            "count": 6
-          },
-          {
-            "file": "src/lib/tripTemplates.ts",
-            "count": 1
-          },
-          {
-            "file": "src/lib/tripTrashQueries.ts",
-            "count": 4
-          },
-          {
-            "file": "src/lib/visaPaymentArrivals.ts",
-            "count": 1
-          }
-        ],
+        "database": [],
+        "rpc": [],
         "auth": [],
         "realtime": [],
-        "edgeFunctions": [
-          {
-            "file": "src/lib/tripPdfClient.ts",
-            "count": 1
-          }
-        ],
+        "edgeFunctions": [],
         "storage": [
           {
             "file": "src/data/SupabaseStorageRepository.ts",
@@ -665,30 +265,17 @@
     }
   },
   "firebaseRootActual": {
-    "supabaseDatabase": 42,
-    "supabaseRpc": 30,
+    "supabaseDatabase": 0,
+    "supabaseRpc": 0,
     "supabaseAuth": 0,
     "supabaseRealtime": 0,
-    "supabaseEdgeFunctions": 1,
+    "supabaseEdgeFunctions": 0,
     "supabaseStorage": 7,
-    "firestore": 10,
-    "genericSupabaseClientImports": 22,
+    "firestore": 12,
+    "genericSupabaseClientImports": 0,
     "supabaseAdapterImports": 0
   },
-  "firebaseRootSharedForbiddenCallSites": [
-    {
-      "file": "src/components/Settings.tsx",
-      "line": 286,
-      "kind": "database",
-      "target": "trips"
-    },
-    {
-      "file": "src/components/Settings.tsx",
-      "line": 337,
-      "kind": "database",
-      "target": "trips"
-    }
-  ],
+  "firebaseRootSharedForbiddenCallSites": [],
   "verticals": [
     {
       "vertical": "auto_repair",
@@ -904,16 +491,16 @@
       "tenants": 3,
       "rows": 1339,
       "reachableInFirebaseRoot": true,
-      "firebaseRootSurfaceFiles": 68,
-      "firebaseRootForbiddenCallSites": 71,
+      "firebaseRootSurfaceFiles": 66,
+      "firebaseRootForbiddenCallSites": 0,
       "firebaseRootForbiddenByCategory": {
-        "database": 40,
-        "rpc": 30,
+        "database": 0,
+        "rpc": 0,
         "auth": 0,
         "realtime": 0,
-        "edgeFunctions": 1
+        "edgeFunctions": 0
       },
-      "shippedRootForbiddenCallSites": 71,
+      "shippedRootForbiddenCallSites": 1,
       "evidence": "NOT_GENERATED",
       "firestoreMigrated": false,
       "blocksParity": true
@@ -938,6 +525,6 @@
   },
   "verticalsSupported": 4,
   "verticalsBlocking": 4,
-  "databaseRuntimeZeroInFirebaseRoot": false,
+  "databaseRuntimeZeroInFirebaseRoot": true,
   "decision": "PRODUCT_PARITY_NO_GO"
 }

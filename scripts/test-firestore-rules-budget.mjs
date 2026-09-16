@@ -28,6 +28,9 @@ import { FirestoreSupermarketRepository } from '../src/data/firestore/FirestoreS
 import { FirestoreAutoRepairRepository } from '../src/data/firestore/FirestoreAutoRepairRepository.ts';
 import { FirestoreCarPartsRepository } from '../src/data/firestore/FirestoreCarPartsRepository.ts';
 import { FirestoreRestaurantRepository } from '../src/data/firestore/FirestoreRestaurantRepository.ts';
+import { FirestoreTravelRepository } from '../src/data/firestore/FirestoreTravelRepository.ts';
+import { createFirestoreBackend } from '../src/data/firestore/createFirestoreBackend.ts';
+import { registerBackend, resetBackendForTests } from '../src/data/backend.ts';
 import { encodeInsert } from '../src/data/firestore/documentCodec.ts';
 import { RulesClient } from '../migration/firestore/lib/rules-client.mjs';
 import { EXPRESSION_LIMIT, allowExpression, conjuncts, measureRuleCost, outcome } from '../migration/firestore/lib/rules-budget.mjs';
@@ -79,7 +82,8 @@ function clientFor(label) {
   const handle = { app, auth, db, session, gateway: new FirestoreAuthGateway(session), profiles: new FirestoreProfileRepository(session),
     admin: new FirestoreAdminRepository(session), market: new FirestoreSupermarketRepository(session),
     repair: new FirestoreAutoRepairRepository(session), parts: new FirestoreCarPartsRepository(session),
-    restaurant: new FirestoreRestaurantRepository(session) };
+    restaurant: new FirestoreRestaurantRepository(session), travel: new FirestoreTravelRepository(session),
+    config: { mode: 'firestore-emulator', app, auth, db, ready: Promise.resolve(), maintenanceEnabled: false, isolatedIdentity } };
   clients.push(handle);
   return handle;
 }
@@ -134,6 +138,20 @@ const TARGET = {
   reservationsUpdate: { match: 'match /reservations/{reservationId} {', allow: 'allow update: if ' },
   waitlistUpdate: { match: 'match /waitlist/{entryId} {', allow: 'allow update: if ' },
   guestsUpdate: { match: 'match /guestProfiles/{guestId} {', allow: 'allow update: if ' },
+  operationCreate: { match: 'match /sparkOperations/{operationId} {', allow: 'allow create: if ' },
+  tripsCreate: { match: 'match /trips/{tripId} {', allow: 'allow create: if ' },
+  tripsUpdate: { match: 'match /trips/{tripId} {', allow: 'allow update: if ' },
+  tripPlansWrite: { match: 'match /tripPlans/{tripId} {', allow: 'allow create, update: if ' },
+  plansCreate: { match: 'match /tripPaymentPlans/{planId} {', allow: 'allow create: if ' },
+  plansUpdate: { match: 'match /tripPaymentPlans/{planId} {', allow: 'allow update: if ' },
+  installmentsCreate: { match: 'match /tripInstallments/{installmentId} {', allow: 'allow create: if ' },
+  installmentsUpdate: { match: 'match /tripInstallments/{installmentId} {', allow: 'allow update: if ' },
+  tripActivityCreate: { match: 'match /tripActivityLog/{eventId} {', allow: 'allow create: if ' },
+  tripAuditCreate: { match: 'match /tripFinancialAudit/{eventId} {', allow: 'allow create: if ' },
+  requestCreate: { match: 'match /idempotency/{id} {', allow: 'allow create: if ' },
+  settingsWrite: { match: 'match /settings/{notificationSettingsId} {', allow: 'allow create, update: if ' },
+  templatesCreate: { match: 'match /tripTemplates/{templateId} {', allow: 'allow create: if ' },
+  packingCreate: { match: 'match /packingLists/{listId} {', allow: 'allow create: if ' },
 };
 
 async function measure(path, target, attempt, { product = true } = {}) {
@@ -221,6 +239,9 @@ before(async () => {
     uid: adminAccount.localId, legacyProfileId: `profile-${adminAccount.localId}`, ownerUid: adminAccount.localId, businessId: null,
     schemaVersion: 1, transformVersion: 1, isDeleted: false,
   });
+  // save_trip probes the canonical payment contract through the registered backend.
+  resetBackendForTests();
+  registerBackend(createFirestoreBackend(s.owner.config));
   s.admin = clientFor('admin');
   await s.admin.gateway.signIn(email('admin'), PASSWORD);
   s.registrant = clientFor('registrant');
@@ -559,6 +580,52 @@ test('restaurant: floor, orders and their ledger, kitchen, manager approval, ana
   ]);
 });
 
+/**
+ * Tourism. One save commits up to three dozen documents, and every rule it evaluates shares the request-wide
+ * 1,000-expression budget, so each rule of that commit is measured on its own against the product ceiling.
+ */
+test('tourism: a trip save, its ledger, its history and the side tables', async () => {
+  const travel = s.owner.travel;
+  const form = (overrides = {}) => ({
+    destination: 'Athens', client_name: 'Budget Client', client_phone: '0521234567', travelers: [], travelers_count: 1,
+    itinerary: [], start_date: '2027-05-01', end_date: '2027-05-06', currency: 'ILS', exchange_rate: 1,
+    wholesale_cost: 1000, sale_price: 1500, payments: [], payment_status: 'unpaid', amount_paid: 0,
+    payment_date: '2027-04-01', payment_method: 'cash', payment_plan: null, room_type: {}, hotel_name: 'H',
+    service_type: 'both', notes: '', status: 'active', ...overrides,
+  });
+  const card = (overrides = {}) => form({ payment_method: 'card',
+    payment_plan: { card_total: 1500, cash_total: 0, installment_count: 1, first_installment_date: '2030-01-15' }, ...overrides });
+  const saveCash = () => outcome(() => travel.saveTrip(s.owner.uid, form({ destination: `Athens ${next()}` }), undefined, randomUUID()));
+  const saveCard = () => outcome(() => travel.saveTrip(s.owner.uid, card({ destination: `Rhodes ${next()}` }), undefined, randomUUID()));
+  // Two subjects: the receipts run against a card schedule, and the edits against a cash trip. Editing the card trip
+  // with a cash form would cancel its schedule, and the next receipt would then be refused for a reason that is not cost.
+  const seeded = await travel.saveTrip(s.owner.uid, card({ destination: 'Seed schedule' }), undefined, randomUUID());
+  const seededPlan = await travel.getTripPaymentPlan(seeded.id);
+  const edited = await travel.saveTrip(s.owner.uid, form({ destination: 'Seed edit' }), undefined, randomUUID());
+  const receipt = (amount) => outcome(() => travel.recordInstallmentPayment(seededPlan.installments[0].id, amount, '2030-01-16T09:00:00Z', null));
+  assertWithin([
+    await measure('tourism: save a trip (operation)', TARGET.operationCreate, saveCash),
+    await measure('tourism: save a trip (trip)', TARGET.tripsCreate, saveCash),
+    await measure('tourism: save a trip (payment plan)', TARGET.plansCreate, saveCash),
+    await measure('tourism: save a trip (plan index)', TARGET.tripPlansWrite, saveCash),
+    await measure('tourism: save a trip (activity)', TARGET.tripActivityCreate, saveCash),
+    await measure('tourism: save a trip (financial audit)', TARGET.tripAuditCreate, saveCash),
+    await measure('tourism: save a trip (write request)', TARGET.requestCreate, saveCash),
+    await measure('tourism: save a card plan (instalment)', TARGET.installmentsCreate, saveCard),
+    await measure('tourism: edit a trip (trip)', TARGET.tripsUpdate,
+      () => outcome(() => travel.saveTrip(s.owner.uid, form({ sale_price: 1500 + next(), destination: 'Seed edit' }), edited.id, randomUUID()))),
+    await measure('tourism: record a Visa receipt (instalment)', TARGET.installmentsUpdate, () => receipt((next() % 5) * 100 + 100)),
+    await measure('tourism: record a Visa receipt (plan)', TARGET.plansUpdate, () => receipt((next() % 5) * 100 + 200)),
+    await measure('tourism: notification settings', TARGET.settingsWrite, () => outcome(() => travel.saveTripNotificationSettings(s.owner.uid, {
+      timezone: 'Asia/Jerusalem', upcoming_enabled: true, upcoming_days: 7 + (next() % 20), trip_reminder_days: [30, 7, 0],
+      payment_enabled: true, payment_reminder_days: [7, 0], cleanup_enabled: true, retention_enabled: true }))),
+    await measure('tourism: save a trip template', TARGET.templatesCreate, () => outcome(() => travel.saveTripTemplate(s.owner.uid,
+      { name: `Budget template ${next()}`, description: 'd', data: { destination: 'Athens' }, templateType: 'full_trip' }))),
+    await measure('tourism: create a packing list', TARGET.packingCreate, () => outcome(() => travel.createPackingList(s.owner.uid, edited.id,
+      `Budget list ${next()}`, [{ category: 'bag', label: 'Charger', checked: false }]))),
+  ]);
+});
+
 test('the budget report is written', () => {
   writeFileSync(REPORT, `${JSON.stringify({
     limit: EXPRESSION_LIMIT, productCeiling: PRODUCT_CEILING, method: 'migration/firestore/lib/rules-budget.mjs',
@@ -566,5 +633,5 @@ test('the budget report is written', () => {
     paths: results.map(({ path, rule, product, withinLimit, costAtMost, costAbove, parts }) =>
       ({ path, rule, product, withinLimit, costAtMost, costAbove, ...(parts ? { parts } : {}) })),
   }, null, 2)}\n`);
-  assert.equal(results.length, 66, 'every measured path is reported');
+  assert.equal(results.length, 80, 'every measured path is reported');
 });

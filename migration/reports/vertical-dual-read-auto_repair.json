@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-15T10:28:44.085Z",
+  "generatedAt": "2026-09-16T19:30:06.386Z",
   "vertical": "auto_repair",
   "target": "firestore-emulator",
   "readOnlySource": {
@@ -84,6 +84,10 @@
         "attempts": 4,
         "denied": 4
       },
+      "derived": {
+        "checked": 0,
+        "mismatches": 0
+      },
       "restoredClean": true,
       "clean": true
     }
@@ -142,6 +146,8 @@
     "crossTenantAllowed": 0,
     "controlsApplicable": 5,
     "controlsDetected": 5,
-    "restoredClean": true
+    "restoredClean": true,
+    "derivedChecked": 0,
+    "derivedMismatches": 0
   }
 }

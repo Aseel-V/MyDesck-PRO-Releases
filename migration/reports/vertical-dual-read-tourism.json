@@ -1,0 +1,640 @@
+{
+  "generatedAt": "2026-09-16T19:27:50.512Z",
+  "vertical": "tourism",
+  "target": "firestore-emulator",
+  "readOnlySource": {
+    "start": {
+      "read_only": "on",
+      "isolation": "repeatable read"
+    },
+    "rejectedWriteSqlState": "25006",
+    "successfulWrites": 0,
+    "end": {
+      "read_only": "on",
+      "isolation": "repeatable read"
+    },
+    "transactionOutcome": "ROLLBACK"
+  },
+  "tenants": [
+    {
+      "businessHash": "4dbcb05fccc9",
+      "ownerHash": "2f93402fb0f7",
+      "methods": {
+        "searchTrips": {
+          "sourceRows": 2,
+          "targetRows": 2,
+          "matched": 2,
+          "missing": 0,
+          "unexpected": 0,
+          "fieldMismatches": 0,
+          "orderMismatches": 0,
+          "mismatchedColumns": {},
+          "unknownColumns": []
+        },
+        "listClientRows": {
+          "sourceRows": 2,
+          "targetRows": 2,
+          "matched": 2,
+          "missing": 0,
+          "unexpected": 0,
+          "fieldMismatches": 0,
+          "orderMismatches": 0,
+          "mismatchedColumns": {},
+          "unknownColumns": []
+        },
+        "listTripNotifications": {
+          "sourceRows": 0,
+          "targetRows": 0,
+          "matched": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "fieldMismatches": 0,
+          "orderMismatches": 0,
+          "mismatchedColumns": {},
+          "unknownColumns": []
+        },
+        "listTripTemplates": {
+          "sourceRows": 0,
+          "targetRows": 0,
+          "matched": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "fieldMismatches": 0,
+          "orderMismatches": 0,
+          "mismatchedColumns": {},
+          "unknownColumns": []
+        },
+        "listFailedCleanupJobs": {
+          "sourceRows": 0,
+          "targetRows": 0,
+          "matched": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "fieldMismatches": 0,
+          "orderMismatches": 0,
+          "mismatchedColumns": {},
+          "unknownColumns": []
+        }
+      },
+      "inventory": {
+        "trips": {
+          "sourceRows": 2,
+          "targetDocuments": 2,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "tripPaymentPlans": {
+          "sourceRows": 2,
+          "targetDocuments": 2,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "tripInstallments": {
+          "sourceRows": 3,
+          "targetDocuments": 3,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "tripActivityLog": {
+          "sourceRows": 18,
+          "targetDocuments": 18,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "tripFinancialAudit": {
+          "sourceRows": 32,
+          "targetDocuments": 32,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "tripPaymentEvents": {
+          "sourceRows": 2,
+          "targetDocuments": 2,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "tripInstallmentEvents": {
+          "sourceRows": 2,
+          "targetDocuments": 2,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "tripNotifications": {
+          "sourceRows": 0,
+          "targetDocuments": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "tripTemplates": {
+          "sourceRows": 0,
+          "targetDocuments": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "tripWhatsappTemplates": {
+          "sourceRows": 0,
+          "targetDocuments": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "storageCleanupQueue": {
+          "sourceRows": 0,
+          "targetDocuments": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        }
+      },
+      "crossTenant": {
+        "attempts": 11,
+        "denied": 11
+      },
+      "derived": {
+        "checked": 0,
+        "mismatches": 0
+      },
+      "restoredClean": true,
+      "clean": true
+    },
+    {
+      "businessHash": "ba615a830ba8",
+      "ownerHash": "4ed545194685",
+      "methods": {
+        "searchTrips": {
+          "sourceRows": 96,
+          "targetRows": 96,
+          "matched": 96,
+          "missing": 0,
+          "unexpected": 0,
+          "fieldMismatches": 0,
+          "orderMismatches": 0,
+          "mismatchedColumns": {},
+          "unknownColumns": []
+        },
+        "listClientRows": {
+          "sourceRows": 95,
+          "targetRows": 95,
+          "matched": 95,
+          "missing": 0,
+          "unexpected": 0,
+          "fieldMismatches": 0,
+          "orderMismatches": 0,
+          "mismatchedColumns": {},
+          "unknownColumns": []
+        },
+        "listTripNotifications": {
+          "sourceRows": 0,
+          "targetRows": 0,
+          "matched": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "fieldMismatches": 0,
+          "orderMismatches": 0,
+          "mismatchedColumns": {},
+          "unknownColumns": []
+        },
+        "listTripTemplates": {
+          "sourceRows": 0,
+          "targetRows": 0,
+          "matched": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "fieldMismatches": 0,
+          "orderMismatches": 0,
+          "mismatchedColumns": {},
+          "unknownColumns": []
+        },
+        "listFailedCleanupJobs": {
+          "sourceRows": 0,
+          "targetRows": 0,
+          "matched": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "fieldMismatches": 0,
+          "orderMismatches": 0,
+          "mismatchedColumns": {},
+          "unknownColumns": []
+        }
+      },
+      "inventory": {
+        "trips": {
+          "sourceRows": 96,
+          "targetDocuments": 96,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "tripPaymentPlans": {
+          "sourceRows": 96,
+          "targetDocuments": 96,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "tripInstallments": {
+          "sourceRows": 31,
+          "targetDocuments": 31,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "tripActivityLog": {
+          "sourceRows": 465,
+          "targetDocuments": 465,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "tripFinancialAudit": {
+          "sourceRows": 401,
+          "targetDocuments": 401,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "tripPaymentEvents": {
+          "sourceRows": 0,
+          "targetDocuments": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "tripInstallmentEvents": {
+          "sourceRows": 0,
+          "targetDocuments": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "tripNotifications": {
+          "sourceRows": 0,
+          "targetDocuments": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "tripTemplates": {
+          "sourceRows": 0,
+          "targetDocuments": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "tripWhatsappTemplates": {
+          "sourceRows": 0,
+          "targetDocuments": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "storageCleanupQueue": {
+          "sourceRows": 8,
+          "targetDocuments": 8,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        }
+      },
+      "crossTenant": {
+        "attempts": 11,
+        "denied": 11
+      },
+      "derived": {
+        "checked": 0,
+        "mismatches": 0
+      },
+      "restoredClean": true,
+      "clean": true
+    },
+    {
+      "businessHash": "ebfdffd17520",
+      "ownerHash": "6d65321887ee",
+      "methods": {
+        "searchTrips": {
+          "sourceRows": 2,
+          "targetRows": 2,
+          "matched": 2,
+          "missing": 0,
+          "unexpected": 0,
+          "fieldMismatches": 0,
+          "orderMismatches": 0,
+          "mismatchedColumns": {},
+          "unknownColumns": []
+        },
+        "listClientRows": {
+          "sourceRows": 2,
+          "targetRows": 2,
+          "matched": 2,
+          "missing": 0,
+          "unexpected": 0,
+          "fieldMismatches": 0,
+          "orderMismatches": 0,
+          "mismatchedColumns": {},
+          "unknownColumns": []
+        },
+        "listTripNotifications": {
+          "sourceRows": 0,
+          "targetRows": 0,
+          "matched": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "fieldMismatches": 0,
+          "orderMismatches": 0,
+          "mismatchedColumns": {},
+          "unknownColumns": []
+        },
+        "listTripTemplates": {
+          "sourceRows": 0,
+          "targetRows": 0,
+          "matched": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "fieldMismatches": 0,
+          "orderMismatches": 0,
+          "mismatchedColumns": {},
+          "unknownColumns": []
+        },
+        "listFailedCleanupJobs": {
+          "sourceRows": 0,
+          "targetRows": 0,
+          "matched": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "fieldMismatches": 0,
+          "orderMismatches": 0,
+          "mismatchedColumns": {},
+          "unknownColumns": []
+        }
+      },
+      "inventory": {
+        "trips": {
+          "sourceRows": 2,
+          "targetDocuments": 2,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "tripPaymentPlans": {
+          "sourceRows": 2,
+          "targetDocuments": 2,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "tripInstallments": {
+          "sourceRows": 3,
+          "targetDocuments": 3,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "tripActivityLog": {
+          "sourceRows": 18,
+          "targetDocuments": 18,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "tripFinancialAudit": {
+          "sourceRows": 32,
+          "targetDocuments": 32,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "tripPaymentEvents": {
+          "sourceRows": 2,
+          "targetDocuments": 2,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "tripInstallmentEvents": {
+          "sourceRows": 2,
+          "targetDocuments": 2,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "tripNotifications": {
+          "sourceRows": 0,
+          "targetDocuments": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "tripTemplates": {
+          "sourceRows": 0,
+          "targetDocuments": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "tripWhatsappTemplates": {
+          "sourceRows": 0,
+          "targetDocuments": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        },
+        "storageCleanupQueue": {
+          "sourceRows": 0,
+          "targetDocuments": 0,
+          "missing": 0,
+          "unexpected": 0,
+          "orphans": 0
+        }
+      },
+      "crossTenant": {
+        "attempts": 11,
+        "denied": 11
+      },
+      "derived": {
+        "checked": 0,
+        "mismatches": 0
+      },
+      "restoredClean": true,
+      "clean": true
+    }
+  ],
+  "corruptionControls": [
+    {
+      "name": "trip sale price changed",
+      "tenant": "4dbcb05fccc9",
+      "metric": "fieldMismatches",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "trip deleted",
+      "tenant": "4dbcb05fccc9",
+      "metric": "missing",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "trip duplicated under a new id",
+      "tenant": "4dbcb05fccc9",
+      "metric": "unexpected",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "trip moved to another owner",
+      "tenant": "4dbcb05fccc9",
+      "metric": "orphans",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "instalment deleted",
+      "tenant": "4dbcb05fccc9",
+      "metric": "missing",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "financial audit record deleted",
+      "tenant": "4dbcb05fccc9",
+      "metric": "missing",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "trip that the source does not have",
+      "tenant": "4dbcb05fccc9",
+      "metric": "unexpected",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "trip sale price changed",
+      "tenant": "ba615a830ba8",
+      "metric": "fieldMismatches",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "trip deleted",
+      "tenant": "ba615a830ba8",
+      "metric": "missing",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "trip duplicated under a new id",
+      "tenant": "ba615a830ba8",
+      "metric": "unexpected",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "trip moved to another owner",
+      "tenant": "ba615a830ba8",
+      "metric": "orphans",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "instalment deleted",
+      "tenant": "ba615a830ba8",
+      "metric": "missing",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "financial audit record deleted",
+      "tenant": "ba615a830ba8",
+      "metric": "missing",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "trip that the source does not have",
+      "tenant": "ba615a830ba8",
+      "metric": "unexpected",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "trip sale price changed",
+      "tenant": "ebfdffd17520",
+      "metric": "fieldMismatches",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "trip deleted",
+      "tenant": "ebfdffd17520",
+      "metric": "missing",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "trip duplicated under a new id",
+      "tenant": "ebfdffd17520",
+      "metric": "unexpected",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "trip moved to another owner",
+      "tenant": "ebfdffd17520",
+      "metric": "orphans",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "instalment deleted",
+      "tenant": "ebfdffd17520",
+      "metric": "missing",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "financial audit record deleted",
+      "tenant": "ebfdffd17520",
+      "metric": "missing",
+      "observed": 1,
+      "status": "DETECTED"
+    },
+    {
+      "name": "trip that the source does not have",
+      "tenant": "ebfdffd17520",
+      "metric": "unexpected",
+      "observed": 1,
+      "status": "DETECTED"
+    }
+  ],
+  "decision": "PASS",
+  "totals": {
+    "tenants": 3,
+    "sourceRowsCompared": 199,
+    "matched": 199,
+    "missing": 0,
+    "unexpected": 0,
+    "fieldMismatches": 0,
+    "orderMismatches": 0,
+    "unknownColumns": 0,
+    "orphans": 0,
+    "sourceRowsInventoried": 1219,
+    "migratedDocuments": 1219,
+    "crossTenantAttempts": 33,
+    "crossTenantAllowed": 0,
+    "controlsApplicable": 21,
+    "controlsDetected": 21,
+    "restoredClean": true,
+    "derivedChecked": 0,
+    "derivedMismatches": 0
+  }
+}

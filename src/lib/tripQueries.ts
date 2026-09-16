@@ -1,9 +1,5 @@
-import { supabase } from './supabase';
 import type { Trip } from '../types/trip';
-import { recordRpcFallback, recordRpcSuccess } from './rpcAvailability';
-import { calculateTripFinancials } from './tripFinancials';
-import { getSafeErrorCode } from './safeError';
-import { fromPaymentMinor, getCanonicalTripPayment } from './tripPaymentSummary';
+import { getBackend } from '../data/backend';
 
 export const TRIPS_PAGE_SIZE = 24;
 
@@ -23,82 +19,9 @@ export interface TripPageResult {
   destinations: string[];
 }
 
-type PaymentContractSnapshot = Record<string, string | number | null>;
-
-function getPaymentContractSnapshot(value: Partial<Trip> | null | undefined): PaymentContractSnapshot | null {
-  if (!value) return null;
-  const summary = value.payment_plan_summary;
-  return {
-    payment_method: value.payment_method ?? null,
-    payment_status: value.payment_status ?? null,
-    amount_paid_minor: Math.round(Number(value.amount_paid ?? 0) * 100),
-    amount_due_minor: Math.round(Number(value.amount_due ?? 0) * 100),
-    summary_method: summary?.payment_method ?? null,
-    summary_source: summary?.source ?? null,
-    cash_paid_minor: summary?.cash_paid_minor ?? null,
-    stored_cash_paid_minor: summary?.stored_cash_paid_minor ?? null,
-    processed_installments: summary?.processed_installments ?? null,
-    scheduled_minor_to_date: summary?.scheduled_minor_to_date ?? null,
-    remaining_scheduled_minor: summary?.remaining_scheduled_minor ?? null,
-    combined_remaining_minor: summary?.combined_remaining_minor ?? null,
-    confirmed_total_minor: summary?.confirmed_total_minor ?? null,
-    total_unpaid_minor: summary?.total_unpaid_minor ?? null,
-    cash_confirmed_minor: summary?.cash_confirmed_minor ?? null,
-    visa_confirmed_minor: summary?.visa_confirmed_minor ?? null,
-    visa_overdue_unconfirmed_minor: summary?.visa_overdue_unconfirmed_minor ?? null,
-    payment_source: summary?.payment_source ?? null,
-    reconciliation_state: summary?.reconciliation_state ?? null,
-    authoritative_payment_status: summary?.authoritative_payment_status ?? null,
-  };
-}
-
 export async function logTripPaymentContractComparison(tripId: string, year: string): Promise<void> {
   if (!import.meta.env.DEV) return;
-
-  const pageArgs = {
-    p_year: year,
-    p_page: 1,
-    p_page_size: 100,
-    p_search: null,
-    p_payment_status: null,
-    p_trip_status: null,
-    p_month: null,
-    p_destination: null,
-    p_sort_key: 'updated_desc',
-  };
-  const [detailResult, pageResult, dashboardResult] = await Promise.all([
-    supabase.rpc('get_trip_details', { p_trip_id: tripId }),
-    supabase.rpc('get_trips_page', pageArgs),
-    supabase.rpc('get_trip_dashboard_items', { p_year: year }),
-  ]);
-  const errors = [detailResult.error, pageResult.error, dashboardResult.error].filter(Boolean);
-  if (errors.length > 0) {
-    console.warn('[Travel payment contract] comparison unavailable', {
-      tripId,
-      errorCodes: errors.map(getSafeErrorCode),
-    });
-    return;
-  }
-
-  const pagePayload = pageResult.data as unknown as Partial<TripPageResult> | null;
-  const detail = detailResult.data as unknown as Partial<Trip> | null;
-  const listItem = pagePayload?.items?.find((item) => item.id === tripId);
-  const dashboardItems = dashboardResult.data as unknown as Array<Partial<Trip>> | null;
-  const dashboardItem = dashboardItems?.find((item) => item.id === tripId);
-  const snapshots = {
-    details: getPaymentContractSnapshot(detail),
-    list: getPaymentContractSnapshot(listItem),
-    dashboard: getPaymentContractSnapshot(dashboardItem),
-  };
-  const fields = new Set(Object.values(snapshots).flatMap((snapshot) => snapshot ? Object.keys(snapshot) : []));
-  const differences = [...fields].filter((field) => {
-    const values = Object.values(snapshots).map((snapshot) => snapshot?.[field] ?? null);
-    return new Set(values).size > 1;
-  });
-
-  const output = { tripId, differences, snapshots };
-  if (differences.length > 0) console.warn('[Travel payment contract] mismatch', output);
-  else console.info('[Travel payment contract] aligned', output);
+  await getBackend().travel.logPaymentContractComparison(tripId, year);
 }
 
 export type TripSortKey =
@@ -132,32 +55,6 @@ export interface TripPageInput {
   sortKey?: TripSortKey;
 }
 
-const TRIP_LIST_FIELDS = 'id,user_id,destination,client_name,travelers_count,start_date,end_date,currency,exchange_rate,wholesale_cost,sale_price,profit,profit_percentage,payment_date,payment_status,amount_paid,amount_due,payment_method,card_paid_amount,cash_paid_amount,room_type,board_basis,hotel_name,service_type,trip_type,airline_name,flight_number,booking_reference,departure_airport,arrival_airport,departure_datetime,arrival_datetime,return_flight_number,return_departure_airport,return_arrival_airport,return_departure_datetime,return_arrival_datetime,ticket_class,ticket_cost_ils,wholesale_original_amount,wholesale_currency,sale_original_amount,sale_currency,checklist_flight,checklist_hotel,checklist_payment,status,export_to_pdf,created_at,updated_at';
-
-function getYearBounds(year: string) {
-  const numericYear = /^\d{4}$/.test(year) ? Number(year) : new Date().getFullYear();
-  return {
-    start: `${numericYear}-01-01`,
-    end: `${numericYear + 1}-01-01`,
-  };
-}
-
-function safeSearchTerm(value?: string): string {
-  return (value || '').trim().replace(/[,()'"\\%_]/g, ' ').replace(/\s+/g, ' ').slice(0, 120);
-}
-
-function isMissingDeletedColumn(error: { code?: string; message?: string } | null): boolean {
-  return error?.code === '42703' && Boolean(error.message?.includes('deleted_at'));
-}
-
-function isPaymentStatus(value?: string): value is Trip['payment_status'] {
-  return value === 'paid' || value === 'partial' || value === 'unpaid';
-}
-
-function isTripStatus(value?: string): value is Trip['status'] {
-  return value === 'active' || value === 'completed' || value === 'cancelled' || value === 'archived';
-}
-
 export function asTripListItem(value: Partial<Trip>): Trip {
   return {
     ...value,
@@ -182,57 +79,11 @@ function stripLegacyTravelerFields(value: unknown): Trip {
 }
 
 export async function fetchTripDashboardItems(year: string): Promise<Trip[]> {
-  const { data, error } = await supabase.rpc('get_trip_dashboard_items', { p_year: year });
-  if (!error) {
-    recordRpcSuccess('get_trip_dashboard_items');
-    return Array.isArray(data) ? (data as unknown as Array<Partial<Trip>>).map(asTripListItem) : [];
-  }
-  if (!recordRpcFallback('get_trip_dashboard_items', error)) throw error;
-
-  const bounds = getYearBounds(year);
-  const runFallback = (withDeletedFilter: boolean) => {
-    let query = supabase
-      .from('trips')
-      .select(TRIP_LIST_FIELDS)
-      .gte('start_date', bounds.start)
-      .lt('start_date', bounds.end)
-      .order('created_at', { ascending: false })
-      .limit(2000);
-    if (withDeletedFilter) query = query.is('deleted_at', null);
-    return query;
-  };
-  let fallback = await runFallback(true);
-  if (isMissingDeletedColumn(fallback.error)) fallback = await runFallback(false);
-  if (fallback.error) throw fallback.error;
-  return (fallback.data ?? []).map((item) => asTripListItem(item as unknown as Partial<Trip>));
+  return getBackend().travelDashboard.listDashboardTrips(year);
 }
 
 export async function fetchTripPage(input: TripPageInput): Promise<TripPageResult> {
-  const { data, error } = await supabase.rpc('get_trips_page', {
-    p_year: input.year,
-    p_page: input.page,
-    p_page_size: input.pageSize ?? TRIPS_PAGE_SIZE,
-    p_search: input.search?.trim() || null,
-    p_payment_status: input.paymentStatus || null,
-    p_trip_status: input.tripStatus || null,
-    p_month: input.month ? Number(input.month) : null,
-    p_destination: input.destination || null,
-    p_sort_key: input.sortKey || 'updated_desc',
-  });
-  if (error) {
-    if (!recordRpcFallback('get_trips_page', error)) throw error;
-    return fetchTripPageFallback(input);
-  }
-  recordRpcSuccess('get_trips_page');
-
-  const payload = (data ?? {}) as unknown as Partial<TripPageResult>;
-  return {
-    items: Array.isArray(payload.items) ? payload.items.map(asTripListItem) : [],
-    total_count: Number(payload.total_count ?? 0),
-    summary: Array.isArray(payload.summary) ? payload.summary : [],
-    upcoming_count: Number(payload.upcoming_count ?? 0),
-    destinations: Array.isArray(payload.destinations) ? payload.destinations : [],
-  };
+  return getBackend().travel.getTripsPage(input);
 }
 
 export async function fetchAllFilteredTrips(input: Omit<TripPageInput, 'page' | 'pageSize'>, onProgress?: (loaded: number, total: number) => void): Promise<Trip[]> {
@@ -249,135 +100,14 @@ export async function fetchAllFilteredTrips(input: Omit<TripPageInput, 'page' | 
   return items;
 }
 
-async function fetchTripPageFallback(input: TripPageInput): Promise<TripPageResult> {
-  const bounds = getYearBounds(input.year);
-  const pageSize = Math.min(Math.max(input.pageSize ?? TRIPS_PAGE_SIZE, 1), 100);
-  const from = (Math.max(input.page, 1) - 1) * pageSize;
-  const search = safeSearchTerm(input.search);
-
-  const buildListQuery = (withDeletedFilter: boolean) => {
-    let query = supabase
-      .from('trips')
-      .select(TRIP_LIST_FIELDS, { count: 'exact' })
-      .gte('start_date', bounds.start)
-      .lt('start_date', bounds.end);
-    if (withDeletedFilter) query = query.is('deleted_at', null);
-    if (isPaymentStatus(input.paymentStatus)) query = query.eq('payment_status', input.paymentStatus);
-    if (isTripStatus(input.tripStatus)) query = query.eq('status', input.tripStatus);
-    else query = query.neq('status', 'archived');
-    if (input.destination) query = query.eq('destination', input.destination);
-    if (input.month) {
-      const month = String(Number(input.month)).padStart(2, '0');
-      const monthStart = `${input.year}-${month}-01`;
-      const nextMonth = new Date(Date.UTC(Number(input.year), Number(month), 1)).toISOString().slice(0, 10);
-      query = query.gte('start_date', monthStart).lt('start_date', nextMonth);
-    }
-    if (search) query = query.or(`destination.ilike.%${search}%,client_name.ilike.%${search}%,hotel_name.ilike.%${search}%`);
-
-    const sortKey = input.sortKey || 'updated_desc';
-    switch (sortKey) {
-      case 'updated_asc':
-        query = query.order('updated_at', { ascending: true });
-        break;
-      case 'created_desc':
-        query = query.order('created_at', { ascending: false });
-        break;
-      case 'created_asc':
-        query = query.order('created_at', { ascending: true });
-        break;
-      case 'start_date_asc':
-        query = query.order('start_date', { ascending: true, nullsFirst: false });
-        break;
-      case 'start_date_desc':
-        query = query.order('start_date', { ascending: false, nullsFirst: false });
-        break;
-      case 'destination_asc':
-        query = query.order('destination', { ascending: true });
-        break;
-      case 'destination_desc':
-        query = query.order('destination', { ascending: false });
-        break;
-      case 'client_name_asc':
-        query = query.order('client_name', { ascending: true });
-        break;
-      case 'client_name_desc':
-        query = query.order('client_name', { ascending: false });
-        break;
-      case 'sale_price_desc':
-        query = query.order('sale_price', { ascending: false });
-        break;
-      case 'sale_price_asc':
-        query = query.order('sale_price', { ascending: true });
-        break;
-      case 'profit_desc':
-        query = query.order('profit', { ascending: false });
-        break;
-      case 'profit_asc':
-        query = query.order('profit', { ascending: true });
-        break;
-      case 'updated_desc':
-      default:
-        query = query.order('updated_at', { ascending: false });
-        break;
-    }
-
-    return query.order('id', { ascending: false }).range(from, from + pageSize - 1);
-  };
-
-  let response = await buildListQuery(true);
-  if (isMissingDeletedColumn(response.error)) response = await buildListQuery(false);
-  if (response.error) throw response.error;
-  const items = (response.data ?? []).map((item) => asTripListItem(item as unknown as Partial<Trip>));
-
-  const summaries = new Map<string, TripPageSummary>();
-  for (const trip of items.filter((item) => item.status !== 'cancelled' && item.status !== 'archived')) {
-    const currency = trip.currency || 'ILS';
-    const financials = calculateTripFinancials(trip);
-    const payment = getCanonicalTripPayment(trip);
-    const current = summaries.get(currency) || { currency, trip_count: 0, revenue: 0, profit: 0, amount_due: 0 };
-    current.trip_count += 1;
-    current.revenue += financials.salePrice;
-    current.profit += financials.profit;
-    current.amount_due += fromPaymentMinor(payment.totalUnpaidMinor);
-    summaries.set(currency, current);
-  }
-
-  const destinations = Array.from(new Set(items.map((item) => item.destination))).sort();
-  return {
-    items,
-    total_count: response.count ?? items.length,
-    summary: Array.from(summaries.values()),
-    upcoming_count: items.filter((item) => item.status !== 'cancelled' && item.start_date >= new Date().toISOString().slice(0, 10)).length,
-    destinations,
-  };
-}
-
 export async function fetchTripDetails(tripId: string): Promise<Trip> {
-  const { data, error } = await supabase.rpc('get_trip_details', { p_trip_id: tripId });
-  if (!error) {
-    recordRpcSuccess('get_trip_details');
-    if (!data) throw new Error('TRIP_NOT_FOUND');
-    return stripLegacyTravelerFields(data);
-  }
-  if (!recordRpcFallback('get_trip_details', error)) throw error;
-
-  const runFallback = (withDeletedFilter: boolean) => {
-    let query = supabase.from('trips').select('*').eq('id', tripId);
-    if (withDeletedFilter) query = query.is('deleted_at', null);
-    return query.maybeSingle();
-  };
-  let fallback = await runFallback(true);
-  if (isMissingDeletedColumn(fallback.error)) fallback = await runFallback(false);
-  if (fallback.error) throw fallback.error;
-  if (!fallback.data) throw new Error('TRIP_NOT_FOUND');
-  return stripLegacyTravelerFields(fallback.data);
+  const data = await getBackend().travel.getTripDetails(tripId);
+  if (!data) throw new Error('TRIP_NOT_FOUND');
+  return stripLegacyTravelerFields(data);
 }
 
 export async function fetchLatestTripForClient(clientName: string, clientPhone?: string): Promise<Trip> {
-  let query = supabase.from('trips').select('id').eq('client_name', clientName).is('deleted_at', null);
-  if (clientPhone) query = query.eq('client_phone', clientPhone);
-  const { data, error } = await query.order('start_date', { ascending: false }).limit(1).maybeSingle();
-  if (error) throw error;
-  if (!data) throw new Error('TRIP_NOT_FOUND');
-  return fetchTripDetails(data.id);
+  const id = await getBackend().travel.findLatestTripIdForClient(clientName, clientPhone);
+  if (!id) throw new Error('TRIP_NOT_FOUND');
+  return fetchTripDetails(id);
 }

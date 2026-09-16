@@ -79,9 +79,88 @@ Gates from `migration/reports/vertical-parity-tourism.json`.
 <!-- DESIGN:BEGIN -->
 ## Design
 
-_Not authored yet._ Firestore collections, document IDs,
-relationships, Rules ownership model, transaction invariants, search and analytics
-strategy must be designed before this vertical can be migrated.
+### Collections and document identity
+
+Every tourism table keeps the identity the rehearsal gives it, so a migrated document and an application-written one are
+the same shape: `trips/{id}`, `tripPaymentPlans/{id}`, `tripInstallments/{id}`, `tripActivityLog/{id}`,
+`tripFinancialAudit/{id}`, `tripPaymentEvents/{id}`, `tripInstallmentEvents/{id}`, `tripNotifications/{id}`,
+`tripTemplates/{id}`, `tripWhatsappTemplates/{id}`, `storageCleanupQueue/{id}`, `idempotency/{uid}__{clientRequestId}`,
+`users/{uid}/settings/{uid}` (trip_notification_settings) and `trips/{tripId}/packingLists/{id}`.
+
+Event tables are bigint identities in the source. A client transaction allocates `base = Date.now() * 1000` and numbers
+its rows `base + 0, 1, 2 ...` in the model's insertion order; the document id is that number zero-padded to 19 digits,
+which is exactly how the rehearsal writes migrated events. The Rules require `id == int(documentId)` and
+`sequence == id`, so no client can slip a row in front of the history that already exists.
+
+### The write model, and how it is proven
+
+`save_trip_transaction`, the trip commands and the side-table statements are reproduced as pure functions
+(`src/data/firestore/tripWriteModel.ts`, `tripCommandModel.ts`, `tripSideModel.ts`): PostgreSQL's NUMERIC arithmetic,
+the trigger cascades, the generated columns, the constraint codes, and the source's own defects. What they decide is
+compared statement by statement against a local PostgreSQL built from the migrations plus the production catalog
+overlay (`travel-write-parity.mjs`, `travel-command-parity.mjs`, `travel-side-parity.mjs`), each with negative
+controls. `tripWriteAdapter.ts` persists what the model decided, in one Firestore transaction, and re-checks every
+document the model read so a concurrent writer aborts the commit instead of losing its own write.
+
+### The operation envelope
+
+Every trip write belongs to one immutable `sparkOperations/{uid}__{clientRequestId}` document written in the same
+commit, and `createdAt == request.time` proves it belongs to that request. Tenancy is proven once there — its own rule
+requires an active tenant and the business's owner — and the rows of the commit bind to it rather than re-deriving
+tenancy per document, which the evaluation budget does not allow. A permanent delete carries no document to read a
+request id from, so its operation id is derived: `{uid}__purge__{tripId}`.
+
+### The payment ledger
+
+`tripPlans/{tripId}` stands in for the source's partial unique index on `trip_payment_plans (trip_id)`: it exists
+exactly when the trip has a live native plan and names it, so a rule can reach that plan in one get. The plan carries
+the canonical summary's derived figures — `visaConfirmedMinor` (the elapsed schedule), `visaReceiptedMinor` (the
+receipts) and `cashConfirmedMinor` — each bounded by the plan's own totals, and the trip's collected total must equal
+`least(sale, cash + visa)` for one of them. That is the whole set of values the source's two paths can produce: the
+payment sync uses receipts, and `save_trip_transaction`'s final step uses the date-derived summary.
+
+### Idempotency without a readable ledger
+
+`trip_write_requests` stays invisible to clients, as it is today: a client that could read it would learn whether a
+payment had already happened. The source reads it inside a SECURITY DEFINER function, which does not exist here, so a
+replay is answered from the operation document — the same `(uid, clientRequestId)` key, readable only by its actor,
+carrying the response the ledger row would have returned.
+
+### Search and analytics
+
+`get_trips_page`, `get_deleted_trips_page`, the analytics RPCs and `get_travel_reports` are ported over bounded
+owner-scoped queries with PostgreSQL's ordering, division and rounding semantics. The full dual read compares every one
+of them against the source for every tenant.
+
+### Deviations, recorded deliberately
+
+- The generated shape validators do not run on trip writes. `trips` has ~60 columns and ~90 document keys, and
+  `sv_trips` alone costs more than the 1,000-expression request budget: a two-document commit was over the limit with
+  it. The trip rules keep tenancy, the operation binding, the money arithmetic, the generated columns,
+  `search_document`, revision monotonicity and field immutability; shape fidelity is proven by the codec, the parity
+  harnesses and the dual read. Every other tourism table keeps its generated validator.
+- The migrated data is compared against the source, not trusted. migration/reports/vertical-dual-read-tourism.json
+  records, for three tenants: 199 of 199 method rows matched across the five repository methods the screens call,
+  1,219 documents inventoried over the eleven tourism collections and 1,219 found, with 0 missing, unexpected,
+  orphaned, field-mismatched or misordered; 33 cross-tenant reads attempted and 33 denied; and 21 of 21 corruption
+  controls detected, each damaged document restored exactly and the comparison clean afterwards. The source is read
+  inside one REPEATABLE READ READ ONLY snapshot that proves its own contract: a write rejected with SQLSTATE 25006,
+  0 successful writes, ROLLBACK. The travel dashboard is compared the same way in
+  migration/reports/travel-dashboard-dual-read.json: 4 tenants, 99 trips, 0 mismatched, 8 of 8 controls detected.
+- Measured headroom, from the committed migration/reports/firestore-rules-budget.json: the vertical's 14 rule paths
+  cost between 175 and 652 expressions against the 850 product ceiling and Firestore's 1,000-expression request
+  limit, none over either. The dearest are the two trip writes, an edit at 652 and a save at 640; the cheapest is
+  the notification settings document at 175. The suite pads the emulator's Rules to find each cost, so the figures
+  are only valid from a run with sole use of the emulator.
+- A history row's rule binds it to a fresh operation of its actor, not to the business, trip and operation type, which
+  would be multiplied by the dozen rows a save appends. A row whose businessId did not match its owner satisfies no
+  tenant's read rule, so it is invisible rather than exposed.
+- Within their own tenant an owner could write a `visaConfirmedMinor` larger than the schedule justifies, up to the
+  card total; no rule can tell without reading the whole schedule. Exactness is proven by the parity harnesses.
+- A permanent delete leaves the trip's `trip_write_requests` rows in place: a client cannot enumerate a collection it
+  cannot read. They reference the purged trip optionally, and nothing reads them.
+- The source's own defects are preserved, not repaired: `create_trip_payment_plan` fails with 42702 for a card or mixed
+  plan, the Settings import is refused with 428C9, and the WhatsApp composer's columns do not exist in production.
 
 <!-- DESIGN:END -->
 

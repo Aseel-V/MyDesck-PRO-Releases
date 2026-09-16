@@ -45,6 +45,8 @@ const suites = [
     ['scripts/run-typescript-source-test.mjs', 'scripts/test-firestore-car-parts.mjs']],
   ['restaurant repository, Rules, staff roles and malicious clients', 'scripts/test-firestore-restaurant.mjs',
     ['scripts/run-typescript-source-test.mjs', 'scripts/test-firestore-restaurant.mjs']],
+  ['tourism repository, Rules and malicious clients', 'scripts/test-firestore-travel.mjs',
+    ['scripts/run-typescript-source-test.mjs', 'scripts/test-firestore-travel.mjs']],
   ['Rules evaluation budget', 'scripts/test-firestore-rules-budget.mjs',
     ['scripts/run-typescript-source-test.mjs', 'scripts/test-firestore-rules-budget.mjs']],
   ['trip transaction', 'migration/firestore/tests/save-trip-transaction.test.mjs'],

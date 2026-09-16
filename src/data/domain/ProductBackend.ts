@@ -14,6 +14,7 @@ import type { AutoRepairRepository } from './autoRepair';
 import type { TravelDashboardRepository } from './travelDashboard';
 import type { CarPartsRepository } from './carParts';
 import type { RestaurantRepository } from './restaurant';
+import type { TravelRepository } from './travel';
 
 export type BackendKind = 'supabase' | 'firestore' | 'firestore-emulator';
 
@@ -27,4 +28,5 @@ export interface ProductBackend {
   readonly travelDashboard: TravelDashboardRepository;
   readonly carParts: CarPartsRepository;
   readonly restaurant: RestaurantRepository;
+  readonly travel: TravelRepository;
 }

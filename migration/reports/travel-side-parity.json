@@ -1,0 +1,159 @@
+{
+  "generatedAt": "2026-09-16T13:57:04.647Z",
+  "oracle": "local PostgreSQL 17 (fixture + migrations + production overlay)",
+  "steps": [
+    {
+      "index": 0,
+      "name": "mark every notification read",
+      "step": "markAllRead",
+      "source": "ok",
+      "model": "ok",
+      "problems": []
+    },
+    {
+      "index": 1,
+      "name": "snooze one notification",
+      "step": "snooze",
+      "source": "ok",
+      "model": "ok",
+      "problems": []
+    },
+    {
+      "index": 2,
+      "name": "mark one notification read",
+      "step": "markRead",
+      "source": "ok",
+      "model": "ok",
+      "problems": []
+    },
+    {
+      "index": 3,
+      "name": "dismiss one notification",
+      "step": "dismiss",
+      "source": "ok",
+      "model": "ok",
+      "problems": []
+    },
+    {
+      "index": 4,
+      "name": "clear the completed notifications",
+      "step": "clearCompleted",
+      "source": "ok",
+      "model": "ok",
+      "problems": []
+    },
+    {
+      "index": 5,
+      "name": "save notification settings",
+      "step": "saveSettings",
+      "source": "ok",
+      "model": "ok",
+      "problems": []
+    },
+    {
+      "index": 6,
+      "name": "save notification settings again",
+      "step": "saveSettings",
+      "source": "ok",
+      "model": "ok",
+      "problems": []
+    },
+    {
+      "index": 7,
+      "name": "create a trip template",
+      "step": "insertTemplate",
+      "source": "ok",
+      "model": "ok",
+      "problems": []
+    },
+    {
+      "index": 8,
+      "name": "mark the template a favourite",
+      "step": "updateTemplate",
+      "source": "ok",
+      "model": "ok",
+      "problems": []
+    },
+    {
+      "index": 9,
+      "name": "use the template",
+      "step": "useTemplate",
+      "source": "ok",
+      "model": "ok",
+      "problems": []
+    },
+    {
+      "index": 10,
+      "name": "archive the template",
+      "step": "updateTemplate",
+      "source": "ok",
+      "model": "ok",
+      "problems": []
+    },
+    {
+      "index": 11,
+      "name": "create a packing list",
+      "step": "createPackingList",
+      "source": "ok",
+      "model": "ok",
+      "problems": []
+    },
+    {
+      "index": 12,
+      "name": "materialize the due Visa events",
+      "step": "materializeVisa",
+      "source": "ok",
+      "model": "ok",
+      "problems": []
+    },
+    {
+      "index": 13,
+      "name": "the WhatsApp composer payload",
+      "step": "whatsappRefusal",
+      "source": "0 composer columns exist",
+      "model": "refused PGRST204",
+      "problems": []
+    }
+  ],
+  "controls": [
+    {
+      "step": "save notification settings",
+      "name": "a settings day list shortened",
+      "status": "DETECTED"
+    },
+    {
+      "step": "save notification settings",
+      "name": "a settings flag flipped",
+      "status": "DETECTED"
+    },
+    {
+      "step": "create a trip template",
+      "name": "a template usage count off by one",
+      "status": "DETECTED"
+    },
+    {
+      "step": "create a trip template",
+      "name": "a template name untrimmed",
+      "status": "DETECTED"
+    },
+    {
+      "step": "materialize the due Visa events",
+      "name": "a notification row left unread",
+      "status": "DETECTED"
+    },
+    {
+      "step": "materialize the due Visa events",
+      "name": "a materialized event dropped",
+      "status": "DETECTED"
+    }
+  ],
+  "decision": "PASS",
+  "migrations": 93,
+  "totals": {
+    "steps": 14,
+    "stepsWithProblems": 0,
+    "problems": 0,
+    "controls": 6,
+    "controlsDetected": 6
+  }
+}

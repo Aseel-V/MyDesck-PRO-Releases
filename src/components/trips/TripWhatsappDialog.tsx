@@ -13,7 +13,7 @@ import {
 } from '../../lib/tripWhatsapp';
 import { loadTripWhatsappPreferences, saveTripWhatsappPreferences, type TripWhatsappPreferences } from '../../lib/tripWhatsappPreferences';
 import { recommendWhatsappMessage } from '../../lib/tripWhatsappSuggestions';
-import { supabase } from '../../lib/supabase';
+import { getBackend } from '../../data/backend';
 import type { Trip } from '../../types/trip';
 import { Button } from '../travel-ui/Button';
 import { fetchTripPaymentPlan } from '../../lib/tripPayments';
@@ -106,9 +106,7 @@ export function TripWhatsappDialog({ trip, onClose, initialType }: Props) {
   const duplicateMutation = useMutation({ mutationFn: (template: TripWhatsappTemplate) => saveWhatsAppTemplate(user!.id, { name: `${template.name} ${t('trips.whatsapp.copySuffix')}`, body: template.body, language: template.language, category: template.category }), onSuccess: () => void refreshTemplates() });
   const persistPhoneIfRequested = async () => {
     if (!updatePhone || !normalizedPhone || phoneMatchesTrip) return;
-    const { data, error } = await supabase.from('trips').update({ client_phone: normalizedPhone })
-      .eq('id', trip.id).eq('user_id', user!.id).select('id').maybeSingle();
-    if (error || !data) throw new Error('PHONE_UPDATE_FAILED');
+    await getBackend().travel.updateTripClientPhone(user!.id, trip.id, normalizedPhone);
     await client.invalidateQueries({ queryKey: ['trips-page'] });
   };
 
@@ -120,8 +118,8 @@ export function TripWhatsappDialog({ trip, onClose, initialType }: Props) {
     if (!url || !canOpen) return;
     try { await persistPhoneIfRequested(); } catch { toast.error(t('trips.whatsapp.phoneUpdateFailed')); return; }
     const metadata = { action: 'whatsapp_opened', category: messageType, language: selectedLanguage, phone_suffix: maskWhatsAppPhone(phone) };
-    const { error } = await supabase.rpc('log_trip_activity', { p_trip_id: trip.id, p_activity_type: 'whatsapp_prepared', p_metadata: metadata });
-    if (error) console.warn('[Travel WhatsApp] Activity logging failed', { code: error.code });
+    try { await getBackend().travel.logTripActivity(trip.id, 'whatsapp_prepared', metadata); }
+    catch (error) { console.warn('[Travel WhatsApp] Activity logging failed', { code: (error as { code?: string })?.code }); }
     if (selectedTemplate) void markWhatsappTemplateUsed(selectedTemplate.id, selectedTemplate.usage_count);
     window.open(url, '_blank', 'noopener,noreferrer');
   };

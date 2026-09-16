@@ -1,5 +1,5 @@
-import { supabase } from './supabase';
 import type { Json } from '../types/database';
+import { getBackend } from '../data/backend';
 import type { Trip } from '../types/trip';
 import { getTripDuration } from './tripDates';
 
@@ -32,46 +32,32 @@ export function createTemplateDataFromTrip(trip: Trip): TripTemplateData {
 }
 
 export async function fetchTripTemplates(search = '', type?: TripTemplateType, includeArchived = false): Promise<TripTemplate[]> {
-  let query = supabase.from('trip_templates').select('*').is('deleted_at', null).order('updated_at', { ascending: false });
-  if (!includeArchived) query = query.eq('status', 'active');
-  if (type) query = query.eq('template_type', type);
-  if (search.trim()) query = query.ilike('name', `%${search.trim().replace(/[%_]/g, '')}%`);
-  const { data, error } = await query;
-  if (error) throw error;
-  return data;
+  return getBackend().travel.listTripTemplates(search, type, includeArchived);
 }
 
 export async function fetchTripTemplate(id: string): Promise<TripTemplate> {
-  const { data, error } = await supabase.from('trip_templates').select('*').eq('id', id).is('deleted_at', null).single();
-  if (error) throw error;
-  return data;
+  return getBackend().travel.getTripTemplate(id);
 }
 
 export async function saveTripTemplate(userId: string, value: { id?: string; name: string; description?: string; data: TripTemplateData; templateType?: TripTemplateType }): Promise<void> {
   if (templateContainsSensitiveData(value.data)) throw new Error('SENSITIVE_TEMPLATE_DATA');
-  const payload = { name: value.name.trim(), description: value.description?.trim() || null, template_data: value.data as unknown as Json, template_type: value.templateType || 'full_trip', updated_at: new Date().toISOString() };
-  const { error } = value.id ? await supabase.from('trip_templates').update(payload).eq('id', value.id) : await supabase.from('trip_templates').insert({ ...payload, user_id: userId });
-  if (error) throw error;
+  await getBackend().travel.saveTripTemplate(userId, value);
 }
 
 export async function toggleTripTemplateFavorite(id: string, isFavorite: boolean): Promise<void> {
-  const { error } = await supabase.from('trip_templates').update({ is_favorite: isFavorite, updated_at: new Date().toISOString() }).eq('id', id);
-  if (error) throw error;
+  await getBackend().travel.toggleTripTemplateFavorite(id, isFavorite);
 }
 
 export async function recordTripTemplateUse(id: string): Promise<void> {
-  const { error } = await supabase.rpc('use_trip_template', { p_template_id: id });
-  if (error) throw error;
+  await getBackend().travel.recordTripTemplateUse(id);
 }
 
 export async function updateTripTemplateStatus(id: string, status: 'active' | 'archived'): Promise<void> {
-  const { error } = await supabase.from('trip_templates').update({ status, updated_at: new Date().toISOString() }).eq('id', id);
-  if (error) throw error;
+  await getBackend().travel.updateTripTemplateStatus(id, status);
 }
 
 export async function softDeleteTripTemplate(id: string): Promise<void> {
-  const { error } = await supabase.from('trip_templates').update({ deleted_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq('id', id);
-  if (error) throw error;
+  await getBackend().travel.softDeleteTripTemplate(id);
 }
 
 export function templateToTripDraft(template: TripTemplate): Trip {

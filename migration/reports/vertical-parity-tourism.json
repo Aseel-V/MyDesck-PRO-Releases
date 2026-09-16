@@ -1,0 +1,278 @@
+{
+  "generatedAt": "2026-09-16T19:55:40.028Z",
+  "vertical": "tourism",
+  "decision": "PASS",
+  "gates": {
+    "firebaseRoot": {
+      "status": "PASS",
+      "runtimeSurfaceFiles": 66,
+      "forbiddenCallSites": [],
+      "genericSupabaseClientImports": [],
+      "supabaseAdapterImports": [],
+      "supabaseJsImports": [],
+      "storageOutsideRepository": []
+    },
+    "generatedSchema": {
+      "status": "PASS",
+      "rulesValidators": "CURRENT"
+    },
+    "suites": {
+      "status": "PASS",
+      "suites": [
+        {
+          "label": "tourism repository, Rules and malicious clients",
+          "file": "scripts/test-firestore-travel.mjs",
+          "outcome": "PASS",
+          "tests": 13
+        },
+        {
+          "label": "schema validator helper semantics",
+          "file": "scripts/test-firestore-schema-validators.mjs",
+          "outcome": "PASS",
+          "tests": 9
+        },
+        {
+          "label": "Rules evaluation budget",
+          "file": "scripts/test-firestore-rules-budget.mjs",
+          "outcome": "PASS",
+          "tests": 10
+        }
+      ]
+    },
+    "rulesBudget": {
+      "status": "PASS",
+      "limit": 1000,
+      "productCeiling": 850,
+      "paths": [
+        {
+          "path": "tourism: save a trip (operation)",
+          "costAtMost": 226
+        },
+        {
+          "path": "tourism: save a trip (trip)",
+          "costAtMost": 640
+        },
+        {
+          "path": "tourism: save a trip (payment plan)",
+          "costAtMost": 577
+        },
+        {
+          "path": "tourism: save a trip (plan index)",
+          "costAtMost": 256
+        },
+        {
+          "path": "tourism: save a trip (activity)",
+          "costAtMost": 211
+        },
+        {
+          "path": "tourism: save a trip (financial audit)",
+          "costAtMost": 280
+        },
+        {
+          "path": "tourism: save a trip (write request)",
+          "costAtMost": 295
+        },
+        {
+          "path": "tourism: save a card plan (instalment)",
+          "costAtMost": 394
+        },
+        {
+          "path": "tourism: edit a trip (trip)",
+          "costAtMost": 652
+        },
+        {
+          "path": "tourism: record a Visa receipt (instalment)",
+          "costAtMost": 466
+        },
+        {
+          "path": "tourism: record a Visa receipt (plan)",
+          "costAtMost": 628
+        },
+        {
+          "path": "tourism: notification settings",
+          "costAtMost": 175
+        },
+        {
+          "path": "tourism: save a trip template",
+          "costAtMost": 370
+        },
+        {
+          "path": "tourism: create a packing list",
+          "costAtMost": 346
+        }
+      ]
+    },
+    "dataRehearsal": {
+      "status": "PASS",
+      "importedAt": "2026-09-15T16:10:20.036Z",
+      "reconciledAt": "2026-09-15T20:25:00.536Z",
+      "dualReadAt": "2026-09-16T19:27:50.512Z",
+      "totals": {
+        "tenants": 3,
+        "sourceRowsCompared": 199,
+        "matched": 199,
+        "missing": 0,
+        "unexpected": 0,
+        "fieldMismatches": 0,
+        "orderMismatches": 0,
+        "unknownColumns": 0,
+        "orphans": 0,
+        "sourceRowsInventoried": 1219,
+        "migratedDocuments": 1219,
+        "crossTenantAttempts": 33,
+        "crossTenantAllowed": 0,
+        "controlsApplicable": 21,
+        "controlsDetected": 21,
+        "restoredClean": true,
+        "derivedChecked": 0,
+        "derivedMismatches": 0
+      },
+      "additionalDualReads": [
+        {
+          "path": "migration/reports/travel-full-dual-read.json",
+          "decision": "PASS",
+          "generatedAt": "2026-09-15T21:58:59.443Z",
+          "totals": {
+            "tenants": 4,
+            "trips": 100,
+            "checks": 666,
+            "mismatches": 0,
+            "controlsApplicable": 15,
+            "controlsDetected": 15,
+            "restoredClean": true
+          }
+        },
+        {
+          "path": "migration/reports/travel-dashboard-dual-read.json",
+          "decision": "PASS",
+          "generatedAt": "2026-09-16T19:15:01.510Z",
+          "totals": {
+            "tenants": 4,
+            "yearsMatched": true,
+            "tripsCompared": 99,
+            "mismatchedTrips": 0,
+            "missing": 0,
+            "unexpected": 0,
+            "orderMismatches": 0,
+            "controlsApplicable": 8,
+            "controlsDetected": 8,
+            "restoredClean": true
+          }
+        }
+      ]
+    },
+    "uiSmoke": {
+      "status": "PASS",
+      "smokeAt": "2026-09-16T19:13:39.062Z",
+      "flows": [
+        {
+          "name": "the English owner creates a trip through the form and finds it in the trips workspace",
+          "status": "passed"
+        },
+        {
+          "name": "the saved trip survives a reload and is found by search",
+          "status": "passed"
+        },
+        {
+          "name": "a trip paid by a Visa schedule is saved with its instalment plan",
+          "status": "passed"
+        },
+        {
+          "name": "a trip is deleted to the trash and restored from it",
+          "status": "passed"
+        },
+        {
+          "name": "another tenant signs in right-to-left in Hebrew and sees none of the first tenant's trips",
+          "status": "passed"
+        },
+        {
+          "name": "the Arabic owner opens the trips workspace and its notification centre right-to-left",
+          "status": "passed"
+        }
+      ]
+    },
+    "search": {
+      "status": "PASS",
+      "surfaces": [
+        {
+          "surface": "Trips list search (destination, client, hotel) with the year, month, status and destination filters",
+          "class": "FIRESTORE_QUERY",
+          "status": "PASS",
+          "files": [
+            "src/lib/tripQueries.ts",
+            "src/components/trips/Trips.tsx",
+            "src/data/firestore/FirestoreTravelRepository.ts"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "Command palette trip lookup",
+          "class": "CLIENT_DERIVED",
+          "status": "PASS",
+          "files": [
+            "src/components/CommandPalette.tsx"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "Trash search over deleted trips",
+          "class": "FIRESTORE_QUERY",
+          "status": "PASS",
+          "files": [
+            "src/lib/tripTrashQueries.ts",
+            "src/components/trips/TripTrash.tsx"
+          ],
+          "verdict": "PASS"
+        }
+      ],
+      "blocked": 0,
+      "unknown": 0
+    },
+    "analytics": {
+      "status": "PASS",
+      "surfaces": [
+        {
+          "surface": "Travel analytics summary and payment analytics",
+          "class": "FIRESTORE_QUERY",
+          "status": "PASS",
+          "files": [
+            "src/lib/analyticsQueries.ts",
+            "src/components/analytics/Analytics.tsx",
+            "src/data/firestore/FirestoreTravelRepository.ts"
+          ],
+          "verdict": "PASS"
+        },
+        {
+          "surface": "Travel reports panel (monthly, destinations, clients)",
+          "class": "FIRESTORE_QUERY",
+          "status": "PASS",
+          "files": [
+            "src/lib/travelReports.ts",
+            "src/components/analytics/TravelReportsPanel.tsx"
+          ],
+          "verdict": "PASS"
+        }
+      ],
+      "blocked": 0,
+      "unknown": 0
+    },
+    "rpc": {
+      "status": "PASS",
+      "surfaces": [],
+      "blocked": 0,
+      "unknown": 0
+    },
+    "realtime": {
+      "status": "PASS",
+      "surfaces": [],
+      "blocked": 0,
+      "unknown": 0
+    },
+    "edgeFunctions": {
+      "status": "PASS",
+      "surfaces": [],
+      "blocked": 0,
+      "unknown": 0
+    }
+  }
+}

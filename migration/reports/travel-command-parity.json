@@ -1,0 +1,355 @@
+{
+  "generatedAt": "2026-09-16T14:24:54.388Z",
+  "oracle": "local PostgreSQL 17 (fixture + migrations + production overlay)",
+  "scenarios": [
+    {
+      "name": "soft delete, restore, restore again",
+      "steps": [
+        {
+          "step": 1,
+          "command": "deleteTrip",
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        },
+        {
+          "step": 2,
+          "command": "restoreTrip",
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        },
+        {
+          "step": 3,
+          "command": "restoreTrip",
+          "source": "error TRIP_RESTORE_NOT_APPLIED",
+          "model": "error TRIP_RESTORE_NOT_APPLIED",
+          "problems": 0
+        }
+      ],
+      "problems": []
+    },
+    {
+      "name": "archive, unarchive, export flag, itinerary",
+      "steps": [
+        {
+          "step": 1,
+          "command": "archiveTrip",
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        },
+        {
+          "step": 2,
+          "command": "archiveTrip",
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        },
+        {
+          "step": 3,
+          "command": "toggleExport",
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        },
+        {
+          "step": 4,
+          "command": "updateTripItinerary",
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        }
+      ],
+      "problems": []
+    },
+    {
+      "name": "client phone accepted and refused",
+      "steps": [
+        {
+          "step": 1,
+          "command": "updateTripClientPhone",
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        },
+        {
+          "step": 2,
+          "command": "updateTripClientPhone",
+          "source": "error PHONE_UPDATE_FAILED",
+          "model": "error PHONE_UPDATE_FAILED",
+          "problems": 0
+        }
+      ],
+      "problems": []
+    },
+    {
+      "name": "trash restore and permanent delete with a card schedule",
+      "steps": [
+        {
+          "step": 1,
+          "command": "deleteTrip",
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        },
+        {
+          "step": 2,
+          "command": "restoreDeletedTrips",
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        },
+        {
+          "step": 3,
+          "command": "deleteTrip",
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        },
+        {
+          "step": 4,
+          "command": "permanentlyDeleteTrips",
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        }
+      ],
+      "problems": []
+    },
+    {
+      "name": "installment receipts: full, partial, undone",
+      "steps": [
+        {
+          "step": 1,
+          "command": "recordInstallmentPayment",
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        },
+        {
+          "step": 2,
+          "command": "recordInstallmentPayment",
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        },
+        {
+          "step": 3,
+          "command": "recordInstallmentPayment",
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        },
+        {
+          "step": 4,
+          "command": "recordInstallmentPayment",
+          "source": "error 22023",
+          "model": "error 22023",
+          "problems": 0
+        }
+      ],
+      "problems": []
+    },
+    {
+      "name": "cash receipts on a mixed plan",
+      "steps": [
+        {
+          "step": 1,
+          "command": "recordCashPayment",
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        },
+        {
+          "step": 2,
+          "command": "recordCashPayment",
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        },
+        {
+          "step": 3,
+          "command": "recordCashPayment",
+          "source": "error 22023",
+          "model": "error 22023",
+          "problems": 0
+        }
+      ],
+      "problems": []
+    },
+    {
+      "name": "reschedule a future installment, refuse a past one",
+      "steps": [
+        {
+          "step": 1,
+          "command": "rescheduleInstallment",
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        },
+        {
+          "step": 3,
+          "command": "rescheduleInstallment",
+          "source": "error 22023",
+          "model": "error 22023",
+          "problems": 0
+        }
+      ],
+      "problems": []
+    },
+    {
+      "name": "recalculate future installments",
+      "steps": [
+        {
+          "step": 1,
+          "command": "recalculateFutureInstallments",
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        },
+        {
+          "step": 2,
+          "command": "recalculateFutureInstallments",
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        }
+      ],
+      "problems": []
+    },
+    {
+      "name": "create a plan on a trip without one, then on a trip with one",
+      "steps": [
+        {
+          "step": 1,
+          "command": "createTripPaymentPlan",
+          "source": "error 42702",
+          "model": "error 42702",
+          "problems": 0
+        },
+        {
+          "step": 2,
+          "command": "createTripPaymentPlan",
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        }
+      ],
+      "problems": []
+    },
+    {
+      "name": "activity logging",
+      "steps": [
+        {
+          "step": 1,
+          "command": "logTripActivity",
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        },
+        {
+          "step": 2,
+          "command": "logTripActivity",
+          "source": "error P0001",
+          "model": "error P0001",
+          "problems": 0
+        },
+        {
+          "step": 3,
+          "command": "logTripActivity",
+          "source": "error P0001",
+          "model": "error P0001",
+          "problems": 0
+        },
+        {
+          "step": 4,
+          "command": "logTripActivity",
+          "source": "ok",
+          "model": "ok",
+          "problems": 0
+        }
+      ],
+      "problems": []
+    },
+    {
+      "name": "settings import of an exported trip",
+      "steps": [
+        {
+          "step": 1,
+          "command": "importTrip",
+          "source": "error 428C9",
+          "model": "error 428C9",
+          "problems": 0
+        }
+      ],
+      "problems": []
+    }
+  ],
+  "controls": [
+    {
+      "scenario": "installment receipts: full, partial, undone",
+      "step": 1,
+      "name": "an installment event missing",
+      "status": "DETECTED"
+    },
+    {
+      "scenario": "installment receipts: full, partial, undone",
+      "step": 1,
+      "name": "the plan card paid total off by one",
+      "status": "DETECTED"
+    },
+    {
+      "scenario": "installment receipts: full, partial, undone",
+      "step": 1,
+      "name": "the trip amount paid at another scale",
+      "status": "DETECTED"
+    },
+    {
+      "scenario": "installment receipts: full, partial, undone",
+      "step": 2,
+      "name": "an installment event missing",
+      "status": "DETECTED"
+    },
+    {
+      "scenario": "installment receipts: full, partial, undone",
+      "step": 2,
+      "name": "the plan card paid total off by one",
+      "status": "DETECTED"
+    },
+    {
+      "scenario": "installment receipts: full, partial, undone",
+      "step": 2,
+      "name": "the trip amount paid at another scale",
+      "status": "DETECTED"
+    },
+    {
+      "scenario": "installment receipts: full, partial, undone",
+      "step": 3,
+      "name": "an installment event missing",
+      "status": "DETECTED"
+    },
+    {
+      "scenario": "installment receipts: full, partial, undone",
+      "step": 3,
+      "name": "the plan card paid total off by one",
+      "status": "DETECTED"
+    },
+    {
+      "scenario": "installment receipts: full, partial, undone",
+      "step": 3,
+      "name": "the trip amount paid at another scale",
+      "status": "DETECTED"
+    }
+  ],
+  "decision": "PASS",
+  "migrations": 93,
+  "totals": {
+    "scenarios": 11,
+    "commandSteps": 31,
+    "scenariosWithProblems": 0,
+    "problems": 0,
+    "controls": 9,
+    "controlsDetected": 9
+  }
+}
