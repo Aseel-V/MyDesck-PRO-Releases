@@ -61,8 +61,13 @@ const verticals = (inventory?.verticals ?? []).map((entry) => {
     firebaseRootForbiddenCallSites: forbiddenSites.length,
     firebaseRootForbiddenByCategory: Object.fromEntries(FORBIDDEN_CATEGORIES.map((kind) => [kind, forbiddenSites.filter((s) => s.kind === kind).length])),
     shippedRootForbiddenCallSites: shippedSites.length,
+    // A gate that passed because there was nothing to prove is carried as such, so a reader of this report cannot
+    // mistake a measured exemption for a proven surface.
     evidence: evidence ? { path: evidencePath, generatedAt: evidence.generatedAt, pass: evidencePass,
-      gates: Object.fromEntries(Object.entries(gates ?? {}).map(([gate, value]) => [gate, value.status])) } : 'NOT_GENERATED',
+      gates: Object.fromEntries(Object.entries(gates ?? {}).map(([gate, value]) => [gate,
+        typeof value.notApplicable === 'string' ? `${value.status}_NOT_APPLICABLE` : value.status])),
+      notApplicableGates: Object.entries(gates ?? {}).filter(([, value]) => typeof value.notApplicable === 'string')
+        .map(([gate, value]) => ({ gate, reason: value.notApplicable, measurement: value.measurement ?? null })) } : 'NOT_GENERATED',
     firestoreMigrated: supported, blocksParity: !supported,
   };
 });

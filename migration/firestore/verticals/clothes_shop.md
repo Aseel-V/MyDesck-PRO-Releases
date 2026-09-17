@@ -11,13 +11,13 @@ Do not hand-edit outside the Design block.
 | Classification | **ACTIVE_EMPTY** |
 | Tenants (live `business_profiles`) | **0** |
 | Source rows (live) | **0** |
-| Firestore migrated | **NO** |
+| Firestore migrated | **NO — nothing to migrate** |
 | Reachable in a Firebase production root without Supabase database calls | **YES** |
-| Rules authored and within budget | NO |
-| Data rehearsal reconciled | NO |
-| UI parity proven | NO |
-| Search proven | NO |
-| Analytics proven | NO |
+| Rules authored and within budget | N/A |
+| Data rehearsal reconciled | N/A |
+| UI parity proven | N/A |
+| Search proven | N/A |
+| Analytics proven | N/A |
 | Retirement requires owner approval | YES |
 
 ## Source data (live counts, read-only)
@@ -60,11 +60,29 @@ RPCs referenced: _none detected_
 
 ## Parity evidence
 
-Gates from `migration/reports/vertical-parity-clothes_shop.json`.
+Gates from `migration/reports/vertical-parity-clothes_shop.json` (generated 2026-09-17T05:52:19.502Z, decision **PASS**).
 
 | Gate | Status |
 | --- | --- |
-| _not generated_ | FAIL |
+| firebaseRoot | PASS |
+| generatedSchema | PASS |
+| suites | PASS (not applicable) |
+| rulesBudget | PASS (not applicable) |
+| dataRehearsal | PASS (not applicable) |
+| uiSmoke | PASS (not applicable) |
+| search | PASS |
+| analytics | PASS |
+| rpc | PASS |
+| realtime | PASS |
+| edgeFunctions | PASS |
+
+A gate marked *not applicable* passed because this vertical has nothing for it to prove. The exemption is
+honoured only against the measured live inventory, never on the configuration's word:
+
+- `suites`: No repository, Rules or malicious-client suite exists for clothes_shop: there is no repository and no collection. phone_shop, clothes_shop and furniture_store own no source table, no tenant and no row: live-vertical-inventory.json measures tenants 0, rows 0, tables 0. The product offers the business type and renders one placeholder dashboard for it.
+- `rulesBudget`: clothes_shop writes no Firestore document, so no rule path of its own is measured against the request budget.
+- `dataRehearsal`: Nothing to rehearse or reconcile: phone_shop, clothes_shop and furniture_store own no source table, no tenant and no row: live-vertical-inventory.json measures tenants 0, rows 0, tables 0. The product offers the business type and renders one placeholder dashboard for it.
+- `uiSmoke`: The whole surface is src/components/dashboards/ClothesShopDashboard.tsx, a static 'coming soon' card with no data call. A browser smoke of it would assert only that a heading renders; its reachability from src/firebase-main.tsx with zero forbidden call sites is measured by the firebaseRoot gate instead.
 
 <!-- DESIGN:BEGIN -->
 ## Design

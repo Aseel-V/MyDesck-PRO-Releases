@@ -28,82 +28,6 @@
     ]
   },
   "verticals": {
-    "supermarket": {
-      "suites": [
-        [
-          "supermarket repository, Rules and malicious clients",
-          "scripts/test-firestore-supermarket.mjs",
-          "typescript"
-        ],
-        [
-          "schema validator helper semantics",
-          "scripts/test-firestore-schema-validators.mjs",
-          "node-test"
-        ],
-        [
-          "Rules evaluation budget",
-          "scripts/test-firestore-rules-budget.mjs",
-          "typescript"
-        ]
-      ],
-      "budgetPathPrefixes": [
-        "supermarket:"
-      ],
-      "search": [
-        {
-          "surface": "POS search box: name, Hebrew name or barcode substring",
-          "class": "CLIENT_DERIVED",
-          "status": "PASS",
-          "files": [
-            "src/components/dashboards/SupermarketDashboard.tsx"
-          ],
-          "evidence": "Filters the complete listAvailableProducts result; the dual read proves that result equal to the source query for every tenant."
-        },
-        {
-          "surface": "Barcode and PLU scan",
-          "class": "CLIENT_DERIVED",
-          "status": "PASS",
-          "files": [
-            "src/components/dashboards/SupermarketDashboard.tsx"
-          ],
-          "evidence": "Exact barcode or PLU-suffix match over the same listAvailableProducts result."
-        },
-        {
-          "surface": "Category chips and the product category picker",
-          "class": "CLIENT_DERIVED",
-          "status": "PASS",
-          "files": [
-            "src/components/dashboards/SupermarketDashboard.tsx",
-            "src/components/market/AddProductModal.tsx"
-          ],
-          "evidence": "listCategories dual read, including ORDER BY sort_order ASC with NULLs last."
-        }
-      ],
-      "analytics": [
-        {
-          "surface": "Sales analytics: date-range list, cash/card/digital totals, edit and delete of a sale",
-          "class": "FIRESTORE_QUERY",
-          "status": "PASS",
-          "files": [
-            "src/components/market/SalesAnalytics.tsx",
-            "src/components/market/EditTransactionModal.tsx"
-          ],
-          "evidence": "listSales is a createdAt range query, newest first, with the source's 1,000-row bound; the dual read proves it equal to the source; the totals come from the unchanged client reducer, proven over Firestore rows in test-firestore-supermarket.mjs and in the browser smoke."
-        },
-        {
-          "surface": "SalesAnalyticsModal hourly, daily and monthly charts",
-          "class": "LEGACY_UNREACHABLE",
-          "status": "LEGACY_UNREACHABLE",
-          "files": [
-            "src/components/market/SalesAnalyticsModal.tsx"
-          ],
-          "evidence": "No module imports it, so its Supabase query is outside both composition roots and cannot run."
-        }
-      ],
-      "rpc": [],
-      "realtime": [],
-      "edgeFunctions": []
-    },
     "auto_repair": {
       "suites": [
         [
@@ -279,6 +203,45 @@
           "evidence": "Reducers over listParts, whose rows and exact prices the dual read proves."
         }
       ],
+      "rpc": [],
+      "realtime": [],
+      "edgeFunctions": []
+    },
+    "clothes_shop": {
+      "suites": [],
+      "suitesNotApplicable": "No repository, Rules or malicious-client suite exists for clothes_shop: there is no repository and no collection. phone_shop, clothes_shop and furniture_store own no source table, no tenant and no row: live-vertical-inventory.json measures tenants 0, rows 0, tables 0. The product offers the business type and renders one placeholder dashboard for it.",
+      "budgetPathPrefixes": [],
+      "budgetNotApplicable": "clothes_shop writes no Firestore document, so no rule path of its own is measured against the request budget.",
+      "dataRehearsalNotApplicable": "Nothing to rehearse or reconcile: phone_shop, clothes_shop and furniture_store own no source table, no tenant and no row: live-vertical-inventory.json measures tenants 0, rows 0, tables 0. The product offers the business type and renders one placeholder dashboard for it.",
+      "uiSmokeNotApplicable": "The whole surface is src/components/dashboards/ClothesShopDashboard.tsx, a static 'coming soon' card with no data call. A browser smoke of it would assert only that a heading renders; its reachability from src/firebase-main.tsx with zero forbidden call sites is measured by the firebaseRoot gate instead.",
+      "search": [],
+      "analytics": [],
+      "rpc": [],
+      "realtime": [],
+      "edgeFunctions": []
+    },
+    "furniture_store": {
+      "suites": [],
+      "suitesNotApplicable": "No repository, Rules or malicious-client suite exists for furniture_store: there is no repository and no collection. phone_shop, clothes_shop and furniture_store own no source table, no tenant and no row: live-vertical-inventory.json measures tenants 0, rows 0, tables 0. The product offers the business type and renders one placeholder dashboard for it.",
+      "budgetPathPrefixes": [],
+      "budgetNotApplicable": "furniture_store writes no Firestore document, so no rule path of its own is measured against the request budget.",
+      "dataRehearsalNotApplicable": "Nothing to rehearse or reconcile: phone_shop, clothes_shop and furniture_store own no source table, no tenant and no row: live-vertical-inventory.json measures tenants 0, rows 0, tables 0. The product offers the business type and renders one placeholder dashboard for it.",
+      "uiSmokeNotApplicable": "The whole surface is src/components/dashboards/FurnitureStoreDashboard.tsx, a static 'coming soon' card with no data call. A browser smoke of it would assert only that a heading renders; its reachability from src/firebase-main.tsx with zero forbidden call sites is measured by the firebaseRoot gate instead.",
+      "search": [],
+      "analytics": [],
+      "rpc": [],
+      "realtime": [],
+      "edgeFunctions": []
+    },
+    "phone_shop": {
+      "suites": [],
+      "suitesNotApplicable": "No repository, Rules or malicious-client suite exists for phone_shop: there is no repository and no collection. phone_shop, clothes_shop and furniture_store own no source table, no tenant and no row: live-vertical-inventory.json measures tenants 0, rows 0, tables 0. The product offers the business type and renders one placeholder dashboard for it.",
+      "budgetPathPrefixes": [],
+      "budgetNotApplicable": "phone_shop writes no Firestore document, so no rule path of its own is measured against the request budget.",
+      "dataRehearsalNotApplicable": "Nothing to rehearse or reconcile: phone_shop, clothes_shop and furniture_store own no source table, no tenant and no row: live-vertical-inventory.json measures tenants 0, rows 0, tables 0. The product offers the business type and renders one placeholder dashboard for it.",
+      "uiSmokeNotApplicable": "The whole surface is src/components/dashboards/PhoneShopDashboard.tsx, a static 'coming soon' card with no data call. A browser smoke of it would assert only that a heading renders; its reachability from src/firebase-main.tsx with zero forbidden call sites is measured by the firebaseRoot gate instead.",
+      "search": [],
+      "analytics": [],
       "rpc": [],
       "realtime": [],
       "edgeFunctions": []
@@ -577,6 +540,82 @@
           "evidence": "Tenant-scoped onSnapshot listener on the screen query, invalidating the same query key once the listener holds the server view (test-firestore-restaurant.mjs)."
         }
       ],
+      "edgeFunctions": []
+    },
+    "supermarket": {
+      "suites": [
+        [
+          "supermarket repository, Rules and malicious clients",
+          "scripts/test-firestore-supermarket.mjs",
+          "typescript"
+        ],
+        [
+          "schema validator helper semantics",
+          "scripts/test-firestore-schema-validators.mjs",
+          "node-test"
+        ],
+        [
+          "Rules evaluation budget",
+          "scripts/test-firestore-rules-budget.mjs",
+          "typescript"
+        ]
+      ],
+      "budgetPathPrefixes": [
+        "supermarket:"
+      ],
+      "search": [
+        {
+          "surface": "POS search box: name, Hebrew name or barcode substring",
+          "class": "CLIENT_DERIVED",
+          "status": "PASS",
+          "files": [
+            "src/components/dashboards/SupermarketDashboard.tsx"
+          ],
+          "evidence": "Filters the complete listAvailableProducts result; the dual read proves that result equal to the source query for every tenant."
+        },
+        {
+          "surface": "Barcode and PLU scan",
+          "class": "CLIENT_DERIVED",
+          "status": "PASS",
+          "files": [
+            "src/components/dashboards/SupermarketDashboard.tsx"
+          ],
+          "evidence": "Exact barcode or PLU-suffix match over the same listAvailableProducts result."
+        },
+        {
+          "surface": "Category chips and the product category picker",
+          "class": "CLIENT_DERIVED",
+          "status": "PASS",
+          "files": [
+            "src/components/dashboards/SupermarketDashboard.tsx",
+            "src/components/market/AddProductModal.tsx"
+          ],
+          "evidence": "listCategories dual read, including ORDER BY sort_order ASC with NULLs last."
+        }
+      ],
+      "analytics": [
+        {
+          "surface": "Sales analytics: date-range list, cash/card/digital totals, edit and delete of a sale",
+          "class": "FIRESTORE_QUERY",
+          "status": "PASS",
+          "files": [
+            "src/components/market/SalesAnalytics.tsx",
+            "src/components/market/EditTransactionModal.tsx"
+          ],
+          "evidence": "listSales is a createdAt range query, newest first, with the source's 1,000-row bound; the dual read proves it equal to the source; the totals come from the unchanged client reducer, proven over Firestore rows in test-firestore-supermarket.mjs and in the browser smoke."
+        },
+        {
+          "surface": "SalesAnalyticsModal hourly, daily and monthly charts",
+          "class": "LEGACY_UNREACHABLE",
+          "status": "LEGACY_UNREACHABLE",
+          "files": [
+            "src/components/market/SalesAnalyticsModal.tsx"
+          ],
+          "evidence": "No module imports it, so its Supabase query is outside both composition roots and cannot run."
+        }
+      ],
+      "rpc": [],
+      "realtime": [],
       "edgeFunctions": []
     },
     "tourism": {

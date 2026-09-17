@@ -41,6 +41,30 @@ const notBefore = (later, earlier) => Boolean(later && earlier) && Date.parse(la
 const gates = {};
 const gate = (name, pass, detail) => { gates[name] = { status: pass ? 'PASS' : 'FAIL', ...detail }; };
 
+/**
+ * A vertical the product offers but that carries nothing to migrate: no source table, no tenant, no row. Three of
+ * them exist (phone_shop, clothes_shop, furniture_store), each a single "coming soon" placeholder reachable from the
+ * dashboard. A dual read of no tables and a browser smoke of a static card would assert nothing, so those gates take
+ * a stated reason instead -- but only against the measured live inventory, never on the configuration's word alone.
+ * A vertical that claims a reason while holding tenants, rows or tables fails, and so does one whose inventory is
+ * missing: the escape is available exactly when the emptiness has been measured.
+ */
+const inventoryEntry = (readJson('migration/reports/live-vertical-inventory.json')?.verticals ?? [])
+  .find((item) => item.vertical === vertical) ?? null;
+const emptiness = {
+  inventoried: Boolean(inventoryEntry),
+  tenants: inventoryEntry?.tenants ?? null,
+  rows: inventoryEntry?.rows ?? null,
+  tables: inventoryEntry?.tables?.length ?? null,
+};
+const measuredEmpty = emptiness.inventoried && emptiness.tenants === 0 && emptiness.rows === 0 && emptiness.tables === 0;
+/** The stated reason for a gate that has nothing to prove, honoured only when the emptiness is measured. */
+const notApplicable = (field) => {
+  const reason = entry[field];
+  if (typeof reason !== 'string' || reason.length === 0) return null;
+  return { reason, measuredEmpty, measurement: emptiness };
+};
+
 const firebase = measureRoot(PRODUCT_ROOTS.firebase, { storageAllowlist: STORAGE_ALLOWLIST });
 const shipped = measureRoot(PRODUCT_ROOTS.shipped, { storageAllowlist: STORAGE_ALLOWLIST });
 if (!firebase.present) throw new Error('FIREBASE_ROOT_MISSING');
@@ -70,7 +94,13 @@ const suites = entry.suites.map(([label, file, runner]) => {
   const count = (name) => Number((run.stdout ?? '').match(new RegExp(`^(?:#|ℹ) ${name} (\\d+)$`, 'm'))?.[1] ?? 0);
   return { label, file, outcome: run.status === 0 && count('tests') > 0 && count('fail') === 0 ? 'PASS' : 'FAIL', tests: count('tests') };
 });
-gate('suites', suites.every((suite) => suite.outcome === 'PASS'), { suites });
+// An empty suite list would satisfy `every` without running anything, so a vertical with no suites must say why
+// and be measurably empty. A suite list that exists is run and must pass.
+const suitesExempt = entry.suites.length === 0 ? notApplicable('suitesNotApplicable') : null;
+gate('suites', entry.suites.length === 0
+  ? Boolean(suitesExempt?.measuredEmpty)
+  : suites.every((suite) => suite.outcome === 'PASS'),
+{ suites, ...(entry.suites.length === 0 ? { notApplicable: suitesExempt?.reason ?? null, measurement: emptiness } : {}) });
 
 const budget = readJson('migration/reports/firestore-rules-budget.json');
 if (entry.budgetPathPrefixes.length) {
@@ -88,18 +118,26 @@ const reconciled = readJson('migration/reports/firestore-full-reconciliation.jso
 const dualRead = readJson(`migration/reports/vertical-dual-read-${vertical}.json`);
 // Screens a vertical shares with another (the travel home of auto_repair) prove their reads in their own dual read.
 const additionalDualReads = (entry.additionalDualReads ?? []).map((path) => ({ path, report: readJson(path) }));
-gate('dataRehearsal', imported?.status === 'IMPORTED_AND_IMMEDIATELY_VERIFIED'
-  && (reconciled?.status ?? reconciled?.decision) === 'RECONCILED' && notBefore(reconciled?.generatedAt, imported?.generatedAt)
-  && [dualRead, ...additionalDualReads.map((item) => item.report)]
-    .every((report) => report?.decision === 'PASS' && notBefore(report?.generatedAt, imported?.generatedAt)),
-{ importedAt: imported?.generatedAt ?? null, reconciledAt: reconciled?.generatedAt ?? null, dualReadAt: dualRead?.generatedAt ?? null,
+const rehearsalExempt = notApplicable('dataRehearsalNotApplicable');
+gate('dataRehearsal', rehearsalExempt
+  ? rehearsalExempt.measuredEmpty
+  : imported?.status === 'IMPORTED_AND_IMMEDIATELY_VERIFIED'
+    && (reconciled?.status ?? reconciled?.decision) === 'RECONCILED' && notBefore(reconciled?.generatedAt, imported?.generatedAt)
+    && [dualRead, ...additionalDualReads.map((item) => item.report)]
+      .every((report) => report?.decision === 'PASS' && notBefore(report?.generatedAt, imported?.generatedAt)),
+{ ...(rehearsalExempt ? { notApplicable: rehearsalExempt.reason, measurement: emptiness } : {}),
+  importedAt: imported?.generatedAt ?? null, reconciledAt: reconciled?.generatedAt ?? null, dualReadAt: dualRead?.generatedAt ?? null,
   totals: dualRead?.totals ?? null,
   additionalDualReads: additionalDualReads.map(({ path, report }) => ({ path, decision: report?.decision ?? null,
     generatedAt: report?.generatedAt ?? null, totals: report?.totals ?? null })) });
 
 const smoke = readJson(`migration/reports/ui-smoke-${vertical}.json`);
-gate('uiSmoke', smoke?.decision === 'PASS' && smoke?.root === PRODUCT_ROOTS.firebase,
-  { smokeAt: smoke?.generatedAt ?? null, flows: smoke?.flows?.map(({ name, status }) => ({ name, status })) ?? null });
+const smokeExempt = notApplicable('uiSmokeNotApplicable');
+gate('uiSmoke', smokeExempt
+  ? smokeExempt.measuredEmpty
+  : smoke?.decision === 'PASS' && smoke?.root === PRODUCT_ROOTS.firebase,
+{ ...(smokeExempt ? { notApplicable: smokeExempt.reason, measurement: emptiness } : {}),
+  smokeAt: smoke?.generatedAt ?? null, flows: smoke?.flows?.map(({ name, status }) => ({ name, status })) ?? null });
 
 const reachableFirebase = new Set(firebase.runtimeFiles);
 const reachableShipped = new Set(shipped.present ? shipped.runtimeFiles : []);

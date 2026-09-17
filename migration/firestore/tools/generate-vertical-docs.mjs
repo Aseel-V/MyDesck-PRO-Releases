@@ -70,12 +70,34 @@ for (const entry of inventory.verticals) {
 
   const evidencePath = `migration/reports/vertical-parity-${entry.vertical}.json`;
   const evidence = existsSync(evidencePath) ? JSON.parse(readFileSync(evidencePath, 'utf8')) : null;
-  const passed = (gate) => (evidence?.gates?.[gate]?.status === 'PASS' ? 'YES' : 'NO');
+  /**
+   * A gate can pass because it was proven or because there was nothing to prove, and the two must not read alike.
+   * A vertical with no table, tenant or row takes the measured not-applicable path in vertical-parity-evidence, and
+   * that exemption is recorded on the gate; rendering it as YES would claim a rehearsal that never happened.
+   */
+  const exempt = (gate) => typeof evidence?.gates?.[gate]?.notApplicable === 'string'
+    // A surface gate over an empty list passes without proving anything, which is the right result for a vertical
+    // that exposes no such surface but is not a claim that one was proven.
+    || (Array.isArray(evidence?.gates?.[gate]?.surfaces) && evidence.gates[gate].surfaces.length === 0);
+  const passed = (gate) => {
+    if (evidence?.gates?.[gate]?.status !== 'PASS') return 'NO';
+    return exempt(gate) ? 'N/A' : 'YES';
+  };
+  const both = (a, b) => (passed(a) === 'NO' || passed(b) === 'NO' ? 'NO'
+    : passed(a) === 'N/A' && passed(b) === 'N/A' ? 'N/A' : 'YES');
   const measured = (parity.verticals ?? []).find((item) => item.vertical === entry.vertical);
   const supportedRoot = measured?.reachableInFirebaseRoot && measured?.firebaseRootForbiddenCallSites === 0 ? 'YES' : 'NO';
+  // Nothing is migrated for a vertical that owns no source row, however green its gates are.
+  const migrated = evidence?.decision !== 'PASS' ? 'NO'
+    : entry.tables.length === 0 && entry.rows === 0 ? 'NO — nothing to migrate' : 'YES';
   const evidenceRows = evidence
-    ? Object.entries(evidence.gates).map(([gate, value]) => `| ${gate} | ${value.status} |`).join('\n')
+    ? Object.entries(evidence.gates).map(([gate, value]) => `| ${gate} | ${value.status}${
+      typeof value.notApplicable === 'string' ? ' (not applicable)' : ''} |`).join('\n')
     : '| _not generated_ | FAIL |';
+  const exemptions = evidence
+    ? Object.entries(evidence.gates).filter(([, value]) => typeof value.notApplicable === 'string')
+      .map(([gate, value]) => `- \`${gate}\`: ${value.notApplicable}`).join('\n')
+    : '';
   const rows = entry.tables.length
     ? entry.tables.map((t) => `| \`${t.table}\` | ${t.rows} |`).join('\n')
     : '| _none_ | 0 |';
@@ -92,9 +114,9 @@ Do not hand-edit outside the Design block.
 | Classification | **${entry.classification}** |
 | Tenants (live \`business_profiles\`) | **${entry.tenants}** |
 | Source rows (live) | **${entry.rows}** |
-| Firestore migrated | **${evidence?.decision === 'PASS' ? 'YES' : 'NO'}** |
+| Firestore migrated | **${migrated}** |
 | Reachable in a Firebase production root without Supabase database calls | **${supportedRoot}** |
-| Rules authored and within budget | ${passed('suites') === 'YES' && passed('rulesBudget') === 'YES' ? 'YES' : 'NO'} |
+| Rules authored and within budget | ${both('suites', 'rulesBudget')} |
 | Data rehearsal reconciled | ${passed('dataRehearsal')} |
 | UI parity proven | ${passed('uiSmoke')} |
 | Search proven | ${passed('search')} |
@@ -145,7 +167,7 @@ Gates from \`${evidencePath}\`${evidence ? ` (generated ${evidence.generatedAt},
 
 | Gate | Status |
 | --- | --- |
-${evidenceRows}
+${evidenceRows}${exemptions ? `\n\nA gate marked *not applicable* passed because this vertical has nothing for it to prove. The exemption is\nhonoured only against the measured live inventory, never on the configuration's word:\n\n${exemptions}` : ''}
 
 ${design}
 

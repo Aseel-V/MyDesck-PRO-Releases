@@ -1,0 +1,92 @@
+{
+  "generatedAt": "2026-09-17T05:52:19.502Z",
+  "vertical": "clothes_shop",
+  "decision": "PASS",
+  "gates": {
+    "firebaseRoot": {
+      "status": "PASS",
+      "runtimeSurfaceFiles": 1,
+      "forbiddenCallSites": [],
+      "genericSupabaseClientImports": [],
+      "supabaseAdapterImports": [],
+      "supabaseJsImports": [],
+      "storageOutsideRepository": []
+    },
+    "generatedSchema": {
+      "status": "PASS",
+      "rulesValidators": "CURRENT"
+    },
+    "suites": {
+      "status": "PASS",
+      "suites": [],
+      "notApplicable": "No repository, Rules or malicious-client suite exists for clothes_shop: there is no repository and no collection. phone_shop, clothes_shop and furniture_store own no source table, no tenant and no row: live-vertical-inventory.json measures tenants 0, rows 0, tables 0. The product offers the business type and renders one placeholder dashboard for it.",
+      "measurement": {
+        "inventoried": true,
+        "tenants": 0,
+        "rows": 0,
+        "tables": 0
+      }
+    },
+    "rulesBudget": {
+      "status": "PASS",
+      "notApplicable": "clothes_shop writes no Firestore document, so no rule path of its own is measured against the request budget."
+    },
+    "dataRehearsal": {
+      "status": "PASS",
+      "notApplicable": "Nothing to rehearse or reconcile: phone_shop, clothes_shop and furniture_store own no source table, no tenant and no row: live-vertical-inventory.json measures tenants 0, rows 0, tables 0. The product offers the business type and renders one placeholder dashboard for it.",
+      "measurement": {
+        "inventoried": true,
+        "tenants": 0,
+        "rows": 0,
+        "tables": 0
+      },
+      "importedAt": "2026-09-15T16:10:20.036Z",
+      "reconciledAt": "2026-09-15T20:25:00.536Z",
+      "dualReadAt": null,
+      "totals": null,
+      "additionalDualReads": []
+    },
+    "uiSmoke": {
+      "status": "PASS",
+      "notApplicable": "The whole surface is src/components/dashboards/ClothesShopDashboard.tsx, a static 'coming soon' card with no data call. A browser smoke of it would assert only that a heading renders; its reachability from src/firebase-main.tsx with zero forbidden call sites is measured by the firebaseRoot gate instead.",
+      "measurement": {
+        "inventoried": true,
+        "tenants": 0,
+        "rows": 0,
+        "tables": 0
+      },
+      "smokeAt": null,
+      "flows": null
+    },
+    "search": {
+      "status": "PASS",
+      "surfaces": [],
+      "blocked": 0,
+      "unknown": 0
+    },
+    "analytics": {
+      "status": "PASS",
+      "surfaces": [],
+      "blocked": 0,
+      "unknown": 0
+    },
+    "rpc": {
+      "status": "PASS",
+      "surfaces": [],
+      "blocked": 0,
+      "unknown": 0
+    },
+    "realtime": {
+      "status": "PASS",
+      "surfaces": [],
+      "blocked": 0,
+      "unknown": 0
+    },
+    "edgeFunctions": {
+      "status": "PASS",
+      "surfaces": [],
+      "blocked": 0,
+      "unknown": 0
+    }
+  }
+}

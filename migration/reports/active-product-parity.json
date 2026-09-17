@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-16T14:03:06.615Z",
+  "generatedAt": "2026-09-17T05:54:50.381Z",
   "readOnly": true,
   "productionMutations": 0,
   "measurement": "TypeScript AST import graph (comments and strings are not code; @/ aliases resolved)",
@@ -309,7 +309,8 @@
           "rpc": "PASS",
           "realtime": "PASS",
           "edgeFunctions": "PASS"
-        }
+        },
+        "notApplicableGates": []
       },
       "firestoreMigrated": true,
       "blocksParity": false
@@ -346,7 +347,8 @@
           "rpc": "PASS",
           "realtime": "PASS",
           "edgeFunctions": "PASS"
-        }
+        },
+        "notApplicableGates": []
       },
       "firestoreMigrated": true,
       "blocksParity": false
@@ -367,9 +369,63 @@
         "edgeFunctions": 0
       },
       "shippedRootForbiddenCallSites": 0,
-      "evidence": "NOT_GENERATED",
-      "firestoreMigrated": false,
-      "blocksParity": true
+      "evidence": {
+        "path": "migration/reports/vertical-parity-clothes_shop.json",
+        "generatedAt": "2026-09-17T05:52:19.502Z",
+        "pass": true,
+        "gates": {
+          "firebaseRoot": "PASS",
+          "generatedSchema": "PASS",
+          "suites": "PASS_NOT_APPLICABLE",
+          "rulesBudget": "PASS_NOT_APPLICABLE",
+          "dataRehearsal": "PASS_NOT_APPLICABLE",
+          "uiSmoke": "PASS_NOT_APPLICABLE",
+          "search": "PASS",
+          "analytics": "PASS",
+          "rpc": "PASS",
+          "realtime": "PASS",
+          "edgeFunctions": "PASS"
+        },
+        "notApplicableGates": [
+          {
+            "gate": "suites",
+            "reason": "No repository, Rules or malicious-client suite exists for clothes_shop: there is no repository and no collection. phone_shop, clothes_shop and furniture_store own no source table, no tenant and no row: live-vertical-inventory.json measures tenants 0, rows 0, tables 0. The product offers the business type and renders one placeholder dashboard for it.",
+            "measurement": {
+              "inventoried": true,
+              "tenants": 0,
+              "rows": 0,
+              "tables": 0
+            }
+          },
+          {
+            "gate": "rulesBudget",
+            "reason": "clothes_shop writes no Firestore document, so no rule path of its own is measured against the request budget.",
+            "measurement": null
+          },
+          {
+            "gate": "dataRehearsal",
+            "reason": "Nothing to rehearse or reconcile: phone_shop, clothes_shop and furniture_store own no source table, no tenant and no row: live-vertical-inventory.json measures tenants 0, rows 0, tables 0. The product offers the business type and renders one placeholder dashboard for it.",
+            "measurement": {
+              "inventoried": true,
+              "tenants": 0,
+              "rows": 0,
+              "tables": 0
+            }
+          },
+          {
+            "gate": "uiSmoke",
+            "reason": "The whole surface is src/components/dashboards/ClothesShopDashboard.tsx, a static 'coming soon' card with no data call. A browser smoke of it would assert only that a heading renders; its reachability from src/firebase-main.tsx with zero forbidden call sites is measured by the firebaseRoot gate instead.",
+            "measurement": {
+              "inventoried": true,
+              "tenants": 0,
+              "rows": 0,
+              "tables": 0
+            }
+          }
+        ]
+      },
+      "firestoreMigrated": true,
+      "blocksParity": false
     },
     {
       "vertical": "furniture_store",
@@ -387,9 +443,63 @@
         "edgeFunctions": 0
       },
       "shippedRootForbiddenCallSites": 0,
-      "evidence": "NOT_GENERATED",
-      "firestoreMigrated": false,
-      "blocksParity": true
+      "evidence": {
+        "path": "migration/reports/vertical-parity-furniture_store.json",
+        "generatedAt": "2026-09-17T05:52:21.520Z",
+        "pass": true,
+        "gates": {
+          "firebaseRoot": "PASS",
+          "generatedSchema": "PASS",
+          "suites": "PASS_NOT_APPLICABLE",
+          "rulesBudget": "PASS_NOT_APPLICABLE",
+          "dataRehearsal": "PASS_NOT_APPLICABLE",
+          "uiSmoke": "PASS_NOT_APPLICABLE",
+          "search": "PASS",
+          "analytics": "PASS",
+          "rpc": "PASS",
+          "realtime": "PASS",
+          "edgeFunctions": "PASS"
+        },
+        "notApplicableGates": [
+          {
+            "gate": "suites",
+            "reason": "No repository, Rules or malicious-client suite exists for furniture_store: there is no repository and no collection. phone_shop, clothes_shop and furniture_store own no source table, no tenant and no row: live-vertical-inventory.json measures tenants 0, rows 0, tables 0. The product offers the business type and renders one placeholder dashboard for it.",
+            "measurement": {
+              "inventoried": true,
+              "tenants": 0,
+              "rows": 0,
+              "tables": 0
+            }
+          },
+          {
+            "gate": "rulesBudget",
+            "reason": "furniture_store writes no Firestore document, so no rule path of its own is measured against the request budget.",
+            "measurement": null
+          },
+          {
+            "gate": "dataRehearsal",
+            "reason": "Nothing to rehearse or reconcile: phone_shop, clothes_shop and furniture_store own no source table, no tenant and no row: live-vertical-inventory.json measures tenants 0, rows 0, tables 0. The product offers the business type and renders one placeholder dashboard for it.",
+            "measurement": {
+              "inventoried": true,
+              "tenants": 0,
+              "rows": 0,
+              "tables": 0
+            }
+          },
+          {
+            "gate": "uiSmoke",
+            "reason": "The whole surface is src/components/dashboards/FurnitureStoreDashboard.tsx, a static 'coming soon' card with no data call. A browser smoke of it would assert only that a heading renders; its reachability from src/firebase-main.tsx with zero forbidden call sites is measured by the firebaseRoot gate instead.",
+            "measurement": {
+              "inventoried": true,
+              "tenants": 0,
+              "rows": 0,
+              "tables": 0
+            }
+          }
+        ]
+      },
+      "firestoreMigrated": true,
+      "blocksParity": false
     },
     {
       "vertical": "phone_shop",
@@ -407,9 +517,63 @@
         "edgeFunctions": 0
       },
       "shippedRootForbiddenCallSites": 0,
-      "evidence": "NOT_GENERATED",
-      "firestoreMigrated": false,
-      "blocksParity": true
+      "evidence": {
+        "path": "migration/reports/vertical-parity-phone_shop.json",
+        "generatedAt": "2026-09-17T05:52:16.892Z",
+        "pass": true,
+        "gates": {
+          "firebaseRoot": "PASS",
+          "generatedSchema": "PASS",
+          "suites": "PASS_NOT_APPLICABLE",
+          "rulesBudget": "PASS_NOT_APPLICABLE",
+          "dataRehearsal": "PASS_NOT_APPLICABLE",
+          "uiSmoke": "PASS_NOT_APPLICABLE",
+          "search": "PASS",
+          "analytics": "PASS",
+          "rpc": "PASS",
+          "realtime": "PASS",
+          "edgeFunctions": "PASS"
+        },
+        "notApplicableGates": [
+          {
+            "gate": "suites",
+            "reason": "No repository, Rules or malicious-client suite exists for phone_shop: there is no repository and no collection. phone_shop, clothes_shop and furniture_store own no source table, no tenant and no row: live-vertical-inventory.json measures tenants 0, rows 0, tables 0. The product offers the business type and renders one placeholder dashboard for it.",
+            "measurement": {
+              "inventoried": true,
+              "tenants": 0,
+              "rows": 0,
+              "tables": 0
+            }
+          },
+          {
+            "gate": "rulesBudget",
+            "reason": "phone_shop writes no Firestore document, so no rule path of its own is measured against the request budget.",
+            "measurement": null
+          },
+          {
+            "gate": "dataRehearsal",
+            "reason": "Nothing to rehearse or reconcile: phone_shop, clothes_shop and furniture_store own no source table, no tenant and no row: live-vertical-inventory.json measures tenants 0, rows 0, tables 0. The product offers the business type and renders one placeholder dashboard for it.",
+            "measurement": {
+              "inventoried": true,
+              "tenants": 0,
+              "rows": 0,
+              "tables": 0
+            }
+          },
+          {
+            "gate": "uiSmoke",
+            "reason": "The whole surface is src/components/dashboards/PhoneShopDashboard.tsx, a static 'coming soon' card with no data call. A browser smoke of it would assert only that a heading renders; its reachability from src/firebase-main.tsx with zero forbidden call sites is measured by the firebaseRoot gate instead.",
+            "measurement": {
+              "inventoried": true,
+              "tenants": 0,
+              "rows": 0,
+              "tables": 0
+            }
+          }
+        ]
+      },
+      "firestoreMigrated": true,
+      "blocksParity": false
     },
     {
       "vertical": "restaurant",
@@ -443,7 +607,8 @@
           "rpc": "PASS",
           "realtime": "PASS",
           "edgeFunctions": "PASS"
-        }
+        },
+        "notApplicableGates": []
       },
       "firestoreMigrated": true,
       "blocksParity": false
@@ -480,7 +645,8 @@
           "rpc": "PASS",
           "realtime": "PASS",
           "edgeFunctions": "PASS"
-        }
+        },
+        "notApplicableGates": []
       },
       "firestoreMigrated": true,
       "blocksParity": false
@@ -501,9 +667,27 @@
         "edgeFunctions": 0
       },
       "shippedRootForbiddenCallSites": 1,
-      "evidence": "NOT_GENERATED",
-      "firestoreMigrated": false,
-      "blocksParity": true
+      "evidence": {
+        "path": "migration/reports/vertical-parity-tourism.json",
+        "generatedAt": "2026-09-16T19:55:40.028Z",
+        "pass": true,
+        "gates": {
+          "firebaseRoot": "PASS",
+          "generatedSchema": "PASS",
+          "suites": "PASS",
+          "rulesBudget": "PASS",
+          "dataRehearsal": "PASS",
+          "uiSmoke": "PASS",
+          "search": "PASS",
+          "analytics": "PASS",
+          "rpc": "PASS",
+          "realtime": "PASS",
+          "edgeFunctions": "PASS"
+        },
+        "notApplicableGates": []
+      },
+      "firestoreMigrated": true,
+      "blocksParity": false
     }
   ],
   "counts": {
@@ -523,8 +707,8 @@
     "supabaseEdgeFunctions": 0,
     "supabaseStorage": "INTENTIONAL_COUNT_BEHIND_StorageRepository"
   },
-  "verticalsSupported": 4,
-  "verticalsBlocking": 4,
+  "verticalsSupported": 8,
+  "verticalsBlocking": 0,
   "databaseRuntimeZeroInFirebaseRoot": true,
-  "decision": "PRODUCT_PARITY_NO_GO"
+  "decision": "PRODUCT_PARITY_GO"
 }
