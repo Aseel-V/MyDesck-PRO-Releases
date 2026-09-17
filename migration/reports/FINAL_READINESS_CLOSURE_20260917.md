@@ -17,8 +17,13 @@ three are blocked on actions this session was not permitted to perform.
 
 ## Repository safety
 
-Branch `codex/firebase-migration`. Starting HEAD `57c9de8`. Staged baseline **212 paths**, unchanged throughout;
-staged tree object `e9b915a30d3c351d22abe750b061e982ef7cccc3` identical before and after every commit. Recovery tag
+Branch `codex/firebase-migration`. Starting HEAD `57c9de8`. Staged baseline **212 paths**, unchanged throughout.
+Invariance is proven by hashing the staged entries themselves — each path paired with the blob SHA actually staged
+for it — which is `afb0a3f2f19e2a1b2a8ea9bf39396956a0d6c87671b2dc7a7f23ea811796e671` both before and after every
+commit of this run (blob-SHAs-only variant: `f591aedc7ca5757efee67b9236660d0edec1028e7d392feea2a494334d54af98`).
+Note that `git write-tree` is **not** a valid baseline fingerprint: it hashes the whole index, so it legitimately
+changes whenever HEAD content changes, and it did (`e9b915a3…` to `49ea94ca…`) purely because this run added
+commits. Recovery tag
 `recovery/pre-final-readiness-closure-20260917-140731` plus staged-index snapshot ref
 `refs/stagedsnap/pre-final-readiness-closure-20260917-140731`. Every commit used an explicit pathspec; no `git add .`
 and no `git commit -a`. `results/security-postgres.json` was not touched — it was already dirty before this session
@@ -29,7 +34,11 @@ began and remains as found.
 algorithms were tried (name-only sorted and unsorted, CRLF and backslash variants, name-status, `ls-files -s`,
 `write-tree`, raw diff, patch diff, blob-hash concatenations). None produced that value, and no script in the
 repository computes it, so the algorithm was never committed and the value is unverifiable. Invariance is instead
-proven by the staged tree object above, which anyone can reproduce with `git write-tree`.
+proven by the staged-entry hash above, which anyone can reproduce with:
+
+```bash
+git diff --cached --name-only | while read -r p; do echo "$p $(git rev-parse ":$p")"; done | sha256sum
+```
 
 ## Phase 1 — IAM: applied, unverified
 
