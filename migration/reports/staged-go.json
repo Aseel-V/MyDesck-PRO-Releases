@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-09-15T21:04:28.595Z",
+  "generatedAt": "2026-09-17T06:01:59.467Z",
   "readOnly": true,
   "productionMutations": 0,
   "architecture": "FIREBASE_AUTH_FIRESTORE_PLUS_SUPABASE_STORAGE_ONLY",
   "inputs": {
-    "activeProductParity": "2026-09-15T20:37:36.426Z",
+    "activeProductParity": "2026-09-17T05:54:50.381Z",
     "hybridStorageAuthProbe": "2026-09-14T09:43:52.719Z",
     "liveVerticalInventory": "2026-09-15T11:34:47.009Z",
     "dryRun": "2026-09-15T21:04:13.338Z",
@@ -70,21 +70,21 @@
   ],
   "supabaseRuntime": {
     "shippedProduct": {
-      "database": 159,
-      "rpc": 34,
+      "database": 157,
+      "rpc": 31,
       "auth": 13,
       "databaseRealtime": 2,
       "storage": 7
     },
     "firebaseRoot": {
-      "supabaseDatabase": 42,
-      "supabaseRpc": 30,
+      "supabaseDatabase": 0,
+      "supabaseRpc": 0,
       "supabaseAuth": 0,
       "supabaseRealtime": 0,
-      "supabaseEdgeFunctions": 1,
+      "supabaseEdgeFunctions": 0,
       "supabaseStorage": 7,
-      "firestore": 10,
-      "genericSupabaseClientImports": 22,
+      "firestore": 12,
+      "genericSupabaseClientImports": 0,
       "supabaseAdapterImports": 0
     },
     "targets": {
@@ -143,15 +143,12 @@
     "PRODUCT_PARITY_GO": {
       "ownedGates": 23,
       "evaluatedGates": 37,
-      "pass": 35,
-      "fail": 2,
+      "pass": 37,
+      "fail": 0,
       "notRun": 0,
       "missing": 0,
-      "decision": "NO_GO",
-      "blockers": [
-        "activeProductParity:FAIL",
-        "supabaseDatabaseRuntimeZero:FAIL"
-      ],
+      "decision": "GO",
+      "blockers": [],
       "dependsOn": [
         "HYBRID_STORAGE_AUTH_GO",
         "STORAGE_ISOLATION_GO",
@@ -162,14 +159,12 @@
     "DRY_RUN_GO": {
       "ownedGates": 8,
       "evaluatedGates": 45,
-      "pass": 39,
-      "fail": 5,
+      "pass": 41,
+      "fail": 3,
       "notRun": 1,
       "missing": 0,
       "decision": "NO_GO",
       "blockers": [
-        "activeProductParity:FAIL",
-        "supabaseDatabaseRuntimeZero:FAIL",
         "iam:FAIL",
         "indexes:FAIL",
         "realClientSmoke:NOT_RUN",
@@ -182,14 +177,12 @@
     "BULK_COPY_GO": {
       "ownedGates": 2,
       "evaluatedGates": 47,
-      "pass": 39,
-      "fail": 5,
+      "pass": 41,
+      "fail": 3,
       "notRun": 1,
       "missing": 2,
       "decision": "NO_GO",
       "blockers": [
-        "activeProductParity:FAIL",
-        "supabaseDatabaseRuntimeZero:FAIL",
         "iam:FAIL",
         "indexes:FAIL",
         "realClientSmoke:NOT_RUN",
@@ -204,14 +197,12 @@
     "CUTOVER_GO": {
       "ownedGates": 3,
       "evaluatedGates": 50,
-      "pass": 39,
-      "fail": 5,
+      "pass": 41,
+      "fail": 3,
       "notRun": 1,
       "missing": 5,
       "decision": "NO_GO",
       "blockers": [
-        "activeProductParity:FAIL",
-        "supabaseDatabaseRuntimeZero:FAIL",
         "iam:FAIL",
         "indexes:FAIL",
         "realClientSmoke:NOT_RUN",
@@ -229,14 +220,12 @@
     "POST_CUTOVER_HEALTHY": {
       "ownedGates": 3,
       "evaluatedGates": 53,
-      "pass": 39,
-      "fail": 5,
+      "pass": 41,
+      "fail": 3,
       "notRun": 1,
       "missing": 8,
       "decision": "NO_GO",
       "blockers": [
-        "activeProductParity:FAIL",
-        "supabaseDatabaseRuntimeZero:FAIL",
         "iam:FAIL",
         "indexes:FAIL",
         "realClientSmoke:NOT_RUN",

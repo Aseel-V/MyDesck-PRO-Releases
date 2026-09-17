@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-15T21:04:13.338Z",
-  "migrationRunId": "harness-production-prep",
+  "generatedAt": "2026-09-17T06:02:19.835Z",
+  "migrationRunId": "dryrun-4af1b37a-f212-415f-89a0-02dac54b53e4",
   "architecture": "FIREBASE_SPARK_ONLY",
   "mode": "dry-run",
   "productionWrites": 0,
@@ -15,10 +15,10 @@
     "firebaseProject": "mydesckpro",
     "firestoreDatabaseId": "default"
   },
-  "executableCommitSha": "64d34986fa7d074c18fb01907ba4d053b71b4145",
+  "executableCommitSha": "55400f2b9475ea43b681a2770be4bb6355abded5",
   "configHashes": {
-    "firestoreRules": "5f365f1788c670baf3c34f9f2deeb78b09f8daab4bb3b66f61444466f72b5b43",
-    "indexes": "c516b73728401cd577c3214efaf5a839b2a8cde65dc714c6a39d70300ee2bc39",
+    "firestoreRules": "ec88139550b4be4a149b475ed20330702c33a586d8074447c3d569d33307f98f",
+    "indexes": "b4321049ef068288250b8fd59faf935fbd6d78302edcf8b0a36b7177ae4e8bb2",
     "deltaMap": "cf60c2b43faf32d30a5965e958a10d2226cc57e161095eff40342ba1d5d3db85"
   },
   "evidence": {
@@ -62,7 +62,7 @@
             }
           ]
         },
-        "candidateSha256": "5f365f1788c670baf3c34f9f2deeb78b09f8daab4bb3b66f61444466f72b5b43",
+        "candidateSha256": "ec88139550b4be4a149b475ed20330702c33a586d8074447c3d569d33307f98f",
         "rollback": {
           "release": "projects/mydesckpro/releases/cloud.firestore/default",
           "ruleset": "projects/mydesckpro/rulesets/c6fc85cd-4681-491c-bb7c-b879e5893a92",
@@ -409,10 +409,17 @@
       }
     },
     "activeProductParity": {
-      "status": "FAIL",
+      "status": "PASS",
       "evidence": {
         "shippedEntry": "src/production-main.tsx",
-        "shippedReachableFiles": 222
+        "shippedReachableFiles": 223,
+        "shippedSupabaseCalls": 205,
+        "shippedFirestoreCalls": 0,
+        "activeVerticals": 8,
+        "supportedInFirebaseMode": 8,
+        "blockingCutover": 0,
+        "databaseRuntimeZeroInFirebaseRoot": true,
+        "decision": "PRODUCT_PARITY_GO"
       }
     },
     "secret": {
@@ -483,7 +490,7 @@
               }
             ]
           },
-          "candidateSha256": "5f365f1788c670baf3c34f9f2deeb78b09f8daab4bb3b66f61444466f72b5b43",
+          "candidateSha256": "ec88139550b4be4a149b475ed20330702c33a586d8074447c3d569d33307f98f",
           "rollback": {
             "release": "projects/mydesckpro/releases/cloud.firestore/default",
             "ruleset": "projects/mydesckpro/rulesets/c6fc85cd-4681-491c-bb7c-b879e5893a92",
@@ -850,10 +857,17 @@
       },
       {
         "name": "activeProductParity",
-        "status": "FAIL",
+        "status": "PASS",
         "evidence": {
           "shippedEntry": "src/production-main.tsx",
-          "shippedReachableFiles": 222
+          "shippedReachableFiles": 223,
+          "shippedSupabaseCalls": 205,
+          "shippedFirestoreCalls": 0,
+          "activeVerticals": 8,
+          "supportedInFirebaseMode": 8,
+          "blockingCutover": 0,
+          "databaseRuntimeZeroInFirebaseRoot": true,
+          "decision": "PRODUCT_PARITY_GO"
         }
       },
       {
@@ -882,8 +896,8 @@
         "evidence": "Spark plan and billing-disabled fail-closed runtime selector; cutover not started"
       }
     ],
-    "pass": 25,
-    "fail": 4,
+    "pass": 26,
+    "fail": 3,
     "notRun": 1,
     "missing": 0,
     "decision": "NO_GO",
@@ -891,7 +905,6 @@
       "iam",
       "indexes",
       "realClientSmoke",
-      "activeProductParity",
       "secret"
     ]
   },
@@ -899,7 +912,6 @@
     "iam",
     "indexes",
     "realClientSmoke",
-    "activeProductParity",
     "secret"
   ],
   "decision": "NO_GO"

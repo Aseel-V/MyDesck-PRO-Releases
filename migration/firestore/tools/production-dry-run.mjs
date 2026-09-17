@@ -69,11 +69,19 @@ const evidence = {
   english: { status: 'PASS', evidence: 'LTR regression' },
   electron: { status: suite('application boundary') === 'PASS' ? 'PASS' : 'NOT_RUN', evidence: 'Electron-compatible renderer composition, Auth persistence, token refresh and local print/PDF path' },
   activeSupabase: { status: spark.runtime.activeSupabaseCalls === 0 ? 'PASS' : 'FAIL', evidence: { firebaseModeReachable: spark.runtime.activeSupabaseCalls, historicalReferences: spark.historicalSourceReferences.supabase } },
-  activeProductParity: { status: parity?.decision === 'ACTIVE_PRODUCT_PARITY_PASS' ? 'PASS' : parity ? 'FAIL' : 'MISSING',
+  // 81bdb75 renamed the parity decision to PRODUCT_PARITY_GO and restructured its fields, but updated only
+  // staged-go.mjs; this gate was left reading ACTIVE_PRODUCT_PARITY_PASS and five keys the report has never
+  // carried, so it could not return PASS whatever the product proved, and its evidence silently recorded
+  // undefined for most of what it claimed to show. The names below are the ones the report actually emits, and
+  // are the same ones staged-go.mjs reads. The gate is no weaker: it still fails unless parity measures GO.
+  activeProductParity: { status: parity?.decision === 'PRODUCT_PARITY_GO' ? 'PASS' : parity ? 'FAIL' : 'MISSING',
     evidence: parity ? { shippedEntry: parity.selector.supabaseBranch, shippedReachableFiles: parity.compositionRoots.shippedProduct.reachableFiles,
-      shippedSupabaseCalls: parity.shippedProductSupabaseReachable, shippedFirestoreCalls: parity.shippedProductFirestoreReachable,
-      activeVerticals: parity.counts.ACTIVE, supportedInFirebaseMode: parity.activeVerticalsSupportedInFirebaseMode,
-      blockingCutover: parity.activeVerticalsBlockingCutover } : 'active-product parity evidence not generated' },
+      shippedSupabaseCalls: parity.compositionRoots.shippedProduct.forbiddenTotal,
+      shippedFirestoreCalls: parity.compositionRoots.shippedProduct.firestoreImports,
+      activeVerticals: parity.verticalsSupported + parity.verticalsBlocking,
+      supportedInFirebaseMode: parity.verticalsSupported, blockingCutover: parity.verticalsBlocking,
+      databaseRuntimeZeroInFirebaseRoot: parity.databaseRuntimeZeroInFirebaseRoot,
+      decision: parity.decision } : 'active-product parity evidence not generated' },
   secret: { status: 'FAIL', evidence: 'GitHub credential removed from active source; provider revocation confirmation missing' },
   writeFreeze: { status: 'PASS', evidence: 'maintenance guard and no-Supabase-fallback behavior' },
   rollback: { status: clientSuite ? 'PASS' : 'NOT_RUN', evidence: 'synthetic Firestore operation journal, detection and exact-ID cleanup rehearsed in emulator; production customer data excluded' },

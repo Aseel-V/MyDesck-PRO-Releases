@@ -1,7 +1,7 @@
 # Firestore Spark production GO checklist
 
 Machine authority: `migration/reports/firestore-production-dry-run.json`.
-Current result: **25 PASS / 4 FAIL / 1 NOT_RUN / 0 MISSING → NO_GO.**
+Current result: **26 PASS / 3 FAIL / 1 NOT_RUN / 0 MISSING → NO_GO.**
 Billing, Functions and Storage capability gates were removed only after their runtime proofs
 passed. Historical evidence is retained.
 
@@ -19,7 +19,7 @@ passed. Historical evidence is retained.
 | Data, delta, exact finance, relationships, events | PASS | 1,439 documents; financial delta exactly 0 across 1,447 values; orphans 0; event mismatches 0. |
 | Search, languages, Electron | PASS | Active Firebase-mode paths are provider-free and bounded. Scoped to the travel workspace — see the parity gate below. |
 | Active Firebase-mode Supabase dependency | PASS | Reachable count 0 **from `src/migration-app/main.tsx` only**; fallback disabled. |
-| **Active product parity** | **FAIL** | **0 of 8 active verticals are supported in Firebase mode.** The shipped root `src/production-main.tsx` reaches 199 files, 297 Supabase calls and 0 Firestore calls. See `migration/reports/active-product-parity.json`. |
+| **Active product parity** | PASS | **8 of 8 active verticals are supported in Firebase mode**, 0 blocking. The Firebase root reaches 0 Supabase database, RPC, Auth, realtime and Edge Function call sites; Storage stays behind `StorageRepository`. The shipped root `src/production-main.tsx` still reaches 223 files, 205 forbidden calls and 0 Firestore calls, which is why the selector has not moved. See `migration/firestore/FULL_PRODUCT_FIRESTORE_PARITY.md` and `migration/reports/active-product-parity.json`. |
 | GitHub credential revocation | **FAIL** | Removed from active source (scanner: 1,193 files, 0 findings). Provider revocation remains unconfirmed. |
 | Maintenance, rollback, observability, selector | PASS | Spark transaction journal and fail-closed controls. |
 
