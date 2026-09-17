@@ -7,7 +7,9 @@ import { createHash } from 'node:crypto';
 
 const project = 'mydesckpro';
 const database = `projects/${project}/databases/default`;
-const migrationIdentity = `mydesck-migration@${project}.iam.gserviceaccount.com`;
+// Dedicated least-privilege Firestore principal. mydesck-migration@ is the Auth administrator and is deliberately
+// NOT the data-migration identity; see migration/reports/FIRESTORE_IAM_DECISION.md.
+const migrationIdentity = `mydesck-firestore-migration@${project}.iam.gserviceaccount.com`;
 const sdk = process.env.GCLOUD_SDK_ROOT ?? join(process.env.LOCALAPPDATA, 'Google/Cloud SDK/google-cloud-sdk');
 function gcloud(args) {
   try { return execFileSync(join(sdk, 'platform/bundledpython/python.exe'), [join(sdk, 'lib/gcloud.py'), ...args],

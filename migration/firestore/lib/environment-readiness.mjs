@@ -8,7 +8,14 @@ export const REQUIRED_APIS = ['cloudfunctions.googleapis.com', 'run.googleapis.c
 
 export function indexShape(index) {
   // Enterprise does not assume an implicit name tie-breaker; deterministic paginated queries declare it.
+  // The Firestore Admin API, however, omits the implicit ascending __name__ tie-breaker from its list response,
+  // while the configured specs declare it. Comparing the two verbatim made every READY index look MISSING, so the
+  // hard-required index gate could never pass no matter what production actually held. Normalise by dropping a
+  // TRAILING ascending __name__ from both sides only. A __name__ that is descending, or that is not last, is a
+  // genuinely different index shape and is preserved.
   const fields = [...index.fields];
+  const last = fields[fields.length - 1];
+  if (last && last.fieldPath === '__name__' && (last.order ?? 'ASCENDING') === 'ASCENDING' && !last.arrayConfig) fields.pop();
   return JSON.stringify({ collectionGroup: index.collectionGroup ?? index.name?.split('/collectionGroups/')[1]?.split('/')[0],
     queryScope: index.queryScope, fields: fields.map(({ fieldPath, order, arrayConfig }) => ({ fieldPath, order, arrayConfig })) });
 }
@@ -117,7 +124,10 @@ export function cleanupPlan(manifest, actualResources) {
 
 export const DB_CONDITION = 'expression=resource.name=="projects/mydesckpro/databases/default" || resource.name.startsWith("projects/mydesckpro/databases/default/documents/"),title=mydesck-default-only';
 export const IAM_BINDINGS = Object.freeze({
+  // Superseded: mydesck-migration@ holds roles/firebaseauth.admin; combining Auth administration with Firestore
+  // data authority is refused. Retained only so the removal command for any legacy grant stays derivable.
   'migration-writer': { member: 'serviceAccount:mydesck-migration@mydesckpro.iam.gserviceaccount.com', role: 'roles/datastore.user', condition: DB_CONDITION },
+  'firestore-migration-writer': { member: 'serviceAccount:mydesck-firestore-migration@mydesckpro.iam.gserviceaccount.com', role: 'projects/mydesckpro/roles/mydesckFirestoreMigrator', condition: DB_CONDITION },
   'rules-reader': { member: 'serviceAccount:mydesck-rules-reader@mydesckpro.iam.gserviceaccount.com', role: 'roles/firebaserules.viewer', condition: 'None' },
   'index-deployer': { member: 'serviceAccount:mydesck-deployer@mydesckpro.iam.gserviceaccount.com', role: 'roles/datastore.indexAdmin', condition: 'None' },
 });
