@@ -2,13 +2,14 @@
 
 This plan targets Firebase Authentication + Firestore + Security Rules on Spark. Cloud Billing, Functions, Storage, Cloud Run, Cloud SQL, and paid search are absent.
 
-0. **Close active product parity first.** `src/main.tsx` selects between
-   `src/production-main.tsx` (the shipped product: 199 reachable files, 297 Supabase calls,
-   0 Firestore calls) and `src/migration-app/main.tsx` (10 files, 0 Supabase). The dashboard
-   serves eight active verticals and **0 of 8** work in Firebase mode. Until that is resolved —
-   by migrating the remaining verticals or by an owner-approved decision to narrow the product —
-   every step below is preparation and step 12 must not run. Authority:
-   `migration/reports/active-product-parity.json`.
+0. **Active product parity is closed (2026-09-17).** `src/main.tsx` selects between
+   `src/production-main.tsx` (the shipped Supabase product: 223 reachable files, 205 forbidden
+   calls, 0 Firestore calls) and `src/firebase-main.tsx` (the Firebase root: 0 Supabase database,
+   RPC, Auth, realtime and Edge Function call sites; Storage retained behind `StorageRepository`).
+   All **8 of 8** active verticals are supported in Firebase mode, 0 blocking, `PRODUCT_PARITY_GO`.
+   Steps 1-11 remain preparation and step 12 must still not run until the remaining readiness gates
+   close. Authority: `migration/reports/active-product-parity.json`,
+   `migration/firestore/FULL_PRODUCT_FIRESTORE_PARITY.md`.
 1. Verify project `mydesckpro`, database ID `default`, free tier/Spark expectation, and billing disabled.
 2. Confirm GitHub credential revocation without recording the token.
 3. Capture current Rules release/source hash and preserve rollback bytes.
@@ -32,5 +33,7 @@ Production migration stops on nonzero financial delta, unknown data, quota risk,
 active Supabase dependency, an active product surface unsupported in Firebase mode, a missing
 hard-required index, IAM drift, or an unconfirmed credential revocation.
 
-As of 2026-09-14 this plan has executed none of steps 1-13. Step 0 fails, and the credential
-revocation in step 2 is still unconfirmed.
+As of 2026-09-17 step 0 is closed and this plan has executed none of steps 1-13. Four readiness
+gates remain open: the migration IAM binding (step 6), the two hard-required indexes (step 5), the
+real production client-SDK smoke (step 8), and the credential revocation in step 2, which is still
+unconfirmed. Authority: `migration/reports/FINAL_PRODUCTION_READINESS.md`.

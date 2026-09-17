@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-17T06:02:19.835Z",
-  "migrationRunId": "dryrun-4af1b37a-f212-415f-89a0-02dac54b53e4",
+  "generatedAt": "2026-09-17T07:29:27.367Z",
+  "migrationRunId": "dryrun-6cd64511-e3d1-4786-a116-4071217d8140",
   "architecture": "FIREBASE_SPARK_ONLY",
   "mode": "dry-run",
   "productionWrites": 0,
@@ -15,7 +15,7 @@
     "firebaseProject": "mydesckpro",
     "firestoreDatabaseId": "default"
   },
-  "executableCommitSha": "55400f2b9475ea43b681a2770be4bb6355abded5",
+  "executableCommitSha": "6f09f75b7b762651f71fe09da6fbf0ff759a6012",
   "configHashes": {
     "firestoreRules": "ec88139550b4be4a149b475ed20330702c33a586d8074447c3d569d33307f98f",
     "indexes": "b4321049ef068288250b8fd59faf935fbd6d78302edcf8b0a36b7177ae4e8bb2",

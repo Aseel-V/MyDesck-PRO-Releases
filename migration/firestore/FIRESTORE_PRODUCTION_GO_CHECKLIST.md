@@ -1,7 +1,9 @@
 # Firestore Spark production GO checklist
 
 Machine authority: `migration/reports/firestore-production-dry-run.json`.
-Current result: **26 PASS / 3 FAIL / 1 NOT_RUN / 0 MISSING → NO_GO.**
+Current result: **26 PASS / 3 FAIL / 1 NOT_RUN / 0 MISSING → NO_GO** (dry-run 2026-09-17T07:29:27Z,
+commit `6f09f75`). Full narrative: `migration/reports/FINAL_PRODUCTION_READINESS.md` and
+`migration/reports/FIREBASE_PRODUCTION_DRY_RUN_FINAL.md`.
 Billing, Functions and Storage capability gates were removed only after their runtime proofs
 passed. Historical evidence is retained.
 
@@ -9,9 +11,9 @@ passed. Historical evidence is retained.
 | --- | --- | --- |
 | Project, literal `default` database, Spark/no billing | PASS | Read-only production inventory, re-verified 2026-09-14. Billing disabled and unlinked; Enterprise Native, free tier. |
 | Auth classification | PASS | 10/10; unknown 0; import not started. |
-| Migration IAM | **FAIL** | Migration identity synthetic Firestore read is 403. Operator must apply the reviewed `roles/datastore.user` binding scoped to the `default` database. |
+| Migration IAM | **FAIL** | Synthetic Firestore read by `mydesck-migration@` is HTTP 403; it holds only `roles/firebaseauth.admin`, `firestoreMigrationRolePresent: false`. Operator must apply the reviewed `roles/datastore.user` binding conditioned to `projects/mydesckpro/databases/default`. **Unresolved:** `FIRESTORE_IAM_REQUIREMENTS.md` prefers a separate `mydesck-firestore-migration@` principal so Auth and data authority are not combined; the gate names `mydesck-migration@`. Decide before binding. |
 | Current/candidate/rollback Rules readiness | PASS | Current release `c6fc85cd` captured and hash-verified against the expected deny-all baseline; candidate emulator-tested; rollback bytes identical to current. |
-| Required indexes | **FAIL** | **2 hard-required, 0 READY** (production has 0 composite indexes). The third candidate is a cost optimization and is not a dry-run gate. |
+| Required indexes | **FAIL** | **2 hard-required, 0 READY** (production has 0 composite indexes). **Defect:** the hard-required count is assigned by array position in `enterprise-index-analysis.mjs`, not by analysis; the `trips … paymentDate` spec was labelled a cost optimization by position although its query is reachable and bounded at 2,000, and the `tripInstallments` spec is unclassified. Re-derive before relying on the count. |
 | Quota budget | PASS | Enterprise 4 KiB read / 1 KiB write tranches; 2.592% of 1 GiB; break-even limits recorded. |
 | No Functions / no Storage | PASS | Active Firebase-mode graph counts are zero; Functions and Storage APIs disabled in the project; 0 buckets. |
 | Critical transactions and malicious client | PASS | Firebase client SDK against emulators: 18 assertions; cross-tenant, financial tamper, self-admin and immutable-event edits denied. |
@@ -20,7 +22,7 @@ passed. Historical evidence is retained.
 | Search, languages, Electron | PASS | Active Firebase-mode paths are provider-free and bounded. Scoped to the travel workspace — see the parity gate below. |
 | Active Firebase-mode Supabase dependency | PASS | Reachable count 0 **from `src/migration-app/main.tsx` only**; fallback disabled. |
 | **Active product parity** | PASS | **8 of 8 active verticals are supported in Firebase mode**, 0 blocking. The Firebase root reaches 0 Supabase database, RPC, Auth, realtime and Edge Function call sites; Storage stays behind `StorageRepository`. The shipped root `src/production-main.tsx` still reaches 223 files, 205 forbidden calls and 0 Firestore calls, which is why the selector has not moved. See `migration/firestore/FULL_PRODUCT_FIRESTORE_PARITY.md` and `migration/reports/active-product-parity.json`. |
-| GitHub credential revocation | **FAIL** | Removed from active source (scanner: 1,193 files, 0 findings). Provider revocation remains unconfirmed. |
+| GitHub credential revocation | **FAIL** | Removed from active source (scanner passes 3/3, detects credential shapes without returning values). Provider revocation remains **unconfirmed**; no confirmation exists anywhere in the repository. Gate is hardcoded FAIL at `production-dry-run.mjs:85`. Operator action in `FINAL_PRODUCTION_READINESS.md` Phase 1. Cutover forbidden until confirmed. |
 | Maintenance, rollback, observability, selector | PASS | Spark transaction journal and fail-closed controls. |
 
 Any FAIL or NOT_RUN keeps the decision `NO_GO`. No production customer migration or backend

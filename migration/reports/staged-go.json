@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-17T06:01:59.467Z",
+  "generatedAt": "2026-09-17T07:31:54.976Z",
   "readOnly": true,
   "productionMutations": 0,
   "architecture": "FIREBASE_AUTH_FIRESTORE_PLUS_SUPABASE_STORAGE_ONLY",
@@ -7,7 +7,7 @@
     "activeProductParity": "2026-09-17T05:54:50.381Z",
     "hybridStorageAuthProbe": "2026-09-14T09:43:52.719Z",
     "liveVerticalInventory": "2026-09-15T11:34:47.009Z",
-    "dryRun": "2026-09-15T21:04:13.338Z",
+    "dryRun": "2026-09-17T07:29:27.367Z",
     "harness": "PASS 39/39"
   },
   "verticals": [
