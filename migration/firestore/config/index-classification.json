@@ -11,11 +11,26 @@
       "collectionGroup": "trips",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "ownerUid", "order": "ASCENDING" },
-        { "fieldPath": "businessId", "order": "ASCENDING" },
-        { "fieldPath": "isDeleted", "order": "ASCENDING" },
-        { "fieldPath": "startDate", "order": "ASCENDING" },
-        { "fieldPath": "__name__", "order": "ASCENDING" }
+        {
+          "fieldPath": "ownerUid",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "businessId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "isDeleted",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "startDate",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
       ],
       "query": "FirestoreTravelRepository.listTripsForBusiness: tenant, deletion state, start-date cursor.",
       "classification": "REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE",
@@ -27,12 +42,30 @@
       "collectionGroup": "trips",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "ownerUid", "order": "ASCENDING" },
-        { "fieldPath": "businessId", "order": "ASCENDING" },
-        { "fieldPath": "isDeleted", "order": "ASCENDING" },
-        { "fieldPath": "status", "order": "ASCENDING" },
-        { "fieldPath": "startDate", "order": "ASCENDING" },
-        { "fieldPath": "__name__", "order": "ASCENDING" }
+        {
+          "fieldPath": "ownerUid",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "businessId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "isDeleted",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "startDate",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
       ],
       "query": "FirestoreTravelRepository.listTripsForBusiness with a status filter.",
       "classification": "REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE",
@@ -44,27 +77,54 @@
       "collectionGroup": "trips",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "ownerUid", "order": "ASCENDING" },
-        { "fieldPath": "businessId", "order": "ASCENDING" },
-        { "fieldPath": "isDeleted", "order": "ASCENDING" },
-        { "fieldPath": "paymentDate", "order": "ASCENDING" },
-        { "fieldPath": "__name__", "order": "ASCENDING" }
+        {
+          "fieldPath": "ownerUid",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "businessId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "isDeleted",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "paymentDate",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
       ],
       "query": "FirestoreTravelDashboardRepository.listDashboardTrips: tenant, deletion state, payment-date range of the year.",
-      "classification": "REVIEW_REQUIRED",
-      "hardDryRunGate": false,
-      "evidenceState": "UNVERIFIED",
-      "rationale": "Unresolved and deliberately not decided from resemblance. The query is genuinely reachable (Dashboard.tsx -> listDashboardTrips) and runs the same tenant and deletion predicates as the two gated indexes, but it is a year range bounded at DASHBOARD_TRIPS_BOUND = 2000 rather than a 25-result page, so its cost profile is not the same and cannot be inferred from the others. A production query plan would settle it; Enterprise rejects the Explain API used by the analyser (INVALID_ARGUMENT: Explain options are not supported in RunQuery API for Enterprise edition), so no measurement exists. An operator must classify it from a supported measurement before the index gate can pass.",
-      "operatorAction": "Measure this query against the production corpus with a supported Enterprise mechanism, then set classification, hardDryRunGate and evidenceState accordingly."
+      "classification": "REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE",
+      "hardDryRunGate": true,
+      "evidenceState": "REASONED_FROM_CORPUS",
+      "rationale": "Resolved from the real code path, not from resemblance. Reachability is proven: Dashboard.tsx:148 -> tripQueries.ts:82 -> FirestoreTravelDashboardRepository.listDashboardTrips, and also FirestoreTravelRepository.ts:473. The Dashboard is the application's landing screen, so this is the highest-frequency reachable query in the product. listDashboardTrips issues TWO queries in parallel (lines 73-74): a startDate range and a paymentDate range, each with the same ownerUid/businessId/isDeleted equalities and each bound at DASHBOARD_TRIPS_BOUND = 2000. There is no explicit orderBy, so Firestore's implicit ordering is the range field then __name__, which is exactly this index's field order. The startDate half is already served by the gated (ownerUid,businessId,isDeleted,startDate,__name__) index. Without this spec the paymentDate half is the only unserved half: on every dashboard load it falls back to merging the automatic single-field indexes and filtering the range, so its cost scales with the tenant's entire live trips collection instead of with the requested year. On the recorded 99-trip corpus that is ~99 documents scanned per load against ~25 for the year slice, and the ratio grows linearly with years of history per tenant. Correctness is not at stake: Firestore Enterprise executes the query unindexed, so this is not REQUIRED_FOR_CORRECTNESS. It is not LEGACY_UNREACHABLE because reachability is proven above, and not NOT_REQUIRED for the same reason. It is gated rather than left COST_OPTIMIZATION because the database is freeTier:true with billing disabled, the query sits on the landing screen, and its 2000-document bound is strictly larger than the 25-result page that justified gating the two sibling indexes. Fail-closed: the highest-frequency reachable query on a free-tier project is gated.",
+      "measurementMethod": "Static reachability trace plus corpus-cardinality reasoning. A production query plan was not obtainable: Firestore Enterprise rejects the Explain API (INVALID_ARGUMENT: Explain options are not supported in RunQuery API for Enterprise edition), and a production cardinality measurement is meaningless because no customer data has been migrated yet. Evidence state is therefore REASONED_FROM_CORPUS, not MEASURED."
     },
     {
       "collectionGroup": "tripInstallments",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "ownerUid", "order": "ASCENDING" },
-        { "fieldPath": "businessId", "order": "ASCENDING" },
-        { "fieldPath": "status", "order": "ASCENDING" },
-        { "fieldPath": "dueDate", "order": "ASCENDING" }
+        {
+          "fieldPath": "ownerUid",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "businessId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "dueDate",
+          "order": "ASCENDING"
+        }
       ],
       "query": "FirestoreTravelRepository.listDueInstallments: tenant, active status set, due date.",
       "classification": "COST_OPTIMIZATION",

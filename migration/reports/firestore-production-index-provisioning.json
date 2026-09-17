@@ -1,0 +1,65 @@
+{
+  "generatedAt": "2026-09-17T11:22:00.000Z",
+  "project": "mydesckpro",
+  "database": "projects/mydesckpro/databases/default",
+  "databaseEdition": "ENTERPRISE",
+  "freeTier": true,
+  "billingEnabled": false,
+  "billingEnabledDuringProvisioning": false,
+  "createdBy": "operator identity (roles/owner); the migration principal holds no index authority",
+  "method": "Firestore Admin API POST collectionGroups/{cg}/indexes, one index at a time, each polled to READY before the next was created",
+  "hardRequiredCount": 3,
+  "hardReadyCount": 3,
+  "indexes": [
+    {
+      "collectionGroup": "trips",
+      "queryScope": "COLLECTION",
+      "fields": ["ownerUid", "businessId", "isDeleted", "startDate", "__name__"],
+      "classification": "REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE",
+      "hardDryRunGate": true,
+      "resource": "projects/mydesckpro/databases/default/collectionGroups/trips/indexes/CICAgOjXh4EK",
+      "createdAt": "2026-09-17T11:19:38.572Z",
+      "readyAt": "2026-09-17T11:20:23.464Z",
+      "state": "READY",
+      "useCase": "FirestoreTravelRepository.listTripsForBusiness: tenant + deletion state + start-date cursor, 25-result page.",
+      "freeTierImpact": "Serves the common travel list screen from an index instead of a tenant-wide scan."
+    },
+    {
+      "collectionGroup": "trips",
+      "queryScope": "COLLECTION",
+      "fields": ["ownerUid", "businessId", "isDeleted", "status", "startDate", "__name__"],
+      "classification": "REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE",
+      "hardDryRunGate": true,
+      "resource": "projects/mydesckpro/databases/default/collectionGroups/trips/indexes/CICAgJiUpoMK",
+      "createdAt": "2026-09-17T11:20:23.464Z",
+      "readyAt": "2026-09-17T11:21:07.176Z",
+      "state": "READY",
+      "useCase": "Same screen with a status filter applied.",
+      "freeTierImpact": "Same page bound; without it the scan dominates regardless of the filter."
+    },
+    {
+      "collectionGroup": "trips",
+      "queryScope": "COLLECTION",
+      "fields": ["ownerUid", "businessId", "isDeleted", "paymentDate", "__name__"],
+      "classification": "REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE",
+      "hardDryRunGate": true,
+      "resource": "projects/mydesckpro/databases/default/collectionGroups/trips/indexes/CICAgJiUsZIK",
+      "createdAt": "2026-09-17T11:21:07.176Z",
+      "readyAt": "2026-09-17T11:21:50.851Z",
+      "state": "READY",
+      "useCase": "FirestoreTravelDashboardRepository.listDashboardTrips paymentDate half (lines 73-74), reached from Dashboard.tsx:148. Year range bound at DASHBOARD_TRIPS_BOUND = 2000, no explicit orderBy so the implicit order is paymentDate then __name__.",
+      "freeTierImpact": "Without it the landing screen scans the tenant's entire live trips collection on every load while its startDate sibling reads an index."
+    }
+  ],
+  "notCreated": [
+    {
+      "collectionGroup": "tripInstallments",
+      "fields": ["ownerUid", "businessId", "status", "dueDate"],
+      "classification": "COST_OPTIMIZATION",
+      "hardDryRunGate": false,
+      "state": "MISSING",
+      "reason": "Not a hard-required gate. The mission permits creating only indexes classified as hard-required gates, so it was deliberately left unprovisioned."
+    }
+  ],
+  "cleanup": "Delete only by exact resource name, e.g. gcloud firestore indexes composite delete projects/mydesckpro/databases/default/collectionGroups/trips/indexes/CICAgJiUsZIK --project=mydesckpro --database=default. Never wildcard."
+}

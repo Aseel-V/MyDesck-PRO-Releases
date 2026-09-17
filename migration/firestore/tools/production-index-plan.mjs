@@ -23,6 +23,6 @@ const report={generatedAt:new Date().toISOString(),project:'mydesckpro',database
   missing:indexes.filter(i=>i.state==='MISSING').length,error:indexes.filter(i=>i.state==='ERROR').length,indexes,
   verification:'gcloud firestore indexes composite list --project=mydesckpro --database=default --format=json',
   cleanup:'Delete only a specific index resource created by the approved operation: gcloud firestore indexes composite delete EXACT_CREATED_INDEX_RESOURCE --project=mydesckpro --database=default. Never delete preexisting indexes or use wildcard cleanup.',
-  note:'Create only reviewed MISSING entries. The two hard-required trip indexes must become READY; the installment index is an explicit cost optimization. CREATING is not READY. Field overrides are outside these commands.'};
+  note:'Create only reviewed MISSING entries. Every hardDryRunGate spec must become READY; specs classified COST_OPTIMIZATION are not gates. CREATING is not READY. Field overrides are outside these commands. Live state is read from the inventory artifact, so refresh inspect-production-environment.mjs before trusting these states.'};
 writeFileSync('migration/reports/firebase-production-index-readiness.json',JSON.stringify(report,null,2)+'\n');
 console.log(JSON.stringify(report,null,2));
