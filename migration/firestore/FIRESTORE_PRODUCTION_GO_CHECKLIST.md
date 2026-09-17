@@ -1,5 +1,16 @@
 # Firestore Spark production GO checklist
 
+> **Superseded in part — see `migration/reports/FINAL_READINESS_CLOSURE_20260917.md` (run of 2026-09-17).**
+> Current measured state: `DRY_RUN_GO = NO_GO`, blockers `iam`, `realClientSmoke`, `secret`.
+> The index blocker is **CLOSED**: hard-required went 2 to 3 (paymentDate classified
+> REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE) and all 3 are READY in production.
+> IAM now targets the dedicated least-privilege principal `mydesck-firestore-migration@`, not
+> `mydesck-migration@`; approval hash `347d47b3...` supersedes `880933c4...`.
+> Candidate Rules hash `ec881395...` verified by real hashing; the candidate is NOT yet deployed.
+> The staged fingerprint `72d33bd9...` quoted below could not be reproduced and is unverifiable; invariance is
+> proven instead by staged tree object `e9b915a30d3c351d22abe750b061e982ef7cccc3`.
+
+
 Machine authority: `migration/reports/firestore-production-dry-run.json`.
 Current result: **26 PASS / 3 FAIL / 1 NOT_RUN / 0 MISSING → NO_GO** (dry-run 2026-09-17T07:29:27Z,
 commit `6f09f75`). Full narrative: `migration/reports/FINAL_PRODUCTION_READINESS.md` and
