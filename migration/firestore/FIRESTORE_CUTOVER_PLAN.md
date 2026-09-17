@@ -33,6 +33,12 @@ Production migration stops on nonzero financial delta, unknown data, quota risk,
 active Supabase dependency, an active product surface unsupported in Firebase mode, a missing
 hard-required index, IAM drift, or an unconfirmed credential revocation.
 
+Step 5's hard-required count now comes from explicit per-index review rather than array position, and one index
+(`trips … paymentDate`) is REVIEW_REQUIRED pending an operator classification. Step 9's source-count check compares a
+fresh live measurement against the rehearsal reference (1,474 = 1,474, delta 0) instead of a constant against
+itself. Step 8's real client smoke is now gated on a validated production artifact that an emulator run cannot
+satisfy.
+
 As of 2026-09-17 step 0 is closed and this plan has executed none of steps 1-13. Four readiness
 gates remain open: the migration IAM binding (step 6), the two hard-required indexes (step 5), the
 real production client-SDK smoke (step 8), and the credential revocation in step 2, which is still

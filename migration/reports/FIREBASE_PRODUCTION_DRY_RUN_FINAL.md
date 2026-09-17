@@ -7,7 +7,7 @@ Decision: **NO_GO.** 26 PASS / 3 FAIL / 1 NOT_RUN / 0 MISSING. Blockers: `iam`, 
 (`DRY_RUN_ORCHESTRATOR_REFUSES_WRITES`). It reads committed evidence and `git rev-parse`, and writes exactly one
 report.
 
-Run identity: `executableCommitSha 6f09f75b7b762651f71fe09da6fbf0ff759a6012`, generated 2026-09-17T07:29:27Z.
+Run identity: `executableCommitSha 5d8a64b2389bce259217932529d1d835739d208a`, generated 2026-09-17T08:42:36.340Z. This is the run produced after the gate fixes, so its source-count, index and client-smoke evidence are the corrected ones.
 
 ## Environment validations
 
@@ -73,8 +73,8 @@ Not passing:
 | Gate | Status | Evidence |
 | --- | --- | --- |
 | `iam` | FAIL | `mydesck-migration@mydesckpro.iam.gserviceaccount.com`, synthetic Firestore read HTTP 403 |
-| `indexes` | FAIL | ENTERPRISE, hard-required 2, ready 0, production composite indexes 0 |
-| `realClientSmoke` | NOT_RUN | hardcoded; requires deployed candidate Rules, both indexes READY, IAM, isolated production identities |
+| `indexes` | FAIL | ENTERPRISE, hard-required 2, ready 0, production composite indexes 0. All four configured specs now classified by identity; `trips … paymentDate` is REVIEW_REQUIRED / UNVERIFIED |
+| `realClientSmoke` | NOT_RUN | derived from `firestore-production-client-smoke.json`; reason `ARTIFACT_ABSENT`. Requires deployed candidate Rules, the hard-required indexes READY, IAM, and isolated production identities |
 | `secret` | FAIL | credential removed from active source; provider revocation confirmation missing |
 
 `criticalTransactions`, `maliciousClient` and `rollback` derive from
@@ -96,14 +96,20 @@ fabricated usage rate. Rules access budget passes: 80 paths, 0 over the 850 ceil
 - Write freeze: maintenance guard with no Supabase fallback; not engaged, and not to be engaged in a dry-run.
 - Backend selector: `src/main.tsx` still selects `src/production-main.tsx`. Cutover NOT_STARTED.
 
-## Defect affecting this dry-run
+## Source-count validation (defect fixed 2026-09-17)
 
-`production-dry-run.mjs:29` calls `validateCounts({ authUsers: auth.totalUsers, sourceRows: 1444 }, { authUsers: 10,
-sourceRows: 1444 })`. The source-row half compares a hardcoded constant against itself and never reads the live
-source, so it cannot detect drift. The pinned `expectedSource.rowsAtLastRehearsal: 1444` in
-`production-migration.json` also disagrees with both the live count (1,474) and the rehearsal it names (1,474 rows,
-1,466 migrated, 8 excluded, 0 unknown). Live has not drifted; the pin is wrong and the check is vacuous until it
-reads the live count.
+The source-row check previously compared a hardcoded 1,444 against the same hardcoded 1,444 and never read the live
+source, so it could not detect drift. It now takes its two halves from different artifacts and fails closed when
+either is missing, unproven, or shares an origin with the other.
+
+| Half | Origin | Value |
+| --- | --- | ---: |
+| Measured | `migration/reports/live-source-inventory.json` (fresh, 2026-09-17T08:31:01Z) | 1,474 rows / 77 tables |
+| Reference | `migration/reports/firestore-full-import.json` → `sourceCoverage.rows` | 1,474 rows / 77 tables |
+| Delta | — | **0** |
+
+The old 1,444 pin was a ledger-entry count from an earlier rehearsal generation, not a source-row count.
+`production-migration.json` now names the artifacts rather than carrying a number.
 
 ## Customer mutations
 

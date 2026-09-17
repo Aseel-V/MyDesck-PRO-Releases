@@ -2,9 +2,22 @@
 
 Machine authority: `migration/reports/staged-go.json`, `migration/reports/firestore-production-dry-run.json`.
 
-Current result: **DRY_RUN_GO = NO_GO.** Four blockers remain, unchanged in number from the previous report and
-matching it exactly: migration IAM, two hard-required Firestore indexes, the real production client-SDK smoke, and
-GitHub credential revocation. No new blocker was invented and none was hidden.
+Current result: **DRY_RUN_GO = NO_GO.** Four blockers remain, unchanged: migration IAM, the hard-required Firestore
+indexes, the real production client-SDK smoke, and GitHub credential revocation. No new blocker was invented and
+none was hidden.
+
+**Updated 2026-09-17 (second readiness pass).** Three gates could previously pass, or could never pass, without
+regard to evidence. All three are fixed and the fixes are covered by regression tests; the gate results themselves
+are unchanged, because no production evidence was fabricated to move them.
+
+| Defect | State |
+| --- | --- |
+| Source-row drift compared a constant with itself | **FIXED** — live measurement vs rehearsal reference, distinct origins, fails closed |
+| Index classification assigned by array position | **FIXED** — keyed by index identity; unreviewed specs fail closed |
+| `realClientSmoke` hardcoded `NOT_RUN` | **FIXED** — derived from a validated production artifact; emulator can never satisfy it |
+
+Evidence classes are labelled throughout: **fresh** (measured this pass), **historical** (recorded earlier, no live
+probe possible here), **emulator**, **production**, and **operator-required**.
 
 ## What this session could and could not do
 
@@ -77,15 +90,36 @@ authority cannot be combined in one identity. The live inventory and the dry-run
 `mydesck-migration@…`. Binding Firestore access to the identity that already holds `roles/firebaseauth.admin`
 contradicts that separation.
 
-**Operator action** — narrowest sufficient role, one identity at a time, conditioned to the single database where
-the organisation permits conditions:
+**Unresolved operator decision — which principal receives the role.** Two committed sources disagree, and this
+pass deliberately does not resolve it:
+
+- `migration/firestore/lib/environment-readiness.mjs` defines the *reviewed* binding `migration-writer` against
+  `mydesck-migration@mydesckpro.iam.gserviceaccount.com`, approval hash
+  `880933c418a8f9d4ce91e7447575238c65828b06d163b503db010e09bdfe9753`.
+- `FIRESTORE_IAM_REQUIREMENTS.md` says that identity "is not granted Firestore access" and prefers a **separate**
+  `mydesck-firestore-migration@mydesckpro.iam.gserviceaccount.com`, so Firebase Auth administrative authority and
+  Firestore data authority are not combined in one principal.
+
+`mydesck-migration@` already holds `roles/firebaseauth.admin`, so binding Firestore access to it is exactly the
+combination the requirements document warns against. Settle this before binding anything; do not grant to the
+wrong principal to make the gate green.
+
+**Operator action — the repository's own reviewed command** (`iamPlan('migration-writer')`), quoted rather than
+invented. If the separation decision goes the other way, substitute the principal and re-derive the approval hash
+through `iamPlan` instead of editing this text:
 
 ```
-gcloud projects add-iam-policy-binding mydesckpro \
-  --member="serviceAccount:mydesck-firestore-migration@mydesckpro.iam.gserviceaccount.com" \
-  --role="roles/datastore.user" \
-  --condition='expression=resource.name.startsWith("projects/mydesckpro/databases/default"),title=default-database-only,description=Migration tooling is limited to the default database'
+gcloud projects add-iam-policy-binding mydesckpro --member=serviceAccount:mydesck-migration@mydesckpro.iam.gserviceaccount.com --role=roles/datastore.user --condition=expression=resource.name=="projects/mydesckpro/databases/default" || resource.name.startsWith("projects/mydesckpro/databases/default/documents/"),title=mydesck-default-only
 ```
+
+Reversal, also defined by the repository:
+
+```
+gcloud projects remove-iam-policy-binding mydesckpro --member=serviceAccount:mydesck-migration@mydesckpro.iam.gserviceaccount.com --role=roles/datastore.user --condition=expression=resource.name=="projects/mydesckpro/databases/default" || resource.name.startsWith("projects/mydesckpro/databases/default/documents/"),title=mydesck-default-only
+```
+
+`assertIamApply` refuses `mode: apply` unless the exact approval hash is supplied, so an unreviewed binding cannot
+be applied by accident.
 
 `roles/datastore.user` is the documented read/write role for application service accounts and covers the entity
 CRUD and transaction permissions the migrator needs. Explicitly **not** to be granted: Owner, Editor, Firebase
@@ -95,7 +129,7 @@ After binding, re-run `inspect-production-environment.mjs` and require `migratio
 confirm by negative test that the identity still cannot change IAM, change billing, read unrelated secrets,
 administer unrelated services, or impersonate arbitrary service accounts.
 
-## Phase 3 — indexes: operator action, and a defect in the classifier
+## Phase 3 — indexes: operator action (classifier defect now fixed)
 
 Production currently has **0 composite indexes** (`existingComposite: 0`). Two are classified hard-required, both on
 `trips`, `queryScope: COLLECTION`:
@@ -106,7 +140,19 @@ Production currently has **0 composite indexes** (`existingComposite: 0`). Two a
 Create them one at a time from the reviewed plan with the narrow index-deployer identity — never a bulk
 `firestore:indexes` deploy — and wait for **READY**, not CREATING. Creating indexes does not require billing.
 
-**Defect reported, not silently corrected.** `enterprise-index-analysis.mjs:42-43` classifies by array position:
+**Defect FIXED 2026-09-17 (was: reported only).** Classification no longer depends on array position. It lives in
+`migration/firestore/config/index-classification.json`, keyed by index identity (collection group, query scope and
+the ordered field list), and `classifyIndexes` joins spec, review and live state on that identity. A spec with no
+reviewed entry is `REVIEW_REQUIRED`, never gates, and blocks the capability through `reviewComplete`, so a newly
+added index cannot inherit a neighbour's decision or pass unreviewed. `capabilityBlockers` no longer asserts
+`indexes.length === 3`. All four configured specs are now classified, where previously only three were.
+
+The `trips … paymentDate` index remains **REVIEW_REQUIRED / UNVERIFIED** and is deliberately not decided from
+resemblance: it is reachable and shares the gated indexes' tenant and deletion predicates, but it is a year range
+bounded at 2,000 rather than a 25-result page, and Enterprise rejects the Explain API the analyser uses (every
+recorded plan probe is HTTP 400), so no measurement supports a classification. An operator must classify it.
+
+The original defect, for the record — `enterprise-index-analysis.mjs` classified by array position:
 
 ```js
 classification: index < 2 ? 'REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE' : 'COST_OPTIMIZATION',
@@ -168,7 +214,15 @@ the deployed source, require `deployed hash == candidate hash`, and roll back im
 
 ## Phase 5 — real client-SDK smoke: NOT RUN
 
-`realClientSmoke` is hardcoded `NOT_RUN` at `production-dry-run.mjs:60`; it is not derived from any artifact.
+**Defect FIXED 2026-09-17.** `realClientSmoke` is now derived from
+`migration/reports/firestore-production-client-smoke.json` through `migration/firestore/lib/client-smoke-evidence.mjs`,
+which requires `target: PRODUCTION`, `project: mydesckpro`, the **client** SDK rather than the Admin SDK, a parseable
+timestamp, a run id, every required category passing, cleanup proving zero residual Auth users, documents and Storage
+objects, and zero production customer writes. Missing, malformed, stale-shaped, emulator-targeted or wrong-project
+artifacts are `NOT_RUN`. The gate currently reports `NOT_RUN` with reason `ARTIFACT_ABSENT`, which is correct: no
+production smoke has run.
+
+It was previously hardcoded `NOT_RUN`, so genuine production evidence could never have closed it.
 
 `migration/reports/firestore-spark-client-smoke.json` exists and passes, but records `target: "EMULATOR"`. It is
 emulator evidence and is what feeds `criticalTransactions`, `maliciousClient` and `rollback` — those three gates are
@@ -179,6 +233,38 @@ production test identities. It must use the Firebase **client** SDK against real
 Rules — never the Admin SDK, which bypasses Rules and therefore proves nothing about them — with a synthetic
 namespace (`migration-test--final-smoke-*`) and a unique `migrationRunId`, a cleanup manifest written before any
 resource is created, and exact-ID cleanup proving zero residue.
+
+## Producing the production client-smoke artifact
+
+The gate now consumes `migration/reports/firestore-production-client-smoke.json`. To close it, a run must use the
+Firebase **client** SDK (not the Admin SDK, which bypasses Rules and proves nothing about them) against the real
+project, with synthetic identities only, and write an artifact of this shape:
+
+```json
+{
+  "generatedAt": "<ISO-8601>",
+  "target": "PRODUCTION",
+  "project": "mydesckpro",
+  "clientSdk": true,
+  "migrationRunId": "migration-test--final-smoke-<uuid>",
+  "status": "PASS",
+  "categories": {
+    "auth": "PASS", "tourism": "PASS", "restaurant": "PASS", "supermarket": "PASS",
+    "autoRepair": "PASS", "carParts": "PASS", "maliciousClient": "DENIED",
+    "financial": "PASS", "hybridStorage": "PASS", "cleanup": "PASS"
+  },
+  "cleanup": { "status": "PASS", "authUsersRemaining": 0, "firestoreDocumentsRemaining": 0, "storageObjectsRemaining": 0 },
+  "productionCustomerWrites": 0
+}
+```
+
+Every field is checked. `target` other than `PRODUCTION`, a project other than `mydesckpro`, `clientSdk` false, an
+unparseable timestamp, a missing run id, any missing or non-passing category, any cleanup residue, or any non-zero
+customer write leaves the gate `NOT_RUN`. A cleanup manifest must be written before any resource is created, and
+only exact ids owned by that `migrationRunId` may be deleted — never a wildcard.
+
+Prerequisites, in order: the IAM binding, both hard-required indexes READY, and the candidate Rules deployed and
+hash-verified.
 
 ## Phase 6 — production dry-run
 
@@ -200,12 +286,28 @@ query helper refuses anything that is not a bare `SELECT`.
 Auth inventory (2026-09-11): 10 users, unknown **0**, accounted 10, uid mismatches 0, production Firebase imports
 **0**. Three users are classified `MANUAL_OPERATOR_ACTION` and require a purpose decision before any enablement.
 
-**Second defect reported, not silently corrected.** `production-migration.json` pins
-`expectedSource.rowsAtLastRehearsal: 1444`, and `production-dry-run.mjs:29` asserts
-`validateCounts({ sourceRows: 1444 }, { sourceRows: 1444 })` — it compares a constant against itself and never reads
-the live source. Live is **1,474** and the rehearsal recorded **1,474** (77 tables, 1,466 migrated, 8 excluded
-credentials, 0 unknown). The pin disagrees with both, so the drift check is presently vacuous. It should read the
-live count and compare against a pin that matches the rehearsal it names. Live has not drifted; the pin is wrong.
+**Second defect FIXED 2026-09-17.** The source-row check no longer compares a constant with itself. The measured
+half is `migration/reports/live-source-inventory.json`; the reference half is the rehearsal's own
+`sourceCoverage.rows` in `firestore-full-import.json`. `evaluateSourceCountDrift` refuses to compare them when
+either is absent, when the measurement is not read-only-proven, or when both share an origin, and it reports
+expected, measured, delta, the measurement timestamp and both origins.
+
+Result this pass: **expected 1,474 / measured 1,474 / delta 0**, tables 77 against 77, measured
+2026-09-17T08:31:01Z. The old pin of 1,444 was a ledger-entry count carried from an earlier rehearsal generation
+(`firestore-full-restart-proof.json .idempotency.ledgerEntries`), not a source-row count; `production-migration.json`
+no longer carries a hand-maintained number and names the artifacts instead.
+
+## New finding: the Rules plan artifact is stale about the candidate
+
+`migration/reports/firestore-production-rules-plan.json` (generated 2026-09-14T07:34:05Z) records
+`candidateSha256: e77ed17b8e3652a5523b25d4fb524f5afa4ec2de291ce23baf74d1a54349e9ba`, but `firestore.rules` was last
+changed by `36c976f` (tourism vertical, 2026-09-17) and now hashes to
+`ec88139550b4be4a149b475ed20330702c33a586d8074447c3d569d33307f98f`.
+
+Its `currentSha256` and `rollbackSha256` still match the captured release files and `candidateDeployed` is still
+false, so the deploy and rollback commands remain usable — but an operator who verified a deployment against that
+artifact's candidate hash would be checking the wrong ruleset. Use the hash computed from the file. The artifact
+should be regenerated by its own tool before any deployment.
 
 ## Phase 7 — GO state
 

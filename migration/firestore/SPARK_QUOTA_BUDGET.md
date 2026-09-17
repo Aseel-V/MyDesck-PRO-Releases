@@ -36,6 +36,14 @@ bound, not a measured usage rate.
 
 The two trip-list indexes remain required for acceptable free-tier usage because that screen is common and an unindexed scan more than doubles the conservative read-unit cost at the present corpus. The installment due-date index is a cost optimization at 37 current rows and is not a hard dry-run gate. It should be reconsidered as the collection grows.
 
-**Caveat on that classification (recorded 2026-09-17).** These labels are not currently derived from analysis. `migration/firestore/tools/enterprise-index-analysis.mjs` assigns them by array position (`index < 2 ? REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE : COST_OPTIMIZATION`) and explains only three hardcoded queries while mapping over four committed specs. The `trips (ownerUid, businessId, isDeleted, paymentDate)` spec was labelled a cost optimization by its position alone, although `FirestoreTravelDashboardRepository.listDashboardTrips` runs that range query with the same tenant and deletion predicates as the gated `startDate` index and is bounded at 2,000 rather than the 25-result page. The `tripInstallments` spec fell out of the classification list entirely. Re-derive each classification from query shape, bound and corpus before relying on the hard-required count. See `migration/reports/FINAL_PRODUCTION_READINESS.md`.
+**Classification source (updated 2026-09-17).** These labels are no longer derived from array position. Every
+configured index spec carries an explicit reviewed classification in
+`migration/firestore/config/index-classification.json`, keyed by index identity, and an unreviewed spec fails the
+dry-run index gate closed rather than inheriting a neighbour's label. The `trips (ownerUid, businessId, isDeleted,
+paymentDate)` index is recorded as **REVIEW_REQUIRED / UNVERIFIED**: it is reachable from the dashboard and shares
+the gated indexes' tenant and deletion predicates, but it is a year range bounded at 2,000 rather than a 25-result
+page, so its cost profile does not follow from theirs, and Enterprise rejects the Explain API the analyser uses
+(recorded plan probes are HTTP 400). An operator must classify it from a supported measurement before the
+hard-required count can be considered final. See `migration/reports/FINAL_PRODUCTION_READINESS.md`.
 
 Usage-rate telemetry is unavailable, so no daily customer activity is fabricated. A mixed workload must sum its actual units and remain below the published limits. Quota exhaustion remains a failed server operation: the app does not show financial success and never falls back to Supabase.
