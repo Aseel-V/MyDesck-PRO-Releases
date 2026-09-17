@@ -1,0 +1,20 @@
+{
+  "generatedAt": "2026-09-17T08:31:01.257Z",
+  "source": "LIVE_PRODUCTION_SOURCE",
+  "readOnly": true,
+  "productionMutations": 0,
+  "measured": {
+    "tables": 77,
+    "rows": 1474,
+    "authUsers": 10
+  },
+  "snapshot": {
+    "isolationLevel": "repeatable read",
+    "readOnlyStart": "on",
+    "readOnlyEnd": "on",
+    "rejectedWriteSqlState": "25006",
+    "successfulWrites": 0,
+    "transactionOutcome": "ROLLBACK",
+    "tlsCertificateVerification": "ENABLED"
+  }
+}

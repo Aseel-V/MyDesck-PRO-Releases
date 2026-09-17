@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-17T07:29:27.367Z",
-  "migrationRunId": "dryrun-6cd64511-e3d1-4786-a116-4071217d8140",
+  "generatedAt": "2026-09-17T08:42:36.340Z",
+  "migrationRunId": "dryrun-818666a5-a0b4-4829-99f7-ba3720f3941c",
   "architecture": "FIREBASE_SPARK_ONLY",
   "mode": "dry-run",
   "productionWrites": 0,
@@ -15,7 +15,7 @@
     "firebaseProject": "mydesckpro",
     "firestoreDatabaseId": "default"
   },
-  "executableCommitSha": "6f09f75b7b762651f71fe09da6fbf0ff759a6012",
+  "executableCommitSha": "5d8a64b2389bce259217932529d1d835739d208a",
   "configHashes": {
     "firestoreRules": "ec88139550b4be4a149b475ed20330702c33a586d8074447c3d569d33307f98f",
     "indexes": "b4321049ef068288250b8fd59faf935fbd6d78302edcf8b0a36b7177ae4e8bb2",
@@ -36,7 +36,23 @@
     },
     "auth": {
       "status": "PASS",
-      "evidence": "10/10; production import not started"
+      "evidence": {
+        "users": "10/10",
+        "unknown": 0,
+        "productionImports": 0,
+        "sourceCount": {
+          "status": "PASS",
+          "expectedRows": 1474,
+          "measuredRows": 1474,
+          "delta": 0,
+          "expectedTables": 77,
+          "measuredTables": 77,
+          "measuredAt": "2026-09-17T08:31:01.257Z",
+          "referenceOrigin": "migration/reports/firestore-full-import.json",
+          "measuredOrigin": "migration/reports/live-source-inventory.json",
+          "reasons": []
+        }
+      }
     },
     "iam": {
       "status": "FAIL",
@@ -87,8 +103,8 @@
         "hardReady": 0,
         "indexes": [
           {
-            "index": 1,
             "collectionGroup": "trips",
+            "queryScope": "COLLECTION",
             "fields": [
               {
                 "fieldPath": "ownerUid",
@@ -112,22 +128,19 @@
               }
             ],
             "query": "FirestoreTravelRepository.listTripsForBusiness: tenant, deletion state, start-date cursor.",
-            "state": "MISSING",
-            "plan": {
-              "http": 400,
-              "status": "INVALID_ARGUMENT",
-              "message": "Explain options are not supported in RunQuery API for Enterprise edition. Please use the ExecutePipeline API instead."
-            },
-            "corpusDocuments": 99,
-            "conservativeUnindexedReadUnits": 117,
+            "identity": "{\"collectionGroup\":\"trips\",\"queryScope\":\"COLLECTION\",\"fields\":[{\"fieldPath\":\"ownerUid\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"businessId\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"isDeleted\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"startDate\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"__name__\",\"order\":\"ASCENDING\"}]}",
             "classification": "REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE",
             "hardDryRunGate": true,
-            "rationale": "Common list query; full scans scale with the tenant collection and consume materially more read units than the 25-result page.",
-            "resource": null
+            "evidenceState": "REASONED_FROM_CORPUS",
+            "rationale": "The trips list is the common travel screen and pages 25 results. Enterprise executes unindexed queries, so the absence is a cost problem rather than a correctness one, but an unindexed scan of the recorded 99-trip corpus costs 117 conservative read units against 51 for the indexed page, and the cost scales with the tenant collection.",
+            "operatorAction": null,
+            "state": "MISSING",
+            "resource": null,
+            "productionState": null
           },
           {
-            "index": 2,
             "collectionGroup": "trips",
+            "queryScope": "COLLECTION",
             "fields": [
               {
                 "fieldPath": "ownerUid",
@@ -155,22 +168,55 @@
               }
             ],
             "query": "FirestoreTravelRepository.listTripsForBusiness with a status filter.",
-            "state": "MISSING",
-            "plan": {
-              "http": 400,
-              "status": "INVALID_ARGUMENT",
-              "message": "Explain options are not supported in RunQuery API for Enterprise edition. Please use the ExecutePipeline API instead."
-            },
-            "corpusDocuments": 99,
-            "conservativeUnindexedReadUnits": 117,
+            "identity": "{\"collectionGroup\":\"trips\",\"queryScope\":\"COLLECTION\",\"fields\":[{\"fieldPath\":\"ownerUid\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"businessId\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"isDeleted\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"status\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"startDate\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"__name__\",\"order\":\"ASCENDING\"}]}",
             "classification": "REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE",
             "hardDryRunGate": true,
-            "rationale": "Common list query; full scans scale with the tenant collection and consume materially more read units than the 25-result page.",
-            "resource": null
+            "evidenceState": "REASONED_FROM_CORPUS",
+            "rationale": "Same screen and the same 25-result page with a status filter applied; the unindexed cost is identical to the unfiltered list because the scan is what dominates.",
+            "operatorAction": null,
+            "state": "MISSING",
+            "resource": null,
+            "productionState": null
           },
           {
-            "index": 3,
+            "collectionGroup": "trips",
+            "queryScope": "COLLECTION",
+            "fields": [
+              {
+                "fieldPath": "ownerUid",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "businessId",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "isDeleted",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "paymentDate",
+                "order": "ASCENDING"
+              },
+              {
+                "fieldPath": "__name__",
+                "order": "ASCENDING"
+              }
+            ],
+            "query": "FirestoreTravelDashboardRepository.listDashboardTrips: tenant, deletion state, payment-date range of the year.",
+            "identity": "{\"collectionGroup\":\"trips\",\"queryScope\":\"COLLECTION\",\"fields\":[{\"fieldPath\":\"ownerUid\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"businessId\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"isDeleted\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"paymentDate\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"__name__\",\"order\":\"ASCENDING\"}]}",
+            "classification": "REVIEW_REQUIRED",
+            "hardDryRunGate": false,
+            "evidenceState": "UNVERIFIED",
+            "rationale": "Unresolved and deliberately not decided from resemblance. The query is genuinely reachable (Dashboard.tsx -> listDashboardTrips) and runs the same tenant and deletion predicates as the two gated indexes, but it is a year range bounded at DASHBOARD_TRIPS_BOUND = 2000 rather than a 25-result page, so its cost profile is not the same and cannot be inferred from the others. A production query plan would settle it; Enterprise rejects the Explain API used by the analyser (INVALID_ARGUMENT: Explain options are not supported in RunQuery API for Enterprise edition), so no measurement exists. An operator must classify it from a supported measurement before the index gate can pass.",
+            "operatorAction": "Measure this query against the production corpus with a supported Enterprise mechanism, then set classification, hardDryRunGate and evidenceState accordingly.",
+            "state": "MISSING",
+            "resource": null,
+            "productionState": null
+          },
+          {
             "collectionGroup": "tripInstallments",
+            "queryScope": "COLLECTION",
             "fields": [
               {
                 "fieldPath": "ownerUid",
@@ -190,18 +236,15 @@
               }
             ],
             "query": "FirestoreTravelRepository.listDueInstallments: tenant, active status set, due date.",
-            "state": "MISSING",
-            "plan": {
-              "http": 400,
-              "status": "INVALID_ARGUMENT",
-              "message": "Explain options are not supported in RunQuery API for Enterprise edition. Please use the ExecutePipeline API instead."
-            },
-            "corpusDocuments": 37,
-            "conservativeUnindexedReadUnits": 44,
+            "identity": "{\"collectionGroup\":\"tripInstallments\",\"queryScope\":\"COLLECTION\",\"fields\":[{\"fieldPath\":\"ownerUid\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"businessId\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"status\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"dueDate\",\"order\":\"ASCENDING\"}]}",
             "classification": "COST_OPTIMIZATION",
             "hardDryRunGate": false,
-            "rationale": "Current 37-row collection remains bounded; index reduces scan cost but its absence does not block a no-customer-write dry-run.",
-            "resource": null
+            "evidenceState": "REASONED_FROM_CORPUS",
+            "rationale": "The recorded corpus holds 37 installment rows, so a full scan costs 44 conservative read units. The index reduces that but its absence does not block a dry-run that writes no customer data. Revisit as the collection grows.",
+            "operatorAction": null,
+            "state": "MISSING",
+            "resource": null,
+            "productionState": null
           }
         ]
       }
@@ -359,7 +402,20 @@
     },
     "realClientSmoke": {
       "status": "NOT_RUN",
-      "evidence": "requires approved candidate Rules deployment, 2 hard-required Enterprise indexes READY, migration IAM, and isolated production test identities"
+      "evidence": {
+        "present": false,
+        "target": null,
+        "project": null,
+        "generatedAt": null,
+        "categories": null,
+        "cleanup": null,
+        "productionCustomerWrites": null,
+        "reasons": [
+          "ARTIFACT_ABSENT"
+        ],
+        "artifact": "migration/reports/firestore-production-client-smoke.json",
+        "requires": "approved candidate Rules deployment, hard-required Enterprise indexes READY, migration IAM, and isolated production test identities"
+      }
     },
     "bulkData": {
       "status": "PASS",
@@ -462,7 +518,23 @@
       {
         "name": "auth",
         "status": "PASS",
-        "evidence": "10/10; production import not started"
+        "evidence": {
+          "users": "10/10",
+          "unknown": 0,
+          "productionImports": 0,
+          "sourceCount": {
+            "status": "PASS",
+            "expectedRows": 1474,
+            "measuredRows": 1474,
+            "delta": 0,
+            "expectedTables": 77,
+            "measuredTables": 77,
+            "measuredAt": "2026-09-17T08:31:01.257Z",
+            "referenceOrigin": "migration/reports/firestore-full-import.json",
+            "measuredOrigin": "migration/reports/live-source-inventory.json",
+            "reasons": []
+          }
+        }
       },
       {
         "name": "iam",
@@ -516,8 +588,8 @@
           "hardReady": 0,
           "indexes": [
             {
-              "index": 1,
               "collectionGroup": "trips",
+              "queryScope": "COLLECTION",
               "fields": [
                 {
                   "fieldPath": "ownerUid",
@@ -541,22 +613,19 @@
                 }
               ],
               "query": "FirestoreTravelRepository.listTripsForBusiness: tenant, deletion state, start-date cursor.",
-              "state": "MISSING",
-              "plan": {
-                "http": 400,
-                "status": "INVALID_ARGUMENT",
-                "message": "Explain options are not supported in RunQuery API for Enterprise edition. Please use the ExecutePipeline API instead."
-              },
-              "corpusDocuments": 99,
-              "conservativeUnindexedReadUnits": 117,
+              "identity": "{\"collectionGroup\":\"trips\",\"queryScope\":\"COLLECTION\",\"fields\":[{\"fieldPath\":\"ownerUid\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"businessId\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"isDeleted\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"startDate\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"__name__\",\"order\":\"ASCENDING\"}]}",
               "classification": "REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE",
               "hardDryRunGate": true,
-              "rationale": "Common list query; full scans scale with the tenant collection and consume materially more read units than the 25-result page.",
-              "resource": null
+              "evidenceState": "REASONED_FROM_CORPUS",
+              "rationale": "The trips list is the common travel screen and pages 25 results. Enterprise executes unindexed queries, so the absence is a cost problem rather than a correctness one, but an unindexed scan of the recorded 99-trip corpus costs 117 conservative read units against 51 for the indexed page, and the cost scales with the tenant collection.",
+              "operatorAction": null,
+              "state": "MISSING",
+              "resource": null,
+              "productionState": null
             },
             {
-              "index": 2,
               "collectionGroup": "trips",
+              "queryScope": "COLLECTION",
               "fields": [
                 {
                   "fieldPath": "ownerUid",
@@ -584,22 +653,55 @@
                 }
               ],
               "query": "FirestoreTravelRepository.listTripsForBusiness with a status filter.",
-              "state": "MISSING",
-              "plan": {
-                "http": 400,
-                "status": "INVALID_ARGUMENT",
-                "message": "Explain options are not supported in RunQuery API for Enterprise edition. Please use the ExecutePipeline API instead."
-              },
-              "corpusDocuments": 99,
-              "conservativeUnindexedReadUnits": 117,
+              "identity": "{\"collectionGroup\":\"trips\",\"queryScope\":\"COLLECTION\",\"fields\":[{\"fieldPath\":\"ownerUid\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"businessId\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"isDeleted\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"status\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"startDate\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"__name__\",\"order\":\"ASCENDING\"}]}",
               "classification": "REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE",
               "hardDryRunGate": true,
-              "rationale": "Common list query; full scans scale with the tenant collection and consume materially more read units than the 25-result page.",
-              "resource": null
+              "evidenceState": "REASONED_FROM_CORPUS",
+              "rationale": "Same screen and the same 25-result page with a status filter applied; the unindexed cost is identical to the unfiltered list because the scan is what dominates.",
+              "operatorAction": null,
+              "state": "MISSING",
+              "resource": null,
+              "productionState": null
             },
             {
-              "index": 3,
+              "collectionGroup": "trips",
+              "queryScope": "COLLECTION",
+              "fields": [
+                {
+                  "fieldPath": "ownerUid",
+                  "order": "ASCENDING"
+                },
+                {
+                  "fieldPath": "businessId",
+                  "order": "ASCENDING"
+                },
+                {
+                  "fieldPath": "isDeleted",
+                  "order": "ASCENDING"
+                },
+                {
+                  "fieldPath": "paymentDate",
+                  "order": "ASCENDING"
+                },
+                {
+                  "fieldPath": "__name__",
+                  "order": "ASCENDING"
+                }
+              ],
+              "query": "FirestoreTravelDashboardRepository.listDashboardTrips: tenant, deletion state, payment-date range of the year.",
+              "identity": "{\"collectionGroup\":\"trips\",\"queryScope\":\"COLLECTION\",\"fields\":[{\"fieldPath\":\"ownerUid\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"businessId\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"isDeleted\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"paymentDate\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"__name__\",\"order\":\"ASCENDING\"}]}",
+              "classification": "REVIEW_REQUIRED",
+              "hardDryRunGate": false,
+              "evidenceState": "UNVERIFIED",
+              "rationale": "Unresolved and deliberately not decided from resemblance. The query is genuinely reachable (Dashboard.tsx -> listDashboardTrips) and runs the same tenant and deletion predicates as the two gated indexes, but it is a year range bounded at DASHBOARD_TRIPS_BOUND = 2000 rather than a 25-result page, so its cost profile is not the same and cannot be inferred from the others. A production query plan would settle it; Enterprise rejects the Explain API used by the analyser (INVALID_ARGUMENT: Explain options are not supported in RunQuery API for Enterprise edition), so no measurement exists. An operator must classify it from a supported measurement before the index gate can pass.",
+              "operatorAction": "Measure this query against the production corpus with a supported Enterprise mechanism, then set classification, hardDryRunGate and evidenceState accordingly.",
+              "state": "MISSING",
+              "resource": null,
+              "productionState": null
+            },
+            {
               "collectionGroup": "tripInstallments",
+              "queryScope": "COLLECTION",
               "fields": [
                 {
                   "fieldPath": "ownerUid",
@@ -619,18 +721,15 @@
                 }
               ],
               "query": "FirestoreTravelRepository.listDueInstallments: tenant, active status set, due date.",
-              "state": "MISSING",
-              "plan": {
-                "http": 400,
-                "status": "INVALID_ARGUMENT",
-                "message": "Explain options are not supported in RunQuery API for Enterprise edition. Please use the ExecutePipeline API instead."
-              },
-              "corpusDocuments": 37,
-              "conservativeUnindexedReadUnits": 44,
+              "identity": "{\"collectionGroup\":\"tripInstallments\",\"queryScope\":\"COLLECTION\",\"fields\":[{\"fieldPath\":\"ownerUid\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"businessId\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"status\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"dueDate\",\"order\":\"ASCENDING\"}]}",
               "classification": "COST_OPTIMIZATION",
               "hardDryRunGate": false,
-              "rationale": "Current 37-row collection remains bounded; index reduces scan cost but its absence does not block a no-customer-write dry-run.",
-              "resource": null
+              "evidenceState": "REASONED_FROM_CORPUS",
+              "rationale": "The recorded corpus holds 37 installment rows, so a full scan costs 44 conservative read units. The index reduces that but its absence does not block a dry-run that writes no customer data. Revisit as the collection grows.",
+              "operatorAction": null,
+              "state": "MISSING",
+              "resource": null,
+              "productionState": null
             }
           ]
         }
@@ -795,7 +894,20 @@
       {
         "name": "realClientSmoke",
         "status": "NOT_RUN",
-        "evidence": "requires approved candidate Rules deployment, 2 hard-required Enterprise indexes READY, migration IAM, and isolated production test identities"
+        "evidence": {
+          "present": false,
+          "target": null,
+          "project": null,
+          "generatedAt": null,
+          "categories": null,
+          "cleanup": null,
+          "productionCustomerWrites": null,
+          "reasons": [
+            "ARTIFACT_ABSENT"
+          ],
+          "artifact": "migration/reports/firestore-production-client-smoke.json",
+          "requires": "approved candidate Rules deployment, hard-required Enterprise indexes READY, migration IAM, and isolated production test identities"
+        }
       },
       {
         "name": "bulkData",

@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-09-12T15:05:37.475Z",
+  "generatedAt": "2026-09-17T08:41:15.854Z",
   "project": "mydesckpro",
   "database": "default",
   "mode": "plan",
   "productionMutations": 0,
-  "candidates": 3,
+  "candidates": 4,
   "hardRequired": 2,
   "hardReady": 0,
   "ready": 0,
   "creating": 0,
-  "missing": 3,
+  "missing": 4,
   "error": 0,
   "indexes": [
     {
@@ -38,20 +38,15 @@
         }
       ],
       "query": "FirestoreTravelRepository.listTripsForBusiness: tenant, deletion state, start-date cursor.",
+      "identity": "{\"collectionGroup\":\"trips\",\"queryScope\":\"COLLECTION\",\"fields\":[{\"fieldPath\":\"ownerUid\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"businessId\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"isDeleted\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"startDate\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"__name__\",\"order\":\"ASCENDING\"}]}",
+      "classification": "REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE",
+      "hardDryRunGate": true,
+      "evidenceState": "REASONED_FROM_CORPUS",
+      "rationale": "The trips list is the common travel screen and pages 25 results. Enterprise executes unindexed queries, so the absence is a cost problem rather than a correctness one, but an unindexed scan of the recorded 99-trip corpus costs 117 conservative read units against 51 for the indexed page, and the cost scales with the tenant collection.",
+      "operatorAction": null,
       "state": "MISSING",
       "resource": null,
       "productionState": null,
-      "index": 1,
-      "plan": {
-        "http": 400,
-        "status": "INVALID_ARGUMENT",
-        "message": "Explain options are not supported in RunQuery API for Enterprise edition. Please use the ExecutePipeline API instead."
-      },
-      "corpusDocuments": 99,
-      "conservativeUnindexedReadUnits": 117,
-      "classification": "REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE",
-      "hardDryRunGate": true,
-      "rationale": "Common list query; full scans scale with the tenant collection and consume materially more read units than the 25-result page.",
       "id": "candidate-1",
       "command": "gcloud 'firestore' 'indexes' 'composite' 'create' '--project=mydesckpro' '--database=default' '--collection-group=trips' '--query-scope=collection' '--field-config=field-path=ownerUid,order=ascending' '--field-config=field-path=businessId,order=ascending' '--field-config=field-path=isDeleted,order=ascending' '--field-config=field-path=startDate,order=ascending' '--field-config=field-path=__name__,order=ascending'"
     },
@@ -85,22 +80,55 @@
         }
       ],
       "query": "FirestoreTravelRepository.listTripsForBusiness with a status filter.",
+      "identity": "{\"collectionGroup\":\"trips\",\"queryScope\":\"COLLECTION\",\"fields\":[{\"fieldPath\":\"ownerUid\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"businessId\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"isDeleted\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"status\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"startDate\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"__name__\",\"order\":\"ASCENDING\"}]}",
+      "classification": "REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE",
+      "hardDryRunGate": true,
+      "evidenceState": "REASONED_FROM_CORPUS",
+      "rationale": "Same screen and the same 25-result page with a status filter applied; the unindexed cost is identical to the unfiltered list because the scan is what dominates.",
+      "operatorAction": null,
       "state": "MISSING",
       "resource": null,
       "productionState": null,
-      "index": 2,
-      "plan": {
-        "http": 400,
-        "status": "INVALID_ARGUMENT",
-        "message": "Explain options are not supported in RunQuery API for Enterprise edition. Please use the ExecutePipeline API instead."
-      },
-      "corpusDocuments": 99,
-      "conservativeUnindexedReadUnits": 117,
-      "classification": "REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE",
-      "hardDryRunGate": true,
-      "rationale": "Common list query; full scans scale with the tenant collection and consume materially more read units than the 25-result page.",
       "id": "candidate-2",
       "command": "gcloud 'firestore' 'indexes' 'composite' 'create' '--project=mydesckpro' '--database=default' '--collection-group=trips' '--query-scope=collection' '--field-config=field-path=ownerUid,order=ascending' '--field-config=field-path=businessId,order=ascending' '--field-config=field-path=isDeleted,order=ascending' '--field-config=field-path=status,order=ascending' '--field-config=field-path=startDate,order=ascending' '--field-config=field-path=__name__,order=ascending'"
+    },
+    {
+      "collectionGroup": "trips",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "ownerUid",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "businessId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "isDeleted",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "paymentDate",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ],
+      "query": "FirestoreTravelDashboardRepository.listDashboardTrips: tenant, deletion state, payment-date range of the year.",
+      "identity": "{\"collectionGroup\":\"trips\",\"queryScope\":\"COLLECTION\",\"fields\":[{\"fieldPath\":\"ownerUid\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"businessId\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"isDeleted\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"paymentDate\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"__name__\",\"order\":\"ASCENDING\"}]}",
+      "classification": "REVIEW_REQUIRED",
+      "hardDryRunGate": false,
+      "evidenceState": "UNVERIFIED",
+      "rationale": "Unresolved and deliberately not decided from resemblance. The query is genuinely reachable (Dashboard.tsx -> listDashboardTrips) and runs the same tenant and deletion predicates as the two gated indexes, but it is a year range bounded at DASHBOARD_TRIPS_BOUND = 2000 rather than a 25-result page, so its cost profile is not the same and cannot be inferred from the others. A production query plan would settle it; Enterprise rejects the Explain API used by the analyser (INVALID_ARGUMENT: Explain options are not supported in RunQuery API for Enterprise edition), so no measurement exists. An operator must classify it from a supported measurement before the index gate can pass.",
+      "operatorAction": "Measure this query against the production corpus with a supported Enterprise mechanism, then set classification, hardDryRunGate and evidenceState accordingly.",
+      "state": "MISSING",
+      "resource": null,
+      "productionState": null,
+      "id": "candidate-3",
+      "command": "gcloud 'firestore' 'indexes' 'composite' 'create' '--project=mydesckpro' '--database=default' '--collection-group=trips' '--query-scope=collection' '--field-config=field-path=ownerUid,order=ascending' '--field-config=field-path=businessId,order=ascending' '--field-config=field-path=isDeleted,order=ascending' '--field-config=field-path=paymentDate,order=ascending' '--field-config=field-path=__name__,order=ascending'"
     },
     {
       "collectionGroup": "tripInstallments",
@@ -124,21 +152,16 @@
         }
       ],
       "query": "FirestoreTravelRepository.listDueInstallments: tenant, active status set, due date.",
+      "identity": "{\"collectionGroup\":\"tripInstallments\",\"queryScope\":\"COLLECTION\",\"fields\":[{\"fieldPath\":\"ownerUid\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"businessId\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"status\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"dueDate\",\"order\":\"ASCENDING\"}]}",
+      "classification": "COST_OPTIMIZATION",
+      "hardDryRunGate": false,
+      "evidenceState": "REASONED_FROM_CORPUS",
+      "rationale": "The recorded corpus holds 37 installment rows, so a full scan costs 44 conservative read units. The index reduces that but its absence does not block a dry-run that writes no customer data. Revisit as the collection grows.",
+      "operatorAction": null,
       "state": "MISSING",
       "resource": null,
       "productionState": null,
-      "index": 3,
-      "plan": {
-        "http": 400,
-        "status": "INVALID_ARGUMENT",
-        "message": "Explain options are not supported in RunQuery API for Enterprise edition. Please use the ExecutePipeline API instead."
-      },
-      "corpusDocuments": 37,
-      "conservativeUnindexedReadUnits": 44,
-      "classification": "COST_OPTIMIZATION",
-      "hardDryRunGate": false,
-      "rationale": "Current 37-row collection remains bounded; index reduces scan cost but its absence does not block a no-customer-write dry-run.",
-      "id": "candidate-3",
+      "id": "candidate-4",
       "command": "gcloud 'firestore' 'indexes' 'composite' 'create' '--project=mydesckpro' '--database=default' '--collection-group=tripInstallments' '--query-scope=collection' '--field-config=field-path=ownerUid,order=ascending' '--field-config=field-path=businessId,order=ascending' '--field-config=field-path=status,order=ascending' '--field-config=field-path=dueDate,order=ascending'"
     }
   ],
