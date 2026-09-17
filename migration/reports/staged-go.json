@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-17T08:42:36.594Z",
+  "generatedAt": "2026-09-17T11:55:41.930Z",
   "readOnly": true,
   "productionMutations": 0,
   "architecture": "FIREBASE_AUTH_FIRESTORE_PLUS_SUPABASE_STORAGE_ONLY",
@@ -7,7 +7,7 @@
     "activeProductParity": "2026-09-17T05:54:50.381Z",
     "hybridStorageAuthProbe": "2026-09-14T09:43:52.719Z",
     "liveVerticalInventory": "2026-09-15T11:34:47.009Z",
-    "dryRun": "2026-09-17T08:42:36.340Z",
+    "dryRun": "2026-09-17T11:53:16.696Z",
     "harness": "PASS 39/39"
   },
   "verticals": [
@@ -159,14 +159,13 @@
     "DRY_RUN_GO": {
       "ownedGates": 8,
       "evaluatedGates": 45,
-      "pass": 41,
-      "fail": 3,
+      "pass": 42,
+      "fail": 2,
       "notRun": 1,
       "missing": 0,
       "decision": "NO_GO",
       "blockers": [
         "iam:FAIL",
-        "indexes:FAIL",
         "realClientSmoke:NOT_RUN",
         "secret:FAIL"
       ],
@@ -177,14 +176,13 @@
     "BULK_COPY_GO": {
       "ownedGates": 2,
       "evaluatedGates": 47,
-      "pass": 41,
-      "fail": 3,
+      "pass": 42,
+      "fail": 2,
       "notRun": 1,
       "missing": 2,
       "decision": "NO_GO",
       "blockers": [
         "iam:FAIL",
-        "indexes:FAIL",
         "realClientSmoke:NOT_RUN",
         "secret:FAIL",
         "productionSourceSnapshot:MISSING",
@@ -197,14 +195,13 @@
     "CUTOVER_GO": {
       "ownedGates": 3,
       "evaluatedGates": 50,
-      "pass": 41,
-      "fail": 3,
+      "pass": 42,
+      "fail": 2,
       "notRun": 1,
       "missing": 5,
       "decision": "NO_GO",
       "blockers": [
         "iam:FAIL",
-        "indexes:FAIL",
         "realClientSmoke:NOT_RUN",
         "secret:FAIL",
         "productionSourceSnapshot:MISSING",
@@ -220,14 +217,13 @@
     "POST_CUTOVER_HEALTHY": {
       "ownedGates": 3,
       "evaluatedGates": 53,
-      "pass": 41,
-      "fail": 3,
+      "pass": 42,
+      "fail": 2,
       "notRun": 1,
       "missing": 8,
       "decision": "NO_GO",
       "blockers": [
         "iam:FAIL",
-        "indexes:FAIL",
         "realClientSmoke:NOT_RUN",
         "secret:FAIL",
         "productionSourceSnapshot:MISSING",

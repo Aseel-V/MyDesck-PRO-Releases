@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-17T08:42:36.340Z",
-  "migrationRunId": "dryrun-818666a5-a0b4-4829-99f7-ba3720f3941c",
+  "generatedAt": "2026-09-17T11:53:16.696Z",
+  "migrationRunId": "dryrun-366c706e-a649-41fe-98d0-4fcc5832e4c2",
   "architecture": "FIREBASE_SPARK_ONLY",
   "mode": "dry-run",
   "productionWrites": 0,
@@ -15,7 +15,7 @@
     "firebaseProject": "mydesckpro",
     "firestoreDatabaseId": "default"
   },
-  "executableCommitSha": "5d8a64b2389bce259217932529d1d835739d208a",
+  "executableCommitSha": "aab9ef22097cd0124981cde9dfc6de6d3b1410c7",
   "configHashes": {
     "firestoreRules": "ec88139550b4be4a149b475ed20330702c33a586d8074447c3d569d33307f98f",
     "indexes": "b4321049ef068288250b8fd59faf935fbd6d78302edcf8b0a36b7177ae4e8bb2",
@@ -57,8 +57,8 @@
     "iam": {
       "status": "FAIL",
       "evidence": {
-        "identity": "mydesck-migration@mydesckpro.iam.gserviceaccount.com",
-        "syntheticRead": 403,
+        "identity": "mydesck-firestore-migration@mydesckpro.iam.gserviceaccount.com",
+        "syntheticRead": 0,
         "requiredRole": "roles/datastore.user scoped to projects/mydesckpro/databases/default where supported"
       }
     },
@@ -96,11 +96,11 @@
       }
     },
     "indexes": {
-      "status": "FAIL",
+      "status": "PASS",
       "evidence": {
         "edition": "ENTERPRISE",
-        "hardRequired": 2,
-        "hardReady": 0,
+        "hardRequired": 3,
+        "hardReady": 3,
         "indexes": [
           {
             "collectionGroup": "trips",
@@ -128,15 +128,15 @@
               }
             ],
             "query": "FirestoreTravelRepository.listTripsForBusiness: tenant, deletion state, start-date cursor.",
-            "identity": "{\"collectionGroup\":\"trips\",\"queryScope\":\"COLLECTION\",\"fields\":[{\"fieldPath\":\"ownerUid\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"businessId\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"isDeleted\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"startDate\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"__name__\",\"order\":\"ASCENDING\"}]}",
+            "identity": "{\"collectionGroup\":\"trips\",\"queryScope\":\"COLLECTION\",\"fields\":[{\"fieldPath\":\"ownerUid\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"businessId\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"isDeleted\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"startDate\",\"order\":\"ASCENDING\"}]}",
             "classification": "REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE",
             "hardDryRunGate": true,
             "evidenceState": "REASONED_FROM_CORPUS",
             "rationale": "The trips list is the common travel screen and pages 25 results. Enterprise executes unindexed queries, so the absence is a cost problem rather than a correctness one, but an unindexed scan of the recorded 99-trip corpus costs 117 conservative read units against 51 for the indexed page, and the cost scales with the tenant collection.",
             "operatorAction": null,
-            "state": "MISSING",
-            "resource": null,
-            "productionState": null
+            "state": "READY",
+            "resource": "projects/mydesckpro/databases/default/collectionGroups/trips/indexes/CICAgOjXh4EK",
+            "productionState": "READY"
           },
           {
             "collectionGroup": "trips",
@@ -168,15 +168,15 @@
               }
             ],
             "query": "FirestoreTravelRepository.listTripsForBusiness with a status filter.",
-            "identity": "{\"collectionGroup\":\"trips\",\"queryScope\":\"COLLECTION\",\"fields\":[{\"fieldPath\":\"ownerUid\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"businessId\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"isDeleted\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"status\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"startDate\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"__name__\",\"order\":\"ASCENDING\"}]}",
+            "identity": "{\"collectionGroup\":\"trips\",\"queryScope\":\"COLLECTION\",\"fields\":[{\"fieldPath\":\"ownerUid\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"businessId\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"isDeleted\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"status\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"startDate\",\"order\":\"ASCENDING\"}]}",
             "classification": "REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE",
             "hardDryRunGate": true,
             "evidenceState": "REASONED_FROM_CORPUS",
             "rationale": "Same screen and the same 25-result page with a status filter applied; the unindexed cost is identical to the unfiltered list because the scan is what dominates.",
             "operatorAction": null,
-            "state": "MISSING",
-            "resource": null,
-            "productionState": null
+            "state": "READY",
+            "resource": "projects/mydesckpro/databases/default/collectionGroups/trips/indexes/CICAgJiUpoMK",
+            "productionState": "READY"
           },
           {
             "collectionGroup": "trips",
@@ -204,15 +204,15 @@
               }
             ],
             "query": "FirestoreTravelDashboardRepository.listDashboardTrips: tenant, deletion state, payment-date range of the year.",
-            "identity": "{\"collectionGroup\":\"trips\",\"queryScope\":\"COLLECTION\",\"fields\":[{\"fieldPath\":\"ownerUid\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"businessId\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"isDeleted\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"paymentDate\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"__name__\",\"order\":\"ASCENDING\"}]}",
-            "classification": "REVIEW_REQUIRED",
-            "hardDryRunGate": false,
-            "evidenceState": "UNVERIFIED",
-            "rationale": "Unresolved and deliberately not decided from resemblance. The query is genuinely reachable (Dashboard.tsx -> listDashboardTrips) and runs the same tenant and deletion predicates as the two gated indexes, but it is a year range bounded at DASHBOARD_TRIPS_BOUND = 2000 rather than a 25-result page, so its cost profile is not the same and cannot be inferred from the others. A production query plan would settle it; Enterprise rejects the Explain API used by the analyser (INVALID_ARGUMENT: Explain options are not supported in RunQuery API for Enterprise edition), so no measurement exists. An operator must classify it from a supported measurement before the index gate can pass.",
-            "operatorAction": "Measure this query against the production corpus with a supported Enterprise mechanism, then set classification, hardDryRunGate and evidenceState accordingly.",
-            "state": "MISSING",
-            "resource": null,
-            "productionState": null
+            "identity": "{\"collectionGroup\":\"trips\",\"queryScope\":\"COLLECTION\",\"fields\":[{\"fieldPath\":\"ownerUid\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"businessId\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"isDeleted\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"paymentDate\",\"order\":\"ASCENDING\"}]}",
+            "classification": "REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE",
+            "hardDryRunGate": true,
+            "evidenceState": "REASONED_FROM_CORPUS",
+            "rationale": "Resolved from the real code path, not from resemblance. Reachability is proven: Dashboard.tsx:148 -> tripQueries.ts:82 -> FirestoreTravelDashboardRepository.listDashboardTrips, and also FirestoreTravelRepository.ts:473. The Dashboard is the application's landing screen, so this is the highest-frequency reachable query in the product. listDashboardTrips issues TWO queries in parallel (lines 73-74): a startDate range and a paymentDate range, each with the same ownerUid/businessId/isDeleted equalities and each bound at DASHBOARD_TRIPS_BOUND = 2000. There is no explicit orderBy, so Firestore's implicit ordering is the range field then __name__, which is exactly this index's field order. The startDate half is already served by the gated (ownerUid,businessId,isDeleted,startDate,__name__) index. Without this spec the paymentDate half is the only unserved half: on every dashboard load it falls back to merging the automatic single-field indexes and filtering the range, so its cost scales with the tenant's entire live trips collection instead of with the requested year. On the recorded 99-trip corpus that is ~99 documents scanned per load against ~25 for the year slice, and the ratio grows linearly with years of history per tenant. Correctness is not at stake: Firestore Enterprise executes the query unindexed, so this is not REQUIRED_FOR_CORRECTNESS. It is not LEGACY_UNREACHABLE because reachability is proven above, and not NOT_REQUIRED for the same reason. It is gated rather than left COST_OPTIMIZATION because the database is freeTier:true with billing disabled, the query sits on the landing screen, and its 2000-document bound is strictly larger than the 25-result page that justified gating the two sibling indexes. Fail-closed: the highest-frequency reachable query on a free-tier project is gated.",
+            "operatorAction": null,
+            "state": "READY",
+            "resource": "projects/mydesckpro/databases/default/collectionGroups/trips/indexes/CICAgJiUsZIK",
+            "productionState": "READY"
           },
           {
             "collectionGroup": "tripInstallments",
@@ -540,8 +540,8 @@
         "name": "iam",
         "status": "FAIL",
         "evidence": {
-          "identity": "mydesck-migration@mydesckpro.iam.gserviceaccount.com",
-          "syntheticRead": 403,
+          "identity": "mydesck-firestore-migration@mydesckpro.iam.gserviceaccount.com",
+          "syntheticRead": 0,
           "requiredRole": "roles/datastore.user scoped to projects/mydesckpro/databases/default where supported"
         }
       },
@@ -581,11 +581,11 @@
       },
       {
         "name": "indexes",
-        "status": "FAIL",
+        "status": "PASS",
         "evidence": {
           "edition": "ENTERPRISE",
-          "hardRequired": 2,
-          "hardReady": 0,
+          "hardRequired": 3,
+          "hardReady": 3,
           "indexes": [
             {
               "collectionGroup": "trips",
@@ -613,15 +613,15 @@
                 }
               ],
               "query": "FirestoreTravelRepository.listTripsForBusiness: tenant, deletion state, start-date cursor.",
-              "identity": "{\"collectionGroup\":\"trips\",\"queryScope\":\"COLLECTION\",\"fields\":[{\"fieldPath\":\"ownerUid\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"businessId\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"isDeleted\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"startDate\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"__name__\",\"order\":\"ASCENDING\"}]}",
+              "identity": "{\"collectionGroup\":\"trips\",\"queryScope\":\"COLLECTION\",\"fields\":[{\"fieldPath\":\"ownerUid\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"businessId\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"isDeleted\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"startDate\",\"order\":\"ASCENDING\"}]}",
               "classification": "REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE",
               "hardDryRunGate": true,
               "evidenceState": "REASONED_FROM_CORPUS",
               "rationale": "The trips list is the common travel screen and pages 25 results. Enterprise executes unindexed queries, so the absence is a cost problem rather than a correctness one, but an unindexed scan of the recorded 99-trip corpus costs 117 conservative read units against 51 for the indexed page, and the cost scales with the tenant collection.",
               "operatorAction": null,
-              "state": "MISSING",
-              "resource": null,
-              "productionState": null
+              "state": "READY",
+              "resource": "projects/mydesckpro/databases/default/collectionGroups/trips/indexes/CICAgOjXh4EK",
+              "productionState": "READY"
             },
             {
               "collectionGroup": "trips",
@@ -653,15 +653,15 @@
                 }
               ],
               "query": "FirestoreTravelRepository.listTripsForBusiness with a status filter.",
-              "identity": "{\"collectionGroup\":\"trips\",\"queryScope\":\"COLLECTION\",\"fields\":[{\"fieldPath\":\"ownerUid\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"businessId\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"isDeleted\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"status\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"startDate\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"__name__\",\"order\":\"ASCENDING\"}]}",
+              "identity": "{\"collectionGroup\":\"trips\",\"queryScope\":\"COLLECTION\",\"fields\":[{\"fieldPath\":\"ownerUid\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"businessId\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"isDeleted\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"status\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"startDate\",\"order\":\"ASCENDING\"}]}",
               "classification": "REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE",
               "hardDryRunGate": true,
               "evidenceState": "REASONED_FROM_CORPUS",
               "rationale": "Same screen and the same 25-result page with a status filter applied; the unindexed cost is identical to the unfiltered list because the scan is what dominates.",
               "operatorAction": null,
-              "state": "MISSING",
-              "resource": null,
-              "productionState": null
+              "state": "READY",
+              "resource": "projects/mydesckpro/databases/default/collectionGroups/trips/indexes/CICAgJiUpoMK",
+              "productionState": "READY"
             },
             {
               "collectionGroup": "trips",
@@ -689,15 +689,15 @@
                 }
               ],
               "query": "FirestoreTravelDashboardRepository.listDashboardTrips: tenant, deletion state, payment-date range of the year.",
-              "identity": "{\"collectionGroup\":\"trips\",\"queryScope\":\"COLLECTION\",\"fields\":[{\"fieldPath\":\"ownerUid\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"businessId\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"isDeleted\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"paymentDate\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"__name__\",\"order\":\"ASCENDING\"}]}",
-              "classification": "REVIEW_REQUIRED",
-              "hardDryRunGate": false,
-              "evidenceState": "UNVERIFIED",
-              "rationale": "Unresolved and deliberately not decided from resemblance. The query is genuinely reachable (Dashboard.tsx -> listDashboardTrips) and runs the same tenant and deletion predicates as the two gated indexes, but it is a year range bounded at DASHBOARD_TRIPS_BOUND = 2000 rather than a 25-result page, so its cost profile is not the same and cannot be inferred from the others. A production query plan would settle it; Enterprise rejects the Explain API used by the analyser (INVALID_ARGUMENT: Explain options are not supported in RunQuery API for Enterprise edition), so no measurement exists. An operator must classify it from a supported measurement before the index gate can pass.",
-              "operatorAction": "Measure this query against the production corpus with a supported Enterprise mechanism, then set classification, hardDryRunGate and evidenceState accordingly.",
-              "state": "MISSING",
-              "resource": null,
-              "productionState": null
+              "identity": "{\"collectionGroup\":\"trips\",\"queryScope\":\"COLLECTION\",\"fields\":[{\"fieldPath\":\"ownerUid\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"businessId\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"isDeleted\",\"order\":\"ASCENDING\"},{\"fieldPath\":\"paymentDate\",\"order\":\"ASCENDING\"}]}",
+              "classification": "REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE",
+              "hardDryRunGate": true,
+              "evidenceState": "REASONED_FROM_CORPUS",
+              "rationale": "Resolved from the real code path, not from resemblance. Reachability is proven: Dashboard.tsx:148 -> tripQueries.ts:82 -> FirestoreTravelDashboardRepository.listDashboardTrips, and also FirestoreTravelRepository.ts:473. The Dashboard is the application's landing screen, so this is the highest-frequency reachable query in the product. listDashboardTrips issues TWO queries in parallel (lines 73-74): a startDate range and a paymentDate range, each with the same ownerUid/businessId/isDeleted equalities and each bound at DASHBOARD_TRIPS_BOUND = 2000. There is no explicit orderBy, so Firestore's implicit ordering is the range field then __name__, which is exactly this index's field order. The startDate half is already served by the gated (ownerUid,businessId,isDeleted,startDate,__name__) index. Without this spec the paymentDate half is the only unserved half: on every dashboard load it falls back to merging the automatic single-field indexes and filtering the range, so its cost scales with the tenant's entire live trips collection instead of with the requested year. On the recorded 99-trip corpus that is ~99 documents scanned per load against ~25 for the year slice, and the ratio grows linearly with years of history per tenant. Correctness is not at stake: Firestore Enterprise executes the query unindexed, so this is not REQUIRED_FOR_CORRECTNESS. It is not LEGACY_UNREACHABLE because reachability is proven above, and not NOT_REQUIRED for the same reason. It is gated rather than left COST_OPTIMIZATION because the database is freeTier:true with billing disabled, the query sits on the landing screen, and its 2000-document bound is strictly larger than the 25-result page that justified gating the two sibling indexes. Fail-closed: the highest-frequency reachable query on a free-tier project is gated.",
+              "operatorAction": null,
+              "state": "READY",
+              "resource": "projects/mydesckpro/databases/default/collectionGroups/trips/indexes/CICAgJiUsZIK",
+              "productionState": "READY"
             },
             {
               "collectionGroup": "tripInstallments",
@@ -1008,21 +1008,19 @@
         "evidence": "Spark plan and billing-disabled fail-closed runtime selector; cutover not started"
       }
     ],
-    "pass": 26,
-    "fail": 3,
+    "pass": 27,
+    "fail": 2,
     "notRun": 1,
     "missing": 0,
     "decision": "NO_GO",
     "blockers": [
       "iam",
-      "indexes",
       "realClientSmoke",
       "secret"
     ]
   },
   "knownBlockers": [
     "iam",
-    "indexes",
     "realClientSmoke",
     "secret"
   ],
