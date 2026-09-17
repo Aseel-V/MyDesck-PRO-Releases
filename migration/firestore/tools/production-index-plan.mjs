@@ -1,17 +1,20 @@
 #!/usr/bin/env node
 import { readFileSync, writeFileSync } from 'node:fs';
-import { indexReadiness } from '../lib/environment-readiness.mjs';
+import { indexReadiness, classifyIndexes } from '../lib/environment-readiness.mjs';
 if(process.argv.some(a=>a.startsWith('--mode=') && a!=='--mode=plan')) throw Error('OPERATOR_INDEX_DEPLOYMENT_REQUIRED');
 const required=JSON.parse(readFileSync('migration/firestore/rules/firestore.indexes.json','utf8')).indexes;
 const inventory=JSON.parse(readFileSync('migration/reports/firebase-production-environment-inventory.json','utf8'));
 const analysis=JSON.parse(readFileSync('migration/reports/firestore-enterprise-index-analysis.json','utf8'));
+const reviews=JSON.parse(readFileSync('migration/firestore/config/index-classification.json','utf8'));
 const quote=s=>`'${s.replaceAll("'","''")}'`;
-const indexes=indexReadiness(required,inventory.evidence.indexes).map((entry,i)=>{
+// Joined by index identity, never by array position: the operator command for a spec must carry that spec's own
+// reviewed classification, so reordering firestore.indexes.json cannot attach the wrong rationale to a command.
+const reviewed=classifyIndexes(required,reviews.classifications,indexReadiness(required,inventory.evidence.indexes));
+const indexes=reviewed.indexes.map((entry,i)=>{
   const args=['firestore','indexes','composite','create','--project=mydesckpro','--database=default',
     `--collection-group=${entry.collectionGroup}`,'--query-scope=collection',
     ...entry.fields.map(f=>`--field-config=field-path=${f.fieldPath},order=${f.order.toLowerCase()}`)];
-  return {...entry,...analysis.classifications[i],state:entry.state,resource:entry.resource,
-    id:`candidate-${i+1}`,command:`gcloud ${args.map(quote).join(' ')}`};
+  return {...entry,id:`candidate-${i+1}`,command:`gcloud ${args.map(quote).join(' ')}`};
 });
 const report={generatedAt:new Date().toISOString(),project:'mydesckpro',database:'default',mode:'plan',productionMutations:0,
   candidates:indexes.length,hardRequired:indexes.filter(i=>i.hardDryRunGate).length,

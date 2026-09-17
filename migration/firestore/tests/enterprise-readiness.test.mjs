@@ -1,27 +1,42 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { classifyIndexes, INDEX_CLASSIFICATIONS } from '../lib/environment-readiness.mjs';
 
 const read = path => JSON.parse(readFileSync(path, 'utf8'));
 const analysis = read('migration/reports/firestore-enterprise-index-analysis.json');
 const indexes = read('migration/firestore/rules/firestore.indexes.json').indexes;
+const reviews = read('migration/firestore/config/index-classification.json').classifications;
 const iam = read('migration/reports/firestore-production-iam-analysis.json');
 const rules = read('migration/reports/firestore-production-rules-plan.json');
 
-test('Enterprise index decisions cover all candidates without Standard functional assumptions', () => {
+test('Enterprise index decisions cover every configured spec, by identity rather than position', () => {
   assert.equal(analysis.edition, 'ENTERPRISE');
-  assert.equal(analysis.classifications.length, 3);
-  assert.equal(analysis.classifications.filter(i => i.hardDryRunGate).length, 2);
-  assert.equal(analysis.classifications[2].classification, 'COST_OPTIMIZATION');
-  assert.ok(analysis.classifications.every(i => !['UNKNOWN','FUNCTIONALLY_REQUIRED'].includes(i.classification)));
+  // Every configured spec carries an explicit reviewed classification; none is inferred from array order.
+  const review = classifyIndexes(indexes, reviews, []);
+  assert.equal(review.indexes.length, indexes.length);
+  assert.deepEqual(review.orphanedReviews, []);
+  assert.ok(review.indexes.every(i => INDEX_CLASSIFICATIONS.includes(i.classification)));
+  // The installment due-date index is a cost optimisation and never gates the dry-run.
+  const installments = review.indexes.find(i => i.collectionGroup === 'tripInstallments');
+  assert.equal(installments.classification, 'COST_OPTIMIZATION');
+  assert.equal(installments.hardDryRunGate, false);
+  assert.ok(review.indexes.every(i => !['UNKNOWN','FUNCTIONALLY_REQUIRED'].includes(i.classification)));
 });
 
 test('paginated Enterprise queries include explicit stable document ordering', () => {
-  assert.deepEqual(indexes.slice(0,2).map(index => index.fields.at(-1)), [
-    { fieldPath: '__name__', order: 'ASCENDING' },
-    { fieldPath: '__name__', order: 'ASCENDING' },
-  ]);
-  assert.notEqual(indexes[2].fields.at(-1).fieldPath, '__name__');
+  // Identified by what the index is for, not by where it sits in the file: every paginated `trips` cursor
+  // query declares the __name__ tie-breaker, and the unpaginated installment due-date query does not.
+  const paginated = indexes.filter(index => index.collectionGroup === 'trips');
+  assert.ok(paginated.length >= 2);
+  for (const index of paginated) {
+    assert.deepEqual(index.fields.at(-1), { fieldPath: '__name__', order: 'ASCENDING' });
+  }
+  const installments = indexes.filter(index => index.collectionGroup === 'tripInstallments');
+  assert.ok(installments.length >= 1);
+  for (const index of installments) {
+    assert.notEqual(index.fields.at(-1).fieldPath, '__name__');
+  }
 });
 
 test('migration IAM plan is narrow and remains unapplied', () => {

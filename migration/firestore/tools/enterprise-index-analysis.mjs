@@ -4,6 +4,7 @@ import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { writeReport } from '../../tools/lib/write-report.mjs';
+import { classifyIndexes, indexShape } from '../lib/environment-readiness.mjs';
 
 const project = 'mydesckpro';
 const database = 'default';
@@ -12,6 +13,7 @@ const token = execFileSync(join(sdk, 'platform/bundledpython/python.exe'),
   [join(sdk, 'lib/gcloud.py'), 'auth', 'print-access-token'],
   { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 60000 }).trim();
 const specs = JSON.parse(readFileSync('migration/firestore/rules/firestore.indexes.json', 'utf8')).indexes;
+const reviews = JSON.parse(readFileSync('migration/firestore/config/index-classification.json', 'utf8'));
 const field = (fieldPath, value) => ({ fieldFilter: { field: { fieldPath }, op: 'EQUAL', value } });
 const and = (...filters) => ({ compositeFilter: { op: 'AND', filters } });
 const queries = [
@@ -34,22 +36,33 @@ const plans = [];
 for (let i=0;i<queries.length;i+=1) plans.push(await explain(queries[i]));
 const corpus = { trips: 99, tripInstallments: 37, maximumDocumentBytes: 4835 };
 const fullScanUnits = (documents) => Math.ceil(documents * corpus.maximumDocumentBytes / 4096);
-const classifications = specs.map((spec,index) => ({
-  index: index + 1, collectionGroup: spec.collectionGroup, fields: spec.fields,
-  query: spec['//'], state: 'MISSING', plan: plans[index],
-  corpusDocuments: spec.collectionGroup === 'trips' ? corpus.trips : corpus.tripInstallments,
-  conservativeUnindexedReadUnits: fullScanUnits(spec.collectionGroup === 'trips' ? corpus.trips : corpus.tripInstallments),
-  classification: index < 2 ? 'REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE' : 'COST_OPTIMIZATION',
-  hardDryRunGate: index < 2,
-  rationale: index < 2
-    ? 'Common list query; full scans scale with the tenant collection and consume materially more read units than the 25-result page.'
-    : 'Current 37-row collection remains bounded; index reduces scan cost but its absence does not block a no-customer-write dry-run.',
+// Classification is NOT derived here. It comes from the reviewed config, joined by index identity, so that
+// re-running this tool cannot relabel an index because of where it sits in firestore.indexes.json and cannot
+// overwrite a reviewer's decision with a positional guess. A spec with no reviewed entry stays REVIEW_REQUIRED
+// and fails the dry-run index gate closed. This tool contributes the measured half: the query plan, when the
+// API supports it, and the conservative unindexed cost at the recorded corpus.
+const reviewed = classifyIndexes(specs, reviews.classifications, []);
+const planByIdentity = new Map(specs.map((spec, index) => [indexShape(spec), plans[index] ?? null]));
+const classifications = reviewed.indexes.map((entry, index) => ({
+  index: index + 1, collectionGroup: entry.collectionGroup, queryScope: entry.queryScope, fields: entry.fields,
+  query: entry.query, state: 'MISSING', plan: planByIdentity.get(entry.identity) ?? null,
+  corpusDocuments: entry.collectionGroup === 'trips' ? corpus.trips : corpus.tripInstallments,
+  conservativeUnindexedReadUnits: fullScanUnits(entry.collectionGroup === 'trips' ? corpus.trips : corpus.tripInstallments),
+  classification: entry.classification,
+  hardDryRunGate: entry.hardDryRunGate,
+  evidenceState: entry.evidenceState,
+  rationale: entry.rationale,
+  operatorAction: entry.operatorAction,
 }));
 const report = {
   generatedAt: new Date().toISOString(), project, database, edition: 'ENTERPRISE', mode: 'NATIVE', readOnly: true,
   productionMutations: 0, officialModel: { unindexedQueriesExecute: true, readUnitTrancheBytes: 4096, writeUnitTrancheBytes: 1024 },
   corpus, classifications, hardRequiredIndexes: classifications.filter((item)=>item.hardDryRunGate).length,
   hardRequiredReady: 0,
+  classificationSource: 'migration/firestore/config/index-classification.json',
+  reviewComplete: reviewed.reviewComplete,
+  unreviewed: reviewed.unreviewed,
+  orphanedReviews: reviewed.orphanedReviews,
 };
 writeReport('migration/reports/firestore-enterprise-index-analysis.json', `${JSON.stringify(report,null,2)}\n`);
 console.log(JSON.stringify({plans:plans.map(p=>p.http),classifications:classifications.map(i=>i.classification),hardRequired:report.hardRequiredIndexes,ready:report.hardRequiredReady}));

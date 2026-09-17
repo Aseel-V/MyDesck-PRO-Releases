@@ -2,9 +2,10 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
-import { evaluateGo, validateCounts } from '../lib/production-guard.mjs';
-import { indexReadiness } from '../lib/environment-readiness.mjs';
+import { evaluateGo, validateCounts, evaluateSourceCountDrift } from '../lib/production-guard.mjs';
+import { indexReadiness, classifyIndexes } from '../lib/environment-readiness.mjs';
 import { verifyRulesCapture } from '../lib/environment-go-evidence.mjs';
+import { evaluateProductionClientSmoke } from '../lib/client-smoke-evidence.mjs';
 import { writeReport } from '../../tools/lib/write-report.mjs';
 
 const value = (name, fallback) => process.argv.find((x) => x.startsWith(`${name}=`))?.slice(name.length + 1) ?? fallback;
@@ -18,22 +19,49 @@ const environment = readJson('migration/reports/firebase-production-environment-
 const auth = readJson('migration/reports/firestore-auth-production-readiness.json');
 const delta = readJson('migration/firestore/config/production-delta-map.json');
 const rehearsal = readJson('migration/reports/firestore-full-reconciliation.json');
+// The rehearsal IMPORT artifact carries sourceCoverage; the reconciliation artifact above does not. It is the
+// reference half of the source-count drift check, and is a different origin from the live measurement.
+const rehearsalImport = readJson('migration/reports/firestore-full-import.json');
 const search = readJson('migration/reports/firestore-search-inventory.json');
 const spark = readJson('migration/reports/firebase-spark-runtime-proof.json');
-const enterpriseIndexes = readJson('migration/reports/firestore-enterprise-index-analysis.json');
 const parity = existsSync('migration/reports/active-product-parity.json') ? readJson('migration/reports/active-product-parity.json') : null;
 const harness = existsSync('migration/reports/firestore-full-harness.json') ? readJson('migration/reports/firestore-full-harness.json') : null;
 const clientSmoke = existsSync('migration/reports/firestore-spark-client-smoke.json') ? readJson('migration/reports/firestore-spark-client-smoke.json') : null;
+// A separate artifact, so the emulator smoke above can never be read as production evidence.
+const productionSmoke = existsSync('migration/reports/firestore-production-client-smoke.json') ? readJson('migration/reports/firestore-production-client-smoke.json') : null;
+const liveSource = existsSync('migration/reports/live-source-inventory.json') ? readJson('migration/reports/live-source-inventory.json') : null;
+const indexClassification = readJson('migration/firestore/config/index-classification.json');
 const suite = (label) => harness?.suites?.find((item) => item.label === label)?.outcome;
 
-validateCounts({ authUsers: auth.totalUsers, sourceRows: 1444 }, { authUsers: 10, sourceRows: 1444 });
+// The Auth count is compared against the recorded inventory; that half was never vacuous. Source rows are
+// deliberately not passed here: they are evaluated below against a live measurement instead of a constant.
+validateCounts({ authUsers: auth.totalUsers, sourceRows: null },
+  { authUsers: config.expectedSource.usersAtLastInventory, sourceRows: null });
+// The source-row half takes its two sides from different artifacts: a live read-only measurement, and the
+// rehearsal this migration is pinned to. Passing one constant to both sides is what made the old check vacuous.
+const sourceDrift = evaluateSourceCountDrift({
+  measured: liveSource && {
+    rows: liveSource.measured?.rows, tables: liveSource.measured?.tables,
+    generatedAt: liveSource.generatedAt, origin: config.expectedSource.liveMeasurementArtifact,
+    readOnlyProven: liveSource.snapshot?.rejectedWriteSqlState === '25006' && liveSource.snapshot?.successfulWrites === 0,
+  },
+  reference: {
+    rows: rehearsalImport.sourceCoverage?.rows, tables: rehearsalImport.sourceCoverage?.tables,
+    origin: config.expectedSource.rowsReferenceArtifact,
+  },
+});
 const commitSha = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
 const env = environment.evidence;
 const indexSpecs = readJson('migration/firestore/rules/firestore.indexes.json').indexes;
 const indexes = indexReadiness(indexSpecs, env.indexes);
-const classifiedIndexes = enterpriseIndexes.classifications.map((analysis, index) => ({ ...analysis,
-  state: indexes[index]?.state ?? 'ERROR', resource: indexes[index]?.resource ?? null }));
-const hardIndexesReady = classifiedIndexes.filter((item)=>item.hardDryRunGate).every((item)=>item.state==='READY');
+// Joined by index identity, never by array position: reordering firestore.indexes.json cannot change which
+// classification applies to which spec, and a spec with no reviewed entry is REVIEW_REQUIRED and fails closed.
+const indexReview = classifyIndexes(indexSpecs, indexClassification.classifications, indexes);
+const classifiedIndexes = indexReview.indexes;
+const hardIndexesReady = indexReview.reviewComplete
+  && indexReview.hardRequired === indexReview.hardRequiredReady
+  && classifiedIndexes.filter((item) => item.hardDryRunGate).every((item) => item.state === 'READY');
+const realSmoke = evaluateProductionClientSmoke(productionSmoke);
 const rulesCaptured = verifyRulesCapture(env);
 const clientSuite = clientSmoke?.status === 'PASS' && clientSmoke?.clientSdk === true;
 const rulesSuite = suite('Firestore Rules') === 'PASS';
@@ -44,7 +72,12 @@ const identityOk = inventory.project.id === config.firebaseProject &&
 const evidence = {
   environment: { status: identityOk ? 'PASS' : 'FAIL', evidence: 'project mydesckpro and literal database default verified' },
   sparkPlan: { status: env.billing.http === 200 && env.billing.data.billingEnabled === false && env.billing.data.accountLinked === false ? 'PASS' : 'FAIL', evidence: { billingEnabled: env.billing.data.billingEnabled, accountLinked: env.billing.data.accountLinked, expectedPlan: 'SPARK' } },
-  auth: { status: auth.unknown === 0 && auth.accounted === auth.totalUsers ? 'PASS' : 'FAIL', evidence: `${auth.accounted}/${auth.totalUsers}; production import not started` },
+  auth: { status: auth.unknown === 0 && auth.accounted === auth.totalUsers && sourceDrift.status === 'PASS' ? 'PASS' : 'FAIL',
+    evidence: { users: `${auth.accounted}/${auth.totalUsers}`, unknown: auth.unknown, productionImports: auth.productionFirebaseImports ?? 0,
+      sourceCount: { status: sourceDrift.status, expectedRows: sourceDrift.expected, measuredRows: sourceDrift.measured,
+        delta: sourceDrift.delta, expectedTables: sourceDrift.expectedTables, measuredTables: sourceDrift.measuredTables,
+        measuredAt: sourceDrift.measuredAt, referenceOrigin: sourceDrift.referenceOrigin,
+        measuredOrigin: sourceDrift.measuredOrigin, reasons: sourceDrift.reasons } } },
   iam: { status: env.migrationSyntheticRead.http === 200 ? 'PASS' : 'FAIL', evidence: { identity: environment.migrationIdentity, syntheticRead: env.migrationSyntheticRead.http, requiredRole: 'roles/datastore.user scoped to projects/mydesckpro/databases/default where supported' } },
   rules: { status: rulesCaptured && rulesSuite ? 'PASS' : 'NOT_RUN', evidence: { currentRetrievable: rulesCaptured, current: env.currentRules, candidateSha256: sha('migration/firestore/rules/firestore.rules'), rollback: env.rollbackRules, emulatorSuite: rulesSuite ? 'PASS' : 'NOT_RUN', candidateDeployed: false } },
   indexes: { status: hardIndexesReady ? 'PASS' : 'FAIL', evidence: { edition: 'ENTERPRISE',
@@ -57,7 +90,9 @@ const evidence = {
   criticalTransactions: { status: clientSuite ? 'PASS' : 'NOT_RUN', evidence: 'Firebase client SDK against emulators: trip, plan, installments, payment, archive and cleanup' },
   ruleAccessBudget: { status: spark.rulesAccessBudgetPass ? 'PASS' : 'FAIL', evidence: spark.rulesAccessBudget },
   maliciousClient: { status: clientSuite && rulesSuite ? 'PASS' : 'NOT_RUN', evidence: 'raw client tampering, cross-tenant, immutable event and self-admin denied by candidate Rules' },
-  realClientSmoke: { status: 'NOT_RUN', evidence: 'requires approved candidate Rules deployment, 2 hard-required Enterprise indexes READY, migration IAM, and isolated production test identities' },
+  realClientSmoke: { status: realSmoke.status, evidence: { ...realSmoke.evidence, reasons: realSmoke.reasons,
+    artifact: 'migration/reports/firestore-production-client-smoke.json',
+    requires: 'approved candidate Rules deployment, hard-required Enterprise indexes READY, migration IAM, and isolated production test identities' } },
   bulkData: { status: 'PASS', evidence: 'streaming/checkpoint/retry writer and dry-run write guard preserved' },
   delta: { status: delta.unknown === 0 && delta.tables === 77 ? 'PASS' : 'FAIL', evidence: `${delta.tables}/77; unknown ${delta.unknown}` },
   financial: { status: rehearsal.financial.unexplainedDelta === 0 ? 'PASS' : 'FAIL', evidence: `${rehearsal.financial.valuesChecked} exact values; delta ${rehearsal.financial.unexplainedDelta}` },

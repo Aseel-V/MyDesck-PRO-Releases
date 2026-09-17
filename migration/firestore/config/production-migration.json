@@ -12,8 +12,11 @@
   },
   "productionAcknowledgement": "I_ACKNOWLEDGE_MYDESCK_FIRESTORE_PRODUCTION_COPY",
   "expectedSource": {
+    "//": "The source-row reference is READ FROM THE REHEARSAL ARTIFACT, not maintained by hand here. The previous hand-maintained rowsAtLastRehearsal was 1444, which is a ledger-entry count carried from an earlier rehearsal generation (firestore-full-restart-proof.json .idempotency.ledgerEntries), not a source-row count; the rehearsal it claimed to describe recorded 1474 rows. A constant that drifts from the artifact it names cannot detect drift, so the orchestrator now compares a live measurement against the artifact below.",
     "tables": 77,
-    "rowsAtLastRehearsal": 1444,
+    "rowsReferenceArtifact": "migration/reports/firestore-full-import.json",
+    "rowsReferencePointer": "sourceCoverage.rows",
+    "liveMeasurementArtifact": "migration/reports/live-source-inventory.json",
     "usersAtLastInventory": 10,
     "storageObjectsAtLastRehearsal": 3
   },

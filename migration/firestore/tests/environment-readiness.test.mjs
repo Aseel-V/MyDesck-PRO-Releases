@@ -2,29 +2,38 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { PROJECT, DATABASE, hash, indexReadiness, capabilityBlockers, assertSyntheticPreflight,
-  cleanupPlan, iamPlan, assertIamApply, IAM_BINDINGS } from '../lib/environment-readiness.mjs';
+  cleanupPlan, iamPlan, assertIamApply, IAM_BINDINGS, classifyIndexes, indexShape } from '../lib/environment-readiness.mjs';
 import { verifyRulesCapture } from '../lib/environment-go-evidence.mjs';
 
 const required = JSON.parse(readFileSync('migration/firestore/rules/firestore.indexes.json', 'utf8')).indexes;
+const reviews = JSON.parse(readFileSync('migration/firestore/config/index-classification.json', 'utf8')).classifications;
+// Every configured spec must be reviewed before capabilityBlockers can clear INDEXES, so the fixture that
+// represents a ready environment reviews whatever the repository currently configures.
+const gates = spec => spec.collectionGroup === 'trips' && spec.fields.some(f => f.fieldPath === 'startDate');
+const reviewedAll = required.map(spec => ({ ...spec, query: spec['//'],
+  classification: gates(spec) ? 'REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE' : 'COST_OPTIMIZATION',
+  hardDryRunGate: gates(spec), evidenceState: 'REASONED_FROM_CORPUS', rationale: 'fixture' }));
+/** Degrade one spec's live state, selected by identity rather than by its position in the file. */
+const withMissing = (pick) => ready().indexes.map(i => (pick(i) ? { ...i, state: 'MISSING' } : i));
 const live = required.map((s,i) => ({ ...s, name: `${DATABASE}/collectionGroups/${s.collectionGroup}/indexes/proof-${i}`, state: 'READY' }));
 const response = indexes => ({ http: 200, data: { indexes } });
 const run = 'migration-test--production-readiness-12345678-1234-1234-1234-123456789abc';
 const ready = () => ({ project: PROJECT, database: DATABASE, backend: 'supabase', migrationRunId: run,
-  billingEnabled: false, sparkPlan: 'PASS', quota: 'PASS', indexes: indexReadiness(required,response(live)).map((i,n)=>({
-    ...i, classification: n < 2 ? 'REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE' : 'COST_OPTIMIZATION', hardDryRunGate: n < 2 })),
+  billingEnabled: false, sparkPlan: 'PASS', quota: 'PASS',
+  indexes: classifyIndexes(required, reviewedAll, indexReadiness(required,response(live))).indexes,
   iam: 'PASS', rules: 'PASS', secret: 'PASS' });
 const entry = () => ({ kind: 'firestore', path: `migration-test/${run}--trip`, migrationRunId: run,
   createdByThisRun: true, creationReceipt: 'create-succeeded-1', version: 'update-time-1' });
 const manifest = resource => ({ project: PROJECT, database: DATABASE, migrationRunId: run, resources: [resource] });
 
 test('index readiness matches exact fields and scope, not the number of indexes', () => {
-  assert.equal(required.length,3);
-  assert.deepEqual(indexReadiness(required,response([])).map(i=>i.state), ['MISSING','MISSING','MISSING']);
+  assert.ok(required.length >= 3);
+  assert.ok(indexReadiness(required,response([])).every(i=>i.state==='MISSING'));
   assert.equal(indexReadiness(required,response(live.map(i=>({...i,collectionGroup:'unrelated'})))).filter(i=>i.state==='READY').length,0);
   assert.equal(indexReadiness(required,response(live.map(i=>({...i,queryScope:'COLLECTION_GROUP'})))).filter(i=>i.state==='READY').length,0);
 });
 test('creating and failed indexes never satisfy readiness', () => {
-  assert.deepEqual(indexReadiness(required,response(live.map(i=>({...i,state:'CREATING'})))).map(i=>i.state), ['CREATING','CREATING','CREATING']);
+  assert.ok(indexReadiness(required,response(live.map(i=>({...i,state:'CREATING'})))).every(i=>i.state==='CREATING'));
   assert.ok(indexReadiness(required,response(live.map(i=>({...i,state:'NEEDS_REPAIR'})))).every(i=>i.state==='ERROR'));
   assert.ok(indexReadiness(required,{http:403}).every(i=>i.state==='ERROR'));
   assert.ok(indexReadiness(required,response(live)).every(i=>i.state==='READY'));
@@ -43,8 +52,10 @@ test('every Spark capability and secret is required before synthetic network wri
   }
   assert.throws(()=>assertSyntheticPreflight({...ready(),billingEnabled:true}),/BILLING/);
   assert.throws(()=>assertSyntheticPreflight({...ready(),indexes:[]}),/INDEXES/);
-  assert.doesNotThrow(()=>assertSyntheticPreflight({...ready(),indexes:ready().indexes.map((i,n)=>n===2?{...i,state:'MISSING'}:i)}));
-  assert.throws(()=>assertSyntheticPreflight({...ready(),indexes:ready().indexes.map((i,n)=>n===0?{...i,state:'MISSING'}:i)}),/INDEXES/);
+  // A non-gating index may be MISSING without blocking; a hard-required one may not. Both are chosen by
+  // identity, so inserting or reordering a spec cannot silently invert what this proves.
+  assert.doesNotThrow(()=>assertSyntheticPreflight({...ready(),indexes:withMissing(i=>!i.hardDryRunGate)}));
+  assert.throws(()=>assertSyntheticPreflight({...ready(),indexes:withMissing(i=>i.hardDryRunGate)}),/INDEXES/);
   assert.throws(()=>assertSyntheticPreflight({...ready(),indexes:ready().indexes.map(i=>({...i,classification:'UNKNOWN'}))}),/INDEXES/);
 });
 test('production identity and backend are fixed for the smoke', () => {

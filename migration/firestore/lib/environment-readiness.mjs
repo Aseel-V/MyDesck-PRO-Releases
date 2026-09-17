@@ -6,11 +6,67 @@ export const hash = value => createHash('sha256').update(value).digest('hex');
 export const REQUIRED_APIS = ['cloudfunctions.googleapis.com', 'run.googleapis.com',
   'cloudbuild.googleapis.com', 'artifactregistry.googleapis.com'];
 
-function indexShape(index) {
+export function indexShape(index) {
   // Enterprise does not assume an implicit name tie-breaker; deterministic paginated queries declare it.
   const fields = [...index.fields];
   return JSON.stringify({ collectionGroup: index.collectionGroup ?? index.name?.split('/collectionGroups/')[1]?.split('/')[0],
     queryScope: index.queryScope, fields: fields.map(({ fieldPath, order, arrayConfig }) => ({ fieldPath, order, arrayConfig })) });
+}
+
+/** Classifications a reviewer may assign. REVIEW_REQUIRED is the fail-closed default, not a verdict. */
+export const INDEX_CLASSIFICATIONS = Object.freeze(['HARD_REQUIRED_FOR_CORRECTNESS',
+  'REQUIRED_FOR_ACCEPTABLE_PERFORMANCE', 'REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE',
+  'COST_OPTIMIZATION', 'OPTIONAL', 'NOT_REQUIRED', 'REVIEW_REQUIRED']);
+
+/**
+ * Joins every configured index spec to its explicit classification and its live state BY IDENTITY.
+ *
+ * Classification used to be assigned by array position, so inserting a spec silently re-labelled its
+ * neighbours and a spec past the end of the hardcoded list inherited nothing at all. Identity here is the same
+ * shape `indexReadiness` matches on, so reordering firestore.indexes.json cannot change what any classification
+ * means, and a spec with no reviewed entry is REVIEW_REQUIRED rather than quietly acquiring one.
+ *
+ * @param {Array} specs         firestore.indexes.json .indexes
+ * @param {Array} classified    index-classification.json .classifications
+ * @param {Array} readiness     indexReadiness(specs, response) output, in spec order
+ */
+export function classifyIndexes(specs, classified, readiness = []) {
+  const byIdentity = new Map((classified ?? []).map((entry) => [indexShape(entry), entry]));
+  const stateByIdentity = new Map((readiness ?? []).map((entry) => [indexShape(entry), entry]));
+  const used = new Set();
+  const indexes = specs.map((spec) => {
+    const identity = indexShape(spec);
+    const review = byIdentity.get(identity);
+    if (review) used.add(identity);
+    const live = stateByIdentity.get(identity);
+    const classification = INDEX_CLASSIFICATIONS.includes(review?.classification) ? review.classification : 'REVIEW_REQUIRED';
+    const unreviewed = classification === 'REVIEW_REQUIRED';
+    return {
+      collectionGroup: spec.collectionGroup, queryScope: spec.queryScope, fields: spec.fields,
+      query: spec['//'] ?? review?.query ?? null, identity,
+      classification,
+      // An unreviewed spec never gates: it blocks through `reviewComplete` instead, so a missing review can
+      // never be mistaken for a reviewed "not required".
+      hardDryRunGate: unreviewed ? false : review.hardDryRunGate === true,
+      evidenceState: unreviewed ? 'UNVERIFIED' : (review.evidenceState ?? 'UNVERIFIED'),
+      rationale: review?.rationale ?? null,
+      operatorAction: review?.operatorAction ?? (unreviewed ? 'Classify this index explicitly in index-classification.json.' : null),
+      state: live?.state ?? 'ERROR',
+      resource: live?.resource ?? null,
+      productionState: live?.productionState ?? null,
+    };
+  });
+  const orphanedReviews = (classified ?? []).filter((entry) => !used.has(indexShape(entry)))
+    .map((entry) => ({ collectionGroup: entry.collectionGroup, query: entry.query ?? null }));
+  return {
+    indexes,
+    unreviewed: indexes.filter((item) => item.classification === 'REVIEW_REQUIRED')
+      .map((item) => ({ collectionGroup: item.collectionGroup, query: item.query })),
+    orphanedReviews,
+    reviewComplete: indexes.every((item) => item.classification !== 'REVIEW_REQUIRED'),
+    hardRequired: indexes.filter((item) => item.hardDryRunGate).length,
+    hardRequiredReady: indexes.filter((item) => item.hardDryRunGate && item.state === 'READY').length,
+  };
 }
 export function indexReadiness(required, response) {
   return required.map(spec => {
@@ -22,9 +78,11 @@ export function indexReadiness(required, response) {
   });
 }
 export function capabilityBlockers({ billingEnabled, indexes, iam, rules, secret, sparkPlan, quota }) {
-  const reviewedIndexes = indexes.length === 3 && indexes.every(i =>
-    ['HARD_REQUIRED_FOR_CORRECTNESS', 'REQUIRED_FOR_ACCEPTABLE_PERFORMANCE',
-      'REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE', 'OPTIONAL', 'COST_OPTIMIZATION', 'NOT_REQUIRED'].includes(i.classification));
+  // Review completeness is a property of the specs, not of how many there happen to be. The old check required
+  // exactly three, so a fourth spec could never satisfy it and a spec dropped from the list would satisfy it by
+  // accident. Every configured spec must carry a reviewed classification; REVIEW_REQUIRED fails closed.
+  const reviewedIndexes = indexes.length > 0 && indexes.every(i =>
+    INDEX_CLASSIFICATIONS.includes(i.classification) && i.classification !== 'REVIEW_REQUIRED');
   const requiredIndexesReady = reviewedIndexes && indexes.filter(i => i.hardDryRunGate).every(i => i.state === 'READY');
   return [billingEnabled !== false && 'BILLING_MUST_REMAIN_DISABLED', sparkPlan !== 'PASS' && 'SPARK_PLAN',
     !requiredIndexesReady && 'INDEXES', iam !== 'PASS' && 'IAM',

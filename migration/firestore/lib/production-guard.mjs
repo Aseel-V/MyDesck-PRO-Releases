@@ -92,6 +92,47 @@ export function validateCounts(actual, expected) {
   if (actual.sourceRows !== expected.sourceRows) throw new Error('UNEXPECTED_SOURCE_ROW_COUNT');
 }
 
+/**
+ * Source-count drift, measured against a reference.
+ *
+ * The orchestrator used to call validateCounts with its own constant on both sides, so the comparison was
+ * 1444 === 1444 and could not detect drift by construction. This takes the two halves from DIFFERENT origins and
+ * refuses to compare them unless both are present and genuinely distinct:
+ *
+ *   measured  a live read-only source measurement (migration/reports/live-source-inventory.json)
+ *   reference the rehearsal the migration is pinned to (firestore-full-import.json .sourceCoverage)
+ *
+ * An absent measurement is not "no drift", it is no evidence, and fails closed.
+ *
+ * @returns {{status:'PASS'|'FAIL', reasons:string[], expected:number|null, measured:number|null,
+ *            delta:number|null, measuredAt:string|null, referenceOrigin:string|null, measuredOrigin:string|null}}
+ */
+export function evaluateSourceCountDrift({ measured, reference }) {
+  const reasons = [];
+  const out = {
+    status: 'FAIL', reasons, expected: reference?.rows ?? null, measured: measured?.rows ?? null, delta: null,
+    measuredAt: measured?.generatedAt ?? null, referenceOrigin: reference?.origin ?? null,
+    measuredOrigin: measured?.origin ?? null, expectedTables: reference?.tables ?? null,
+    measuredTables: measured?.tables ?? null,
+  };
+  if (!measured || typeof measured.rows !== 'number') reasons.push('LIVE_MEASUREMENT_ABSENT');
+  if (!reference || typeof reference.rows !== 'number') reasons.push('REFERENCE_ABSENT');
+  if (measured && reference && measured.origin && measured.origin === reference.origin) {
+    // Both halves coming from one artifact is how the previous check became vacuous.
+    reasons.push('MEASUREMENT_AND_REFERENCE_SHARE_ORIGIN');
+  }
+  if (measured && !measured.readOnlyProven) reasons.push('LIVE_MEASUREMENT_NOT_READ_ONLY_PROVEN');
+  if (reasons.length) return out;
+
+  out.delta = measured.rows - reference.rows;
+  if (out.delta !== 0) reasons.push(`SOURCE_ROW_DRIFT:expected ${reference.rows}, measured ${measured.rows}, delta ${out.delta}`);
+  if (typeof measured.tables === 'number' && typeof reference.tables === 'number' && measured.tables !== reference.tables) {
+    reasons.push(`SOURCE_TABLE_DRIFT:expected ${reference.tables}, measured ${measured.tables}`);
+  }
+  out.status = reasons.length ? 'FAIL' : 'PASS';
+  return out;
+}
+
 export function validateAuthCollisions(sourceUsers, targetUsers) {
   const targetUids = new Set(targetUsers.map((user) => user.uid));
   const targetEmails = new Map(targetUsers.filter((user) => user.emailNormalized)

@@ -1,0 +1,76 @@
+{
+  "//": "Explicit classification for every composite index spec in migration/firestore/rules/firestore.indexes.json. Entries are keyed by index IDENTITY (collectionGroup, queryScope and the ordered field list), never by array position, so reordering or inserting a spec cannot change what any classification means. A spec with no entry here is REVIEW_REQUIRED and fails the dry-run index gate closed. classification values: HARD_REQUIRED_FOR_CORRECTNESS, REQUIRED_FOR_ACCEPTABLE_PERFORMANCE, REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE, COST_OPTIMIZATION, OPTIONAL, NOT_REQUIRED, REVIEW_REQUIRED. Only the hardDryRunGate entries block DRY_RUN_GO.",
+  "schemaVersion": 1,
+  "evidenceStates": {
+    "MEASURED": "Classification supported by a recorded measurement against the production corpus.",
+    "REASONED_FROM_CORPUS": "Classification derived from the recorded corpus size and the query's declared bound, without a production query plan.",
+    "UNVERIFIED": "No production measurement and no sufficient recorded reasoning. Fails closed."
+  },
+  "classifications": [
+    {
+      "collectionGroup": "trips",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "ownerUid", "order": "ASCENDING" },
+        { "fieldPath": "businessId", "order": "ASCENDING" },
+        { "fieldPath": "isDeleted", "order": "ASCENDING" },
+        { "fieldPath": "startDate", "order": "ASCENDING" },
+        { "fieldPath": "__name__", "order": "ASCENDING" }
+      ],
+      "query": "FirestoreTravelRepository.listTripsForBusiness: tenant, deletion state, start-date cursor.",
+      "classification": "REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE",
+      "hardDryRunGate": true,
+      "evidenceState": "REASONED_FROM_CORPUS",
+      "rationale": "The trips list is the common travel screen and pages 25 results. Enterprise executes unindexed queries, so the absence is a cost problem rather than a correctness one, but an unindexed scan of the recorded 99-trip corpus costs 117 conservative read units against 51 for the indexed page, and the cost scales with the tenant collection."
+    },
+    {
+      "collectionGroup": "trips",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "ownerUid", "order": "ASCENDING" },
+        { "fieldPath": "businessId", "order": "ASCENDING" },
+        { "fieldPath": "isDeleted", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "startDate", "order": "ASCENDING" },
+        { "fieldPath": "__name__", "order": "ASCENDING" }
+      ],
+      "query": "FirestoreTravelRepository.listTripsForBusiness with a status filter.",
+      "classification": "REQUIRED_FOR_ACCEPTABLE_FREE_TIER_USAGE",
+      "hardDryRunGate": true,
+      "evidenceState": "REASONED_FROM_CORPUS",
+      "rationale": "Same screen and the same 25-result page with a status filter applied; the unindexed cost is identical to the unfiltered list because the scan is what dominates."
+    },
+    {
+      "collectionGroup": "trips",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "ownerUid", "order": "ASCENDING" },
+        { "fieldPath": "businessId", "order": "ASCENDING" },
+        { "fieldPath": "isDeleted", "order": "ASCENDING" },
+        { "fieldPath": "paymentDate", "order": "ASCENDING" },
+        { "fieldPath": "__name__", "order": "ASCENDING" }
+      ],
+      "query": "FirestoreTravelDashboardRepository.listDashboardTrips: tenant, deletion state, payment-date range of the year.",
+      "classification": "REVIEW_REQUIRED",
+      "hardDryRunGate": false,
+      "evidenceState": "UNVERIFIED",
+      "rationale": "Unresolved and deliberately not decided from resemblance. The query is genuinely reachable (Dashboard.tsx -> listDashboardTrips) and runs the same tenant and deletion predicates as the two gated indexes, but it is a year range bounded at DASHBOARD_TRIPS_BOUND = 2000 rather than a 25-result page, so its cost profile is not the same and cannot be inferred from the others. A production query plan would settle it; Enterprise rejects the Explain API used by the analyser (INVALID_ARGUMENT: Explain options are not supported in RunQuery API for Enterprise edition), so no measurement exists. An operator must classify it from a supported measurement before the index gate can pass.",
+      "operatorAction": "Measure this query against the production corpus with a supported Enterprise mechanism, then set classification, hardDryRunGate and evidenceState accordingly."
+    },
+    {
+      "collectionGroup": "tripInstallments",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "ownerUid", "order": "ASCENDING" },
+        { "fieldPath": "businessId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "dueDate", "order": "ASCENDING" }
+      ],
+      "query": "FirestoreTravelRepository.listDueInstallments: tenant, active status set, due date.",
+      "classification": "COST_OPTIMIZATION",
+      "hardDryRunGate": false,
+      "evidenceState": "REASONED_FROM_CORPUS",
+      "rationale": "The recorded corpus holds 37 installment rows, so a full scan costs 44 conservative read units. The index reduces that but its absence does not block a dry-run that writes no customer data. Revisit as the collection grows."
+    }
+  ]
+}
