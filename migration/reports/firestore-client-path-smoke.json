@@ -1,0 +1,199 @@
+{
+  "generatedAt": "2026-09-18T13:28:50.186Z",
+  "artifact": "firestore-client-path-smoke",
+  "runId": "clientpath-089c6755-381e-44c2-986c-8c62579a5f42",
+  "target": "PRODUCTION",
+  "project": "mydesckpro",
+  "releasedVersion": "0.0.62",
+  "method": "application repositories via createFirestoreBackend; Admin SDK used only for cleanup",
+  "byVertical": {
+    "bootstrap": {
+      "pass": 2,
+      "fail": 0
+    },
+    "carParts": {
+      "pass": 4,
+      "fail": 1
+    },
+    "supermarket": {
+      "pass": 4,
+      "fail": 1
+    },
+    "restaurant": {
+      "pass": 5,
+      "fail": 1
+    },
+    "autoRepair": {
+      "pass": 1,
+      "fail": 1
+    },
+    "tourism": {
+      "pass": 0,
+      "fail": 1
+    }
+  },
+  "totalChecks": 21,
+  "failedChecks": 5,
+  "classifications": {
+    "APPLICATION_WRITE_DEFECT": 5
+  },
+  "checks": [
+    {
+      "vertical": "bootstrap",
+      "operation": "tenant A: createOwnerProfiles",
+      "ok": true,
+      "classification": "PASS",
+      "detail": null
+    },
+    {
+      "vertical": "bootstrap",
+      "operation": "tenant B: createOwnerProfiles",
+      "ok": true,
+      "classification": "PASS",
+      "detail": null
+    },
+    {
+      "vertical": "carParts",
+      "operation": "createPart",
+      "ok": true,
+      "classification": "PASS",
+      "detail": null
+    },
+    {
+      "vertical": "carParts",
+      "operation": "listParts",
+      "ok": true,
+      "classification": "PASS",
+      "detail": null
+    },
+    {
+      "vertical": "carParts",
+      "operation": "updatePart",
+      "ok": false,
+      "classification": "APPLICATION_WRITE_DEFECT",
+      "detail": "8 RESOURCE_EXHAUSTED: Quota exceeded."
+    },
+    {
+      "vertical": "carParts",
+      "operation": "cross-tenant updatePart leaves the victim unchanged",
+      "ok": true,
+      "classification": "PASS",
+      "detail": null
+    },
+    {
+      "vertical": "carParts",
+      "operation": "deletePart",
+      "ok": true,
+      "classification": "PASS",
+      "detail": null
+    },
+    {
+      "vertical": "supermarket",
+      "operation": "createProduct",
+      "ok": true,
+      "classification": "PASS",
+      "detail": null
+    },
+    {
+      "vertical": "supermarket",
+      "operation": "listAvailableProducts",
+      "ok": true,
+      "classification": "PASS",
+      "detail": null
+    },
+    {
+      "vertical": "supermarket",
+      "operation": "updateProduct",
+      "ok": false,
+      "classification": "APPLICATION_WRITE_DEFECT",
+      "detail": "8 RESOURCE_EXHAUSTED: Quota exceeded."
+    },
+    {
+      "vertical": "supermarket",
+      "operation": "cross-tenant updateProduct leaves the victim unchanged",
+      "ok": true,
+      "classification": "PASS",
+      "detail": null
+    },
+    {
+      "vertical": "supermarket",
+      "operation": "deleteProduct",
+      "ok": true,
+      "classification": "PASS",
+      "detail": null
+    },
+    {
+      "vertical": "restaurant",
+      "operation": "createTable",
+      "ok": true,
+      "classification": "PASS",
+      "detail": null
+    },
+    {
+      "vertical": "restaurant",
+      "operation": "listTables",
+      "ok": true,
+      "classification": "PASS",
+      "detail": null
+    },
+    {
+      "vertical": "restaurant",
+      "operation": "updateTable",
+      "ok": false,
+      "classification": "APPLICATION_WRITE_DEFECT",
+      "detail": "8 RESOURCE_EXHAUSTED: Quota exceeded."
+    },
+    {
+      "vertical": "restaurant",
+      "operation": "cross-tenant updateTable leaves the victim unchanged",
+      "ok": true,
+      "classification": "PASS",
+      "detail": null
+    },
+    {
+      "vertical": "restaurant",
+      "operation": "deleteTable",
+      "ok": true,
+      "classification": "PASS",
+      "detail": null
+    },
+    {
+      "vertical": "restaurant",
+      "operation": "createCategory",
+      "ok": true,
+      "classification": "PASS",
+      "detail": null
+    },
+    {
+      "vertical": "autoRepair",
+      "operation": "registerVehicleAndOpenOrder",
+      "ok": false,
+      "classification": "APPLICATION_WRITE_DEFECT",
+      "detail": "8 RESOURCE_EXHAUSTED: Quota exceeded."
+    },
+    {
+      "vertical": "autoRepair",
+      "operation": "listRepairOrders",
+      "ok": true,
+      "classification": "PASS",
+      "detail": null
+    },
+    {
+      "vertical": "tourism",
+      "operation": "saveTrip",
+      "ok": false,
+      "classification": "APPLICATION_WRITE_DEFECT",
+      "detail": "BACKEND_NOT_REGISTERED"
+    }
+  ],
+  "cleanup": {
+    "firestoreSwept": 0,
+    "firestoreSweepFailed": 1,
+    "authCreated": 2,
+    "authDeleted": 2,
+    "authFailed": 0
+  },
+  "syntheticResidue": 1,
+  "customerMutations": 0,
+  "decision": "CLIENT_PATH_SMOKE_FAIL"
+}
