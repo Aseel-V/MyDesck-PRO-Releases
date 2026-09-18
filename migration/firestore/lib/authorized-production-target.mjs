@@ -24,9 +24,8 @@
  * The target consumes planned entries, not `(path, data)` pairs, so a caller cannot substitute its
  * own content for a legitimate path.
  */
-import { execFileSync } from 'node:child_process';
-import { join } from 'node:path';
 import { assertCapability } from './production-execution-authorization.mjs';
+import { MIGRATION_WRITE_IDENTITY, openMigrationFirestore } from './migration-identity.mjs';
 import { rawDocumentHash } from './full-rehearsal-core.mjs';
 import { PROOF_PREFIX } from './table-map.mjs';
 
@@ -36,20 +35,10 @@ export const DEFAULT_BATCH_SIZE = 100;
 export const FIRESTORE_BATCH_LIMIT = 500;
 
 /**
- * The identity this target writes as.
- *
- * Not the operator, and not the ambient ADC identity. ADC on this machine impersonates
- * mydesck-migration@, which has no Firestore access, and cannot itself impersonate the writer
- * identity; the operator's own gcloud account is the one holding tokenCreator on it. So the token is
- * minted exactly the way every other tool in this repository mints it — `gcloud auth
- * print-access-token --impersonate-service-account=<writer>` — and handed to the Firestore client.
- *
- * There is deliberately no fallback. If the writer token cannot be minted the target refuses to
- * open, rather than quietly connecting as whatever identity happens to be lying around: a migration
- * that writes as the wrong principal is worse than one that does not start.
+ * The identity this target writes as is defined once, in `migration-identity.mjs`, and re-exported
+ * here because callers reasonably look for it on the thing that does the writing.
  */
-export const MIGRATION_WRITE_IDENTITY =
-  'mydesck-firestore-migration@mydesckpro.iam.gserviceaccount.com';
+export { MIGRATION_WRITE_IDENTITY };
 
 export class ProductionTargetError extends Error {
   constructor(code, detail) {
@@ -107,6 +96,9 @@ export function sealMutationPlan(plan, { expectedDocuments = EXPECTED_PLANNED_DO
   }
   const allowlist = new Set();
   const rootCollections = new Set();
+  // Every collection segment at any depth, not just the first. Emptiness is checked by collection
+  // group, and a nested collection id is exactly the one the root-only check used to miss.
+  const collectionIds = new Set();
   for (const entry of plan) {
     if (!entry || typeof entry !== 'object') throw new ProductionTargetError('PLAN_ENTRY_MALFORMED');
     if (typeof entry.documentFingerprint !== 'string' || !entry.documentFingerprint) {
@@ -119,11 +111,13 @@ export function sealMutationPlan(plan, { expectedDocuments = EXPECTED_PLANNED_DO
     if (allowlist.has(entry.path)) throw new ProductionTargetError('PLAN_DUPLICATE_PATH', entry.path);
     allowlist.add(entry.path);
     rootCollections.add(segments[0]);
+    for (let index = 0; index < segments.length; index += 2) collectionIds.add(segments[index]);
     Object.freeze(entry.data);
     Object.freeze(entry);
   }
   Object.freeze(plan);
-  return { plan, allowlist: Object.freeze(allowlist), rootCollections: Object.freeze(rootCollections) };
+  return { plan, allowlist: Object.freeze(allowlist), rootCollections: Object.freeze(rootCollections),
+    collectionIds: Object.freeze(collectionIds) };
 }
 
 /** Stable hash of the whole plan, so a journal can prove which plan it belongs to. */
@@ -148,61 +142,12 @@ export async function openAuthorizedProductionTarget({
 
   // 3. Connect. The instance stays in this closure and is never exposed.
   const connect = firestoreFactory ?? (async () => {
-    if (process.env.FIRESTORE_EMULATOR_HOST) {
-      throw new ProductionTargetError('EMULATOR_HOST_SET_FOR_PRODUCTION_TARGET');
+    try {
+      return await openMigrationFirestore({ projectId, databaseId });
+    } catch (error) {
+      throw new ProductionTargetError(error?.code ?? 'PRODUCTION_CONNECTION_FAILED',
+        MIGRATION_WRITE_IDENTITY);
     }
-    const { AuthClient, GoogleAuth } = await import('google-auth-library');
-    const { Firestore } = await import('@google-cloud/firestore');
-
-    /** Mints and caches the writer-identity access token. The token is never logged or persisted. */
-    class MigrationWriterClient extends AuthClient {
-      #token = null;
-      #expiresAt = 0;
-
-      async getAccessToken() {
-        if (this.#token && Date.now() < this.#expiresAt) return { token: this.#token };
-        const sdk = process.env.GCLOUD_SDK_ROOT
-          ?? join(process.env.LOCALAPPDATA ?? '', 'Google/Cloud SDK/google-cloud-sdk');
-        let minted;
-        try {
-          minted = execFileSync(join(sdk, 'platform/bundledpython/python.exe'),
-            [join(sdk, 'lib/gcloud.py'), 'auth', 'print-access-token',
-              `--impersonate-service-account=${MIGRATION_WRITE_IDENTITY}`],
-            { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 120_000 }).trim();
-        } catch {
-          // The failure detail can carry account names; the code is enough to act on.
-          throw new ProductionTargetError('MIGRATION_WRITE_IDENTITY_TOKEN_UNAVAILABLE',
-            MIGRATION_WRITE_IDENTITY);
-        }
-        if (!minted) {
-          throw new ProductionTargetError('MIGRATION_WRITE_IDENTITY_TOKEN_EMPTY',
-            MIGRATION_WRITE_IDENTITY);
-        }
-        this.#token = minted;
-        // gcloud mints these for about an hour; refresh well inside that.
-        this.#expiresAt = Date.now() + 30 * 60 * 1000;
-        return { token: this.#token };
-      }
-
-      async getRequestHeaders() {
-        const { token } = await this.getAccessToken();
-        return new Headers({ authorization: `Bearer ${token}` });
-      }
-
-      async request(options) { return this.transporter.request(options); }
-    }
-
-    // Proves the identity is actually available before any collection is touched.
-    const writer = new MigrationWriterClient();
-    await writer.getAccessToken();
-
-    const db = new Firestore({
-      projectId,
-      databaseId,
-      auth: new GoogleAuth({ authClient: writer }),
-      ignoreUndefinedProperties: false,
-    });
-    return { db, close: () => db.terminate(), identity: MIGRATION_WRITE_IDENTITY };
   });
   const connection = await connect({ projectId, databaseId });
   const db = connection.db;
@@ -249,15 +194,37 @@ export async function openAuthorizedProductionTarget({
     get committedCount() { return committed; },
     committedPaths: () => [...committedPaths],
 
-    /** Zero documents in every collection the plan will write. Read-only. */
+    /**
+     * Zero documents anywhere the plan will write, including descendants. Read-only.
+     *
+     * The original version queried root collections only, and that is not the same question. In
+     * Firestore a subcollection document can exist under a parent document that does not exist, so
+     * `businesses/{id}/menuItems/{x}` is completely invisible to a query on `businesses`. The first
+     * production copy ran against a target this check had called empty while thirty such documents
+     * were sitting one level down, which reconciliation then found as unexpected documents.
+     *
+     * Collection-group queries are the fix: a collection group matches every collection with that
+     * id at any depth, parent document or no parent document. Root collections are collection
+     * groups too, so this strictly contains the old check rather than replacing it with something
+     * different. `listCollections()` is also consulted, so a root collection the plan never
+     * mentions is still caught.
+     *
+     * One limit is worth stating rather than implying: a document in a collection id that appears
+     * neither in the plan nor as a root collection cannot be enumerated through the API at all, so
+     * emptiness here means "empty of everything reachable from the plan and from the root", not a
+     * mathematical proof that the database holds nothing.
+     */
     async assertTargetEmpty() {
+      const rootCollections = (await db.listCollections()).map((collection) => collection.id);
+      const groupIds = [...new Set([...sealed.collectionIds, ...sealed.rootCollections, ...rootCollections])]
+        .sort();
       const found = [];
-      for (const collection of sealed.rootCollections) {
-        const snapshot = await db.collection(collection).limit(1).get();
-        if (!snapshot.empty) found.push(collection);
+      for (const collectionId of groupIds) {
+        const snapshot = await db.collectionGroup(collectionId).select().limit(1).get();
+        if (!snapshot.empty) found.push(collectionId);
       }
       if (found.length) throw new ProductionTargetError('TARGET_NOT_EMPTY', found.join(','));
-      return { empty: true, collectionsChecked: [...sealed.rootCollections].sort() };
+      return { empty: true, collectionsChecked: groupIds, rootCollectionsListed: rootCollections.sort() };
     },
 
     /**

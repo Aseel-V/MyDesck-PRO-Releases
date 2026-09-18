@@ -16,9 +16,7 @@
  * It authenticates as the same migration identity the copy wrote as, for the same reason: ambient
  * credentials on this machine resolve to an account with no Firestore access at all.
  */
-import { execFileSync } from 'node:child_process';
-import { join } from 'node:path';
-import { MIGRATION_WRITE_IDENTITY } from './authorized-production-target.mjs';
+import { MIGRATION_WRITE_IDENTITY, openMigrationFirestore } from './migration-identity.mjs';
 
 export class ProductionReaderError extends Error {
   constructor(code, detail) {
@@ -41,53 +39,13 @@ export async function openProductionReader({ projectId, databaseId, firestoreFac
   if (databaseId !== 'default') throw new ProductionReaderError('READER_DATABASE_MISMATCH', String(databaseId));
 
   const connect = firestoreFactory ?? (async () => {
-    if (process.env.FIRESTORE_EMULATOR_HOST) {
-      throw new ProductionReaderError('EMULATOR_HOST_SET_FOR_PRODUCTION_READER');
+    try {
+      return await openMigrationFirestore({ projectId, databaseId });
+    } catch (error) {
+      throw new ProductionReaderError(error?.code ?? 'PRODUCTION_CONNECTION_FAILED',
+        MIGRATION_WRITE_IDENTITY);
     }
-    const { AuthClient, GoogleAuth } = await import('google-auth-library');
-    const { Firestore } = await import('@google-cloud/firestore');
-
-    class MigrationReadClient extends AuthClient {
-      #token = null;
-      #expiresAt = 0;
-
-      async getAccessToken() {
-        if (this.#token && Date.now() < this.#expiresAt) return { token: this.#token };
-        const sdk = process.env.GCLOUD_SDK_ROOT
-          ?? join(process.env.LOCALAPPDATA ?? '', 'Google/Cloud SDK/google-cloud-sdk');
-        let minted;
-        try {
-          minted = execFileSync(join(sdk, 'platform/bundledpython/python.exe'),
-            [join(sdk, 'lib/gcloud.py'), 'auth', 'print-access-token',
-              `--impersonate-service-account=${MIGRATION_WRITE_IDENTITY}`],
-            { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 120_000 }).trim();
-        } catch {
-          throw new ProductionReaderError('MIGRATION_IDENTITY_TOKEN_UNAVAILABLE', MIGRATION_WRITE_IDENTITY);
-        }
-        if (!minted) throw new ProductionReaderError('MIGRATION_IDENTITY_TOKEN_EMPTY', MIGRATION_WRITE_IDENTITY);
-        this.#token = minted;
-        this.#expiresAt = Date.now() + 30 * 60 * 1000;
-        return { token: this.#token };
-      }
-
-      async getRequestHeaders() {
-        const { token } = await this.getAccessToken();
-        return new Headers({ authorization: `Bearer ${token}` });
-      }
-
-      async request(options) { return this.transporter.request(options); }
-    }
-
-    const reader = new MigrationReadClient();
-    await reader.getAccessToken();
-    const db = new Firestore({
-      projectId, databaseId,
-      auth: new GoogleAuth({ authClient: reader }),
-      ignoreUndefinedProperties: false,
-    });
-    return { db, close: () => db.terminate() };
   });
-
   const connection = await connect({ projectId, databaseId });
   const db = connection.db;
 

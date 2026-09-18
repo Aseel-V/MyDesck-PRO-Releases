@@ -46,6 +46,11 @@ export const PINNED_TOOLING = Object.freeze([
   'migration/firestore/lib/authorized-production-target.mjs',
   'migration/firestore/lib/production-journal.mjs',
   'migration/firestore/tools/production-rollback.mjs',
+  // The identity every production connection authenticates as, and the only other boundary that can
+  // delete a production document. Both change what happens to customer data; both are pinned.
+  'migration/firestore/lib/migration-identity.mjs',
+  'migration/firestore/lib/residue-cleanup-target.mjs',
+  'migration/firestore/tools/residue-cleanup.mjs',
   'migration/firestore/tools/production-auth-import.mjs',
   'migration/firestore/tools/production-storage-migration.mjs',
   'migration/firestore/config/production-migration.json',

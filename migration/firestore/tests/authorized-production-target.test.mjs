@@ -47,12 +47,33 @@ const realCapability = (stage = STAGES.firestoreBulkCopy) => {
 function fakeFirestore({ seed = {}, failOnBatch = null } = {}) {
   const store = new Map(Object.entries(seed));
   const state = { commits: 0, writes: 0, deletes: 0 };
+  // Firestore semantics that matter here: a document lives at its own path, and a subcollection
+  // document exists independently of whether its parent document does. A collection group matches
+  // every collection with that id at any depth; listCollections sees root collections only.
+  const inGroup = (collectionId) => [...store.keys()].filter((path) => {
+    const segments = path.split('/');
+    return segments.slice(0, -1).some((segment, index) => index % 2 === 0 && segment === collectionId);
+  });
   const db = {
     projectId: 'mydesckpro',
     doc: (path) => ({ path, get: async () => ({ exists: store.has(path), data: () => store.get(path) }) }),
+    listCollections: async () => [...new Set([...store.keys()].map((path) => path.split('/')[0]))]
+      .map((id) => ({ id })),
+    collectionGroup: (collectionId) => {
+      const build = (cap) => ({
+        select: () => build(cap),
+        limit: (n) => build(n),
+        get: async () => {
+          const hits = inGroup(collectionId).slice(0, cap ?? Infinity);
+          return { empty: hits.length === 0, size: hits.length,
+            docs: hits.map((path) => ({ ref: { path } })) };
+        },
+      });
+      return build(null);
+    },
     collection: (name) => ({
       limit: () => ({ get: async () => {
-        const hit = [...store.keys()].some((key) => key === name || key.startsWith(`${name}/`));
+        const hit = [...store.keys()].some((key) => key.startsWith(`${name}/`) && key.split('/').length === 2);
         return { empty: !hit };
       } }),
     }),
@@ -214,6 +235,40 @@ test('11. a non-empty target is refused before first write', async () => {
 });
 
 // ============================ batching and commits ==============================================
+
+test('11b. REGRESSION: a subcollection document under an ABSENT parent fails the empty check', async () => {
+  // This is the case the first production copy walked past. `businesses/<id>` does not exist, so a
+  // query on `businesses` returns nothing, while `businesses/<id>/menuItems/<x>` is really there.
+  const orphanedDescendant = 'businesses/ghost-business/menuItems/leftover-from-smoke';
+  const fake = fakeFirestore({ seed: { [orphanedDescendant]: { transformVersion: 'app-v1' } } });
+
+  // The old root-only question still answers "empty", which is precisely why it was the wrong one.
+  assert.equal((await fake.factory().then((c) => c.db.collection('businesses').limit(1).get())).empty, true,
+    'a root-collection query cannot see a document under an absent parent');
+
+  const plan = syntheticPlan().map((entry, index) => index !== 0 ? entry : {
+    ...entry,
+    path: 'businesses/b1/menuItems/planned-0',
+    collection: 'businesses/b1/menuItems',
+    docId: 'planned-0',
+    documentFingerprint: rawDocumentHash('businesses/b1/menuItems/planned-0', entry.data),
+  });
+  const target = await openAuthorizedProductionTarget({ capability: realCapability(), mutationPlan: plan,
+    projectId: 'mydesckpro', databaseId: 'default', sourceProject: 'pubugnfaqqukelvgckdr',
+    stage: STAGES.firestoreBulkCopy, firestoreFactory: fake.factory });
+  await assert.rejects(() => target.assertTargetEmpty(), /TARGET_NOT_EMPTY/,
+    'the copy must refuse to start while an orphaned descendant is present');
+  assert.equal(fake.state.writes, 0, 'the refusal happens before the first write');
+});
+
+test('11c. nested collection ids are all sealed, not just the root', () => {
+  const plan = syntheticPlan().map((entry, index) => index !== 0 ? entry : {
+    ...entry, path: 'businesses/b1/menuItems/x', collection: 'businesses/b1/menuItems', docId: 'x' });
+  const sealed = sealMutationPlan(plan);
+  assert.equal(sealed.collectionIds.has('businesses'), true);
+  assert.equal(sealed.collectionIds.has('menuItems'), true);
+  assert.equal(sealed.rootCollections.has('menuItems'), false, 'menuItems is nested, not a root');
+});
 
 test('13/14. every planned path is committed exactly once across the correct batch count', async () => {
   const plan = syntheticPlan();
