@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-18T08:57:07.645Z",
+  "generatedAt": "2026-09-18T11:27:01.023Z",
   "artifact": "firestore-production-reconciliation",
   "migrationRunId": "bulkcopy-15363817-711a-4b52-9414-4885a8585bf4",
   "journal": "migration/production-copy.local/bulkcopy-15363817-711a-4b52-9414-4885a8585bf4.json",
@@ -29,7 +29,7 @@
   "journalChecks": {
     "integrityHash": "VERIFIED_ON_LOAD",
     "stage": "firestore-bulk-copy",
-    "status": "COPY_COMPLETE",
+    "status": "RECONCILED",
     "firebaseProject": "mydesckpro",
     "firestoreDatabaseId": "default",
     "plannedDocumentCount": 1477,
@@ -38,11 +38,30 @@
     "failure": null,
     "faults": [],
     "planHashJournal": "f8dba2bb6106806e8ac4d7c1e98e0ff9ee26ebcea6a6167dd80d211a598617b3",
-    "planHashDerived": "f8dba2bb6106806e8ac4d7c1e98e0ff9ee26ebcea6a6167dd80d211a598617b3",
-    "planHashMatches": true,
+    "planHashDerived": "38a2eb3cfff655d0ebbdfea9b31332e29f379d01b87da7be2dbec23661bfaf53",
+    "planHashMatches": false,
+    "planHashDiffersByAuthorizedWithdrawal": true,
+    "authorizedWithdrawals": [
+      {
+        "paths": [
+          "users/14819359-83d9-4401-9795-fcb42176e59b",
+          "users/608befcc-7ed8-4466-80f4-d99a45c5e4c5",
+          "users/f1191f99-f242-4eb5-a1a6-d45c5222c7a8"
+        ],
+        "reason": "OPERATOR_EXCLUDED_AUTH_IDENTITY_DERIVED_DOCUMENT",
+        "decidedAt": "2026-09-18",
+        "cleanupRunId": "withdrawal-04dcda47-6641-437a-87a4-5e2221c52881",
+        "at": "2026-09-18T11:25:16.046Z"
+      }
+    ],
+    "copyDocumentCount": 1477,
+    "expectedTargetDocuments": 1474,
     "duplicateJournalPaths": 0,
     "journalPathsNotInPlan": 0,
     "plannedPathsNotInJournal": 0,
+    "expectedPathsNotPlanned": 0,
+    "plannedPathsNotExpected": 0,
+    "withdrawnPaths": 3,
     "batchDocumentSum": 1477,
     "batchLayoutSum": 1477,
     "ledgerMismatches": 0
@@ -58,9 +77,9 @@
     "sourceRowsAccounted": 1474,
     "migratedRows": 1466,
     "excludedRows": 8,
-    "firestoreDocuments": 1477,
-    "documentsFoundInTarget": 1477,
-    "documentsScannedInTarget": 1477,
+    "firestoreDocuments": 1474,
+    "documentsFoundInTarget": 1474,
+    "documentsScannedInTarget": 1474,
     "missingDocuments": 0,
     "unexpectedDocuments": 0,
     "rawHashMismatches": 0,
@@ -142,7 +161,7 @@
       },
       {
         "collectionId": "users",
-        "documents": 10
+        "documents": 7
       },
       {
         "collectionId": "orders",
@@ -331,12 +350,6 @@
     "journalStatusUpdate": "RECONCILED"
   },
   "perTable": {
-    "auth.users": {
-      "expected": 3,
-      "found": 3,
-      "rawMismatches": 0,
-      "canonicalMismatches": 0
-    },
     "business_profiles": {
       "expected": 6,
       "found": 6,

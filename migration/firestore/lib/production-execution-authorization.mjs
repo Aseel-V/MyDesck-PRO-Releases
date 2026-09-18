@@ -56,6 +56,9 @@ export const PINNED_TOOLING = Object.freeze([
   'migration/firestore/tools/withdraw-excluded-auth-documents.mjs',
   'migration/firestore/config/excluded-auth-identities.json',
   'migration/firestore/tools/production-auth-import.mjs',
+  // The Auth boundary and the plan naming who gets an account. Both decide production identities.
+  'migration/firestore/lib/authorized-auth-import-target.mjs',
+  'migration/firestore/config/production-auth-ledger-plan.json',
   'migration/firestore/tools/production-storage-migration.mjs',
   'migration/firestore/config/production-migration.json',
 ]);

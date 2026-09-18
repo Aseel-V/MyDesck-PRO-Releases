@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-11T16:36:11.831Z",
+  "generatedAt": "2026-09-18T11:27:45.343Z",
   "sourceSnapshot": {
     "readOnly": true,
     "isolationLevel": "repeatable read",
@@ -9,28 +9,36 @@
   "TRANSPARENT": 7,
   "REAUTH_REQUIRED": 0,
   "RESET_REQUIRED": 0,
-  "MANUAL_OPERATOR_ACTION": 3,
+  "MANUAL_OPERATOR_ACTION": 0,
   "INTENTIONALLY_EXCLUDED_WITH_JUSTIFICATION": 0,
+  "OPERATOR_EXCLUDED_MIGRATION_PREPARATION_RESIDUE": 3,
   "unknown": 0,
   "accounted": 10,
+  "toImport": 7,
+  "excludedByOperator": 3,
+  "manualOrUnknownRemaining": 0,
+  "operatorExclusionDecision": "EXCLUDE_AS_MIGRATION_PREPARATION_RESIDUE",
+  "operatorExclusionDecidedAt": "2026-09-18",
   "uidMismatches": 0,
   "users": [
     {
       "uidFingerprint": "95e3cb04de08",
-      "sourceTargetUidEqual": true,
-      "uidPreserved": true,
-      "classification": "MANUAL_OPERATOR_ACTION",
-      "requiredAction": "CONFIRM_ACCOUNT_PURPOSE_AND_CREATE_OR_EXPLICITLY_DENY_APPLICATION_LINKAGE_BEFORE_ENABLEMENT",
+      "sourceTargetUidEqual": null,
+      "uidPreserved": false,
+      "toImport": false,
+      "plannedState": "EXCLUDED",
+      "classification": "OPERATOR_EXCLUDED_MIGRATION_PREPARATION_RESIDUE",
+      "requiredAction": "DO_NOT_IMPORT_UNLESS_A_NEW_OPERATOR_DECISION_REVERSES_THE_EXCLUSION",
       "emailVerified": true,
       "status": "ACTIVE",
-      "blockingReasons": [
-        "MISSING_PROFILE_AND_BUSINESS"
-      ]
+      "blockingReasons": []
     },
     {
       "uidFingerprint": "29f3c0367460",
       "sourceTargetUidEqual": true,
       "uidPreserved": true,
+      "toImport": true,
+      "plannedState": "PENDING",
       "classification": "TRANSPARENT",
       "requiredAction": "IMPORT_UID_AND_COMPATIBLE_BCRYPT",
       "emailVerified": true,
@@ -41,6 +49,8 @@
       "uidFingerprint": "6d65321887ee",
       "sourceTargetUidEqual": true,
       "uidPreserved": true,
+      "toImport": true,
+      "plannedState": "PENDING",
       "classification": "TRANSPARENT",
       "requiredAction": "IMPORT_UID_AND_COMPATIBLE_BCRYPT",
       "emailVerified": true,
@@ -49,20 +59,22 @@
     },
     {
       "uidFingerprint": "4ca1630f70b0",
-      "sourceTargetUidEqual": true,
-      "uidPreserved": true,
-      "classification": "MANUAL_OPERATOR_ACTION",
-      "requiredAction": "CONFIRM_ACCOUNT_PURPOSE_AND_CREATE_OR_EXPLICITLY_DENY_APPLICATION_LINKAGE_BEFORE_ENABLEMENT",
+      "sourceTargetUidEqual": null,
+      "uidPreserved": false,
+      "toImport": false,
+      "plannedState": "EXCLUDED",
+      "classification": "OPERATOR_EXCLUDED_MIGRATION_PREPARATION_RESIDUE",
+      "requiredAction": "DO_NOT_IMPORT_UNLESS_A_NEW_OPERATOR_DECISION_REVERSES_THE_EXCLUSION",
       "emailVerified": true,
       "status": "ACTIVE",
-      "blockingReasons": [
-        "MISSING_PROFILE_AND_BUSINESS"
-      ]
+      "blockingReasons": []
     },
     {
       "uidFingerprint": "a3d78f6c5a53",
       "sourceTargetUidEqual": true,
       "uidPreserved": true,
+      "toImport": true,
+      "plannedState": "PENDING",
       "classification": "TRANSPARENT",
       "requiredAction": "IMPORT_UID_AND_COMPATIBLE_BCRYPT",
       "emailVerified": true,
@@ -73,6 +85,8 @@
       "uidFingerprint": "14639a9664ae",
       "sourceTargetUidEqual": true,
       "uidPreserved": true,
+      "toImport": true,
+      "plannedState": "PENDING",
       "classification": "TRANSPARENT",
       "requiredAction": "IMPORT_UID_AND_COMPATIBLE_BCRYPT",
       "emailVerified": true,
@@ -83,6 +97,8 @@
       "uidFingerprint": "4ed545194685",
       "sourceTargetUidEqual": true,
       "uidPreserved": true,
+      "toImport": true,
+      "plannedState": "PENDING",
       "classification": "TRANSPARENT",
       "requiredAction": "IMPORT_UID_AND_COMPATIBLE_BCRYPT",
       "emailVerified": true,
@@ -93,6 +109,8 @@
       "uidFingerprint": "2f93402fb0f7",
       "sourceTargetUidEqual": true,
       "uidPreserved": true,
+      "toImport": true,
+      "plannedState": "PENDING",
       "classification": "TRANSPARENT",
       "requiredAction": "IMPORT_UID_AND_COMPATIBLE_BCRYPT",
       "emailVerified": true,
@@ -103,6 +121,8 @@
       "uidFingerprint": "14f005e47862",
       "sourceTargetUidEqual": true,
       "uidPreserved": true,
+      "toImport": true,
+      "plannedState": "PENDING",
       "classification": "TRANSPARENT",
       "requiredAction": "IMPORT_UID_AND_COMPATIBLE_BCRYPT",
       "emailVerified": true,
@@ -111,15 +131,15 @@
     },
     {
       "uidFingerprint": "f3b8c72c5a7d",
-      "sourceTargetUidEqual": true,
-      "uidPreserved": true,
-      "classification": "MANUAL_OPERATOR_ACTION",
-      "requiredAction": "CONFIRM_ACCOUNT_PURPOSE_AND_CREATE_OR_EXPLICITLY_DENY_APPLICATION_LINKAGE_BEFORE_ENABLEMENT",
+      "sourceTargetUidEqual": null,
+      "uidPreserved": false,
+      "toImport": false,
+      "plannedState": "EXCLUDED",
+      "classification": "OPERATOR_EXCLUDED_MIGRATION_PREPARATION_RESIDUE",
+      "requiredAction": "DO_NOT_IMPORT_UNLESS_A_NEW_OPERATOR_DECISION_REVERSES_THE_EXCLUSION",
       "emailVerified": true,
       "status": "ACTIVE",
-      "blockingReasons": [
-        "MISSING_PROFILE_AND_BUSINESS"
-      ]
+      "blockingReasons": []
     }
   ],
   "productionFirebaseImports": 0

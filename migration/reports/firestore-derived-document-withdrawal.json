@@ -1,0 +1,47 @@
+{
+  "generatedAt": "2026-09-18T11:25:11.027Z",
+  "artifact": "firestore-derived-document-withdrawal",
+  "cleanupRunId": "withdrawal-04dcda47-6641-437a-87a4-5e2221c52881",
+  "bulkMigrationRunId": "bulkcopy-15363817-711a-4b52-9414-4885a8585bf4",
+  "projectId": "mydesckpro",
+  "firestoreDatabaseId": "default",
+  "identity": "mydesck-firestore-migration@mydesckpro.iam.gserviceaccount.com",
+  "operatorDecision": "EXCLUDE_AS_MIGRATION_PREPARATION_RESIDUE",
+  "reason": "OPERATOR_EXCLUDED_AUTH_IDENTITY_DERIVED_DOCUMENT",
+  "manifestIntegrity": "VERIFIED",
+  "manifestIntegrityHash": "f686fd5f252035226d04b466d6044e67572a95294c7fde5823b5792b7a275c62",
+  "excludedIdentities": [
+    "95e3cb04de08",
+    "4ca1630f70b0",
+    "f3b8c72c5a7d"
+  ],
+  "expectedWithdrawals": 3,
+  "matchedWithdrawals": 3,
+  "survivingPlanDocuments": 1474,
+  "copyWrittenDocuments": 1477,
+  "survivingPlanOverlap": 0,
+  "sourceOrphansAfterExclusion": 0,
+  "problems": [],
+  "state": "WITHDRAWAL_AUTHORIZED",
+  "status": "COMPLETE",
+  "actualDeletes": 3,
+  "deletedPaths": [
+    "users/14819359-83d9-4401-9795-fcb42176e59b",
+    "users/608befcc-7ed8-4466-80f4-d99a45c5e4c5",
+    "users/f1191f99-f242-4eb5-a1a6-d45c5222c7a8"
+  ],
+  "failures": [],
+  "confirmedAbsent": 3,
+  "journal": {
+    "withdrawn": 3,
+    "remaining": 1474
+  },
+  "journalStatus": "RECONCILED",
+  "mutations": {
+    "firestoreDeletes": 3,
+    "firestoreWrites": 0,
+    "authImports": 0,
+    "storageMutations": 0,
+    "sourceMutations": 0
+  }
+}

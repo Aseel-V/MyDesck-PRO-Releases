@@ -3,8 +3,14 @@ import { createHash } from 'node:crypto';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { localConfig, withSourceSnapshot } from '../../tools/lib/staging-source.mjs';
 import { writeReport } from '../../tools/lib/write-report.mjs';
+import { loadExcludedAuthIdentities } from '../lib/migration-plan.mjs';
 
 const fingerprint = (uid) => createHash('sha256').update(uid).digest('hex').slice(0, 12);
+
+// Identities an operator has excluded. Checked before every other rule, because an exclusion is
+// a decision about whether the account belongs in the migration at all, and the remaining rules
+// only answer how an account that does belong should be imported.
+const excludedAuth = loadExcludedAuthIdentities();
 const result = await withSourceSnapshot(localConfig(), async (select) => (await select(`
   SELECT u.id::text AS uid,
     (u.email IS NOT NULL AND u.email <> '')::text AS has_email,
@@ -36,14 +42,23 @@ const privateLedger = result.map((row) => {
   if (row.has_email !== 'true') reasons.push('MISSING_EMAIL');
   if (providers.some((provider) => provider !== 'email')) reasons.push('OAUTH_IDENTITY');
   let classification = 'TRANSPARENT'; let requiredAction = 'IMPORT_UID_AND_COMPATIBLE_BCRYPT';
-  if (row.is_deleted === 'true') { classification = 'INTENTIONALLY_EXCLUDED_WITH_JUSTIFICATION'; requiredAction = 'PRESERVE_TOMBSTONE_AND_DO_NOT_ENABLE_LOGIN'; reasons.push('SOURCE_DELETED'); }
+  if (excludedAuth.fingerprints.has(fingerprint(row.uid))) {
+    classification = 'OPERATOR_EXCLUDED_MIGRATION_PREPARATION_RESIDUE';
+    requiredAction = 'DO_NOT_IMPORT_UNLESS_A_NEW_OPERATOR_DECISION_REVERSES_THE_EXCLUSION';
+    reasons.length = 0;
+  }
+  else if (row.is_deleted === 'true') { classification = 'INTENTIONALLY_EXCLUDED_WITH_JUSTIFICATION'; requiredAction = 'PRESERVE_TOMBSTONE_AND_DO_NOT_ENABLE_LOGIN'; reasons.push('SOURCE_DELETED'); }
   else if (Number(row.duplicate_email_count) > 1 || Number(row.mfa_count) > 0) { classification = 'MANUAL_OPERATOR_ACTION'; requiredAction = 'RESOLVE_UNIQUE_EMAIL_OR_REENROLL_MFA_BEFORE_IMPORT'; }
   else if (Number(row.profile_count) === 0 && Number(row.business_count) === 0) { classification = 'MANUAL_OPERATOR_ACTION'; requiredAction = 'CONFIRM_ACCOUNT_PURPOSE_AND_CREATE_OR_EXPLICITLY_DENY_APPLICATION_LINKAGE_BEFORE_ENABLEMENT'; }
   else if (row.password_class === 'UNSUPPORTED') { classification = 'RESET_REQUIRED'; requiredAction = 'IMPORT_DISABLED_THEN_CONTROLLED_PASSWORD_RESET'; }
   else if (providers.some((provider) => provider !== 'email') || row.has_phone === 'true' || row.has_email !== 'true') { classification = 'REAUTH_REQUIRED'; requiredAction = 'PRESERVE_UID_AND_REQUIRE_PROVIDER_OR_PHONE_REAUTH'; }
   else if (row.password_class === 'NONE') { classification = 'RESET_REQUIRED'; requiredAction = 'PRESERVE_UID_AND_REQUIRE_PASSWORD_RESET'; }
-  if (row.is_banned === 'true') requiredAction += '_PRESERVE_DISABLED_STATE';
-  return { sourceUid: row.uid, targetUid: row.uid, uidPreserved: true, classification,
+  const excluded = classification === 'OPERATOR_EXCLUDED_MIGRATION_PREPARATION_RESIDUE';
+  if (row.is_banned === 'true' && !excluded) requiredAction += '_PRESERVE_DISABLED_STATE';
+  return { sourceUid: row.uid, targetUid: excluded ? null : row.uid, uidPreserved: !excluded,
+    toImport: !excluded && classification !== 'INTENTIONALLY_EXCLUDED_WITH_JUSTIFICATION',
+    plannedState: excluded ? 'EXCLUDED' : 'PENDING',
+    classification,
     requiredAction, emailVerified: row.email_verified === 'true', status: row.is_banned === 'true' ? 'DISABLED' : 'ACTIVE',
     blockingReasons: reasons.length ? reasons : [] };
 });
@@ -51,14 +66,24 @@ mkdirSync('migration/blocker-closure.local', { recursive: true });
 writeFileSync('migration/blocker-closure.local/auth-readiness-ledger.json',
   `${JSON.stringify({ generatedAt: new Date().toISOString(), users: privateLedger }, null, 2)}\n`);
 const users = privateLedger.map(({ sourceUid, targetUid, ...row }) => ({ uidFingerprint: fingerprint(sourceUid),
-  sourceTargetUidEqual: sourceUid === targetUid, ...row }));
+  // An excluded identity has no target uid at all, so uid equality is not the right question for it;
+  // asking it anyway would either invent a mismatch or hide the exclusion behind a green count.
+  sourceTargetUidEqual: row.toImport ? sourceUid === targetUid : null, ...row }));
 const classes = ['TRANSPARENT', 'REAUTH_REQUIRED', 'RESET_REQUIRED', 'MANUAL_OPERATOR_ACTION',
-  'INTENTIONALLY_EXCLUDED_WITH_JUSTIFICATION'];
+  'INTENTIONALLY_EXCLUDED_WITH_JUSTIFICATION', 'OPERATOR_EXCLUDED_MIGRATION_PREPARATION_RESIDUE'];
 const counts = Object.fromEntries(classes.map((name) => [name, users.filter((user) => user.classification === name).length]));
 const report = { generatedAt: new Date().toISOString(), sourceSnapshot: { readOnly: true,
   isolationLevel: 'repeatable read', writesCaused: 0 }, totalUsers: users.length, ...counts,
-  unknown: 0, accounted: users.length, uidMismatches: users.filter((user) => !user.sourceTargetUidEqual).length,
+  unknown: 0, accounted: users.length,
+  toImport: users.filter((user) => user.toImport).length,
+  excludedByOperator: users.filter((user) => !user.toImport).length,
+  manualOrUnknownRemaining: users.filter((user) => user.classification === 'MANUAL_OPERATOR_ACTION').length,
+  operatorExclusionDecision: excludedAuth.decision ?? null,
+  operatorExclusionDecidedAt: excludedAuth.decidedAt ?? null,
+  uidMismatches: users.filter((user) => user.sourceTargetUidEqual === false).length,
   users, productionFirebaseImports: 0 };
 writeReport('migration/reports/firestore-auth-production-readiness.json', `${JSON.stringify(report, null, 2)}\n`);
 console.log(JSON.stringify({ totalUsers: report.totalUsers, classifications: counts, unknown: 0,
-  uidMismatches: report.uidMismatches, privateLedger: 'ignored local file', sourceWrites: 0 }));
+  toImport: report.toImport, excludedByOperator: report.excludedByOperator,
+  manualOrUnknownRemaining: report.manualOrUnknownRemaining,
+  uidMismatches: report.uidMismatches, privateLedger: 'ignored local file', sourceWrites: 0 }, null, 2));
