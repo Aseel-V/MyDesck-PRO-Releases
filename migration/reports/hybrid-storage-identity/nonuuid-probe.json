@@ -1,0 +1,121 @@
+{
+  "runId": "nonuuid-mu60pzo6",
+  "uidShape": {
+    "length": 28,
+    "isUuid": false,
+    "uidFingerprint": "67cbfff016cf"
+  },
+  "tokenMetadata": {
+    "iss": "https://securetoken.google.com/mydesckpro",
+    "aud": "mydesckpro",
+    "hasRoleAuthenticated": true,
+    "subIsUuid": false
+  },
+  "upload": {
+    "ok": true,
+    "error": null
+  },
+  "read": {
+    "ok": true,
+    "error": null
+  },
+  "checksumMatch": true,
+  "overwrite": {
+    "ok": true,
+    "error": null
+  },
+  "overwriteVerified": true,
+  "delete": {
+    "ok": true,
+    "error": null,
+    "removed": 1
+  },
+  "verifiedGone": true,
+  "storageResidue": 0,
+  "authCleanup": [
+    "deleted",
+    "deleted"
+  ],
+  "authResidue": 0,
+  "uuidErrorPresent": false,
+  "results": [
+    {
+      "name": "uid is Firebase-generated and NOT UUID-shaped",
+      "ok": true,
+      "detail": "{\"length\":28,\"isUuid\":false,\"uidFingerprint\":\"67cbfff016cf\"}"
+    },
+    {
+      "name": "token carries role=authenticated with a non-UUID subject",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "upload own object",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "read own object",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "checksum/content match",
+      "ok": true,
+      "detail": "sha256 ebf4f635a17d10d6 vs ebf4f635a17d10d6"
+    },
+    {
+      "name": "overwrite own object",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "cache-busted re-read confirms the new bytes",
+      "ok": true,
+      "detail": "len 68 expected 68"
+    },
+    {
+      "name": "wrong user read denied",
+      "ok": true,
+      "detail": "{}"
+    },
+    {
+      "name": "wrong user overwrite denied",
+      "ok": true,
+      "detail": "new row violates row-level security policy"
+    },
+    {
+      "name": "wrong user delete denied",
+      "ok": true,
+      "detail": "no object removed"
+    },
+    {
+      "name": "anonymous API access denied",
+      "ok": true,
+      "detail": "{}"
+    },
+    {
+      "name": "anonymous CDN access denied",
+      "ok": true,
+      "detail": "http 400"
+    },
+    {
+      "name": "delete own object",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "cache-busted read after delete confirms the object is gone",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "owner-scoped list returns zero objects for this run",
+      "ok": true,
+      "detail": null
+    }
+  ],
+  "passed": 15,
+  "total": 15,
+  "status": "PASS"
+}

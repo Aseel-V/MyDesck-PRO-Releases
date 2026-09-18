@@ -1,0 +1,30 @@
+{
+  "generatedAt": "2026-09-17T20:54:19.955Z",
+  "migrationRunId": "migrated-uuid-mu60chmb",
+  "target": "PRODUCTION",
+  "plannedAuthIdentities": [
+    {
+      "role": "owner",
+      "uid": "033b581a-a383-4d07-85a0-1921e2af109a",
+      "email": "migration-test--migrated-uuid-mu60chmb-owner@example.com"
+    },
+    {
+      "role": "other",
+      "uid": "2ae9cd6a-e5e8-4a9b-a117-e1076fdde8bd",
+      "email": "migration-test--migrated-uuid-mu60chmb-other@example.com"
+    }
+  ],
+  "plannedStorageObject": "business-signatures/033b581a-a383-4d07-85a0-1921e2af109a/migration-test--migrated-uuid-mu60chmb.png",
+  "provisioning": "operator tooling with explicit localId, mirroring the uid-preserving Auth import",
+  "customerResourcesInScope": "NONE",
+  "createdResources": {
+    "authUids": [
+      "033b581a-a383-4d07-85a0-1921e2af109a",
+      "2ae9cd6a-e5e8-4a9b-a117-e1076fdde8bd"
+    ],
+    "storageObjects": [
+      "business-signatures/033b581a-a383-4d07-85a0-1921e2af109a/migration-test--migrated-uuid-mu60chmb.png"
+    ]
+  },
+  "status": "RESOURCES_CREATED"
+}

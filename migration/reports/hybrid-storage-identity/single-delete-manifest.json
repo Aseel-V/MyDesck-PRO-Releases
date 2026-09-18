@@ -1,0 +1,16 @@
+{
+  "generatedAt": "2026-09-17T20:43:03.071Z",
+  "migrationRunId": "single-del-mu5zxzbz",
+  "target": "PRODUCTION",
+  "plannedAuthIdentity": "migration-test--single-del-mu5zxzbz-owner@example.com",
+  "plannedStorageObject": "business-signatures/{ownerUid}/migration-test--single-del-mu5zxzbz.png",
+  "createdResources": {
+    "authUids": [
+      "T1uzH1YKAAdcOoBlIKfMzyTCE0A3"
+    ],
+    "storageObjects": [
+      "business-signatures/T1uzH1YKAAdcOoBlIKfMzyTCE0A3/migration-test--single-del-mu5zxzbz.png"
+    ]
+  },
+  "status": "RESOURCES_CREATED"
+}

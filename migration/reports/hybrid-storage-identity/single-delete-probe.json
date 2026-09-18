@@ -1,0 +1,32 @@
+{
+  "runId": "single-del-mu5zxzbz",
+  "routeType": "single-object: DELETE {SUPABASE_URL}/storage/v1/object/{bucket}/{uid}/{file} (bucket in path, no request body) — distinct from storage-js .remove(), which is DELETE /object/{bucket} with a {prefixes:[...]} body",
+  "upload": {
+    "ok": true,
+    "error": null
+  },
+  "delete": {
+    "http": 400,
+    "ok": false,
+    "body": "{\"statusCode\":\"400\",\"error\":\"InvalidParameter\",\"message\":\"invalid input syntax for type uuid: \\\"T1uzH1YKAAdcOoBlIKfMzyTCE0A3\\\"\",\"code\":\"InvalidParameter\"}"
+  },
+  "verifyGone": {
+    "objectStillReadable": true,
+    "error": null
+  },
+  "ownerList": {
+    "error": null,
+    "objectsForThisRun": 1,
+    "totalUnderOwnerPrefix": 1
+  },
+  "uuidErrorPresent": true,
+  "authResidue": 0,
+  "storageResidue": 1,
+  "tokenMetadata": {
+    "iss": "https://securetoken.google.com/mydesckpro",
+    "aud": "mydesckpro",
+    "hasRoleAuthenticated": true,
+    "subFingerprint": "07ba1d29d1af"
+  },
+  "safeReplacementForRemove": false
+}

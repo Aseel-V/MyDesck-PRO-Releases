@@ -1,0 +1,30 @@
+{
+  "generatedAt": "2026-09-17T19:53:13.238Z",
+  "migrationRunId": "hybrid-probe-mu5y5wd2",
+  "target": "PRODUCTION",
+  "purpose": "Hybrid storage identity probe. Written before any synthetic resource is created.",
+  "plannedAuthIdentities": [
+    {
+      "role": "owner",
+      "email": "migration-test--hybrid-probe-mu5y5wd2-owner@example.com"
+    },
+    {
+      "role": "other",
+      "email": "migration-test--hybrid-probe-mu5y5wd2-other@example.com"
+    }
+  ],
+  "plannedStorageObjects": [
+    "{ownerUid}/migration-test--<runId>-signature.png"
+  ],
+  "customerResourcesInScope": "NONE",
+  "createdResources": {
+    "authUids": [
+      "iEBkidYfU2dww5S8KnWZY974ow33",
+      "WS9a1AEA7JUzqEPhS5pqmtJPB8X2"
+    ],
+    "storageObjects": [
+      "business-signatures/iEBkidYfU2dww5S8KnWZY974ow33/migration-test--hybrid-probe-mu5y5wd2-signature.png"
+    ]
+  },
+  "status": "RESOURCES_CREATED"
+}

@@ -1,0 +1,140 @@
+{
+  "runId": "migrated-uuid-mu60chmb",
+  "ownerUidIsUuid": true,
+  "tokenMetadata": {
+    "iss": "https://securetoken.google.com/mydesckpro",
+    "aud": "mydesckpro",
+    "hasRoleAuthenticated": true,
+    "subIsUuid": true,
+    "subFingerprint": "b62f780f4a61"
+  },
+  "upload": {
+    "ok": true,
+    "error": null
+  },
+  "read": {
+    "ok": true,
+    "error": null
+  },
+  "checksumMatch": true,
+  "overwrite": {
+    "ok": true,
+    "error": null
+  },
+  "overwriteVerified": true,
+  "overwriteCachedRead": {
+    "http": 200,
+    "len": 68
+  },
+  "delete": {
+    "ok": true,
+    "error": null,
+    "removed": 1
+  },
+  "verifiedGone": true,
+  "goneCheck": {
+    "http": 400
+  },
+  "storageResidue": 0,
+  "authCleanup": [
+    {
+      "mode": "delete",
+      "deleted": true,
+      "uidFingerprint": "b62f780f4a61",
+      "customerRecordsModified": 0
+    },
+    {
+      "mode": "delete",
+      "deleted": true,
+      "uidFingerprint": "1e09a6cd5550",
+      "customerRecordsModified": 0
+    }
+  ],
+  "authResidue": 0,
+  "uuidErrorPresent": false,
+  "results": [
+    {
+      "name": "owner provisioned with an explicit UUID uid",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "owner signs in through the normal client SDK",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "token carries role=authenticated and a UUID subject",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "upload own object",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "read own object",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "checksum/content match",
+      "ok": true,
+      "detail": "sha256 ebf4f635a17d10d6 vs ebf4f635a17d10d6"
+    },
+    {
+      "name": "overwrite own object",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "re-read verifies the new bytes",
+      "ok": true,
+      "detail": "len 68 expected 68"
+    },
+    {
+      "name": "wrong user read denied",
+      "ok": true,
+      "detail": "{}"
+    },
+    {
+      "name": "wrong user overwrite denied",
+      "ok": true,
+      "detail": "new row violates row-level security policy"
+    },
+    {
+      "name": "wrong user delete denied",
+      "ok": true,
+      "detail": "no object removed"
+    },
+    {
+      "name": "anonymous API access denied",
+      "ok": true,
+      "detail": "{}"
+    },
+    {
+      "name": "anonymous CDN access denied",
+      "ok": true,
+      "detail": "http 400"
+    },
+    {
+      "name": "delete own object",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "object no longer exists",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "owner-scoped list returns zero objects for this run",
+      "ok": true,
+      "detail": null
+    }
+  ],
+  "passed": 16,
+  "total": 16,
+  "status": "PASS"
+}

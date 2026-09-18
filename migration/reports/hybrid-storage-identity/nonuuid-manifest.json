@@ -1,0 +1,28 @@
+{
+  "generatedAt": "2026-09-17T21:04:49.878Z",
+  "migrationRunId": "nonuuid-mu60pzo6",
+  "target": "PRODUCTION",
+  "identityCreation": "normal Firebase client signUp (Firebase-generated uid)",
+  "plannedAuthIdentities": [
+    {
+      "role": "owner",
+      "email": "migration-test--nonuuid-mu60pzo6-owner@example.com"
+    },
+    {
+      "role": "other",
+      "email": "migration-test--nonuuid-mu60pzo6-other@example.com"
+    }
+  ],
+  "plannedStorageObject": "business-signatures/{ownerUid}/migration-test--nonuuid-mu60pzo6.png",
+  "customerResourcesInScope": "NONE",
+  "createdResources": {
+    "authUids": [
+      "d8PMeEG9KtTof5Es2LpkKOmJQK73",
+      "toz9ufWU3yOXzNTCDnXGqkZxw393"
+    ],
+    "storageObjects": [
+      "business-signatures/d8PMeEG9KtTof5Es2LpkKOmJQK73/migration-test--nonuuid-mu60pzo6.png"
+    ]
+  },
+  "status": "RESOURCES_CREATED"
+}

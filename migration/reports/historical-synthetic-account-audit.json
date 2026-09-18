@@ -1,0 +1,26 @@
+{
+  "generatedAt": "2026-09-18T06:11:04.070Z",
+  "project": "mydesckpro",
+  "mode": "READ_ONLY",
+  "productionMutations": 0,
+  "auth": {
+    "totalProductionAccounts": 0,
+    "historicalSyntheticAccounts": 0,
+    "nonSyntheticAccounts": 0,
+    "accounts": []
+  },
+  "firestore": {
+    "documentsInDatabase": 0,
+    "documentsLinkedToHistoricalAccounts": 0,
+    "documentsNotLinked": 0,
+    "linkedPaths": [],
+    "unlinkedPaths": [],
+    "collectionsWalked": []
+  },
+  "customerLinkage": {
+    "nonSyntheticAuthAccounts": 0,
+    "documentsOwnedByNonSyntheticUid": 0,
+    "productionAuthImportsPerformed": 0,
+    "anyCustomerData": false
+  }
+}

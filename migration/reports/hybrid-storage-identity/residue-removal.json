@@ -1,0 +1,19 @@
+{
+  "runId": "residue-mu61k9ug",
+  "targetPath": "business-signatures/T1uzH1YKAAdcOoBlIKfMzyTCE0A3/.emptyFolderPlaceholder",
+  "steps": [
+    "synthetic identity re-provisioned for its own prefix",
+    "signed in through the client SDK as the owning identity",
+    "delete issued via StorageRepository: removed 1"
+  ],
+  "objectsUnderPrefixBefore": [
+    ".emptyFolderPlaceholder"
+  ],
+  "deleted": {
+    "ok": true,
+    "error": null,
+    "count": 1
+  },
+  "objectsUnderPrefixAfter": [],
+  "identityRemoved": true
+}

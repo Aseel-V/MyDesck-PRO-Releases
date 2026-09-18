@@ -1,0 +1,80 @@
+{
+  "artifact": "firestore-production-copy-validation",
+  "generatedAt": "2026-09-18T06:53:23Z",
+  "command": "node migration/firestore/tools/production-data-migration.mjs --mode=production-copy --ack=<acknowledgement> --go-manifest=<manifest outside the repository> --validate-only",
+  "headCommit": "9b17e8092ee00fa2cf078905aad7a2e2bc9d05f7",
+  "approvedPreparationCommit": "cf0553c4e6d5205d2518e4a67f3cad593b9bb85b",
+  "writeIdentity": "mydesck-firestore-migration@mydesckpro.iam.gserviceaccount.com",
+  "run": {
+    "state": "AUTHORIZED_TO_EXECUTE",
+    "authorized": true,
+    "projectId": "mydesckpro",
+    "databaseId": "default",
+    "plannedSourceRows": 1466,
+    "excludedRows": 8,
+    "plannedFirestoreDocs": 1477,
+    "plannedBatches": 15,
+    "batchSize": 100,
+    "allowlistSize": 1477,
+    "rootCollections": [
+      "businessOwners",
+      "businesses",
+      "featureRollouts",
+      "idempotency",
+      "storageCleanupQueue",
+      "tripActivityLog",
+      "tripFinancialAudit",
+      "tripInstallmentEvents",
+      "tripInstallments",
+      "tripPaymentEvents",
+      "tripPaymentPlans",
+      "trips",
+      "users",
+      "whatsappServerTemplates"
+    ],
+    "planHash": "f8dba2bb6106806e8ac4d7c1e98e0ff9ee26ebcea6a6167dd80d211a598617b3",
+    "targetDocsBefore": 0,
+    "collectionsCheckedEmpty": [
+      "businessOwners",
+      "businesses",
+      "featureRollouts",
+      "idempotency",
+      "storageCleanupQueue",
+      "tripActivityLog",
+      "tripFinancialAudit",
+      "tripInstallmentEvents",
+      "tripInstallments",
+      "tripPaymentEvents",
+      "tripPaymentPlans",
+      "trips",
+      "users",
+      "whatsappServerTemplates"
+    ],
+    "sourceSnapshot": {
+      "isolationLevel": "repeatable read",
+      "readOnly": "on",
+      "rejectedWriteSqlState": "25006",
+      "successfulWrites": 0
+    },
+    "reconciliationExpectation": {
+      "sourceRowsAccounted": 1474,
+      "migratedRows": 1466,
+      "excludedRows": 8,
+      "firestoreDocuments": 1477,
+      "note": "COPY_COMPLETE does not imply BULK_COPY_GO; full reconciliation is the next required stage"
+    },
+    "actualFirestoreWrites": 0,
+    "actualAuthImports": 0,
+    "actualStorageMutations": 0,
+    "sourceMutations": 0,
+    "productionTarget": "PRODUCTION_TARGET_VALIDATED",
+    "validateOnly": true
+  },
+  "stoppedBefore": "commitPlannedBatch — the first production write was never reached",
+  "mutations": {
+    "firestoreWrites": 0,
+    "authImports": 0,
+    "storageMutations": 0,
+    "sourceMutations": 0
+  }
+}

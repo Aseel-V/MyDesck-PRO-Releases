@@ -1,0 +1,122 @@
+{
+  "generatedAt": "2026-09-17T19:53:30.279Z",
+  "migrationRunId": "hybrid-probe-mu5y5wd2",
+  "target": "PRODUCTION",
+  "supabaseAuthSessionUsed": false,
+  "serviceRoleKeyUsed": false,
+  "rlsPolicyModified": false,
+  "bucketMadePublic": false,
+  "uuidErrorPresent": true,
+  "findingsExtra": {
+    "objectPath": "iEBkidYfU2dww5S8KnWZY974ow33/migration-test--hybrid-probe-mu5y5wd2-signature.png",
+    "deleteError": "invalid input syntax for type uuid: \"iEBkidYfU2dww5S8KnWZY974ow33\"",
+    "deletedCount": 0,
+    "deleteRetryError": "invalid input syntax for type uuid: \"iEBkidYfU2dww5S8KnWZY974ow33\"",
+    "deleteRetryCount": 0
+  },
+  "results": [
+    {
+      "name": "two synthetic Firebase identities created",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "token before claim lacks role=authenticated",
+      "ok": true,
+      "detail": "hasRoleAuthenticated=false"
+    },
+    {
+      "name": "role claim applied by operator tooling",
+      "ok": true,
+      "detail": "{ \"mode\": \"apply\", \"totalUsers\": 7, \"byScope\": { \"SYNTHETIC\": 7 }, \"withRequiredClaimBefore\": 5, \"withRequiredClaimAfter\": 7, \"productionClaimWrites\": 0, \"decision\": \"ROLE_CLAIM_READY\" } "
+    },
+    {
+      "name": "token after claim carries role=authenticated",
+      "ok": true,
+      "detail": "{\"iss\":\"https://securetoken.google.com/mydesckpro\",\"aud\":\"mydesckpro\",\"subFingerprint\":\"9f6d6db22604\",\"expISO\":\"2026-09-17T20:53:20.000Z\",\"hasRoleAuthenticated\":true,\"algHeader\":\"RS256\"}"
+    },
+    {
+      "name": "issuer is the Firebase project",
+      "ok": true,
+      "detail": "https://securetoken.google.com/mydesckpro"
+    },
+    {
+      "name": "audience is the Firebase project",
+      "ok": true,
+      "detail": "mydesckpro"
+    },
+    {
+      "name": "token is RS256",
+      "ok": true,
+      "detail": "RS256"
+    },
+    {
+      "name": "authorized owner upload succeeds",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "authorized owner read succeeds",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "checksum/content matches what was written",
+      "ok": true,
+      "detail": "sha256 ebf4f635a17d10d6 vs ebf4f635a17d10d6"
+    },
+    {
+      "name": "authorized owner overwrite succeeds",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "overwritten content reads back as the new bytes",
+      "ok": false,
+      "detail": "len 67 expected 68"
+    },
+    {
+      "name": "wrong user read denied",
+      "ok": true,
+      "detail": "{}"
+    },
+    {
+      "name": "wrong user overwrite denied",
+      "ok": true,
+      "detail": "new row violates row-level security policy"
+    },
+    {
+      "name": "wrong user delete denied",
+      "ok": true,
+      "detail": "no object removed"
+    },
+    {
+      "name": "cross-tenant listing denied",
+      "ok": true,
+      "detail": "empty or refused"
+    },
+    {
+      "name": "anonymous API access denied",
+      "ok": true,
+      "detail": "{}"
+    },
+    {
+      "name": "anonymous public/CDN access denied",
+      "ok": true,
+      "detail": "http 400"
+    },
+    {
+      "name": "authorized owner delete succeeds",
+      "ok": false,
+      "detail": "invalid input syntax for type uuid: \"iEBkidYfU2dww5S8KnWZY974ow33\""
+    },
+    {
+      "name": "no \"invalid input syntax for type uuid\" anywhere in this run",
+      "ok": false,
+      "detail": "authorized owner delete succeeds"
+    }
+  ],
+  "passed": 17,
+  "total": 20,
+  "status": "FAIL"
+}
