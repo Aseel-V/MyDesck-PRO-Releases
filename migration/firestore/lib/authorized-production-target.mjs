@@ -24,6 +24,8 @@
  * The target consumes planned entries, not `(path, data)` pairs, so a caller cannot substitute its
  * own content for a legitimate path.
  */
+import { execFileSync } from 'node:child_process';
+import { join } from 'node:path';
 import { assertCapability } from './production-execution-authorization.mjs';
 import { rawDocumentHash } from './full-rehearsal-core.mjs';
 import { PROOF_PREFIX } from './table-map.mjs';
@@ -32,6 +34,22 @@ export const EXPECTED_PLANNED_DOCUMENTS = 1477;
 export const DEFAULT_BATCH_SIZE = 100;
 /** Firestore's hard limit on writes in one batched commit. */
 export const FIRESTORE_BATCH_LIMIT = 500;
+
+/**
+ * The identity this target writes as.
+ *
+ * Not the operator, and not the ambient ADC identity. ADC on this machine impersonates
+ * mydesck-migration@, which has no Firestore access, and cannot itself impersonate the writer
+ * identity; the operator's own gcloud account is the one holding tokenCreator on it. So the token is
+ * minted exactly the way every other tool in this repository mints it — `gcloud auth
+ * print-access-token --impersonate-service-account=<writer>` — and handed to the Firestore client.
+ *
+ * There is deliberately no fallback. If the writer token cannot be minted the target refuses to
+ * open, rather than quietly connecting as whatever identity happens to be lying around: a migration
+ * that writes as the wrong principal is worse than one that does not start.
+ */
+export const MIGRATION_WRITE_IDENTITY =
+  'mydesck-firestore-migration@mydesckpro.iam.gserviceaccount.com';
 
 export class ProductionTargetError extends Error {
   constructor(code, detail) {
@@ -133,19 +151,68 @@ export async function openAuthorizedProductionTarget({
     if (process.env.FIRESTORE_EMULATOR_HOST) {
       throw new ProductionTargetError('EMULATOR_HOST_SET_FOR_PRODUCTION_TARGET');
     }
-    const app = await import('firebase-admin/app');
-    const firestore = await import('firebase-admin/firestore');
-    const instance = app.initializeApp({ projectId, credential: app.applicationDefault() },
-      `authorized-production-${process.pid}-${Date.now()}`);
-    const db = firestore.getFirestore(instance, databaseId);
-    db.settings({ ignoreUndefinedProperties: false });
-    return { db, close: () => app.deleteApp(instance) };
+    const { AuthClient, GoogleAuth } = await import('google-auth-library');
+    const { Firestore } = await import('@google-cloud/firestore');
+
+    /** Mints and caches the writer-identity access token. The token is never logged or persisted. */
+    class MigrationWriterClient extends AuthClient {
+      #token = null;
+      #expiresAt = 0;
+
+      async getAccessToken() {
+        if (this.#token && Date.now() < this.#expiresAt) return { token: this.#token };
+        const sdk = process.env.GCLOUD_SDK_ROOT
+          ?? join(process.env.LOCALAPPDATA ?? '', 'Google/Cloud SDK/google-cloud-sdk');
+        let minted;
+        try {
+          minted = execFileSync(join(sdk, 'platform/bundledpython/python.exe'),
+            [join(sdk, 'lib/gcloud.py'), 'auth', 'print-access-token',
+              `--impersonate-service-account=${MIGRATION_WRITE_IDENTITY}`],
+            { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 120_000 }).trim();
+        } catch {
+          // The failure detail can carry account names; the code is enough to act on.
+          throw new ProductionTargetError('MIGRATION_WRITE_IDENTITY_TOKEN_UNAVAILABLE',
+            MIGRATION_WRITE_IDENTITY);
+        }
+        if (!minted) {
+          throw new ProductionTargetError('MIGRATION_WRITE_IDENTITY_TOKEN_EMPTY',
+            MIGRATION_WRITE_IDENTITY);
+        }
+        this.#token = minted;
+        // gcloud mints these for about an hour; refresh well inside that.
+        this.#expiresAt = Date.now() + 30 * 60 * 1000;
+        return { token: this.#token };
+      }
+
+      async getRequestHeaders() {
+        const { token } = await this.getAccessToken();
+        return new Headers({ authorization: `Bearer ${token}` });
+      }
+
+      async request(options) { return this.transporter.request(options); }
+    }
+
+    // Proves the identity is actually available before any collection is touched.
+    const writer = new MigrationWriterClient();
+    await writer.getAccessToken();
+
+    const db = new Firestore({
+      projectId,
+      databaseId,
+      auth: new GoogleAuth({ authClient: writer }),
+      ignoreUndefinedProperties: false,
+    });
+    return { db, close: () => db.terminate(), identity: MIGRATION_WRITE_IDENTITY };
   });
   const connection = await connect({ projectId, databaseId });
   const db = connection.db;
 
   // 4. The target must satisfy itself about identity rather than trusting the caller's word.
-  const actualProject = db.projectId ?? db._settings?.projectId ?? projectId;
+  // The `projectId` getter throws until the client has resolved; the settings it was built
+  // with are the authoritative statement of where writes would land either way.
+  let actualProject = db._settings?.projectId ?? null;
+  if (!actualProject) { try { actualProject = db.projectId; } catch { actualProject = null; } }
+  actualProject = actualProject ?? projectId;
   if (actualProject !== 'mydesckpro') {
     throw new ProductionTargetError('TARGET_PROJECT_MISMATCH', String(actualProject));
   }
@@ -175,6 +242,7 @@ export async function openAuthorizedProductionTarget({
   return Object.freeze({
     projectId: actualProject,
     databaseId,
+    identity: connection.identity ?? null,
     plannedDocuments: sealed.plan.length,
     allowlistSize: sealed.allowlist.size,
     rootCollections: [...sealed.rootCollections].sort(),
