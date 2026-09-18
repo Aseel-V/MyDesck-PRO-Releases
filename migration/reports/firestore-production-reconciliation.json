@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-18T11:38:16.731Z",
+  "generatedAt": "2026-09-18T12:39:47.458Z",
   "artifact": "firestore-production-reconciliation",
   "migrationRunId": "bulkcopy-15363817-711a-4b52-9414-4885a8585bf4",
   "journal": "migration/production-copy.local/bulkcopy-15363817-711a-4b52-9414-4885a8585bf4.json",

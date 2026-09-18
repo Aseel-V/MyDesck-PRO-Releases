@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-18T11:41:14.661Z",
+  "generatedAt": "2026-09-18T12:33:09.821Z",
   "artifact": "firestore-production-final-delta",
   "bulkMigrationRunId": "bulkcopy-15363817-711a-4b52-9414-4885a8585bf4",
   "projectId": "mydesckpro",
@@ -20,7 +20,7 @@
     "transactionOutcome": "ROLLBACK",
     "marker": {
       "snapshot": "21207:21207:",
-      "captured_at": "2026-09-18 11:39:52.395249+00",
+      "captured_at": "2026-09-18 12:31:50.664415+00",
       "wal_lsn": "7/FC000000"
     }
   },

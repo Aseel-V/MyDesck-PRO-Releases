@@ -1,0 +1,69 @@
+{
+  "generatedAt": "2026-09-18T12:37:45.644Z",
+  "artifact": "split-brain-watch",
+  "bulkMigrationRunId": "bulkcopy-15363817-711a-4b52-9414-4885a8585bf4",
+  "projectId": "mydesckpro",
+  "releasedVersion": "0.0.62",
+  "risk": {
+    "oldClientCanStillWrite": true,
+    "reason": "the 0.0.61 updater never checks automatically; discovery, download and install are all manual and the notice is dismissible",
+    "forcedUpdateAvailable": false,
+    "requiredFlagEnforced": false
+  },
+  "observation": {
+    "at": "2026-09-18T12:37:45.644Z",
+    "marker": {
+      "snapshot": "21207:21207:",
+      "captured_at": "2026-09-18 12:36:45.502384+00",
+      "wal_lsn": "7/FC000000"
+    },
+    "sourceRows": 1474,
+    "plannedDocuments": 1474,
+    "authUsers": 10,
+    "storage": [
+      {
+        "bucket": "business-signatures",
+        "objects": 1,
+        "bytes": 146338,
+        "lastUpdated": "2026-09-14 18:09:14.198949+00"
+      },
+      {
+        "bucket": "logos",
+        "objects": 2,
+        "bytes": 292332,
+        "lastUpdated": "2026-09-14 19:25:21.084352+00"
+      },
+      {
+        "bucket": "restaurant-assets",
+        "objects": 1,
+        "bytes": 0,
+        "lastUpdated": "2026-03-21 14:22:05.365841+00"
+      }
+    ],
+    "newestBusinessWrite": "2026-09-13 16:19:07.889912+00",
+    "newDocuments": 0,
+    "changedDocuments": 0,
+    "removedFromPlan": 0,
+    "rowDriftVsCutover": [],
+    "sourceMoved": false,
+    "walMoved": null,
+    "txidMoved": null
+  },
+  "observations": 1,
+  "quietSince": "2026-09-18T12:37:45.644Z",
+  "quietForHours": 0,
+  "quietWindowHours": 24,
+  "postReleaseSourceNew": 0,
+  "postReleaseSourceChanged": 0,
+  "postReleaseSourceDeleted": 0,
+  "authUsersChange": 0,
+  "storageChange": 0,
+  "decision": "WATCHING",
+  "nextAction": "keep watching: 24h of continuous quiet required, 0.0h so far",
+  "mutations": {
+    "sourceWrites": 0,
+    "firestoreWrites": 0,
+    "authImports": 0,
+    "storageMutations": 0
+  }
+}
