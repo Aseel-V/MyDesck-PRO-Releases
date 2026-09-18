@@ -4,7 +4,7 @@
   "supabaseProject": "pubugnfaqqukelvgckdr",
   "schemaVersion": 1,
   "transformVersion": "1.full.1",
-  "approvedPreparationCommit": "7e10184375a14a1453fa722304b27605ed0fe3af",
+  "approvedPreparationCommit": "3b0bd25b742b1d135645a37768cd7482d8e42a67",
   "defaultModes": {
     "auth": "dry-run",
     "data": "dry-run",
