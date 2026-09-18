@@ -19,13 +19,15 @@
  */
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const PROJECT = 'mydesckpro';
 const SYNTHETIC_PREFIX = 'migration-test--';
 const REQUIRED_CLAIM = { role: 'authenticated' };
 const APPROVAL = 'I_ACKNOWLEDGE_MYDESCK_PRODUCTION_CLAIM_WRITE';
+const LEDGER_PATH = 'migration/firestore/config/production-auth-ledger-plan.json';
+const JOURNAL_PATH = 'migration/production-copy.local/role-claim-journal.json';
 
 const arg = (name, fallback = null) =>
   process.argv.find((a) => a.startsWith(`${name}=`))?.slice(name.length + 1) ?? fallback;
@@ -75,8 +77,35 @@ const rows = users.map((user) => {
   };
 });
 
+/**
+ * The authorized import set, by uid fingerprint.
+ *
+ * `--include-production` used to mean "every account that lacks the claim", which happens to be the
+ * right set today only because Firebase Auth currently holds nothing else. That is a coincidence,
+ * not a guarantee, and a claim write to an identity nobody authorized is exactly the kind of thing
+ * this tool exists to prevent. Production targets are now intersected with the accounts the auth
+ * ledger marks as imported, so an identity outside it cannot be written to even by an operator who
+ * supplied the approval.
+ */
+const authorizedFingerprints = (() => {
+  try {
+    const ledger = JSON.parse(readFileSync(LEDGER_PATH, 'utf8'));
+    return new Set(ledger.users.filter((user) => user.toImport).map((user) => user.sourceUidFingerprint));
+  } catch { return null; }
+})();
+if (mode === 'apply' && includeProduction && !authorizedFingerprints) {
+  throw Error('AUTH_LEDGER_UNREADABLE_REFUSING_PRODUCTION_CLAIM_WRITE');
+}
+
 const needing = rows.filter((r) => !r.hasRequiredClaim);
-const targets = needing.filter((r) => includeProduction || r.scope === 'SYNTHETIC');
+const refused = [];
+const targets = needing.filter((row) => {
+  if (row.scope === 'SYNTHETIC') return true;
+  if (!includeProduction) return false;
+  if (authorizedFingerprints.has(row.uidFingerprint)) return true;
+  refused.push({ uidFingerprint: row.uidFingerprint, reason: 'NOT_IN_AUTHORIZED_IMPORT_LEDGER' });
+  return false;
+});
 const applied = [];
 if (mode === 'apply') {
   for (const row of targets) {
@@ -95,6 +124,28 @@ if (mode === 'apply') {
 const after = mode === 'apply' ? await listUsers() : users;
 const verified = after.map((u) => parseClaims(u.customAttributes)?.role === 'authenticated');
 
+// Before/after claim state per account. Claim keys and the role value are recorded; any other
+// claim's value is not, because this journal is about what changed, not about what they contain.
+const beforeByUid = new Map(users.map((u) => [u.localId, parseClaims(u.customAttributes) ?? {}]));
+const claimJournal = after.map((user) => {
+  const before = beforeByUid.get(user.localId) ?? {};
+  const now = parseClaims(user.customAttributes) ?? {};
+  const lost = Object.keys(before).filter((key) => !(key in now));
+  return {
+    uidFingerprint: fingerprint(user.localId),
+    scope: (user.email ?? '').startsWith(SYNTHETIC_PREFIX) ? 'SYNTHETIC' : 'PRODUCTION',
+    authorizedByLedger: authorizedFingerprints
+      ? authorizedFingerprints.has(fingerprint(user.localId)) : null,
+    beforeClaimKeys: Object.keys(before).sort(),
+    afterClaimKeys: Object.keys(now).sort(),
+    roleBefore: before.role ?? null,
+    roleAfter: now.role ?? null,
+    otherClaimsLost: lost,
+  };
+});
+writeFileSync(JOURNAL_PATH, `${JSON.stringify({ generatedAt: new Date().toISOString(), mode,
+  includeProduction, accounts: claimJournal }, null, 2)}\n`, { mode: 0o600 });
+
 const report = {
   generatedAt: new Date().toISOString(),
   project: PROJECT,
@@ -105,6 +156,10 @@ const report = {
   withRequiredClaimBefore: rows.filter((r) => r.hasRequiredClaim).length,
   withRequiredClaimAfter: verified.filter(Boolean).length,
   missingClaim: needing.map((r) => ({ uidFingerprint: r.uidFingerprint, scope: r.scope })),
+  refusedOutsideLedger: refused,
+  authorizedImportSetSize: authorizedFingerprints ? authorizedFingerprints.size : null,
+  otherCustomClaimsLost: claimJournal.reduce((sum, a) => sum + a.otherClaimsLost.length, 0),
+  claimJournal: JOURNAL_PATH,
   applied,
   productionClaimWrites: applied.filter((a) => a.scope === 'PRODUCTION').length,
   customerRecordsModified: mode === 'apply' ? applied.filter((a) => a.scope === 'PRODUCTION').length : 0,

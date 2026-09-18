@@ -141,8 +141,8 @@ export class FirestoreAuthGateway implements AuthGateway {
     }
   }
 
-  async getAccessToken(): Promise<string | null> {
+  async getAccessToken(forceRefresh = false): Promise<string | null> {
     const user = await this.session.currentUser();
-    return user ? user.getIdToken() : null;
+    return user ? user.getIdToken(forceRefresh) : null;
   }
 }

@@ -43,6 +43,10 @@ export interface AuthGateway {
    */
   completePasswordReset(newPassword: string, actionCode?: string | null): Promise<void>;
   /** Token presented to Supabase Storage. */
-  getAccessToken(): Promise<string | null>;
+  /**
+   * The bearer token for Storage. `forceRefresh` mints a new one instead of returning the cached
+   * token, which is the only way a session picks up a custom claim written after it signed in.
+   */
+  getAccessToken(forceRefresh?: boolean): Promise<string | null>;
   currentUid(): string | null;
 }

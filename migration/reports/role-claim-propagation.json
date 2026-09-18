@@ -1,0 +1,36 @@
+{
+  "generatedAt": "2026-09-18T13:15:59.820Z",
+  "artifact": "role-claim-propagation",
+  "runId": "claimprop-b071a359-1c2e-4310-b691-9d04efced33f",
+  "bridge": {
+    "provider": "supabase-js accessToken -> registerStorageIdentity -> AuthGateway.getAccessToken",
+    "call": "user.getIdToken() with no forceRefresh",
+    "consequence": "a session presents its cached token until Firebase refreshes it near expiry"
+  },
+  "findings": {
+    "staleSession": {
+      "roleBeforeClaim": null,
+      "roleFromCachedToken": null,
+      "cachedTokenUnchanged": true,
+      "cachedTokenExpiresInMinutes": 60,
+      "storageWithStaleToken": "DENIED",
+      "roleAfterForcedRefresh": "authenticated",
+      "storageAfterForcedRefresh": "ALLOWED",
+      "objectPath": "business-signatures/jMerR3ydrNd1iBrWZkiObOnBxFC3/migration-test--claimprop-b071a359-1c2e-4310-b691-9d04efced33f-stale.png"
+    },
+    "freshSignIn": {
+      "role": "authenticated",
+      "storage": "ALLOWED",
+      "objectPath": "business-signatures/9F4lW3aoTecsXEocmwqdkXhc7si1/migration-test--claimprop-b071a359-1c2e-4310-b691-9d04efced33f-fresh.png"
+    }
+  },
+  "freshSignInReceivesClaim": true,
+  "staleSessionKeepsOldToken": true,
+  "forcedRefreshRestoresStorage": true,
+  "cleanup": {
+    "syntheticAuthCreated": 2,
+    "syntheticAuthDeleted": 2,
+    "syntheticAuthRemaining": 0
+  },
+  "decision": "PROPAGATION_UNDERSTOOD"
+}

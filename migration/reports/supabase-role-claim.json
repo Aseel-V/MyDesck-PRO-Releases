@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-09-18T12:56:39.728Z",
+  "generatedAt": "2026-09-18T13:14:13.564Z",
   "project": "mydesckpro",
-  "mode": "verify",
-  "includeProduction": false,
+  "mode": "apply",
+  "includeProduction": true,
   "totalUsers": 7,
   "byScope": {
     "PRODUCTION": 5,
     "SYNTHETIC": 2
   },
   "withRequiredClaimBefore": 0,
-  "withRequiredClaimAfter": 0,
+  "withRequiredClaimAfter": 7,
   "missingClaim": [
     {
       "uidFingerprint": "29f3c0367460",
@@ -40,9 +40,63 @@
       "scope": "PRODUCTION"
     }
   ],
-  "applied": [],
-  "productionClaimWrites": 0,
-  "customerRecordsModified": 0,
+  "refusedOutsideLedger": [],
+  "authorizedImportSetSize": 7,
+  "otherCustomClaimsLost": 0,
+  "claimJournal": "migration/production-copy.local/role-claim-journal.json",
+  "applied": [
+    {
+      "uidFingerprint": "29f3c0367460",
+      "scope": "PRODUCTION",
+      "http": 200,
+      "ok": true,
+      "preservedClaimKeys": []
+    },
+    {
+      "uidFingerprint": "6d65321887ee",
+      "scope": "SYNTHETIC",
+      "http": 200,
+      "ok": true,
+      "preservedClaimKeys": []
+    },
+    {
+      "uidFingerprint": "a3d78f6c5a53",
+      "scope": "PRODUCTION",
+      "http": 200,
+      "ok": true,
+      "preservedClaimKeys": []
+    },
+    {
+      "uidFingerprint": "14639a9664ae",
+      "scope": "PRODUCTION",
+      "http": 200,
+      "ok": true,
+      "preservedClaimKeys": []
+    },
+    {
+      "uidFingerprint": "4ed545194685",
+      "scope": "PRODUCTION",
+      "http": 200,
+      "ok": true,
+      "preservedClaimKeys": []
+    },
+    {
+      "uidFingerprint": "2f93402fb0f7",
+      "scope": "SYNTHETIC",
+      "http": 200,
+      "ok": true,
+      "preservedClaimKeys": []
+    },
+    {
+      "uidFingerprint": "14f005e47862",
+      "scope": "PRODUCTION",
+      "http": 200,
+      "ok": true,
+      "preservedClaimKeys": []
+    }
+  ],
+  "productionClaimWrites": 5,
+  "customerRecordsModified": 5,
   "note": "Firebase custom claims reach a client only on the next ID-token refresh; synthetic tests must force a refresh before asserting.",
-  "decision": "ROLE_CLAIM_INCOMPLETE"
+  "decision": "ROLE_CLAIM_READY"
 }
