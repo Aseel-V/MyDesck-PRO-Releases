@@ -20,6 +20,7 @@ import { qi } from '../../tools/lib/staging-source.mjs';
 import { TABLE_MAP, validateTableMap } from './table-map.mjs';
 import { canonicalHash } from './canonical.mjs';
 import { firestoreFieldsFromSource, transformRow } from './transform.mjs';
+import { parseDecimalString, decimalStringToScaledInteger } from './exact-decimal.mjs';
 import {
   authDerivedDocument, businessOwnerIndexDocument, credentialExclusions, documentId,
   extraFields, indexRisk, migratableColumns, normalizePgArray, rawDocumentHash, resolveTenancy,
@@ -118,6 +119,7 @@ export async function buildMigrationPlan({ select, Timestamp }) {
   const coverage = [];
   const collisions = new Map();
   const metadataBySourceKey = new Map();
+  const financialValues = [];
   const profileUids = new Set();
   const vehicleRows = [];
   let sourceRows = 0;
@@ -191,6 +193,21 @@ export async function buildMigrationPlan({ select, Timestamp }) {
           estimatedBytes: transformed.estimatedBytes, derived: false, data: transformed.data,
           canonicalSource: transformed.canonicalSource, columns };
         plan.push(entry);
+        // Financial parity is checked against the SOURCE row, not the document, so the comparison
+        // cannot be satisfied by a transform that is wrong in both directions. Same column rule and
+        // same scaling as the rehearsal.
+        for (const column of columns) {
+          if (!/amount|price|cost|paid|profit|rate|subtotal|total|tax|tip|discount|cash|card|receivable|margin/i
+            .test(column.name)) continue;
+          if (!['numeric', 'decimal', 'bigint', 'integer', 'smallint'].includes(column.type)) continue;
+          if (row[column.name] === null || row[column.name] === undefined) continue;
+          const scale = column.name.endsWith('_minor') ? 2
+            : ['numeric', 'decimal'].includes(column.type) ? parseDecimalString(row[column.name]).sourceScale : 0;
+          const units = ['numeric', 'decimal'].includes(column.type)
+            ? decimalStringToScaledInteger(row[column.name], scale) : BigInt(row[column.name]);
+          financialValues.push({ path, field: column.name, units: units.toString(), scale,
+            currency: row.currency ?? row.preferred_currency ?? null });
+        }
         metadataBySourceKey.set(key, { key, sourceTable: tableName, sourcePk: pk, targetPath: path,
           docId, columns, ownerUid: tenancy.ownerUid, businessId: tenancy.businessId,
           foreignKeys: table.foreignKeys.map((fk) => ({ parent: fk.parent, columns: fk.columns,
@@ -213,15 +230,27 @@ export async function buildMigrationPlan({ select, Timestamp }) {
   const derive = (entry) => { collisions.set(entry.path, entry.sourceKey); plan.push(entry); };
 
   for (const row of authRows) {
-    if (profileUids.has(row.uid)) continue;
     const path = `users/${encodeURIComponent(row.uid)}`;
-    if (collisions.has(path)) continue;
-    const data = authDerivedDocument(row.uid, businessByOwner.get(row.uid) ?? null);
-    derive({ path, collection: 'users', docId: row.uid, sourceTable: 'auth.users', sourcePk: [row.uid],
-      sourceKey: `auth.users#${encodeURIComponent(row.uid)}`,
-      sourceFingerprint: rawDocumentHash(path, data), documentFingerprint: rawDocumentHash(path, data),
-      ownerUid: row.uid, businessId: businessByOwner.get(row.uid) ?? null,
-      estimatedBytes: Buffer.byteLength(JSON.stringify(data)), derived: true, data, columns: [] });
+    if (!profileUids.has(row.uid) && !collisions.has(path)) {
+      const data = authDerivedDocument(row.uid, businessByOwner.get(row.uid) ?? null);
+      derive({ path, collection: 'users', docId: row.uid, sourceTable: 'auth.users', sourcePk: [row.uid],
+        sourceKey: `auth.users#${encodeURIComponent(row.uid)}`,
+        sourceFingerprint: rawDocumentHash(path, data), documentFingerprint: rawDocumentHash(path, data),
+        ownerUid: row.uid, businessId: businessByOwner.get(row.uid) ?? null,
+        estimatedBytes: Buffer.byteLength(JSON.stringify(data)), derived: true, data, columns: [] });
+    }
+    // Every auth user is a valid foreign-key target, whether its document came from user_profiles or
+    // was derived here. Without this registration every FK into auth.users reads as a source orphan,
+    // which is an artefact of the bookkeeping rather than anything about the data. The rehearsal
+    // registers it the same way, and for the same reason.
+    const userDocument = plan.find((entry) => entry.path === path);
+    if (!userDocument) throw new Error('AUTH_USER_DOCUMENT_PLAN_MISSING');
+    metadataBySourceKey.set(`auth.users#${encodeURIComponent(row.uid)}`, {
+      key: `auth.users#${encodeURIComponent(row.uid)}`, sourceTable: 'auth.users',
+      sourcePk: [row.uid], targetPath: path, docId: row.uid, columns: [],
+      ownerUid: userDocument.ownerUid, businessId: userDocument.businessId,
+      foreignKeys: [], entityType: 'auth.users',
+    });
   }
 
   for (const business of businessRows) {
@@ -263,12 +292,48 @@ export async function buildMigrationPlan({ select, Timestamp }) {
       estimatedBytes: Buffer.byteLength(JSON.stringify(data)), derived: true, data, columns: [] });
   }
 
+  // ---- relationship records, from the foreign keys already captured per row --------------------
+  // Derived documents carry no foreign keys of their own, so this walks the table documents only.
+  const sourceKeys = new Set(metadataBySourceKey.keys());
+  const relationships = [];
+  let sourceOrphans = 0;
+  let crossTenantReferences = 0;
+  for (const item of metadataBySourceKey.values()) {
+    for (const fk of item.foreignKeys) {
+      if (fk.values.some((value) => value === null || value === undefined)) continue;
+      const [schema, parentTableName] = fk.parent.split('.');
+      let parentKey;
+      if (schema === 'auth') parentKey = `auth.users#${encodeURIComponent(String(fk.values[0]))}`;
+      else {
+        const parentTable = catalogByName.get(parentTableName);
+        const pseudo = Object.fromEntries(fk.parentColumns.map((name, index) => [name, fk.values[index]]));
+        parentKey = sourceKey(parentTableName, parentTable.primaryKey, pseudo);
+      }
+      const parent = metadataBySourceKey.get(parentKey);
+      if (!parent && !sourceKeys.has(parentKey)) sourceOrphans += 1;
+      if (parent && item.businessId && parent.businessId && item.businessId !== parent.businessId) {
+        crossTenantReferences += 1;
+      }
+      relationships.push({ childPath: item.targetPath, parentPath: parent?.targetPath ?? null,
+        sourceExisting: Boolean(parent),
+        sameTenant: !parent || !item.businessId || !parent.businessId
+          || item.businessId === parent.businessId });
+    }
+  }
+
   const tableDocuments = plan.filter((entry) => !entry.derived).length;
   const derivedDocuments = plan.filter((entry) => entry.derived).length;
   return {
     plan,
     excluded,
     coverage,
+    // Audit structures. These describe the same snapshot the plan was built from; they add no
+    // documents and change no document, so the plan stays byte-for-byte what it was.
+    relationships,
+    financialValues,
+    metadata: [...metadataBySourceKey.values()],
+    sourceOrphans,
+    crossTenantReferences,
     counts: {
       sourceRows,
       excludedRows: excluded.length,
