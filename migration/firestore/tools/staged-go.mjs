@@ -22,6 +22,14 @@ const roleClaim = read('migration/reports/supabase-role-claim.json');
 const staff = read('migration/reports/restaurant-staff-inventory.json');
 const smoke = read('migration/reports/hybrid-storage-smoke.json');
 const bucket = read('migration/reports/signature-bucket-provision.json');
+// Production-stage evidence. These files exist only once the corresponding stage has actually
+// run against production, so a stage that has not happened stays MISSING rather than assumed.
+const reconciliation = read('migration/reports/firestore-production-reconciliation.json');
+const finalDelta = read('migration/reports/firestore-production-final-delta.json');
+const authImport = read('migration/reports/firestore-production-auth-import.json');
+const productionSmoke = read('migration/reports/firestore-post-cutover-smoke.json');
+const postCutoverFinancial = read('migration/reports/firestore-post-cutover-financial.json');
+const rollbackJournal = read('migration/reports/firestore-production-rollback-readiness.json');
 const staffRulesSuite = harness?.suites?.find((x) => x.label === 'restaurant staff membership Rules');
 const rulesSource = existsSync('migration/firestore/rules/firestore.rules')
   ? readFileSync('migration/firestore/rules/firestore.rules', 'utf8') : '';
@@ -103,6 +111,45 @@ const evidence = {
       : 'not generated' },
   storageAnonymousDenied: { status: storageAuth?.anonymousPrivateRead?.denied ? 'PASS' : 'NOT_RUN',
     evidence: storageAuth?.anonymousPrivateRead ?? 'not generated' },
+
+  // ---- production stages ------------------------------------------------------------------------
+  // Each of these reads a decision another tool actually reached. Nothing here re-derives a verdict,
+  // and an artifact that is absent stays MISSING: a stage that never ran must not read as a pass.
+  productionSourceSnapshot: { status: reconciliation?.snapshot?.rejectedWriteSqlState === '25006'
+      && reconciliation?.snapshot?.successfulWrites === 0 ? 'PASS' : reconciliation ? 'FAIL' : 'NOT_RUN',
+    evidence: reconciliation?.snapshot ?? 'not generated' },
+  productionReconciliation: { status: reconciliation?.status === 'RECONCILED' ? 'PASS'
+      : reconciliation ? 'FAIL' : 'NOT_RUN',
+    evidence: reconciliation ? { status: reconciliation.status, levels: reconciliation.levels,
+      missing: reconciliation.coverage.missingDocuments,
+      unexpected: reconciliation.coverage.unexpectedDocuments,
+      hashMismatches: reconciliation.coverage.rawHashMismatches
+        + reconciliation.coverage.canonicalHashMismatches,
+      bulkCopyGo: reconciliation.bulkCopyGo } : 'not generated' },
+  finalDelta: { status: finalDelta?.decision === 'NO_DELTA_REQUIRED' ? 'PASS'
+      : finalDelta?.decision === 'DELTA_APPLIED' ? 'PASS' : finalDelta ? 'FAIL' : 'NOT_RUN',
+    evidence: finalDelta ? { decision: finalDelta.decision, delta: finalDelta.delta,
+      planHashUnchanged: finalDelta.planHashUnchanged,
+      writeFreezeApplied: finalDelta.writeFreeze?.applied } : 'not generated' },
+  // The delta measurement compares the current source against what Firestore actually holds, so a
+  // zero delta is itself the post-delta reconciliation; there is no second pass to wait for.
+  finalReconciliation: { status: finalDelta && finalDelta.delta.newDocuments === 0
+      && finalDelta.delta.changedDocuments === 0 && finalDelta.delta.deletedDocuments === 0
+      && finalDelta.delta.sourceTableRowDrift.length === 0 ? 'PASS' : finalDelta ? 'FAIL' : 'NOT_RUN',
+    evidence: finalDelta?.delta ?? 'not generated' },
+  productionAuthImport: { status: authImport?.decision === 'AUTH_IMPORT_GO' ? 'PASS'
+      : authImport ? 'FAIL' : 'NOT_RUN',
+    evidence: authImport ? { sourceUsers: authImport.sourceUsers, imported: authImport.imported,
+      uidMismatches: authImport.uidMismatches } : 'not generated' },
+  productionSmoke: { status: productionSmoke?.decision === 'PRODUCTION_SMOKE_PASS' ? 'PASS'
+      : productionSmoke ? 'FAIL' : 'NOT_RUN',
+    evidence: productionSmoke?.summary ?? 'not generated' },
+  postCutoverFinancialCheck: { status: postCutoverFinancial?.decision === 'FINANCIAL_PARITY_PASS' ? 'PASS'
+      : postCutoverFinancial ? 'FAIL' : 'NOT_RUN',
+    evidence: postCutoverFinancial?.summary ?? 'not generated' },
+  rollbackJournal: { status: rollbackJournal?.decision === 'ROLLBACK_READY' ? 'PASS'
+      : rollbackJournal ? 'FAIL' : 'NOT_RUN',
+    evidence: rollbackJournal?.summary ?? 'not generated' },
 };
 
 const stages = evaluateStagedGo(evidence);

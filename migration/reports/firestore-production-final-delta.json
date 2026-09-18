@@ -1,0 +1,67 @@
+{
+  "generatedAt": "2026-09-18T09:04:32.634Z",
+  "artifact": "firestore-production-final-delta",
+  "bulkMigrationRunId": "bulkcopy-15363817-711a-4b52-9414-4885a8585bf4",
+  "projectId": "mydesckpro",
+  "firestoreDatabaseId": "default",
+  "readIdentity": "mydesck-firestore-migration@mydesckpro.iam.gserviceaccount.com",
+  "writeFreeze": {
+    "applied": false,
+    "mechanism": "src/data/maintenanceMode.ts via VITE_MIGRATION_MAINTENANCE",
+    "coverage": "FirestoreTravelRepository only",
+    "appliesToLiveSupabaseBackend": false,
+    "note": "The implemented freeze guards the Firebase-mode client. The build that is live today runs the Supabase path, which has no freeze wired into it, so source quiescence is measured here rather than enforced."
+  },
+  "snapshot": {
+    "isolationLevel": "repeatable read",
+    "readOnly": "on",
+    "rejectedWriteSqlState": "25006",
+    "successfulWrites": 0,
+    "transactionOutcome": "ROLLBACK",
+    "marker": {
+      "snapshot": "21207:21207:",
+      "captured_at": "2026-09-18 09:03:09.248292+00",
+      "wal_lsn": "7/FC000000"
+    }
+  },
+  "copyTime": {
+    "startedAt": "2026-09-18T08:15:16.078Z",
+    "planHash": "f8dba2bb6106806e8ac4d7c1e98e0ff9ee26ebcea6a6167dd80d211a598617b3",
+    "plannedDocuments": 1477
+  },
+  "now": {
+    "planHash": "f8dba2bb6106806e8ac4d7c1e98e0ff9ee26ebcea6a6167dd80d211a598617b3",
+    "plannedDocuments": 1477,
+    "sourceRows": 1474,
+    "migratableRows": 1466,
+    "excludedRows": 8,
+    "authUsers": 10
+  },
+  "planHashUnchanged": true,
+  "delta": {
+    "newDocuments": 0,
+    "changedDocuments": 0,
+    "deletedDocuments": 0,
+    "sourceTableRowDrift": [],
+    "newSample": [],
+    "changedSample": [],
+    "deletedSample": [],
+    "documentsRequiringApplication": 0,
+    "batches": 0
+  },
+  "planProperties": {
+    "noCredentialFields": true,
+    "noExcludedOperationalRows": true,
+    "deterministicPaths": true,
+    "ownershipPreserved": true,
+    "storageWrites": 0
+  },
+  "decision": "NO_DELTA_REQUIRED",
+  "mutations": {
+    "firestoreWrites": 0,
+    "firestoreDeletes": 0,
+    "authImports": 0,
+    "storageMutations": 0,
+    "sourceMutations": 0
+  }
+}

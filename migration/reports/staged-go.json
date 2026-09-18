@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-17T11:55:41.930Z",
+  "generatedAt": "2026-09-18T10:54:19.425Z",
   "readOnly": true,
   "productionMutations": 0,
   "architecture": "FIREBASE_AUTH_FIRESTORE_PLUS_SUPABASE_STORAGE_ONLY",
@@ -7,7 +7,7 @@
     "activeProductParity": "2026-09-17T05:54:50.381Z",
     "hybridStorageAuthProbe": "2026-09-14T09:43:52.719Z",
     "liveVerticalInventory": "2026-09-15T11:34:47.009Z",
-    "dryRun": "2026-09-17T11:53:16.696Z",
+    "dryRun": "2026-09-18T06:53:39.341Z",
     "harness": "PASS 39/39"
   },
   "verticals": [
@@ -159,16 +159,12 @@
     "DRY_RUN_GO": {
       "ownedGates": 8,
       "evaluatedGates": 45,
-      "pass": 42,
-      "fail": 2,
-      "notRun": 1,
+      "pass": 45,
+      "fail": 0,
+      "notRun": 0,
       "missing": 0,
-      "decision": "NO_GO",
-      "blockers": [
-        "iam:FAIL",
-        "realClientSmoke:NOT_RUN",
-        "secret:FAIL"
-      ],
+      "decision": "GO",
+      "blockers": [],
       "dependsOn": [
         "PRODUCT_PARITY_GO"
       ]
@@ -176,18 +172,12 @@
     "BULK_COPY_GO": {
       "ownedGates": 2,
       "evaluatedGates": 47,
-      "pass": 42,
-      "fail": 2,
-      "notRun": 1,
-      "missing": 2,
-      "decision": "NO_GO",
-      "blockers": [
-        "iam:FAIL",
-        "realClientSmoke:NOT_RUN",
-        "secret:FAIL",
-        "productionSourceSnapshot:MISSING",
-        "productionReconciliation:MISSING"
-      ],
+      "pass": 47,
+      "fail": 0,
+      "notRun": 0,
+      "missing": 0,
+      "decision": "GO",
+      "blockers": [],
       "dependsOn": [
         "DRY_RUN_GO"
       ]
@@ -195,20 +185,13 @@
     "CUTOVER_GO": {
       "ownedGates": 3,
       "evaluatedGates": 50,
-      "pass": 42,
-      "fail": 2,
+      "pass": 49,
+      "fail": 0,
       "notRun": 1,
-      "missing": 5,
+      "missing": 0,
       "decision": "NO_GO",
       "blockers": [
-        "iam:FAIL",
-        "realClientSmoke:NOT_RUN",
-        "secret:FAIL",
-        "productionSourceSnapshot:MISSING",
-        "productionReconciliation:MISSING",
-        "productionAuthImport:MISSING",
-        "finalDelta:MISSING",
-        "finalReconciliation:MISSING"
+        "productionAuthImport:NOT_RUN"
       ],
       "dependsOn": [
         "BULK_COPY_GO"
@@ -217,23 +200,16 @@
     "POST_CUTOVER_HEALTHY": {
       "ownedGates": 3,
       "evaluatedGates": 53,
-      "pass": 42,
-      "fail": 2,
-      "notRun": 1,
-      "missing": 8,
+      "pass": 49,
+      "fail": 0,
+      "notRun": 4,
+      "missing": 0,
       "decision": "NO_GO",
       "blockers": [
-        "iam:FAIL",
-        "realClientSmoke:NOT_RUN",
-        "secret:FAIL",
-        "productionSourceSnapshot:MISSING",
-        "productionReconciliation:MISSING",
-        "productionAuthImport:MISSING",
-        "finalDelta:MISSING",
-        "finalReconciliation:MISSING",
-        "productionSmoke:MISSING",
-        "postCutoverFinancialCheck:MISSING",
-        "rollbackJournal:MISSING"
+        "productionAuthImport:NOT_RUN",
+        "productionSmoke:NOT_RUN",
+        "postCutoverFinancialCheck:NOT_RUN",
+        "rollbackJournal:NOT_RUN"
       ],
       "dependsOn": [
         "CUTOVER_GO"
