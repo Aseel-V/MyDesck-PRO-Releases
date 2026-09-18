@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-18T13:42:22.185Z",
+  "generatedAt": "2026-09-18T13:59:43.123Z",
   "artifact": "split-brain-watch",
   "bulkMigrationRunId": "bulkcopy-15363817-711a-4b52-9414-4885a8585bf4",
   "projectId": "mydesckpro",
@@ -13,11 +13,11 @@
   "mode": "SOURCE_ONLY_NO_FIRESTORE_READS",
   "firestoreOperationsUsed": 0,
   "observation": {
-    "at": "2026-09-18T13:42:22.185Z",
+    "at": "2026-09-18T13:59:43.123Z",
     "marker": {
-      "snapshot": "21248:21248:",
-      "captured_at": "2026-09-18 13:41:30.905868+00",
-      "wal_lsn": "8/4000000"
+      "snapshot": "21254:21254:",
+      "captured_at": "2026-09-18 13:58:53.653577+00",
+      "wal_lsn": "8/5000000"
     },
     "sourceRows": 1474,
     "plannedDocuments": 1474,
@@ -48,13 +48,13 @@
     "removedFromPlan": 0,
     "rowDriftVsCutover": [],
     "sourceMoved": false,
-    "walMoved": false,
-    "txidMoved": false
+    "walMoved": true,
+    "txidMoved": true
   },
-  "observations": 5,
+  "observations": 6,
   "quietSince": "2026-09-18T12:37:45.644Z",
   "quietAnchor": "FIRST_CLEAN_POST_RELEASE_OBSERVATION",
-  "quietForHours": 1.08,
+  "quietForHours": 1.37,
   "quietWindowHours": 168,
   "quietWindowDays": 7,
   "windowCompletesAt": "2026-09-25T12:37:45.644Z",
@@ -65,7 +65,7 @@
   "authUsersChange": 0,
   "storageChange": 0,
   "decision": "WATCHING",
-  "nextAction": "keep watching: 7 consecutive days required, 0.04 so far; completes at 2026-09-25T12:37:45.644Z if nothing writes",
+  "nextAction": "keep watching: 7 consecutive days required, 0.06 so far; completes at 2026-09-25T12:37:45.644Z if nothing writes",
   "mutations": {
     "sourceWrites": 0,
     "firestoreWrites": 0,
