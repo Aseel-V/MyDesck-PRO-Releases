@@ -1,32 +1,32 @@
 {
-  "version": "0.0.61",
-  "releasedAt": "2026-08-13T12:00:00.000Z",
+  "version": "0.0.62",
+  "releasedAt": "2026-09-18T12:00:00.000Z",
   "title": {
-    "en": "Automatic Visa Collection by Installment Date",
-    "he": "גביית ויזה אוטומטית לפי תאריכי התשלומים",
-    "ar": "تحصيل Visa تلقائياً حسب تواريخ الدفعات"
+    "en": "New Secure Backend",
+    "he": "תשתית מאובטחת חדשה",
+    "ar": "بنية خلفية آمنة جديدة"
   },
   "changes": {
     "en": [
-      "Visa installments now count as collected automatically when their due date arrives",
-      "Mixed payments combine confirmed Cash with Visa collected according to schedule",
-      "Trip cards, details, Dashboard, Analysis, reports, CSV, XLSX, PDF, invoices, and manual WhatsApp summaries now use the same totals",
-      "New post-release Visa transitions show a one-time animated card highlight",
-      "Historical installments are included in totals without creating a notification flood"
+      "MyDesck PRO now runs on a new backend built on Firebase Authentication and Firestore",
+      "Sign in with the same email and password you already use; no account changes are needed",
+      "All trips, payments, installments, documents and business data were migrated and verified",
+      "Signatures and business logos continue to work exactly as before",
+      "Your previous data remains preserved and unchanged throughout the transition"
     ],
     "he": [
-      "תשלומי ויזה נחשבים כמשולמים אוטומטית כאשר תאריך היעד שלהם מגיע",
-      "בתשלום משולב, המזומן שאושר מתחבר לוויזה ששולמה לפי לוח הזמנים",
-      "כרטיסי נסיעה, פרטים, לוח הבקרה, ניתוח, דוחות, CSV, XLSX, PDF, חשבוניות והודעות WhatsApp ידניות משתמשים כעת באותם סכומים",
-      "התקדמות ויזה חדשה לאחר העדכון מוצגת פעם אחת עם אנימציה והדגשה בכרטיס",
-      "תשלומים היסטוריים נכללים בסכומים בלי ליצור הצפה של התראות"
+      "MyDesck PRO עובדת מעתה על תשתית חדשה המבוססת על Firebase Authentication ו-Firestore",
+      "התחברו עם אותה כתובת אימייל וסיסמה שאתם משתמשים בהן; אין צורך בשינוי בחשבון",
+      "כל הטיולים, התשלומים, התשלומים לשיעורין, המסמכים ונתוני העסק הועברו ואומתו",
+      "החתימות ולוגו העסק ממשיכים לעבוד בדיוק כמו קודם",
+      "הנתונים הקודמים שלכם נשמרים ללא שינוי לאורך כל המעבר"
     ],
     "ar": [
-      "تُعتبر دفعات Visa محصلة تلقائياً عند حلول تاريخ استحقاقها",
-      "يجمع الدفع المختلط بين النقد المؤكد وVisa المحصلة حسب الجدول",
-      "تستخدم بطاقات الرحلات والتفاصيل ولوحة التحكم والتحليلات والتقارير وCSV وXLSX وPDF والفواتير ورسائل WhatsApp اليدوية المبالغ نفسها",
-      "يظهر تقدم Visa الجديد بعد التحديث مرة واحدة مع حركة وإضاءة للبطاقة",
-      "تدخل الدفعات التاريخية في الإجماليات من دون إغراق المستخدم بالتنبيهات"
+      "يعمل MyDesck PRO الآن على بنية خلفية جديدة مبنية على Firebase Authentication و Firestore",
+      "سجّل الدخول بالبريد الإلكتروني وكلمة المرور نفسها التي تستخدمها؛ لا حاجة لأي تغيير في الحساب",
+      "تم نقل جميع الرحلات والمدفوعات والأقساط والمستندات وبيانات العمل والتحقق منها",
+      "تستمر التواقيع وشعارات العمل في العمل تمامًا كما كانت",
+      "تبقى بياناتك السابقة محفوظة دون تغيير طوال عملية الانتقال"
     ]
   }
 }
