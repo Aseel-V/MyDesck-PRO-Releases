@@ -14,7 +14,7 @@ This plan targets Firebase Authentication + Firestore + Security Rules on Spark.
 2. Confirm GitHub credential revocation without recording the token.
 3. Capture current Rules release/source hash and preserve rollback bytes.
 4. Review and deploy the Spark candidate Rules; verify the deployed source hash.
-5. Create the **2 hard-required** `trips` composite indexes and wait for **2/2 READY**. The third
+5. Create the **3 hard-required** `trips` composite indexes and wait for **3/3 READY**. The fourth
    candidate (`tripInstallments` due-date) is classified `COST_OPTIMIZATION` at the current 37 rows
    and is not a dry-run gate; revisit it as that collection grows. Enterprise Native executes
    unindexed queries, so a missing index is a cost problem, not a correctness one. Create indexes
