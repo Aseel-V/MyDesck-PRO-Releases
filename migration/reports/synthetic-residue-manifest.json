@@ -1,0 +1,92 @@
+{
+  "generatedAt": "2026-09-18T13:37:27.691Z",
+  "mode": "OFFLINE_NO_FIRESTORE_CONTACT",
+  "reason": "SYNTHETIC_SMOKE_RESIDUE",
+  "cleanWatermark": {
+    "reconciliationAt": "2026-09-18T13:09:05.245Z",
+    "unexpectedDocumentsThen": 0,
+    "meaning": "runs that finished before this are proven clean by it"
+  },
+  "unsweptRuns": [
+    {
+      "runId": "clientpath-089c6755-381e-44c2-986c-8c62579a5f42",
+      "authUids": 2,
+      "businessIds": 2,
+      "sweepOutcome": "residue=1"
+    },
+    {
+      "runId": "clientpath-77b36888-db0d-43e9-996f-25e6eabe85d0",
+      "authUids": 2,
+      "businessIds": 2,
+      "sweepOutcome": "residue=1"
+    },
+    {
+      "runId": "clientpath-b9075dc2-9a03-477e-bacd-a61a8d72433f",
+      "authUids": 2,
+      "businessIds": 0,
+      "sweepOutcome": "NO_SWEEP_RECORDED"
+    }
+  ],
+  "syntheticUids": [
+    "9bjE7ldtYUMKraH26WPxFXfoVOJ3",
+    "JnoyMhPA5yaBjv8v6nmyZMGy8v63",
+    "QxomQw0WCUUmd11GOnnKZYxcc3z2",
+    "TStatqwnsgZ4xceSa1gOrNwf7NU2",
+    "Zxg6iWeEvYd969PBguUpQMoMd4z1",
+    "xyNcRAZ8RjWP37fcMt8uIwGarzH2"
+  ],
+  "syntheticBusinessIds": [
+    "4996ab37-c04d-4953-a52c-1d1ecb81ccd1",
+    "7e429b04-1bfd-4ca0-a1d8-3974c7e64910",
+    "871cbc37-1362-4734-8de2-5d14bdf91ff6",
+    "b49d0123-482d-4bd8-93fa-4ae0e123a967"
+  ],
+  "deterministicPaths": 16,
+  "derivable": [
+    {
+      "resolveFrom": "businessOwners/TStatqwnsgZ4xceSa1gOrNwf7NU2",
+      "field": "businessId",
+      "yields": "businesses/{businessId} plus its subcollections",
+      "runId": "clientpath-b9075dc2-9a03-477e-bacd-a61a8d72433f"
+    },
+    {
+      "resolveFrom": "businessOwners/JnoyMhPA5yaBjv8v6nmyZMGy8v63",
+      "field": "businessId",
+      "yields": "businesses/{businessId} plus its subcollections",
+      "runId": "clientpath-b9075dc2-9a03-477e-bacd-a61a8d72433f"
+    }
+  ],
+  "enumerable": [
+    {
+      "parent": "businesses/4996ab37-c04d-4953-a52c-1d1ecb81ccd1",
+      "runId": "clientpath-089c6755-381e-44c2-986c-8c62579a5f42",
+      "method": "listCollections on this document, then listDocuments per subcollection"
+    },
+    {
+      "parent": "businesses/7e429b04-1bfd-4ca0-a1d8-3974c7e64910",
+      "runId": "clientpath-089c6755-381e-44c2-986c-8c62579a5f42",
+      "method": "listCollections on this document, then listDocuments per subcollection"
+    },
+    {
+      "parent": "businesses/871cbc37-1362-4734-8de2-5d14bdf91ff6",
+      "runId": "clientpath-77b36888-db0d-43e9-996f-25e6eabe85d0",
+      "method": "listCollections on this document, then listDocuments per subcollection"
+    },
+    {
+      "parent": "businesses/b49d0123-482d-4bd8-93fa-4ae0e123a967",
+      "runId": "clientpath-77b36888-db0d-43e9-996f-25e6eabe85d0",
+      "method": "listCollections on this document, then listDocuments per subcollection"
+    }
+  ],
+  "expectedDeterministicCount": 16,
+  "proofs": {
+    "overlapsMigrationBaseline": 0,
+    "allUidsAreNonUuidSynthetic": true,
+    "touchesMigratedIdentity": 0,
+    "touchesCustomerBusiness": 0,
+    "migrationBaselineSize": 1477
+  },
+  "note": "deterministicPaths is exact. enumerable and derivable are NOT paths yet: the repositories generated those document ids and recorded them nowhere, so they must be listed after reset, and only by listing subcollections of these six business documents.",
+  "integrityHash": "cd1932b21e77284ffb72ad369c32582bf7de67de3c928186ad86550b8aceec7f",
+  "decision": "SAFE_TO_DELETE_AFTER_RESET"
+}

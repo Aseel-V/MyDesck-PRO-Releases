@@ -45,6 +45,16 @@ if (!journalPath) throw Error('JOURNAL_PATH_REQUIRED');
 /** Seven consecutive days. Operator decision of 2026-09-18; not a default to tune casually. */
 const QUIET_WINDOW_HOURS = 168;
 const quietHours = Number(value('--quiet-hours', String(QUIET_WINDOW_HOURS)));
+/**
+ * Source-only mode: observe Supabase and do not touch Firestore.
+ *
+ * The question this tool exists to answer — did an old client write to the source? — is entirely
+ * source-side. Comparing against Firestore adds confidence but costs a read of the whole corpus,
+ * which is exactly what exhausted the daily allowance. While the quota is short, or simply to keep
+ * a long watch cheap, the comparison can be skipped and the drift still measured against the
+ * recorded cutover baseline.
+ */
+const sourceOnly = process.argv.includes('--source-only');
 if (!Number.isFinite(quietHours) || quietHours <= 0) throw Error('QUIET_HOURS_INVALID');
 
 const journal = ProductionJournal.load(journalPath);
@@ -84,15 +94,22 @@ if (evidence.rejectedWriteSqlState !== '25006' || evidence.successfulWrites !== 
 // ---- compare against Firestore -------------------------------------------------------------------
 const plan = source.built.plan;
 const plannedPaths = new Set(plan.map((entry) => entry.path));
-const reader = await openProductionReader({ projectId: PROJECT, databaseId: DATABASE });
+const reader = sourceOnly
+  ? null
+  : await openProductionReader({ projectId: PROJECT, databaseId: DATABASE });
 let report;
 try {
-  const documents = await reader.readDocuments([...plannedPaths]);
-  const created = plan.filter((entry) => !documents.has(entry.path)).map((entry) => entry.path);
-  const changed = plan.filter((entry) => {
+  const documents = reader ? await reader.readDocuments([...plannedPaths]) : new Map();
+  // Without the target read, "new" and "changed" are measured against the expected path set the
+  // journal records rather than against what Firestore holds. That still detects a source write,
+  // which is the whole point; it just cannot also detect target drift.
+  const created = reader
+    ? plan.filter((entry) => !documents.has(entry.path)).map((entry) => entry.path)
+    : plan.filter((entry) => !expectedTargetPaths.has(entry.path)).map((entry) => entry.path);
+  const changed = reader ? plan.filter((entry) => {
     const doc = documents.get(entry.path);
     return doc && rawDocumentHash(entry.path, doc) !== entry.documentFingerprint;
-  }).map((entry) => entry.path);
+  }).map((entry) => entry.path) : [];
   const removed = [...expectedTargetPaths].filter((path) => !plannedPaths.has(path));
 
   // ---- did the source move since the last observation? -------------------------------------------
@@ -154,6 +171,8 @@ try {
       forcedUpdateAvailable: false,
       requiredFlagEnforced: false,
     },
+    mode: sourceOnly ? 'SOURCE_ONLY_NO_FIRESTORE_READS' : 'SOURCE_AND_TARGET',
+    firestoreOperationsUsed: sourceOnly ? 0 : plan.length,
     observation,
     observations: ledger.observations.length,
     quietSince,
@@ -184,14 +203,16 @@ try {
     mutations: { sourceWrites: 0, firestoreWrites: 0, authImports: 0, storageMutations: 0 },
   };
   writeReport(REPORT_PATH, `${JSON.stringify(report, null, 2)}\n`);
-  await reader.close();
+  if (reader) await reader.close();
 } catch (error) {
-  await reader.close().catch(() => undefined);
+  if (reader) await reader.close().catch(() => undefined);
   throw error;
 }
 
 console.log(JSON.stringify({
   decision: report.decision,
+  mode: report.mode,
+  firestoreOperationsUsed: report.firestoreOperationsUsed,
   postReleaseSourceNew: report.postReleaseSourceNew,
   postReleaseSourceChanged: report.postReleaseSourceChanged,
   postReleaseSourceDeleted: report.postReleaseSourceDeleted,
