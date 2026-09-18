@@ -136,16 +136,38 @@ try {
         : (!UUID.test(ownerUid) && !sourceAuthUids.has(ownerUid)),
     };
     entry.checks = checks;
-    const failed = Object.entries(checks)
-      .filter(([, outcome]) => outcome === false).map(([name]) => name);
-    // A document whose business is non-customer but which has no createdAt of its own (counters,
-    // plate indexes) is carried by its parent rather than refused: the parent linkage is the
-    // stronger statement, and it is checked above.
-    const unresolved = Object.entries(checks)
-      .filter(([, outcome]) => outcome === null).map(([name]) => name);
-    entry.unresolvedChecks = unresolved;
-    if (failed.length) failures.push({ path, reason: 'CONDITIONS_FAILED', failed });
     documents.push(entry);
+  }
+
+  // ---- provenance for the documents that carry no self-description ------------------------------
+  // The app maintains index and counter documents — restaurantCounters/orders, vehiclePlates/<hash>
+  // — that hold no transformVersion and no createdAt. Nothing in them says who made them, so they
+  // cannot satisfy the field-based conditions and must not be waved through on the grounds that
+  // they look harmless. They are established instead by their parent: each sits under a business
+  // that an app-v1 sibling has already attested as synthetic, and that business is proven to be
+  // outside the source business table, outside the migrated corpus and outside every customer
+  // identity. That is a stronger statement than a self-reported version string, not a weaker one.
+  const attestedSyntheticBusinesses = new Set(documents
+    .filter((item) => item.transformVersion === 'app-v1' && item.businessId)
+    .map((item) => item.businessId));
+  for (const entry of documents) {
+    const selfDescribing = entry.transformVersion === 'app-v1';
+    entry.checks.provenanceEstablished = selfDescribing
+      ? entry.checks.createdBeforeMigrationRun === true
+      : Boolean(entry.businessId) && attestedSyntheticBusinesses.has(entry.businessId)
+        && !sourceBusinessIds.has(entry.businessId) && !migratedBusinessIds.has(entry.businessId);
+    entry.provenance = selfDescribing
+      ? 'SELF_DESCRIBED_APP_V1_BEFORE_MIGRATION_RUN'
+      : 'PARENT_BUSINESS_ATTESTED_SYNTHETIC_BY_SIBLING';
+    const failed = Object.entries(entry.checks)
+      .filter(([, outcome]) => outcome === false).map(([name]) => name);
+    entry.unresolvedChecks = Object.entries(entry.checks)
+      .filter(([name, outcome]) => outcome === null && name !== 'createdBeforeMigrationRun')
+      .map(([name]) => name);
+    if (failed.length || entry.unresolvedChecks.length) {
+      failures.push({ path: entry.path, reason: 'CONDITIONS_FAILED',
+        failed, unresolved: entry.unresolvedChecks });
+    }
   }
 
   // ---- Phase 2 overlap arithmetic ------------------------------------------------------------
@@ -210,6 +232,11 @@ try {
     readIdentity: reader.identity,
     decision: blocked ? 'BLOCKED' : 'SAFE_TO_DELETE',
     residueCount: documents.length,
+    provenanceBreakdown: {
+      selfDescribedAppV1: documents.filter((item) => item.transformVersion === 'app-v1').length,
+      parentAttestedIndexOrCounter: documents.filter((item) => item.transformVersion !== 'app-v1').length,
+      attestedSyntheticBusinesses: [...attestedSyntheticBusinesses].sort(),
+    },
     expectedResidueCount: EXPECTED_RESIDUE,
     countAsExpected,
     overlap,

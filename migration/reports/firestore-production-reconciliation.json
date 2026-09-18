@@ -1,18 +1,18 @@
 {
-  "generatedAt": "2026-09-18T08:37:18.473Z",
+  "generatedAt": "2026-09-18T08:57:07.645Z",
   "artifact": "firestore-production-reconciliation",
   "migrationRunId": "bulkcopy-15363817-711a-4b52-9414-4885a8585bf4",
   "journal": "migration/production-copy.local/bulkcopy-15363817-711a-4b52-9414-4885a8585bf4.json",
   "projectId": "mydesckpro",
   "firestoreDatabaseId": "default",
   "readIdentity": "mydesck-firestore-migration@mydesckpro.iam.gserviceaccount.com",
-  "status": "MISMATCH",
+  "status": "RECONCILED",
   "levels": {
     "journalIntegrity": "PASS",
     "sourceSnapshotReadOnly": "PASS",
     "planStability": "PASS",
     "sourceCoverage": "PASS",
-    "targetCoverage": "FAIL",
+    "targetCoverage": "PASS",
     "entityCanonicalParity": "PASS",
     "relationshipParity": "PASS",
     "financialParity": "PASS",
@@ -60,351 +60,14 @@
     "excludedRows": 8,
     "firestoreDocuments": 1477,
     "documentsFoundInTarget": 1477,
-    "documentsScannedInTarget": 1507,
+    "documentsScannedInTarget": 1477,
     "missingDocuments": 0,
-    "unexpectedDocuments": 30,
+    "unexpectedDocuments": 0,
     "rawHashMismatches": 0,
     "canonicalHashMismatches": 0,
     "missingSample": [],
-    "unexpectedSample": [
-      "businesses/a6fa9d60-3228-4f1a-9ffa-4f2d909da0c8/menuCategories/39f77c85-7453-41a7-b18a-492ecd5715e9",
-      "businesses/c22dcf30-11b6-42f9-99cf-1cbfb4e20843/menuCategories/00056c2e-235d-4b62-9d5e-5e00045d4171",
-      "businesses/d209e8e6-5f4c-47d5-aac1-b01cfcc8ef6d/menuCategories/dca03cc4-8b0a-4fe6-8fc3-c50d6d5b8d90",
-      "businesses/a6fa9d60-3228-4f1a-9ffa-4f2d909da0c8/tables/2d2200b9-1b94-42e2-ab4b-bc6cdd64826c",
-      "businesses/c22dcf30-11b6-42f9-99cf-1cbfb4e20843/tables/e5a55470-4a2d-4f1b-b5e3-1c3a8c8e0d56"
-    ],
-    "unexpectedDetail": [
-      {
-        "path": "businesses/a6fa9d60-3228-4f1a-9ffa-4f2d909da0c8/menuCategories/39f77c85-7453-41a7-b18a-492ecd5715e9",
-        "collectionId": "menuCategories",
-        "transformVersion": "app-v1",
-        "writtenByThisMigration": false,
-        "createdAt": "2026-09-17T18:50:57.000Z",
-        "predatesCopy": true,
-        "ownerUidShape": "FIREBASE_UID",
-        "businessIdInMigratedCorpus": false,
-        "ownerUidInMigratedCorpus": false
-      },
-      {
-        "path": "businesses/c22dcf30-11b6-42f9-99cf-1cbfb4e20843/menuCategories/00056c2e-235d-4b62-9d5e-5e00045d4171",
-        "collectionId": "menuCategories",
-        "transformVersion": "app-v1",
-        "writtenByThisMigration": false,
-        "createdAt": "2026-09-17T21:09:03.000Z",
-        "predatesCopy": true,
-        "ownerUidShape": "FIREBASE_UID",
-        "businessIdInMigratedCorpus": false,
-        "ownerUidInMigratedCorpus": false
-      },
-      {
-        "path": "businesses/d209e8e6-5f4c-47d5-aac1-b01cfcc8ef6d/menuCategories/dca03cc4-8b0a-4fe6-8fc3-c50d6d5b8d90",
-        "collectionId": "menuCategories",
-        "transformVersion": "app-v1",
-        "writtenByThisMigration": false,
-        "createdAt": "2026-09-17T18:43:33.000Z",
-        "predatesCopy": true,
-        "ownerUidShape": "FIREBASE_UID",
-        "businessIdInMigratedCorpus": false,
-        "ownerUidInMigratedCorpus": false
-      },
-      {
-        "path": "businesses/a6fa9d60-3228-4f1a-9ffa-4f2d909da0c8/tables/2d2200b9-1b94-42e2-ab4b-bc6cdd64826c",
-        "collectionId": "tables",
-        "transformVersion": "app-v1",
-        "writtenByThisMigration": false,
-        "createdAt": "2026-09-17T18:50:56.000Z",
-        "predatesCopy": true,
-        "ownerUidShape": "FIREBASE_UID",
-        "businessIdInMigratedCorpus": false,
-        "ownerUidInMigratedCorpus": false
-      },
-      {
-        "path": "businesses/c22dcf30-11b6-42f9-99cf-1cbfb4e20843/tables/e5a55470-4a2d-4f1b-b5e3-1c3a8c8e0d56",
-        "collectionId": "tables",
-        "transformVersion": "app-v1",
-        "writtenByThisMigration": false,
-        "createdAt": "2026-09-17T21:09:02.000Z",
-        "predatesCopy": true,
-        "ownerUidShape": "FIREBASE_UID",
-        "businessIdInMigratedCorpus": false,
-        "ownerUidInMigratedCorpus": false
-      },
-      {
-        "path": "businesses/d209e8e6-5f4c-47d5-aac1-b01cfcc8ef6d/tables/b839c6b3-6529-4771-a52d-fe1504d84e6d",
-        "collectionId": "tables",
-        "transformVersion": "app-v1",
-        "writtenByThisMigration": false,
-        "createdAt": "2026-09-17T18:43:32.000Z",
-        "predatesCopy": true,
-        "ownerUidShape": "FIREBASE_UID",
-        "businessIdInMigratedCorpus": false,
-        "ownerUidInMigratedCorpus": false
-      },
-      {
-        "path": "businesses/035d1f78-6401-4927-a9bf-39f4b4e6acdc/vehicles/64854a8d-d52e-4842-9765-1326fd13bf58",
-        "collectionId": "vehicles",
-        "transformVersion": "app-v1",
-        "writtenByThisMigration": false,
-        "createdAt": "2026-09-17T18:51:20.000Z",
-        "predatesCopy": true,
-        "ownerUidShape": "FIREBASE_UID",
-        "businessIdInMigratedCorpus": false,
-        "ownerUidInMigratedCorpus": false
-      },
-      {
-        "path": "businesses/e081ad01-78b7-4dc0-8616-7afec4be7746/vehicles/33231104-5a88-409f-a06e-4c57fb51d512",
-        "collectionId": "vehicles",
-        "transformVersion": "app-v1",
-        "writtenByThisMigration": false,
-        "createdAt": "2026-09-17T21:09:25.000Z",
-        "predatesCopy": true,
-        "ownerUidShape": "FIREBASE_UID",
-        "businessIdInMigratedCorpus": false,
-        "ownerUidInMigratedCorpus": false
-      },
-      {
-        "path": "businesses/e39ea66f-a542-4cf6-9dde-19d533a1a37b/vehicles/6b979948-ca3b-47a8-9de7-6b76bc889eaa",
-        "collectionId": "vehicles",
-        "transformVersion": "app-v1",
-        "writtenByThisMigration": false,
-        "createdAt": "2026-09-17T18:43:54.000Z",
-        "predatesCopy": true,
-        "ownerUidShape": "FIREBASE_UID",
-        "businessIdInMigratedCorpus": false,
-        "ownerUidInMigratedCorpus": false
-      },
-      {
-        "path": "businesses/0472ffb4-76b9-4076-9e54-2935a847eb16/menuItems/6e6872d7-4a78-4894-b7be-367a7334e3e9",
-        "collectionId": "menuItems",
-        "transformVersion": "app-v1",
-        "writtenByThisMigration": false,
-        "createdAt": "2026-09-17T21:09:18.000Z",
-        "predatesCopy": true,
-        "ownerUidShape": "FIREBASE_UID",
-        "businessIdInMigratedCorpus": false,
-        "ownerUidInMigratedCorpus": false
-      },
-      {
-        "path": "businesses/40ba71a1-f18d-408d-98b6-fa4b0250d1cc/menuItems/e6c97d4f-ec84-44fe-b4f4-b5f9f59361f8",
-        "collectionId": "menuItems",
-        "transformVersion": "app-v1",
-        "writtenByThisMigration": false,
-        "createdAt": "2026-09-17T18:51:12.000Z",
-        "predatesCopy": true,
-        "ownerUidShape": "FIREBASE_UID",
-        "businessIdInMigratedCorpus": false,
-        "ownerUidInMigratedCorpus": false
-      },
-      {
-        "path": "businesses/6d0c5c4f-bc1b-489a-bb33-f9ac1cea53c0/menuItems/1a01cab5-20e8-4bcc-ac0c-f16677e16403",
-        "collectionId": "menuItems",
-        "transformVersion": "app-v1",
-        "writtenByThisMigration": false,
-        "createdAt": "2026-09-17T18:43:47.000Z",
-        "predatesCopy": true,
-        "ownerUidShape": "FIREBASE_UID",
-        "businessIdInMigratedCorpus": false,
-        "ownerUidInMigratedCorpus": false
-      },
-      {
-        "path": "businesses/a6fa9d60-3228-4f1a-9ffa-4f2d909da0c8/menuItems/f3a83871-19bd-48e2-a13c-aad77a2b662a",
-        "collectionId": "menuItems",
-        "transformVersion": "app-v1",
-        "writtenByThisMigration": false,
-        "createdAt": "2026-09-17T18:50:58.000Z",
-        "predatesCopy": true,
-        "ownerUidShape": "FIREBASE_UID",
-        "businessIdInMigratedCorpus": false,
-        "ownerUidInMigratedCorpus": false
-      },
-      {
-        "path": "businesses/c22dcf30-11b6-42f9-99cf-1cbfb4e20843/menuItems/b8b80bfe-87cd-4f6c-9d67-9524dfbc9f57",
-        "collectionId": "menuItems",
-        "transformVersion": "app-v1",
-        "writtenByThisMigration": false,
-        "createdAt": "2026-09-17T21:09:04.000Z",
-        "predatesCopy": true,
-        "ownerUidShape": "FIREBASE_UID",
-        "businessIdInMigratedCorpus": false,
-        "ownerUidInMigratedCorpus": false
-      },
-      {
-        "path": "businesses/d209e8e6-5f4c-47d5-aac1-b01cfcc8ef6d/menuItems/a0b009b1-900c-4458-99a6-70aa428e500f",
-        "collectionId": "menuItems",
-        "transformVersion": "app-v1",
-        "writtenByThisMigration": false,
-        "createdAt": "2026-09-17T18:43:34.000Z",
-        "predatesCopy": true,
-        "ownerUidShape": "FIREBASE_UID",
-        "businessIdInMigratedCorpus": false,
-        "ownerUidInMigratedCorpus": false
-      },
-      {
-        "path": "businesses/a6fa9d60-3228-4f1a-9ffa-4f2d909da0c8/orders/54958cc7-591b-4a7c-8631-8f3193fc9088",
-        "collectionId": "orders",
-        "transformVersion": "app-v1",
-        "writtenByThisMigration": false,
-        "createdAt": "2026-09-17T18:51:05.000Z",
-        "predatesCopy": true,
-        "ownerUidShape": "FIREBASE_UID",
-        "businessIdInMigratedCorpus": false,
-        "ownerUidInMigratedCorpus": false
-      },
-      {
-        "path": "businesses/c22dcf30-11b6-42f9-99cf-1cbfb4e20843/orders/dd2c378a-e916-44d9-93aa-4bc34a124265",
-        "collectionId": "orders",
-        "transformVersion": "app-v1",
-        "writtenByThisMigration": false,
-        "createdAt": "2026-09-17T21:09:11.000Z",
-        "predatesCopy": true,
-        "ownerUidShape": "FIREBASE_UID",
-        "businessIdInMigratedCorpus": false,
-        "ownerUidInMigratedCorpus": false
-      },
-      {
-        "path": "businesses/d209e8e6-5f4c-47d5-aac1-b01cfcc8ef6d/orders/0e73a382-ffe5-4151-90d8-f2e10f22531b",
-        "collectionId": "orders",
-        "transformVersion": "app-v1",
-        "writtenByThisMigration": false,
-        "createdAt": "2026-09-17T18:43:41.000Z",
-        "predatesCopy": true,
-        "ownerUidShape": "FIREBASE_UID",
-        "businessIdInMigratedCorpus": false,
-        "ownerUidInMigratedCorpus": false
-      },
-      {
-        "path": "businesses/0472ffb4-76b9-4076-9e54-2935a847eb16/marketTransactions/4ecf84ba-28d4-40fa-9510-453916f945c5",
-        "collectionId": "marketTransactions",
-        "transformVersion": "app-v1",
-        "writtenByThisMigration": false,
-        "createdAt": "2026-09-17T21:09:18.000Z",
-        "predatesCopy": true,
-        "ownerUidShape": "FIREBASE_UID",
-        "businessIdInMigratedCorpus": false,
-        "ownerUidInMigratedCorpus": false
-      },
-      {
-        "path": "businesses/40ba71a1-f18d-408d-98b6-fa4b0250d1cc/marketTransactions/221b1352-c472-404f-b4a9-a468d680b5a1",
-        "collectionId": "marketTransactions",
-        "transformVersion": "app-v1",
-        "writtenByThisMigration": false,
-        "createdAt": "2026-09-17T18:51:12.000Z",
-        "predatesCopy": true,
-        "ownerUidShape": "FIREBASE_UID",
-        "businessIdInMigratedCorpus": false,
-        "ownerUidInMigratedCorpus": false
-      },
-      {
-        "path": "businesses/6d0c5c4f-bc1b-489a-bb33-f9ac1cea53c0/marketTransactions/d773e210-f721-493b-95db-b39d8b8c29c9",
-        "collectionId": "marketTransactions",
-        "transformVersion": "app-v1",
-        "writtenByThisMigration": false,
-        "createdAt": "2026-09-17T18:43:47.000Z",
-        "predatesCopy": true,
-        "ownerUidShape": "FIREBASE_UID",
-        "businessIdInMigratedCorpus": false,
-        "ownerUidInMigratedCorpus": false
-      },
-      {
-        "path": "businesses/a6fa9d60-3228-4f1a-9ffa-4f2d909da0c8/orderItems/4c0974bf-d5a5-484d-8de7-ecd51102530d",
-        "collectionId": "orderItems",
-        "transformVersion": "app-v1",
-        "writtenByThisMigration": false,
-        "createdAt": "2026-09-17T18:51:07.000Z",
-        "predatesCopy": true,
-        "ownerUidShape": "FIREBASE_UID",
-        "businessIdInMigratedCorpus": false,
-        "ownerUidInMigratedCorpus": false
-      },
-      {
-        "path": "businesses/c22dcf30-11b6-42f9-99cf-1cbfb4e20843/orderItems/5a6729bb-22e9-4848-b4a6-39fe5c15d259",
-        "collectionId": "orderItems",
-        "transformVersion": "app-v1",
-        "writtenByThisMigration": false,
-        "createdAt": "2026-09-17T21:09:13.000Z",
-        "predatesCopy": true,
-        "ownerUidShape": "FIREBASE_UID",
-        "businessIdInMigratedCorpus": false,
-        "ownerUidInMigratedCorpus": false
-      },
-      {
-        "path": "businesses/d209e8e6-5f4c-47d5-aac1-b01cfcc8ef6d/orderItems/bc31e85d-7f2a-4d9f-b36d-95750f671045",
-        "collectionId": "orderItems",
-        "transformVersion": "app-v1",
-        "writtenByThisMigration": false,
-        "createdAt": "2026-09-17T18:43:43.000Z",
-        "predatesCopy": true,
-        "ownerUidShape": "FIREBASE_UID",
-        "businessIdInMigratedCorpus": false,
-        "ownerUidInMigratedCorpus": false
-      },
-      {
-        "path": "businesses/035d1f78-6401-4927-a9bf-39f4b4e6acdc/vehiclePlates/7651a76495d71fb3569596f6bdd8e6439b5db0d95dfafc91410cea660df616e8",
-        "collectionId": "vehiclePlates",
-        "transformVersion": null,
-        "writtenByThisMigration": false,
-        "createdAt": null,
-        "predatesCopy": null,
-        "ownerUidShape": "ABSENT",
-        "businessIdInMigratedCorpus": false,
-        "ownerUidInMigratedCorpus": null
-      },
-      {
-        "path": "businesses/e081ad01-78b7-4dc0-8616-7afec4be7746/vehiclePlates/97ef8f3b2cb121a0667c7b47d67ca94e516b2f4b1c42e80e8f5ff7cdabc4148b",
-        "collectionId": "vehiclePlates",
-        "transformVersion": null,
-        "writtenByThisMigration": false,
-        "createdAt": null,
-        "predatesCopy": null,
-        "ownerUidShape": "ABSENT",
-        "businessIdInMigratedCorpus": false,
-        "ownerUidInMigratedCorpus": null
-      },
-      {
-        "path": "businesses/e39ea66f-a542-4cf6-9dde-19d533a1a37b/vehiclePlates/7651a76495d71fb3569596f6bdd8e6439b5db0d95dfafc91410cea660df616e8",
-        "collectionId": "vehiclePlates",
-        "transformVersion": null,
-        "writtenByThisMigration": false,
-        "createdAt": null,
-        "predatesCopy": null,
-        "ownerUidShape": "ABSENT",
-        "businessIdInMigratedCorpus": false,
-        "ownerUidInMigratedCorpus": null
-      },
-      {
-        "path": "businesses/a6fa9d60-3228-4f1a-9ffa-4f2d909da0c8/restaurantCounters/orders",
-        "collectionId": "restaurantCounters",
-        "transformVersion": null,
-        "writtenByThisMigration": false,
-        "createdAt": null,
-        "predatesCopy": null,
-        "ownerUidShape": "ABSENT",
-        "businessIdInMigratedCorpus": false,
-        "ownerUidInMigratedCorpus": null
-      },
-      {
-        "path": "businesses/c22dcf30-11b6-42f9-99cf-1cbfb4e20843/restaurantCounters/orders",
-        "collectionId": "restaurantCounters",
-        "transformVersion": null,
-        "writtenByThisMigration": false,
-        "createdAt": null,
-        "predatesCopy": null,
-        "ownerUidShape": "ABSENT",
-        "businessIdInMigratedCorpus": false,
-        "ownerUidInMigratedCorpus": null
-      },
-      {
-        "path": "businesses/d209e8e6-5f4c-47d5-aac1-b01cfcc8ef6d/restaurantCounters/orders",
-        "collectionId": "restaurantCounters",
-        "transformVersion": null,
-        "writtenByThisMigration": false,
-        "createdAt": null,
-        "predatesCopy": null,
-        "ownerUidShape": "ABSENT",
-        "businessIdInMigratedCorpus": false,
-        "ownerUidInMigratedCorpus": null
-      }
-    ],
+    "unexpectedSample": [],
+    "unexpectedDetail": [],
     "unexpectedWrittenByThisMigration": 0,
     "unexpectedTouchingMigratedCorpus": 0,
     "mismatchSample": [],
@@ -419,7 +82,7 @@
       },
       {
         "collectionId": "menuCategories",
-        "documents": 20
+        "documents": 17
       },
       {
         "collectionId": "restaurantStaff",
@@ -427,7 +90,7 @@
       },
       {
         "collectionId": "tables",
-        "documents": 16
+        "documents": 13
       },
       {
         "collectionId": "featureRollouts",
@@ -455,7 +118,7 @@
       },
       {
         "collectionId": "vehicles",
-        "documents": 4
+        "documents": 1
       },
       {
         "collectionId": "restaurantAuditLogs",
@@ -463,7 +126,7 @@
       },
       {
         "collectionId": "menuItems",
-        "documents": 10
+        "documents": 4
       },
       {
         "collectionId": "tripFinancialAudit",
@@ -483,7 +146,7 @@
       },
       {
         "collectionId": "orders",
-        "documents": 13
+        "documents": 10
       },
       {
         "collectionId": "tripInstallments",
@@ -495,7 +158,7 @@
       },
       {
         "collectionId": "marketTransactions",
-        "documents": 4
+        "documents": 1
       },
       {
         "collectionId": "kitchenTickets",
@@ -503,7 +166,7 @@
       },
       {
         "collectionId": "orderItems",
-        "documents": 20
+        "documents": 17
       },
       {
         "collectionId": "tripInstallmentEvents",
@@ -519,11 +182,11 @@
       },
       {
         "collectionId": "vehiclePlates",
-        "documents": 4
+        "documents": 1
       },
       {
         "collectionId": "restaurantCounters",
-        "documents": 4
+        "documents": 1
       }
     ]
   },
@@ -665,7 +328,7 @@
     "authImports": 0,
     "storageMutations": 0,
     "sourceMutations": 0,
-    "journalStatusUpdate": "NONE"
+    "journalStatusUpdate": "RECONCILED"
   },
   "perTable": {
     "auth.users": {
@@ -849,7 +512,7 @@
       "canonicalMismatches": 0
     }
   },
-  "journalStatusAfter": "COPY_COMPLETE",
-  "bulkCopyGo": "NO_GO",
-  "nextStage": "full reconciliation is required before BULK_COPY_GO"
+  "journalStatusAfter": "RECONCILED",
+  "bulkCopyGo": "GO",
+  "nextStage": "auth-import (separately operator-authorized)"
 }
