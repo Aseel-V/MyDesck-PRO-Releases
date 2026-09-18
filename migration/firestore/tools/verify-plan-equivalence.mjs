@@ -34,7 +34,14 @@ const oracle = Array.isArray(oracleRaw) ? oracleRaw : (oracleRaw.expected ?? ora
 const oracleByPath = new Map(oracle.map((entry) => [entry.targetPath, entry]));
 const planByPath = new Map(built.plan.map((entry) => [entry.path, entry]));
 
-const missing = [...oracleByPath.keys()].filter((path) => !planByPath.has(path));
+// The oracle predates the operator's auth exclusions, so the documents behind excluded identities
+// are legitimately absent from the plan now. They are subtracted explicitly and reported, never
+// folded into the equivalence result: the point of this check is that the transform has not drifted,
+// and an exclusion that quietly counted as "equivalent" would defeat it.
+const excludedPaths = new Set((built.excludedAuthIdentities ?? []).map((item) => item.targetPath));
+const excludedInOracle = [...excludedPaths].filter((path) => oracleByPath.has(path));
+const missing = [...oracleByPath.keys()]
+  .filter((path) => !planByPath.has(path) && !excludedPaths.has(path));
 const unexpected = [...planByPath.keys()].filter((path) => !oracleByPath.has(path));
 const hashMismatches = [];
 for (const [path, entry] of planByPath) {
@@ -56,6 +63,9 @@ const report = {
   generatedAt: new Date().toISOString(), mode: 'READ_ONLY_EQUIVALENCE_CHECK',
   firestoreWrites: 0, sourceWrites: 0,
   oracle: { artifact: ORACLE, documents: oracle.length },
+  operatorExclusions: { identities: excludedPaths.size, presentInOracle: excludedInOracle.length,
+    paths: [...excludedPaths].sort(),
+    note: 'excluded by operator decision after the oracle was recorded; subtracted, not ignored' },
   planned: built.counts,
   comparison: {
     missingFromPlan: missing.length,
@@ -76,9 +86,10 @@ const report = {
 };
 report.equivalent = missing.length === 0 && unexpected.length === 0
   && hashMismatches.length === 0 && report.deterministic
-  && built.counts.plannedDocuments === oracle.length;
+  && built.counts.plannedDocuments + excludedPaths.size === oracle.length;
 
 writeReport('migration/reports/migration-plan-equivalence.json', `${JSON.stringify(report, null, 2)}\n`);
 console.log(JSON.stringify({ equivalent: report.equivalent, planned: report.planned,
-  oracleDocuments: report.oracle.documents, comparison: report.comparison,
+  oracleDocuments: report.oracle.documents, operatorExclusions: report.operatorExclusions,
+  comparison: report.comparison,
   deterministic: report.deterministic, snapshot: report.snapshot }, null, 2));

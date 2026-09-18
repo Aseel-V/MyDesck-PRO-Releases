@@ -27,7 +27,7 @@ import { join } from 'node:path';
 import { localConfig, withSourceSnapshot } from '../../tools/lib/staging-source.mjs';
 import { writeReport } from '../../tools/lib/write-report.mjs';
 import { buildMigrationPlan } from '../lib/migration-plan.mjs';
-import { planHash } from '../lib/authorized-production-target.mjs';
+import { planHash, EXPECTED_PLANNED_DOCUMENTS } from '../lib/authorized-production-target.mjs';
 import { openProductionReader } from '../lib/production-reader.mjs';
 import { ProductionJournal, JOURNAL_STATUS, bulkCopyGate } from '../lib/production-journal.mjs';
 import { sha256 } from '../lib/production-guard.mjs';
@@ -107,7 +107,14 @@ const sourceReadOnlyProven = snapshotEvidence.rejectedWriteSqlState === '25006'
 const built = source.built;
 const plan = built.plan;
 const derivedPlanHash = planHash(plan, sha256);
+// The journal's plan hash describes what the copy wrote. Once an operator decision withdraws some
+// of those documents the two can no longer match, and pretending otherwise would either hide the
+// withdrawal or fail the gate for the wrong reason. So the hash is compared only when nothing has
+// been withdrawn, and otherwise the stronger set comparison below carries the check.
+const withdrawnPaths = journal.withdrawnPaths;
+const expectedTargetPaths = journal.expectedPathSet();
 const planHashMatchesJournal = derivedPlanHash === journal.body.planHash;
+const planHashDiffersByAuthorizedWithdrawal = !planHashMatchesJournal && withdrawnPaths.length > 0;
 
 // ---- 2. journal vs plan (the production ledger) --------------------------------------------------
 const plannedPaths = new Set(plan.map((entry) => entry.path));
@@ -115,17 +122,24 @@ const journalPaths = journal.body.writtenPaths;
 const journalPathSet = new Set(journalPaths);
 const ledgerFaults = {
   duplicateJournalPaths: journalPaths.length - journalPathSet.size,
-  journalPathsNotInPlan: journalPaths.filter((path) => !plannedPaths.has(path)).length,
+  // Withdrawn paths are expected to be in the journal and absent from the plan; they are not faults.
+  journalPathsNotInPlan: journalPaths
+    .filter((path) => !plannedPaths.has(path) && !withdrawnPaths.includes(path)).length,
   plannedPathsNotInJournal: [...plannedPaths].filter((path) => !journalPathSet.has(path)).length,
+  expectedPathsNotPlanned: [...expectedTargetPaths].filter((path) => !plannedPaths.has(path)).length,
+  plannedPathsNotExpected: [...plannedPaths].filter((path) => !expectedTargetPaths.has(path)).length,
+  withdrawnPaths: withdrawnPaths.length,
   batchDocumentSum: journal.body.completedBatches.reduce((sum, batch) => sum + batch.documents, 0),
   batchLayoutSum: journal.body.batchLayout.reduce((sum, batch) => sum + batch.documents, 0),
 };
+const copyDocumentCount = plan.length + withdrawnPaths.length;
 const ledgerMismatches = ledgerFaults.duplicateJournalPaths + ledgerFaults.journalPathsNotInPlan
   + ledgerFaults.plannedPathsNotInJournal
-  + (ledgerFaults.batchDocumentSum === plan.length ? 0 : 1)
-  + (ledgerFaults.batchLayoutSum === plan.length ? 0 : 1)
-  + (journal.body.plannedDocumentCount === plan.length ? 0 : 1)
-  + (planHashMatchesJournal ? 0 : 1);
+  + ledgerFaults.expectedPathsNotPlanned + ledgerFaults.plannedPathsNotExpected
+  + (ledgerFaults.batchDocumentSum === copyDocumentCount ? 0 : 1)
+  + (ledgerFaults.batchLayoutSum === copyDocumentCount ? 0 : 1)
+  + (journal.body.plannedDocumentCount === copyDocumentCount ? 0 : 1)
+  + (planHashMatchesJournal || planHashDiffersByAuthorizedWithdrawal ? 0 : 1);
 
 // ---- 3. target: read every planned document, and scan for anything else -------------------------
 const reader = await openProductionReader({ projectId: PROJECT, databaseId: DATABASE });
@@ -410,9 +424,14 @@ try {
   const levels = {
     journalIntegrity: journalFaults.length === 0 ? 'PASS' : 'FAIL',
     sourceSnapshotReadOnly: sourceReadOnlyProven ? 'PASS' : 'FAIL',
-    planStability: planHashMatchesJournal ? 'PASS' : 'FAIL',
+    // Either the plan is byte-identical to the copy's, or it differs by exactly the withdrawals and
+    // the surviving sets agree document for document. Nothing else passes.
+    planStability: planHashMatchesJournal
+      || (planHashDiffersByAuthorizedWithdrawal && ledgerFaults.expectedPathsNotPlanned === 0
+        && ledgerFaults.plannedPathsNotExpected === 0) ? 'PASS' : 'FAIL',
     sourceCoverage: built.counts.sourceRows === 1474 && built.counts.migratableRows === 1466
-      && built.counts.excludedRows === 8 && built.counts.plannedDocuments === 1477 ? 'PASS' : 'FAIL',
+      && built.counts.excludedRows === 8
+      && built.counts.plannedDocuments === EXPECTED_PLANNED_DOCUMENTS ? 'PASS' : 'FAIL',
     targetCoverage: missingDocuments.length === 0 && unexpectedDocuments.length === 0 ? 'PASS' : 'FAIL',
     entityCanonicalParity: rawMismatches === 0 && canonicalMismatches === 0 ? 'PASS' : 'FAIL',
     relationshipParity: relationshipMismatches === 0 && migrationCreatedOrphans === 0
@@ -446,7 +465,11 @@ try {
     levels,
     journalChecks: { ...journalChecks, faults: journalFaults,
       planHashJournal: journal.body.planHash, planHashDerived: derivedPlanHash,
-      planHashMatches: planHashMatchesJournal, ...ledgerFaults, ledgerMismatches },
+      planHashMatches: planHashMatchesJournal,
+      planHashDiffersByAuthorizedWithdrawal,
+      authorizedWithdrawals: journal.body.authorizedWithdrawals ?? [],
+      copyDocumentCount, expectedTargetDocuments: expectedTargetPaths.size,
+      ...ledgerFaults, ledgerMismatches },
     snapshot: {
       isolationLevel: snapshotEvidence.start?.isolation ?? null,
       readOnly: snapshotEvidence.start?.read_only ?? null,

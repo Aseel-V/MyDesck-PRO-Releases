@@ -25,6 +25,14 @@ import { rawDocumentHash } from './full-rehearsal-core.mjs';
 import { sha256 } from './production-guard.mjs';
 
 export const CLEANUP_REASON = 'HISTORICAL_CLIENT_SMOKE_RESIDUE';
+/**
+ * Withdrawing a document the migration itself wrote is a different act from deleting residue it
+ * never wrote, so it gets its own reason rather than being disguised as the first one. The boundary
+ * treats them identically — same allowlist, same exclusion set, same pre-delete hash check — but the
+ * manifest has to say which it is, and a caller has to name the reason it will accept.
+ */
+export const WITHDRAWAL_REASON = 'OPERATOR_EXCLUDED_AUTH_IDENTITY_DERIVED_DOCUMENT';
+export const KNOWN_REASONS = Object.freeze([CLEANUP_REASON, WITHDRAWAL_REASON]);
 export const CLEANUP_STATUS = Object.freeze({
   PREPARED: 'PREPARED',
   DELETING: 'DELETING',
@@ -65,9 +73,11 @@ export function validateCleanupPath(path) {
 }
 
 /** Freeze the manifest and derive its allowlist. Verifies the integrity hash on the way through. */
-export function sealCleanupManifest(manifest, { expectedCount } = {}) {
+export function sealCleanupManifest(manifest, { expectedCount, allowedReasons = [CLEANUP_REASON] } = {}) {
   if (!manifest || typeof manifest !== 'object') throw new ResidueCleanupError('MANIFEST_MALFORMED');
-  if (manifest.reason !== CLEANUP_REASON) throw new ResidueCleanupError('MANIFEST_REASON_UNEXPECTED', manifest.reason);
+  if (!allowedReasons.includes(manifest.reason)) {
+    throw new ResidueCleanupError('MANIFEST_REASON_UNEXPECTED', manifest.reason);
+  }
   if (manifest.integrityHash !== manifestIntegrityHash(manifest)) {
     throw new ResidueCleanupError('MANIFEST_INTEGRITY_HASH_MISMATCH');
   }
@@ -104,6 +114,7 @@ export function sealCleanupManifest(manifest, { expectedCount } = {}) {
  */
 export async function openResidueCleanupTarget({
   manifest, projectId, databaseId, forbiddenPaths, expectedCount, firestoreFactory,
+  allowedReasons = [CLEANUP_REASON],
 }) {
   if (projectId !== 'mydesckpro') throw new ResidueCleanupError('CLEANUP_PROJECT_MISMATCH', String(projectId));
   if (databaseId !== 'default') throw new ResidueCleanupError('CLEANUP_DATABASE_MISMATCH', String(databaseId));
@@ -111,7 +122,7 @@ export async function openResidueCleanupTarget({
     throw new ResidueCleanupError('CLEANUP_FORBIDDEN_SET_REQUIRED');
   }
 
-  const sealed = sealCleanupManifest(manifest, { expectedCount });
+  const sealed = sealCleanupManifest(manifest, { expectedCount, allowedReasons });
   const overlap = [...sealed.allowlist].filter((path) => forbiddenPaths.has(path));
   if (overlap.length) throw new ResidueCleanupError('CLEANUP_OVERLAPS_MIGRATION', overlap.slice(0, 3).join(','));
 

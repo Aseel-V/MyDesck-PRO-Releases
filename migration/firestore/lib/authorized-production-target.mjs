@@ -29,7 +29,7 @@ import { MIGRATION_WRITE_IDENTITY, openMigrationFirestore } from './migration-id
 import { rawDocumentHash } from './full-rehearsal-core.mjs';
 import { PROOF_PREFIX } from './table-map.mjs';
 
-export const EXPECTED_PLANNED_DOCUMENTS = 1477;
+export const EXPECTED_PLANNED_DOCUMENTS = 1474;
 export const DEFAULT_BATCH_SIZE = 100;
 /** Firestore's hard limit on writes in one batched commit. */
 export const FIRESTORE_BATCH_LIMIT = 500;

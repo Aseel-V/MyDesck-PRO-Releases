@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "decision": "EXCLUDE_AS_MIGRATION_PREPARATION_RESIDUE",
+  "decidedBy": "operator",
+  "decidedAt": "2026-09-18",
+  "appliesTo": "auth.users identities, addressed by sha256(uid) truncated to 12 hex characters",
+  "note": "Identities listed here are not imported into Firebase Auth and get no derived Firestore user document. The classification is deliberately config rather than code so that reversing it is a recorded decision and not an edit. Re-including an identity requires a new explicit operator decision; nothing in the tooling promotes an excluded identity back on its own.",
+  "reversal": "Remove the fingerprint from this file and regenerate the auth readiness ledger. The excluded identity's derived document is then planned again like any other.",
+  "identities": [
+    {
+      "uidFingerprint": "f3b8c72c5a7d",
+      "reason": "MIGRATION_PREPARATION_RESIDUE",
+      "evidence": {
+        "emailDomain": "example.test",
+        "createdAt": "2026-09-09T09:58:29Z",
+        "signInCount": "once, at creation",
+        "userProfiles": 0,
+        "businessProfiles": 0,
+        "customerDocumentsOwned": 0,
+        "derivedDocument": "users/<uid> (auth-derived, no source profile row)"
+      }
+    },
+    {
+      "uidFingerprint": "95e3cb04de08",
+      "reason": "MIGRATION_PREPARATION_RESIDUE",
+      "evidence": {
+        "emailDomain": "example.test",
+        "createdAt": "2026-09-09T09:58:35Z",
+        "signInCount": "once, at creation",
+        "userProfiles": 0,
+        "businessProfiles": 0,
+        "customerDocumentsOwned": 0,
+        "derivedDocument": "users/<uid> (auth-derived, no source profile row)"
+      }
+    },
+    {
+      "uidFingerprint": "4ca1630f70b0",
+      "reason": "MIGRATION_PREPARATION_RESIDUE",
+      "evidence": {
+        "emailDomain": "example.test",
+        "createdAt": "2026-09-09T09:58:40Z",
+        "signInCount": "once, at creation",
+        "userProfiles": 0,
+        "businessProfiles": 0,
+        "customerDocumentsOwned": 0,
+        "derivedDocument": "users/<uid> (auth-derived, no source profile row)"
+      }
+    }
+  ],
+  "notExcluded": {
+    "note": "Two other example.test identities own profiles and businesses and remain fully included. Domain alone does not decide inclusion; application linkage does.",
+    "uidFingerprints": ["2f93402fb0f7", "6d65321887ee"]
+  }
+}

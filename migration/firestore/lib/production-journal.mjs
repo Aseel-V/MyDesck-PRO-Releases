@@ -64,6 +64,7 @@ export class ProductionJournal {
       batchLayout,
       completedBatches: [],
       writtenPaths: [],
+      authorizedWithdrawals: [],
       failure: null,
       startedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -96,6 +97,37 @@ export class ProductionJournal {
   get status() { return this.body.status; }
   get writtenPaths() { return [...this.body.writtenPaths]; }
   confirmedSet() { return new Set(this.body.writtenPaths); }
+
+  /** Paths the copy wrote that an operator decision has since authorized removing. */
+  get withdrawnPaths() { return (this.body.authorizedWithdrawals ?? []).flatMap((item) => item.paths); }
+
+  /** What the target should contain now: everything written, less anything withdrawn. */
+  expectedPathSet() {
+    const withdrawn = new Set(this.withdrawnPaths);
+    return new Set(this.body.writtenPaths.filter((path) => !withdrawn.has(path)));
+  }
+
+  /**
+   * Record an authorized withdrawal.
+   *
+   * writtenPaths is left alone. It is the record of what the copy actually did, and editing history
+   * to match a later decision would destroy the only evidence that the decision was ever applied.
+   * The withdrawal is additive, so the difference between the two is always visible.
+   */
+  recordAuthorizedWithdrawal({ paths, reason, decidedAt, cleanupRunId }) {
+    if (!Array.isArray(paths) || paths.length === 0) throw new Error('WITHDRAWAL_PATHS_REQUIRED');
+    if (!reason) throw new Error('WITHDRAWAL_REASON_REQUIRED');
+    const unknown = paths.filter((path) => !this.body.writtenPaths.includes(path));
+    if (unknown.length) throw new Error(`WITHDRAWAL_PATH_NOT_WRITTEN_BY_THIS_RUN:${unknown.length}`);
+    this.body.authorizedWithdrawals ??= [];
+    const already = new Set(this.withdrawnPaths);
+    const duplicated = paths.filter((path) => already.has(path));
+    if (duplicated.length) throw new Error(`WITHDRAWAL_ALREADY_RECORDED:${duplicated.length}`);
+    this.body.authorizedWithdrawals.push({ paths: [...paths], reason, decidedAt: decidedAt ?? null,
+      cleanupRunId: cleanupRunId ?? null, at: new Date().toISOString() });
+    this.#persist();
+    return { withdrawn: paths.length, remaining: this.expectedPathSet().size };
+  }
 
   beginWriting() {
     this.body.status = JOURNAL_STATUS.WRITING;

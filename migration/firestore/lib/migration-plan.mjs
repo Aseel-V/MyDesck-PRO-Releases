@@ -16,6 +16,8 @@
  * Expected shape for the pinned snapshot: 1,474 source rows, 8 excluded as derived operational
  * state, 1,466 table documents, 11 derived documents, 1,477 documents total.
  */
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { qi } from '../../tools/lib/staging-source.mjs';
 import { TABLE_MAP, validateTableMap } from './table-map.mjs';
 import { canonicalHash } from './canonical.mjs';
@@ -29,6 +31,27 @@ import {
 } from './full-rehearsal-core.mjs';
 
 const READ_PAGE = 100;
+
+/**
+ * Auth identities the operator has excluded as migration-preparation residue.
+ *
+ * Read from config rather than compiled in, so that the decision is auditable and reversing it is
+ * itself a recorded change. An excluded identity is not imported into Firebase Auth and gets no
+ * derived Firestore user document; it is still counted, still reported, and still has to survive the
+ * relationship check, because an identity that something references cannot safely be dropped.
+ */
+export const EXCLUDED_AUTH_CONFIG_PATH = 'migration/firestore/config/excluded-auth-identities.json';
+export function uidFingerprint(uid) {
+  return createHash('sha256').update(uid).digest('hex').slice(0, 12);
+}
+export function loadExcludedAuthIdentities(path = EXCLUDED_AUTH_CONFIG_PATH) {
+  let parsed;
+  try { parsed = JSON.parse(readFileSync(path, 'utf8')); }
+  catch { return { fingerprints: new Set(), entries: [] }; }
+  const entries = Array.isArray(parsed.identities) ? parsed.identities : [];
+  return { fingerprints: new Set(entries.map((entry) => entry.uidFingerprint)), entries,
+    decision: parsed.decision ?? null, decidedAt: parsed.decidedAt ?? null };
+}
 
 /** Path with every id segment replaced by a short hash, for logs and reports. */
 export function redactPath(path, createHash) {
@@ -229,8 +252,19 @@ export async function buildMigrationPlan({ select, Timestamp }) {
   // ---- derived documents, in the rehearsal's order ---------------------------------------------
   const derive = (entry) => { collisions.set(entry.path, entry.sourceKey); plan.push(entry); };
 
+  const excludedAuth = loadExcludedAuthIdentities();
+  const excludedIdentities = [];
   for (const row of authRows) {
     const path = `users/${encodeURIComponent(row.uid)}`;
+    if (excludedAuth.fingerprints.has(uidFingerprint(row.uid))) {
+      // No document, and no foreign-key registration either. If anything in the source references
+      // this identity the relationship pass will report it as a source orphan, which is exactly the
+      // signal that the exclusion is unsafe — so it is left to surface rather than papered over.
+      excludedIdentities.push({ uidFingerprint: uidFingerprint(row.uid), targetPath: path,
+        reason: 'OPERATOR_EXCLUDED_MIGRATION_PREPARATION_RESIDUE',
+        hasSourceProfile: profileUids.has(row.uid) });
+      continue;
+    }
     if (!profileUids.has(row.uid) && !collisions.has(path)) {
       const data = authDerivedDocument(row.uid, businessByOwner.get(row.uid) ?? null);
       derive({ path, collection: 'users', docId: row.uid, sourceTable: 'auth.users', sourcePk: [row.uid],
@@ -331,6 +365,7 @@ export async function buildMigrationPlan({ select, Timestamp }) {
     // documents and change no document, so the plan stays byte-for-byte what it was.
     relationships,
     financialValues,
+    excludedAuthIdentities: excludedIdentities,
     metadata: [...metadataBySourceKey.values()],
     sourceOrphans,
     crossTenantReferences,
@@ -340,6 +375,7 @@ export async function buildMigrationPlan({ select, Timestamp }) {
       migratableRows: sourceRows - excluded.length,
       tableDocuments,
       derivedDocuments,
+      excludedAuthIdentities: excludedIdentities.length,
       plannedDocuments: plan.length,
     },
   };

@@ -61,7 +61,8 @@ if (evidence.rejectedWriteSqlState !== '25006' || evidence.successfulWrites !== 
 
 const plan = source.built.plan;
 const plannedPaths = new Set(plan.map((entry) => entry.path));
-const journalPaths = new Set(journal.body.writtenPaths);
+// Withdrawn documents are deliberately absent, so the exclusion set is what should still exist.
+const journalPaths = journal.expectedPathSet();
 const derivedPlanHash = planHash(plan, sha256);
 if (derivedPlanHash !== journal.body.planHash) throw Error('PLAN_HASH_DRIFT_SINCE_COPY');
 

@@ -75,6 +75,8 @@ if (evidence.rejectedWriteSqlState !== '25006' || evidence.successfulWrites !== 
 const built = source.built;
 const plan = built.plan;
 const derivedPlanHash = planHash(plan, sha256);
+// What the target should hold now: everything the copy wrote, less anything withdrawn since.
+const expectedTargetPaths = journal.expectedPathSet();
 
 // ---- the target is the authority on what the target contains --------------------------------------
 const reader = await openProductionReader({ projectId: PROJECT, databaseId: DATABASE });
@@ -109,8 +111,13 @@ try {
 
   const deltaDocuments = [...created, ...changed];
   const deltaPlan = plan.filter((entry) => deltaDocuments.some((item) => item.path === entry.path));
+  // The plan hash can legitimately differ from the copy's once documents have been withdrawn by an
+  // operator decision, so the comparison that matters is between the current plan and what the
+  // target is supposed to hold: identical sets, or it is not a zero delta.
+  const setsAgree = plannedPaths.size === expectedTargetPaths.size
+    && [...plannedPaths].every((path) => expectedTargetPaths.has(path));
   const zeroDelta = created.length === 0 && changed.length === 0 && deleted.length === 0
-    && rowDrift.length === 0 && derivedPlanHash === journal.body.planHash;
+    && rowDrift.length === 0 && setsAgree;
 
   // ---- properties the delta plan must hold, asserted rather than assumed ---------------------------
   // These come from the planner itself; restating them here is what makes "the delta is safe to
@@ -169,6 +176,9 @@ try {
       authUsers: source.authUsers,
     },
     planHashUnchanged: derivedPlanHash === journal.body.planHash,
+    expectedTargetDocuments: expectedTargetPaths.size,
+    withdrawnByOperatorDecision: journal.withdrawnPaths.length,
+    plannedSetMatchesExpectedSet: setsAgree,
     delta: {
       newDocuments: created.length,
       changedDocuments: changed.length,

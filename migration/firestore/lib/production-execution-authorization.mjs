@@ -51,6 +51,10 @@ export const PINNED_TOOLING = Object.freeze([
   'migration/firestore/lib/migration-identity.mjs',
   'migration/firestore/lib/residue-cleanup-target.mjs',
   'migration/firestore/tools/residue-cleanup.mjs',
+  // The withdrawal command deletes documents the migration itself wrote, and the exclusion config
+  // decides which identities are dropped from both Firestore and the Auth import. Both are pinned.
+  'migration/firestore/tools/withdraw-excluded-auth-documents.mjs',
+  'migration/firestore/config/excluded-auth-identities.json',
   'migration/firestore/tools/production-auth-import.mjs',
   'migration/firestore/tools/production-storage-migration.mjs',
   'migration/firestore/config/production-migration.json',
