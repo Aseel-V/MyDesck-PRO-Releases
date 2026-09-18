@@ -1,18 +1,48 @@
 {
-  "generatedAt": "2026-09-14T08:30:22.862Z",
+  "generatedAt": "2026-09-18T12:56:39.728Z",
   "project": "mydesckpro",
   "mode": "verify",
   "includeProduction": false,
-  "totalUsers": 5,
+  "totalUsers": 7,
   "byScope": {
-    "SYNTHETIC": 5
+    "PRODUCTION": 5,
+    "SYNTHETIC": 2
   },
-  "withRequiredClaimBefore": 5,
-  "withRequiredClaimAfter": 5,
-  "missingClaim": [],
+  "withRequiredClaimBefore": 0,
+  "withRequiredClaimAfter": 0,
+  "missingClaim": [
+    {
+      "uidFingerprint": "29f3c0367460",
+      "scope": "PRODUCTION"
+    },
+    {
+      "uidFingerprint": "6d65321887ee",
+      "scope": "SYNTHETIC"
+    },
+    {
+      "uidFingerprint": "a3d78f6c5a53",
+      "scope": "PRODUCTION"
+    },
+    {
+      "uidFingerprint": "14639a9664ae",
+      "scope": "PRODUCTION"
+    },
+    {
+      "uidFingerprint": "4ed545194685",
+      "scope": "PRODUCTION"
+    },
+    {
+      "uidFingerprint": "2f93402fb0f7",
+      "scope": "SYNTHETIC"
+    },
+    {
+      "uidFingerprint": "14f005e47862",
+      "scope": "PRODUCTION"
+    }
+  ],
   "applied": [],
   "productionClaimWrites": 0,
   "customerRecordsModified": 0,
   "note": "Firebase custom claims reach a client only on the next ID-token refresh; synthetic tests must force a refresh before asserting.",
-  "decision": "ROLE_CLAIM_READY"
+  "decision": "ROLE_CLAIM_INCOMPLETE"
 }

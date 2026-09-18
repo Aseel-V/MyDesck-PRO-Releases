@@ -20,7 +20,10 @@
  * delta stays a separate, separately authorized action, because a tool that both detects and writes
  * would eventually write on a detection nobody read.
  *
- *   node migration/firestore/tools/split-brain-watch.mjs --journal=<path> [--quiet-hours=24]
+ * The window is seven consecutive days by operator decision, anchored on the first verified
+ * post-release zero-drift observation, and any legitimate source write resets it to zero.
+ *
+ *   node migration/firestore/tools/split-brain-watch.mjs --journal=<path> [--quiet-hours=168]
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { localConfig, withSourceSnapshot } from '../../tools/lib/staging-source.mjs';
@@ -39,7 +42,9 @@ const value = (name, fallback = null) =>
   process.argv.find((x) => x.startsWith(`${name}=`))?.slice(name.length + 1) ?? fallback;
 const journalPath = value('--journal');
 if (!journalPath) throw Error('JOURNAL_PATH_REQUIRED');
-const quietHours = Number(value('--quiet-hours', '24'));
+/** Seven consecutive days. Operator decision of 2026-09-18; not a default to tune casually. */
+const QUIET_WINDOW_HOURS = 168;
+const quietHours = Number(value('--quiet-hours', String(QUIET_WINDOW_HOURS)));
 if (!Number.isFinite(quietHours) || quietHours <= 0) throw Error('QUIET_HOURS_INVALID');
 
 const journal = ProductionJournal.load(journalPath);
@@ -123,12 +128,17 @@ try {
   writeReport(LEDGER_PATH, `${JSON.stringify(ledger, null, 2)}\n`);
 
   // ---- how long has the source been quiet? --------------------------------------------------------
+  // The window is anchored on the first verified zero-drift observation after the release, and any
+  // observation that saw the source move re-anchors it. A write during the window does not shorten
+  // the window; it restarts it.
   const moving = ledger.observations.filter((item) => item.sourceMoved);
   const lastMovement = moving.at(-1) ?? null;
-  const firstObservation = ledger.observations[0];
-  const quietSince = lastMovement ? lastMovement.at : firstObservation.at;
+  const firstClean = ledger.observations.find((item) => !item.sourceMoved) ?? null;
+  const anchor = lastMovement ? lastMovement.at : (firstClean?.at ?? observation.at);
+  const quietSince = anchor;
   const quietForHours = (Date.now() - Date.parse(quietSince)) / 3_600_000;
   const quietLongEnough = !sourceMoved && quietForHours >= quietHours;
+  const windowCompletesAt = new Date(Date.parse(quietSince) + quietHours * 3_600_000).toISOString();
 
   report = {
     generatedAt: observation.at,
@@ -147,8 +157,12 @@ try {
     observation,
     observations: ledger.observations.length,
     quietSince,
+    quietAnchor: lastMovement ? 'LAST_SOURCE_MOVEMENT' : 'FIRST_CLEAN_POST_RELEASE_OBSERVATION',
     quietForHours: Number(quietForHours.toFixed(2)),
     quietWindowHours: quietHours,
+    quietWindowDays: Number((quietHours / 24).toFixed(2)),
+    windowCompletesAt,
+    windowResetsOnAnyLegitimateSourceWrite: true,
     postReleaseSourceNew: created.length,
     postReleaseSourceChanged: changed.length,
     postReleaseSourceDeleted: removed.length,
@@ -163,8 +177,10 @@ try {
     nextAction: sourceMoved
       ? 'reconcile the measured delta before POST_CUTOVER_HEALTHY can be considered'
       : quietLongEnough
-        ? `source quiet for ${quietForHours.toFixed(1)}h; an operator may close the transition`
-        : `keep watching: ${quietHours}h of continuous quiet required, ${quietForHours.toFixed(1)}h so far`,
+        ? `source quiet for ${(quietForHours / 24).toFixed(1)} days; prepare and validate the reversible `
+          + 'legacy database write lock, then an operator may close the transition'
+        : `keep watching: ${(quietHours / 24).toFixed(0)} consecutive days required, `
+          + `${(quietForHours / 24).toFixed(2)} so far; completes at ${windowCompletesAt} if nothing writes`,
     mutations: { sourceWrites: 0, firestoreWrites: 0, authImports: 0, storageMutations: 0 },
   };
   writeReport(REPORT_PATH, `${JSON.stringify(report, null, 2)}\n`);
@@ -182,7 +198,9 @@ console.log(JSON.stringify({
   authUsersChange: report.authUsersChange,
   storageChange: report.storageChange,
   observations: report.observations,
+  quietSince: report.quietSince,
   quietForHours: report.quietForHours,
+  windowCompletesAt: report.windowCompletesAt,
   marker: report.observation.marker,
   oldClientCanStillWrite: report.risk.oldClientCanStillWrite,
   nextAction: report.nextAction,
