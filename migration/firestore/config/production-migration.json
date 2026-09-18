@@ -24,6 +24,5 @@
     "isolationLevel": "REPEATABLE READ",
     "readOnly": true,
     "negativeWriteSqlState": "25006"
-  },
-  "approvedPreparationCommitNote": "The reviewed preparation commit containing the controlled execution authorization gate, the permanently locked Storage copy path and the corrected cutover plan. Authorization requires this commit to be HEAD or an ancestor of it AND every pinned tooling path to be byte-identical to it, except this field, which cannot contain its own SHA."
+  }
 }

@@ -69,6 +69,11 @@ const git = (args) => {
   try { return execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim(); }
   catch { return null; }
 };
+/** Blob content, untrimmed: trimming would make every file's trailing newline read as drift. */
+const gitShowRaw = (args) => {
+  try { return execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }); }
+  catch { return null; }
+};
 
 /**
  * @returns {{authorized:boolean, reasons:string[], checks:object}}
@@ -182,7 +187,7 @@ export function authorize({ mode, stage, acknowledgement, goManifestPath, config
       // other byte of the config, and every byte of the other pinned files, must match the pin.
       const drift = [];
       for (const path of PINNED_TOOLING) {
-        const atPin = git(['show', `${pinned}:${path}`]);
+        const atPin = gitShowRaw(['show', `${pinned}:${path}`]);
         const now = existsSync(path) ? readFileSync(path, 'utf8') : null;
         if (atPin === null || now === null) { drift.push(`${path}:UNREADABLE`); continue; }
         if (path === CONFIG_PATH) {
