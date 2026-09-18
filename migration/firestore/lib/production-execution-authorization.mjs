@@ -40,6 +40,12 @@ export const PINNED_TOOLING = Object.freeze([
   'migration/firestore/lib/production-guard.mjs',
   'migration/firestore/lib/production-execution-authorization.mjs',
   'migration/firestore/tools/production-data-migration.mjs',
+  // The mutation boundary itself, and the only two things allowed to reach it, are pinned too:
+  // pinning the executor while leaving the target it calls unpinned would protect the caller and
+  // not the thing that actually writes.
+  'migration/firestore/lib/authorized-production-target.mjs',
+  'migration/firestore/lib/production-journal.mjs',
+  'migration/firestore/tools/production-rollback.mjs',
   'migration/firestore/tools/production-auth-import.mjs',
   'migration/firestore/tools/production-storage-migration.mjs',
   'migration/firestore/config/production-migration.json',
@@ -74,6 +80,59 @@ const gitShowRaw = (args) => {
   try { return execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }); }
   catch { return null; }
 };
+
+/**
+ * Opaque authorization capability.
+ *
+ * The production target must not be openable by a caller that simply asserts it is authorized, so a
+ * plain `{ authorized: true }` is worthless here: capabilities are registered in a module-private
+ * WeakSet and there is no exported constructor. The only way to obtain one is for `authorize()` to
+ * return every condition satisfied, which means a capability existing at all is itself evidence that
+ * the manifest, acknowledgement, identity, commit pin, tooling state and readiness all held.
+ *
+ * The capability also BINDS the context it was issued for. `assertCapability` re-checks those
+ * bindings at the mutation boundary, so a capability minted for one project, database, source, stage
+ * or manifest cannot be replayed against another.
+ */
+const ISSUED_CAPABILITIES = new WeakSet();
+
+class ProductionAuthorizationCapability {
+  constructor(bindings) {
+    Object.assign(this, bindings);
+    Object.freeze(this);
+  }
+}
+
+function issueCapability(bindings) {
+  const capability = new ProductionAuthorizationCapability(bindings);
+  ISSUED_CAPABILITIES.add(capability);
+  return capability;
+}
+
+/**
+ * Verify a capability at the mutation boundary. Returns the capability or throws.
+ *
+ * Fails closed on: anything not minted by this module, an expired window, or any binding that does
+ * not match the context the caller claims to be operating in.
+ */
+export function assertCapability(capability, { projectId, databaseId, sourceProject, stage }) {
+  if (!capability || typeof capability !== 'object' || !ISSUED_CAPABILITIES.has(capability)) {
+    throw new Error('AUTHORIZATION_CAPABILITY_NOT_ISSUED_BY_AUTHORIZATION_MODULE');
+  }
+  if (capability.firebaseProject !== projectId) throw new Error('CAPABILITY_FIREBASE_PROJECT_MISMATCH');
+  if (capability.firestoreDatabaseId !== databaseId) throw new Error('CAPABILITY_FIRESTORE_DATABASE_MISMATCH');
+  if (capability.supabaseProject !== sourceProject) throw new Error('CAPABILITY_SOURCE_PROJECT_MISMATCH');
+  if (capability.stage !== stage) throw new Error('CAPABILITY_STAGE_MISMATCH');
+  if (!capability.goManifestIntegrityHash) throw new Error('CAPABILITY_MANIFEST_HASH_ABSENT');
+  if (!capability.approvedPreparationCommit) throw new Error('CAPABILITY_APPROVED_COMMIT_ABSENT');
+  if (Date.parse(capability.expiresAt) <= Date.now()) throw new Error('CAPABILITY_EXPIRED');
+  return capability;
+}
+
+/** True only for a capability this module minted. Never trusts a shape. */
+export function isIssuedCapability(value) {
+  return Boolean(value) && typeof value === 'object' && ISSUED_CAPABILITIES.has(value);
+}
 
 /**
  * @returns {{authorized:boolean, reasons:string[], checks:object}}
@@ -218,7 +277,19 @@ export function authorize({ mode, stage, acknowledgement, goManifestPath, config
     reasons.push(`DRY_RUN_BLOCKERS_PRESENT:${JSON.stringify(readiness?.knownBlockers ?? null)}`);
   }
 
-  return { authorized: reasons.length === 0, reasons, checks };
+  if (reasons.length > 0) return { authorized: false, reasons, checks, capability: null };
+  // Minted only here, only with every condition satisfied, and bound to this exact context.
+  const capability = issueCapability({
+    stage,
+    firebaseProject: EXPECTED.firebaseProject,
+    firestoreDatabaseId: EXPECTED.firestoreDatabaseId,
+    supabaseProject: EXPECTED.supabaseProject,
+    approvedPreparationCommit: pinned,
+    goManifestIntegrityHash: manifest.integrityHash,
+    authorizedAt: new Date().toISOString(),
+    expiresAt: manifest.expiresAt,
+  });
+  return { authorized: true, reasons, checks, capability };
 }
 
 /**
