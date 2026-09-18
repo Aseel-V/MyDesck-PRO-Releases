@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-18T10:54:19.425Z",
+  "generatedAt": "2026-09-18T11:39:34.269Z",
   "readOnly": true,
   "productionMutations": 0,
   "architecture": "FIREBASE_AUTH_FIRESTORE_PLUS_SUPABASE_STORAGE_ONLY",
@@ -185,14 +185,12 @@
     "CUTOVER_GO": {
       "ownedGates": 3,
       "evaluatedGates": 50,
-      "pass": 49,
+      "pass": 50,
       "fail": 0,
-      "notRun": 1,
+      "notRun": 0,
       "missing": 0,
-      "decision": "NO_GO",
-      "blockers": [
-        "productionAuthImport:NOT_RUN"
-      ],
+      "decision": "GO",
+      "blockers": [],
       "dependsOn": [
         "BULK_COPY_GO"
       ]
@@ -200,13 +198,12 @@
     "POST_CUTOVER_HEALTHY": {
       "ownedGates": 3,
       "evaluatedGates": 53,
-      "pass": 49,
+      "pass": 50,
       "fail": 0,
-      "notRun": 4,
+      "notRun": 3,
       "missing": 0,
       "decision": "NO_GO",
       "blockers": [
-        "productionAuthImport:NOT_RUN",
         "productionSmoke:NOT_RUN",
         "postCutoverFinancialCheck:NOT_RUN",
         "rollbackJournal:NOT_RUN"

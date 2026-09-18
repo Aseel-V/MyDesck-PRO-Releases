@@ -20,7 +20,7 @@
  *
  *   node migration/firestore/tools/production-reconcile.mjs --journal=<path> [--no-mark]
  */
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
@@ -400,6 +400,17 @@ try {
   const authBody = await authResponse.json();
   const firebaseAuthAccounts = Number(authBody.recordsCount ?? 0);
 
+  // What Firebase Auth should hold depends on whether the import stage has run. Before it, zero.
+  // After it, exactly the accounts the ledger authorized — no more, and none of the excluded ones.
+  // Hardcoding zero was right only while the import had not happened, and leaving it that way would
+  // have turned a successful import into a reconciliation failure.
+  const authPlanPath = 'migration/firestore/config/production-auth-ledger-plan.json';
+  const authImportPath = 'migration/reports/firestore-production-auth-import.json';
+  const authPlan = existsSync(authPlanPath) ? JSON.parse(readFileSync(authPlanPath, 'utf8')) : null;
+  const authImport = existsSync(authImportPath) ? JSON.parse(readFileSync(authImportPath, 'utf8')) : null;
+  const authImportCompleted = authImport?.decision === 'AUTH_IMPORT_GO';
+  const expectedAuthAccounts = authImportCompleted ? (authPlan?.toImport ?? 0) : 0;
+
   const preflight = JSON.parse(readFileSync('migration/reports/pre-bulk-preflight.json', 'utf8'));
   const baselineByTable = new Map(preflight.live.perTable.map((row) => [row.table, row.rows]));
   const sourceRowDrift = source.perTable.filter((row) => baselineByTable.get(row.table) !== row.rows)
@@ -445,7 +456,7 @@ try {
     timestampParity: timestampPrecisionLoss === 0 ? 'PASS' : 'FAIL',
     documentSizeValidity: tooLarge === 0 ? 'PASS' : 'FAIL',
     migrationLedger: ledgerMismatches === 0 ? 'PASS' : 'FAIL',
-    authUntouched: firebaseAuthAccounts === 0 ? 'PASS' : 'FAIL',
+    authStateAsAuthorized: firebaseAuthAccounts === expectedAuthAccounts ? 'PASS' : 'FAIL',
     storageUntouched: storageDrift.length === 0 ? 'PASS' : 'FAIL',
     sourceUntouched: sourceRowDrift.length === 0 && source.authUsers === preflight.live.authUsers
       ? 'PASS' : 'FAIL',
@@ -518,6 +529,9 @@ try {
     size: { nearLimit, tooLarge },
     untouched: {
       firebaseAuthAccounts,
+      expectedFirebaseAuthAccounts: expectedAuthAccounts,
+      authImportStageCompleted: authImportCompleted,
+      authAccountsExcludedByOperator: authPlan?.excludedByOperator ?? 0,
       supabaseStorageObjects: source.storage,
       supabaseStorageDrift: storageDrift,
       supabaseAuthUsers: source.authUsers,

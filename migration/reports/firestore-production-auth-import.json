@@ -1,0 +1,58 @@
+{
+  "generatedAt": "2026-09-18T11:34:03.659Z",
+  "artifact": "firestore-production-auth-import",
+  "migrationRunId": "authimport-0682c51c-d45a-4148-8c96-26996df38dfd",
+  "projectId": "mydesckpro",
+  "sourceUsers": 10,
+  "toImport": 7,
+  "excludedByOperator": 3,
+  "excludedFingerprints": [
+    "4ca1630f70b0",
+    "95e3cb04de08",
+    "f3b8c72c5a7d"
+  ],
+  "importFingerprints": [
+    "14639a9664ae",
+    "14f005e47862",
+    "29f3c0367460",
+    "2f93402fb0f7",
+    "4ed545194685",
+    "6d65321887ee",
+    "a3d78f6c5a53"
+  ],
+  "firebaseAccountsBefore": 0,
+  "uidPreservation": "SOURCE_UUID_USED_AS_FIREBASE_UID_VERBATIM",
+  "uidRemappingTable": "NONE",
+  "passwordHandling": "BCRYPT_PASSED_THROUGH_NEVER_RECORDED",
+  "snapshot": {
+    "isolationLevel": "repeatable read",
+    "readOnly": "on",
+    "rejectedWriteSqlState": "25006",
+    "successfulWrites": 0
+  },
+  "state": "AUTH_IMPORT_COMPLETE",
+  "imported": 7,
+  "firebaseAccountsAfter": 7,
+  "missingUsers": 0,
+  "unexpectedUsers": 0,
+  "uidMismatches": 0,
+  "nonUuidUids": 0,
+  "attributeMismatches": [],
+  "passwordsPresent": 7,
+  "importedUidFingerprints": [
+    "14639a9664ae",
+    "14f005e47862",
+    "29f3c0367460",
+    "2f93402fb0f7",
+    "4ed545194685",
+    "6d65321887ee",
+    "a3d78f6c5a53"
+  ],
+  "decision": "AUTH_IMPORT_GO",
+  "mutations": {
+    "authImports": 7,
+    "firestoreWrites": 0,
+    "storageMutations": 0,
+    "sourceMutations": 0
+  }
+}
