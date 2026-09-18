@@ -1,0 +1,35 @@
+{
+  "generatedAt": "2026-09-18T06:21:29.719Z",
+  "mode": "READ_ONLY_EQUIVALENCE_CHECK",
+  "firestoreWrites": 0,
+  "sourceWrites": 0,
+  "oracle": {
+    "artifact": "migration/full-rehearsal.local/expected.json",
+    "documents": 1477
+  },
+  "planned": {
+    "sourceRows": 1474,
+    "excludedRows": 8,
+    "migratableRows": 1466,
+    "tableDocuments": 1466,
+    "derivedDocuments": 11,
+    "plannedDocuments": 1477
+  },
+  "comparison": {
+    "missingFromPlan": 0,
+    "unexpectedInPlan": 0,
+    "documentHashMismatches": 0,
+    "missingSample": [],
+    "unexpectedSample": [],
+    "mismatchSample": []
+  },
+  "deterministic": true,
+  "snapshot": {
+    "isolationLevel": "repeatable read",
+    "readOnly": "on",
+    "rejectedWriteSqlState": "25006",
+    "successfulWrites": 0,
+    "transactionOutcome": "ROLLBACK"
+  },
+  "equivalent": true
+}
