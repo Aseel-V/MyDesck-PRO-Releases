@@ -4,7 +4,7 @@
   "supabaseProject": "pubugnfaqqukelvgckdr",
   "schemaVersion": 1,
   "transformVersion": "1.full.1",
-  "approvedPreparationCommit": "PENDING_POST_REVIEW_PIN",
+  "approvedPreparationCommit": "3e111d699d31bfa024c251c0adca73ae7d1f5d2b",
   "defaultModes": {
     "auth": "dry-run",
     "data": "dry-run",
@@ -24,5 +24,6 @@
     "isolationLevel": "REPEATABLE READ",
     "readOnly": true,
     "negativeWriteSqlState": "25006"
-  }
+  },
+  "approvedPreparationCommitNote": "The reviewed preparation commit containing the controlled execution authorization gate, the permanently locked Storage copy path and the corrected cutover plan. Authorization requires this commit to be HEAD or an ancestor of it AND every pinned tooling path to be byte-identical to it, except this field, which cannot contain its own SHA."
 }
