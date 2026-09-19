@@ -7,6 +7,7 @@ export default {
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
         arabic: ['IBM Plex Sans Arabic', 'sans-serif'],
+        hebrew: ['Rubik', 'sans-serif'],
       },
     },
   },

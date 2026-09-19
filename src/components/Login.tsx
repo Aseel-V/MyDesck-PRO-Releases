@@ -15,6 +15,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import ForgotPassword from './ForgotPassword';
+import { useNavigate } from 'react-router-dom';
 import {
   getFriendlyAuthError,
   shouldAttemptStaffFallback,
@@ -32,9 +33,20 @@ export default function Login() {
   const [error, setError] = useState('');
   const [view, setView] = useState<'login' | 'forgot-password'>('login');
   const [isLangOpen, setIsLangOpen] = useState(false);
+  const navigate = useNavigate();
 
   const isElectron =
     typeof window !== 'undefined' && Boolean(window.electronAPI);
+
+  const openForgotPassword = () => {
+    if (isElectron) {
+      setView('forgot-password');
+      return;
+    }
+
+    const localePrefix = /^\/(ar|he)(?:\/|$)/.exec(window.location.pathname)?.[1];
+    navigate(`${localePrefix ? `/${localePrefix}` : ''}/forgot-password`);
+  };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -291,7 +303,7 @@ export default function Login() {
 
                     <button
                       type="button"
-                      onClick={() => setView('forgot-password')}
+                      onClick={openForgotPassword}
                       className="text-sm font-semibold text-sky-700 transition hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:text-sky-400"
                     >
                       {t('auth.forgotPassword')}

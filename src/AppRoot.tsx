@@ -1,4 +1,4 @@
-import { StrictMode } from 'react';
+import { StrictMode, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App.tsx';
@@ -30,6 +30,18 @@ import { HashRouter } from 'react-router-dom';
  * business_type dispatch and every screen are the same code on both backends.
  */
 export function renderApp(): void {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <ErrorBoundary>
+        <HashRouter>
+          <AppProviders><App /></AppProviders>
+        </HashRouter>
+      </ErrorBoundary>
+    </StrictMode>
+  );
+}
+
+export function AppProviders({ children }: { children: ReactNode }) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -41,23 +53,15 @@ export function renderApp(): void {
   });
   const persister = createIDBPersister();
 
-  createRoot(document.getElementById('root')!).render(
-    <StrictMode>
-      <ErrorBoundary>
-        <PersistQueryClientProvider client={queryClient} persistOptions={{ persister }}>
-          <AuthProvider>
-            <LanguageProvider>
-              <ThemeProvider>
-                <CurrencyProvider>
-                  <HashRouter>
-                    <App />
-                  </HashRouter>
-                </CurrencyProvider>
-              </ThemeProvider>
-            </LanguageProvider>
-          </AuthProvider>
-        </PersistQueryClientProvider>
-      </ErrorBoundary>
-    </StrictMode>
+  return (
+    <PersistQueryClientProvider client={queryClient} persistOptions={{ persister }}>
+      <AuthProvider>
+        <LanguageProvider>
+          <ThemeProvider>
+            <CurrencyProvider>{children}</CurrencyProvider>
+          </ThemeProvider>
+        </LanguageProvider>
+      </AuthProvider>
+    </PersistQueryClientProvider>
   );
 }

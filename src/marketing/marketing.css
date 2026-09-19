@@ -1,0 +1,89 @@
+.marketing-root {
+  --marketing-ink: #0f172a;
+  --marketing-body: #334155;
+  --marketing-muted-text: #526174;
+  --marketing-link: #075985;
+  --marketing-cta: #075985;
+  --marketing-cta-hover: #0c4a6e;
+  --marketing-accent: #8a4b08;
+  --marketing-focus: #0369a1;
+  --marketing-border: #e2e8f0;
+  --marketing-border-strong: #cbd5e1;
+  --marketing-surface-soft: #f8fafc;
+  --marketing-hero: #f5f9fc;
+  --marketing-icon-bg: #eaf4fb;
+  font-family: "Inter", sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  text-rendering: optimizeLegibility;
+}
+
+html[data-marketing-locale="ar"] .marketing-root {
+  font-family: "IBM Plex Sans Arabic", sans-serif;
+}
+
+html[data-marketing-locale="he"] .marketing-root {
+  font-family: "Rubik", sans-serif;
+}
+
+.marketing-root *,
+.marketing-root ::before,
+.marketing-root ::after {
+  box-sizing: border-box;
+}
+
+.marketing-root a,
+.marketing-root button,
+.marketing-root summary,
+.marketing-root input,
+.marketing-root select,
+.marketing-root textarea {
+  touch-action: manipulation;
+}
+
+.marketing-root .marketing-button,
+.marketing-root button,
+.marketing-root a,
+.marketing-root summary {
+  transition-duration: 200ms;
+  transition-property: color, background-color, border-color, box-shadow, transform;
+  transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.marketing-grid {
+  background-image:
+    linear-gradient(rgba(15, 75, 126, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 75, 126, 0.055) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(to bottom, black, transparent 92%);
+}
+
+.marketing-faq summary::-webkit-details-marker {
+  display: none;
+}
+
+.marketing-faq[open] summary span[aria-hidden="true"] span:last-child {
+  transform: translateX(-50%) rotate(90deg);
+}
+
+[dir="rtl"] .marketing-faq[open] summary span[aria-hidden="true"] span:last-child {
+  transform: translateX(50%) rotate(90deg);
+}
+
+@media (max-width: 374px) {
+  .marketing-root h1 {
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marketing-root *,
+  .marketing-root ::before,
+  .marketing-root ::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+

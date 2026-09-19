@@ -1,0 +1,114 @@
+[
+  {
+    "path": "/",
+    "indexable": true,
+    "structuredDataType": "Organization+SoftwareApplication+FAQPage",
+    "title": { "en": "Connected business operations", "ar": "إدارة أعمال مترابطة", "he": "ניהול עסקי מחובר" },
+    "description": { "en": "Run operations, customers, finances, documents, and reporting from one multilingual workspace built around real business workflows.", "ar": "أدر العمليات والعملاء والشؤون المالية والمستندات والتقارير من مساحة عمل متعددة اللغات مبنية حول سير العمل الحقيقي.", "he": "נהלו תפעול, לקוחות, כספים, מסמכים ודוחות מסביבת עבודה רב-לשונית שנבנתה סביב תהליכים עסקיים אמיתיים." }
+  },
+  {
+    "path": "/features",
+    "indexable": true,
+    "structuredDataType": "SoftwareApplication",
+    "title": { "en": "Business workflow features", "ar": "ميزات سير العمل", "he": "יכולות לתהליכי עבודה" },
+    "description": { "en": "Explore MyDesck PRO operations, customer, sales, payment tracking, financial, document, and reporting workflows.", "ar": "استكشف عمليات MyDesck PRO وإدارة العملاء والمبيعات وتتبع الدفعات والشؤون المالية والمستندات والتقارير.", "he": "גלו את יכולות MyDesck PRO לתפעול, לקוחות, מכירות, מעקב תשלומים, כספים, מסמכים ודוחות." }
+  },
+  {
+    "path": "/solutions",
+    "indexable": true,
+    "structuredDataType": "SoftwareApplication",
+    "title": { "en": "Industry solutions", "ar": "حلول حسب القطاع", "he": "פתרונות לפי ענף" },
+    "description": { "en": "See available and early-access MyDesck PRO workflows for travel agencies, supermarkets, restaurants, and auto repair workshops.", "ar": "تعرّف على حلول MyDesck PRO المتاحة والمبكرة لوكالات السفر والمتاجر والمطاعم وورش السيارات.", "he": "הכירו את תהליכי MyDesck PRO הזמינים ובגישה מוקדמת לסוכנויות נסיעות, סופרמרקטים, מסעדות ומוסכים." }
+  },
+  {
+    "path": "/solutions/travel-agencies",
+    "indexable": true,
+    "structuredDataType": "SoftwareApplication",
+    "title": { "en": "Travel agency management", "ar": "إدارة وكالات السفر", "he": "ניהול סוכנויות נסיעות" },
+    "description": { "en": "Manage trips, travelers, itineraries, payment schedules, installments, documents, reports, and analytics in one multilingual workspace.", "ar": "أدر الرحلات والمسافرين والبرامج وجداول الدفع والأقساط والمستندات والتقارير والتحليلات في مساحة عمل واحدة.", "he": "נהלו טיולים, נוסעים, מסלולים, לוחות תשלום, תשלומים, מסמכים, דוחות וניתוחים בסביבת עבודה אחת." }
+  },
+  {
+    "path": "/solutions/supermarkets",
+    "indexable": true,
+    "structuredDataType": "SoftwareApplication",
+    "title": { "en": "Supermarket point of sale", "ar": "نقطة بيع للمتاجر", "he": "נקודת מכירה לסופרמרקטים" },
+    "description": { "en": "Run core supermarket POS workflows with products, categories, barcode and weighted-item entry, VAT, receipts, history, and sales analytics.", "ar": "شغّل نقطة البيع الأساسية مع المنتجات والفئات والباركود والأصناف الموزونة والضريبة والإيصالات وسجل المبيعات.", "he": "הפעילו תהליכי קופה מרכזיים עם מוצרים, קטגוריות, ברקודים, פריטים שקילים, מע״מ, קבלות והיסטוריית מכירות." }
+  },
+  {
+    "path": "/solutions/restaurants",
+    "indexable": true,
+    "structuredDataType": "SoftwareApplication",
+    "title": { "en": "Restaurant operations — Early Access", "ar": "تشغيل المطاعم — وصول مبكر", "he": "תפעול מסעדות — גישה מוקדמת" },
+    "description": { "en": "Early-access restaurant workflows for tables, floor plans, menus, staff structures, orders, KDS, reservations, history, and analytics.", "ar": "سير عمل مبكر للطاولات والمخططات والقوائم والموظفين والطلبات وشاشة المطبخ والحجوزات والتحليلات.", "he": "תהליכי מסעדה בגישה מוקדמת לשולחנות, תוכנית אולם, תפריטים, צוות, הזמנות, KDS, הזמנות מקום וניתוחים." }
+  },
+  {
+    "path": "/solutions/auto-repair",
+    "indexable": true,
+    "structuredDataType": "SoftwareApplication",
+    "title": { "en": "Auto repair workflows — Early Access", "ar": "سير عمل ورش السيارات — وصول مبكر", "he": "תהליכי מוסך — גישה מוקדמת" },
+    "description": { "en": "Early-access workshop workflows for vehicle intake, government-data lookup where available, work orders, parts, labor, history, inventory, and documents.", "ar": "سير عمل مبكر لاستقبال المركبات والبحث الحكومي حيث يتوفر وأوامر العمل والقطع والأجور والسجل والمستندات.", "he": "תהליכים בגישה מוקדמת לקליטת רכב, חיפוש נתוני ממשלה כשזמין, כרטיסי עבודה, חלקים, עבודה, היסטוריה ומסמכים." }
+  },
+  {
+    "path": "/pricing",
+    "indexable": true,
+    "structuredDataType": "SoftwareApplication",
+    "title": { "en": "Assisted activation", "ar": "تفعيل بمساعدة", "he": "הפעלה בליווי" },
+    "description": { "en": "MyDesck PRO is currently activated through an assisted onboarding process. Request a trial or contact sales to discuss your workflow.", "ar": "يتم تفعيل MyDesck PRO حاليًا من خلال إعداد بمساعدة. اطلب تجربة أو تواصل مع المبيعات لمناقشة سير عملك.", "he": "MyDesck PRO מופעל כיום בתהליך הצטרפות מלווה. בקשו ניסיון או פנו למכירות כדי לדון בתהליך העבודה שלכם." }
+  },
+  {
+    "path": "/security",
+    "indexable": true,
+    "structuredDataType": "Organization",
+    "title": { "en": "Security and data access", "ar": "الأمان والوصول للبيانات", "he": "אבטחה וגישה לנתונים" },
+    "description": { "en": "Learn how MyDesck PRO uses authenticated access, tenant-aware authorization, cloud data storage, private assets, and server-confirmed writes.", "ar": "تعرّف على الوصول الموثّق والصلاحيات الخاصة بكل نشاط والتخزين السحابي والأصول الخاصة والكتابة المؤكدة من الخادم.", "he": "למדו על גישה מאומתת, הרשאות מודעות לעסק, אחסון ענן, נכסים פרטיים וכתיבות מאושרות שרת ב-MyDesck PRO." }
+  },
+  {
+    "path": "/privacy",
+    "indexable": true,
+    "structuredDataType": "WebPage",
+    "title": { "en": "Privacy notice", "ar": "إشعار الخصوصية", "he": "הודעת פרטיות" },
+    "description": { "en": "Read the current MyDesck PRO privacy notice for website visitors and business users.", "ar": "اقرأ إشعار الخصوصية الحالي لزوار موقع MyDesck PRO ومستخدمي الأعمال.", "he": "קראו את הודעת הפרטיות הנוכחית למבקרי אתר MyDesck PRO ולמשתמשים עסקיים." }
+  },
+  {
+    "path": "/terms",
+    "indexable": true,
+    "structuredDataType": "WebPage",
+    "title": { "en": "Terms of use", "ar": "شروط الاستخدام", "he": "תנאי שימוש" },
+    "description": { "en": "Read the current terms governing access to the MyDesck PRO website and assisted service activation.", "ar": "اقرأ الشروط الحالية التي تحكم استخدام موقع MyDesck PRO وتفعيل الخدمة بمساعدة.", "he": "קראו את התנאים הנוכחיים לשימוש באתר MyDesck PRO ולהפעלת השירות בליווי." }
+  },
+  {
+    "path": "/contact",
+    "indexable": true,
+    "structuredDataType": "ContactPage",
+    "title": { "en": "Contact MyDesck PRO", "ar": "تواصل مع MyDesck PRO", "he": "יצירת קשר עם MyDesck PRO" },
+    "description": { "en": "Request access, discuss a trial, ask for a product walkthrough, or contact MyDesck PRO support through a transparent email workflow.", "ar": "اطلب الوصول أو ناقش تجربة أو عرض المنتج أو تواصل مع دعم MyDesck PRO عبر البريد الإلكتروني.", "he": "בקשו גישה, שוחחו על ניסיון, בקשו הדגמת מוצר או פנו לתמיכת MyDesck PRO באמצעות דוא״ל." }
+  },
+  {
+    "path": "/login",
+    "indexable": false,
+    "structuredDataType": "WebPage",
+    "title": { "en": "Sign in", "ar": "تسجيل الدخول", "he": "כניסה" },
+    "description": { "en": "Secure MyDesck PRO account access.", "ar": "دخول آمن إلى حساب MyDesck PRO.", "he": "גישה מאובטחת לחשבון MyDesck PRO." }
+  },
+  {
+    "path": "/forgot-password",
+    "indexable": false,
+    "structuredDataType": "WebPage",
+    "title": { "en": "Reset password", "ar": "استعادة كلمة المرور", "he": "איפוס סיסמה" },
+    "description": { "en": "Request a MyDesck PRO password reset link.", "ar": "اطلب رابطًا لاستعادة كلمة مرور MyDesck PRO.", "he": "בקשו קישור לאיפוס סיסמת MyDesck PRO." }
+  },
+  {
+    "path": "/reset-password",
+    "indexable": false,
+    "structuredDataType": "WebPage",
+    "title": { "en": "Choose a new password", "ar": "اختر كلمة مرور جديدة", "he": "בחירת סיסמה חדשה" },
+    "description": { "en": "Complete a MyDesck PRO password reset.", "ar": "أكمل استعادة كلمة مرور MyDesck PRO.", "he": "השלימו איפוס סיסמה ב-MyDesck PRO." }
+  },
+  {
+    "path": "/dashboard",
+    "indexable": false,
+    "structuredDataType": "WebPage",
+    "title": { "en": "Workspace", "ar": "مساحة العمل", "he": "סביבת עבודה" },
+    "description": { "en": "Authenticated MyDesck PRO workspace.", "ar": "مساحة عمل MyDesck PRO الموثقة.", "he": "סביבת העבודה המאומתת של MyDesck PRO." }
+  }
+]

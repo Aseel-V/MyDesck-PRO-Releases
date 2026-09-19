@@ -67,10 +67,11 @@ export default function ResetPassword() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-500 ml-1">
+                <label htmlFor="reset-password-new" className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-500 ml-1">
                     {t('forgotPassword.resetPassword.newPassword')}
                 </label>
                 <input
+                    id="reset-password-new"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -83,10 +84,11 @@ export default function ResetPassword() {
                 />
             </div>
              <div className="space-y-2">
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-500 ml-1">
+                <label htmlFor="reset-password-confirm" className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-500 ml-1">
                     {t('forgotPassword.resetPassword.confirmPassword')}
                 </label>
                 <input
+                    id="reset-password-confirm"
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
@@ -100,7 +102,7 @@ export default function ResetPassword() {
             </div>
 
             {error && (
-                <div className="p-4 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 rounded-xl text-sm text-rose-600 dark:text-rose-400 flex items-center gap-3">
+                <div role="alert" aria-live="assertive" className="p-4 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 rounded-xl text-sm text-rose-600 dark:text-rose-400 flex items-center gap-3">
                     <AlertCircle className="w-5 h-5 shrink-0" />
                     {error}
                 </div>

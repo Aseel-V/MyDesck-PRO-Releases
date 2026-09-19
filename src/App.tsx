@@ -20,6 +20,7 @@ import { useWebsiteUpdate } from './hooks/useWebsiteUpdate';
 import { HelmetProvider } from 'react-helmet-async';
 import SolutionPage from './pages/solutions/SolutionPage';
 import SafetySupportPage from './pages/SafetySupportPage';
+import ForgotPassword from './components/ForgotPassword';
 
 // Import new components for staff routing
 import KitchenDisplaySystem from './components/restaurant/KitchenDisplaySystem';
@@ -142,6 +143,7 @@ function App() {
       {showReleaseNotes && <WebsiteReleaseNotesDialog onClose={() => setShowReleaseNotes(false)} />}
       <Routes>
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/forgot-password" element={<ForgotPassword onBack={() => window.location.hash = '#/login'} />} />
         <Route path="/login" element={<LoginWrapper />} />
         
         {/* Explicit Routing: Web = Landing Page, Electron = App */}
@@ -152,6 +154,7 @@ function App() {
         
         {/* Web App Access */}
         <Route path="/dashboard" element={<AppContent />} />
+        <Route path="/:locale/dashboard" element={<AppContent />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

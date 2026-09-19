@@ -21,8 +21,12 @@ export default function ForgotPassword({ onBack }: ForgotPasswordProps) {
     setError(null);
 
     try {
-      // Crucial for HashRouter: Must include the /#/ in the redirect URL
-      await getBackend().auth.sendPasswordReset(email, window.location.origin + '/#/reset-password');
+      const localePrefix = /^\/(ar|he)(?:\/|$)/.exec(window.location.pathname)?.[1];
+      const resetPath = `${localePrefix ? `/${localePrefix}` : ''}/reset-password`;
+      const resetUrl = window.electronAPI
+        ? `${window.location.origin}${window.location.pathname}#/reset-password`
+        : `${window.location.origin}${resetPath}`;
+      await getBackend().auth.sendPasswordReset(email, resetUrl);
       setSubmitted(true);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to send reset email';
@@ -79,7 +83,7 @@ export default function ForgotPassword({ onBack }: ForgotPasswordProps) {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
-          <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-500 ml-1">
+          <label htmlFor="forgot-password-email" className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-500 ml-1">
             {t('forgotPassword.emailLabel')}
           </label>
           <div className="relative group">
@@ -87,6 +91,7 @@ export default function ForgotPassword({ onBack }: ForgotPasswordProps) {
               <Mail className="h-5 w-5 text-slate-400 dark:text-slate-500 group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 transition-colors" />
             </div>
             <input
+              id="forgot-password-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -100,7 +105,7 @@ export default function ForgotPassword({ onBack }: ForgotPasswordProps) {
         </div>
 
         {error && (
-          <div className="p-4 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 rounded-xl text-sm text-rose-600 dark:text-rose-400 flex items-start gap-3">
+          <div role="alert" aria-live="assertive" className="p-4 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 rounded-xl text-sm text-rose-600 dark:text-rose-400 flex items-start gap-3">
              <div className="mt-0.5 shrink-0 w-1.5 h-1.5 rounded-full bg-rose-500" />
              {error}
           </div>
