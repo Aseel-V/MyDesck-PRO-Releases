@@ -38,7 +38,7 @@ export default function ContactPage() {
   return (
     <>
       <MarketingSEO path="/contact" />
-      <MarketingSection className="border-b border-slate-200 bg-[var(--marketing-hero)] pt-16 sm:pt-20"><MarketingContainer><SectionHeading eyebrow={copy.contact.eyebrow} title={copy.contact.title} description={copy.contact.intro} /></MarketingContainer></MarketingSection>
+      <MarketingSection className="border-b border-slate-200 bg-[var(--marketing-hero)] pt-16 sm:pt-20"><MarketingContainer><SectionHeading level={1} eyebrow={copy.contact.eyebrow} title={copy.contact.title} description={copy.contact.intro} /></MarketingContainer></MarketingSection>
       <MarketingSection>
         <MarketingContainer className="grid gap-8 lg:grid-cols-[1fr_0.6fr]">
           <MarketingCard className="p-6 sm:p-8">
@@ -58,4 +58,3 @@ export default function ContactPage() {
     </>
   );
 }
-

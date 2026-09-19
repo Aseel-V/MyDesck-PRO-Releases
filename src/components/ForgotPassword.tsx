@@ -43,9 +43,9 @@ export default function ForgotPassword({ onBack }: ForgotPasswordProps) {
           <div className="bg-emerald-500/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-500/20 shadow-lg shadow-emerald-900/20">
             <CheckCircle2 className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-slate-100 dark:to-slate-400 bg-clip-text text-transparent mb-3">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-slate-100 dark:to-slate-400 bg-clip-text text-transparent mb-3">
             {t('forgotPassword.checkEmail.title')}
-          </h2>
+          </h1>
           <p className="text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
             {t('forgotPassword.checkEmail.desc')} <span className="text-blue-600 dark:text-blue-400 font-medium">{email}</span>
           </p>
@@ -73,9 +73,9 @@ export default function ForgotPassword({ onBack }: ForgotPasswordProps) {
           </div>
           {t('forgotPassword.back')}
         </button>
-        <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-blue-700 to-cyan-600 dark:from-blue-400 dark:via-blue-500 dark:to-cyan-400 bg-clip-text text-transparent mb-2">
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-blue-700 to-cyan-600 dark:from-blue-400 dark:via-blue-500 dark:to-cyan-400 bg-clip-text text-transparent mb-2">
           {t('forgotPassword.title')}
-        </h2>
+        </h1>
         <p className="text-slate-600 dark:text-slate-400">
           {t('forgotPassword.desc')}
         </p>
@@ -93,6 +93,7 @@ export default function ForgotPassword({ onBack }: ForgotPasswordProps) {
             <input
               id="forgot-password-email"
               type="email"
+              autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className={`block w-full ${direction === 'rtl' ? 'pr-12 pl-4' : 'pl-12 pr-4'} py-3.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 

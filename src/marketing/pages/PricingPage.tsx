@@ -8,7 +8,7 @@ export default function PricingPage() {
   return (
     <>
       <MarketingSEO path="/pricing" />
-      <MarketingSection className="border-b border-slate-200 bg-[var(--marketing-hero)] pt-16 sm:pt-20"><MarketingContainer><SectionHeading eyebrow={copy.pricing.eyebrow} title={copy.pricing.title} description={copy.pricing.intro} /></MarketingContainer></MarketingSection>
+      <MarketingSection className="border-b border-slate-200 bg-[var(--marketing-hero)] pt-16 sm:pt-20"><MarketingContainer><SectionHeading level={1} eyebrow={copy.pricing.eyebrow} title={copy.pricing.title} description={copy.pricing.intro} /></MarketingContainer></MarketingSection>
       <MarketingSection>
         <MarketingContainer className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
           <MarketingCard className="border-slate-300 p-7 sm:p-10"><p className="text-sm font-bold text-sky-800">{copy.pricing.eyebrow}</p><h2 className="mt-3 text-3xl font-semibold text-slate-950">{copy.pricing.cardTitle}</h2><p className="mt-4 max-w-xl text-base leading-7 text-slate-600">{copy.pricing.cardDescription}</p><h3 className="mt-8 text-sm font-bold uppercase tracking-[0.12em] text-slate-500">{copy.pricing.includedTitle}</h3><CheckList items={copy.pricing.included} /><div className="mt-8 flex flex-col gap-3 sm:flex-row"><MarketingButton to="/contact?intent=trial">{copy.common.requestTrial}</MarketingButton><MarketingButton to="/contact?intent=sales" variant="secondary">{copy.common.contactSales}</MarketingButton></div><p className="mt-6 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950">{copy.pricing.note}</p></MarketingCard>
@@ -19,4 +19,3 @@ export default function PricingPage() {
     </>
   );
 }
-

@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Navigate, useParams } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { motion } from 'framer-motion';
 import { 
@@ -103,7 +103,11 @@ const SolutionPage = () => {
     }
   };
 
-  const c = config[type || 'market'] || config.market;
+  if (!type || !config[type]) {
+    return <Navigate to="/" replace />;
+  }
+
+  const c = config[type];
   const translationKey = `landing.industries.${type}`;
 
   return (

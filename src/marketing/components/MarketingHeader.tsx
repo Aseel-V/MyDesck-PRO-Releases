@@ -51,7 +51,7 @@ export function MarketingHeader() {
           <MarketingButton to="/contact?intent=trial" className="min-h-11 py-2.5">{copy.nav.requestAccess}</MarketingButton>
         </div>
         <div className="ms-auto flex items-center gap-2 lg:hidden">
-          <MarketingButton to="/contact?intent=trial" className="hidden min-h-11 px-3 py-2 text-xs sm:inline-flex">{copy.nav.requestAccess}</MarketingButton>
+          <MarketingButton to="/contact?intent=trial" className="min-h-11 px-2.5 py-2 text-[0.69rem] sm:px-3 sm:text-xs">{copy.nav.requestAccess}</MarketingButton>
           <button ref={menuButtonRef} type="button" aria-expanded={mobileOpen} aria-controls="mobile-navigation" aria-label={mobileOpen ? copy.nav.close : copy.nav.menu} onClick={() => setMobileOpen((value) => !value)} className="flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200 text-slate-800 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500">
             {mobileOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
           </button>
@@ -74,4 +74,3 @@ export function MarketingHeader() {
     </header>
   );
 }
-

@@ -142,7 +142,7 @@ const LandingPage = () => {
       benefits: [
         { title: "Dashboard/Profits: Track revenue & growth instantly", icon: LayoutDashboard },
         { title: "Accountant Export: One-click financial reports", icon: FileText },
-        { title: "3 Months Free Trial then only $20/mo", icon: BadgeDollarSign }
+        { title: "Request access with assisted onboarding", icon: BadgeDollarSign }
       ],
       demo: {
         title: 'See it in action',
@@ -219,7 +219,7 @@ const LandingPage = () => {
       benefits: [
         { title: "לוח בקרה ורווחים: מעקב אחר הכנסות וצמיחה", icon: LayoutDashboard },
         { title: "ייצוא לרואה חשבון: דו״חות כספיים בקליק", icon: FileText },
-        { title: "3 חודשי ניסיון חינם, ואז $20/חודש בלבד", icon: BadgeDollarSign }
+        { title: "בקשת גישה עם קליטה מודרכת", icon: BadgeDollarSign }
       ],
       demo: {
         title: 'ראה את המערכת בפעולה',
@@ -296,7 +296,7 @@ const LandingPage = () => {
       benefits: [
         { title: "لوحة التحكم والأرباح: تتبع الإيرادات، المصروفات، وصافي الربح لحظة بلحظة.", icon: LayoutDashboard },
         { title: "تصدير للمحاسب: تقارير مالية كاملة (Excel/PDF) وسجل فواتير جاهز بنقرة واحدة.", icon: FileText },
-        { title: "ابدأ مجاناً: 3 أشهر تجربة كاملة، ثم $20/شهر فقط (شامل التحديثات والدعم).", icon: BadgeDollarSign }
+        { title: "اطلب الوصول مع تهيئة موجهة", icon: BadgeDollarSign }
       ],
       demo: {
         title: 'شاهد النظام يعمل',

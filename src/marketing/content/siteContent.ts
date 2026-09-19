@@ -322,7 +322,7 @@ const en: MarketingCopy = {
   },
   security: {
     eyebrow: 'Security', title: 'Authenticated cloud access with tenant-aware boundaries.',
-    intro: 'MyDesck PRO now uses a cloud production architecture. This page replaces outdated local-only and 100% offline claims.',
+    intro: 'MyDesck PRO uses a cloud production architecture built around authenticated access and managed services.',
     principles: [
       { title: 'Identity & sessions', description: 'Firebase Authentication provides account sign-in, session handling, and password recovery.', items: ['Authenticated access', 'Session lifecycle', 'Password reset workflow'] },
       { title: 'Business data', description: 'Operational records are stored in Firestore and accessed through tenant-aware authorization.', items: ['Cloud data storage', 'Business-aware access controls', 'Server-confirmed writes'] },
@@ -579,4 +579,3 @@ const he: MarketingCopy = {
 };
 
 export const siteContent: Record<MarketingLocale, MarketingCopy> = { en, ar, he };
-

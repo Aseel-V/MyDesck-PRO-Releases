@@ -57,15 +57,16 @@ export default function ResetPassword() {
             <div className="bg-blue-500/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 border border-blue-500/20 shadow-lg shadow-blue-900/20">
                 <Lock className="w-8 h-8 text-blue-600 dark:text-blue-400" />
             </div>
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-slate-100 dark:to-slate-400 bg-clip-text text-transparent mb-2">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-slate-100 dark:to-slate-400 bg-clip-text text-transparent mb-2">
                 {t('forgotPassword.resetPassword.title')}
-            </h2>
+            </h1>
             <p className="text-slate-600 dark:text-slate-400">
                 {t('forgotPassword.resetPassword.desc')}
             </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+            <input type="text" name="username" autoComplete="username" className="hidden" tabIndex={-1} aria-hidden="true" />
             <div className="space-y-2">
                 <label htmlFor="reset-password-new" className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-500 ml-1">
                     {t('forgotPassword.resetPassword.newPassword')}
@@ -73,6 +74,7 @@ export default function ResetPassword() {
                 <input
                     id="reset-password-new"
                     type="password"
+                    autoComplete="new-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className={`block w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500
@@ -90,6 +92,7 @@ export default function ResetPassword() {
                 <input
                     id="reset-password-confirm"
                     type="password"
+                    autoComplete="new-password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className={`block w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500

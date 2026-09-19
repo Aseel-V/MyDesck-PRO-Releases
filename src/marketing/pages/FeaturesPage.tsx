@@ -11,7 +11,7 @@ export default function FeaturesPage() {
     <>
       <MarketingSEO path="/features" />
       <MarketingSection className="border-b border-slate-200 bg-[var(--marketing-hero)] pt-16 sm:pt-20">
-        <MarketingContainer><SectionHeading eyebrow={copy.features.eyebrow} title={copy.features.title} description={copy.features.intro} /></MarketingContainer>
+        <MarketingContainer><SectionHeading level={1} eyebrow={copy.features.eyebrow} title={copy.features.title} description={copy.features.intro} /></MarketingContainer>
       </MarketingSection>
       <MarketingSection>
         <MarketingContainer>

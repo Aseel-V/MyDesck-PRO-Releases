@@ -12,7 +12,7 @@ export default function SolutionsPage() {
   return (
     <>
       <MarketingSEO path="/solutions" />
-      <MarketingSection className="border-b border-slate-200 bg-[var(--marketing-hero)] pt-16 sm:pt-20"><MarketingContainer><SectionHeading eyebrow={copy.solutions.eyebrow} title={copy.solutions.title} description={copy.solutions.intro} /></MarketingContainer></MarketingSection>
+      <MarketingSection className="border-b border-slate-200 bg-[var(--marketing-hero)] pt-16 sm:pt-20"><MarketingContainer><SectionHeading level={1} eyebrow={copy.solutions.eyebrow} title={copy.solutions.title} description={copy.solutions.intro} /></MarketingContainer></MarketingSection>
       <MarketingSection>
         <MarketingContainer>
           <div className="grid gap-6 md:grid-cols-2">{solutions.map((solution) => {
@@ -27,4 +27,3 @@ export default function SolutionsPage() {
     </>
   );
 }
-

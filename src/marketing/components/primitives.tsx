@@ -44,17 +44,20 @@ export function SectionHeading({
   description,
   align = 'start',
   inverse = false,
+  level = 2,
 }: {
   eyebrow: string;
   title: string;
   description?: string;
   align?: 'start' | 'center';
   inverse?: boolean;
+  level?: 1 | 2;
 }) {
+  const Heading = level === 1 ? 'h1' : 'h2';
   return (
     <div className={classes('max-w-3xl', align === 'center' && 'mx-auto text-center')}>
       <p className={classes('text-sm font-bold tracking-[0.14em] uppercase', inverse ? 'text-sky-300' : 'text-[var(--marketing-accent)]')}>{eyebrow}</p>
-      <h2 className={classes('mt-4 text-3xl font-semibold tracking-[-0.035em] sm:text-4xl lg:text-[2.6rem] lg:leading-[1.12]', inverse ? 'text-white' : 'text-[var(--marketing-ink)]')}>{title}</h2>
+      <Heading className={classes('mt-4 text-3xl font-semibold tracking-[-0.035em] sm:text-4xl lg:text-[2.6rem] lg:leading-[1.12]', inverse ? 'text-white' : 'text-[var(--marketing-ink)]')}>{title}</Heading>
       {description && <p className={classes('mt-5 max-w-[46rem] text-base leading-7 sm:text-lg', inverse ? 'text-slate-300' : 'text-[var(--marketing-muted-text)]', align === 'center' && 'mx-auto')}>{description}</p>}
     </div>
   );
@@ -172,4 +175,3 @@ export function CTASection({ eyebrow, title, description }: { eyebrow: string; t
     </MarketingSection>
   );
 }
-
