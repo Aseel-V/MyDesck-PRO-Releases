@@ -6,7 +6,6 @@ import {
   type ReactNode,
 } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import i18n from '../../lib/i18n';
 import { siteContent, type MarketingCopy } from './siteContent';
 import {
   localizePath,
@@ -34,7 +33,6 @@ export function MarketingLanguageProvider({ children }: { children: ReactNode })
     document.documentElement.dir = direction;
     document.documentElement.dataset.marketingLocale = locale;
     localStorage.setItem('elite_travels_language', locale);
-    void i18n.changeLanguage(locale);
 
     return () => {
       delete document.documentElement.dataset.marketingLocale;
@@ -64,4 +62,3 @@ export function useMarketingLanguage(): MarketingLanguageValue {
   if (!context) throw new Error('useMarketingLanguage must be used inside MarketingLanguageProvider');
   return context;
 }
-

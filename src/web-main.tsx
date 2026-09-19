@@ -14,7 +14,6 @@ import '@fontsource/rubik/600.css';
 import '@fontsource/rubik/700.css';
 import './index.css';
 import './marketing/marketing.css';
-import './lib/i18n';
 import WebRoot from './WebRoot';
 import { legacyHashSearch, resolveLegacyHash } from './marketing/routes/routeModel';
 
@@ -26,4 +25,3 @@ if (legacyDestination) {
 createRoot(document.getElementById('root')!).render(
   <StrictMode><WebRoot /></StrictMode>,
 );
-

@@ -1,3 +1,7 @@
 User-agent: *
 Allow: /
+Disallow: /login
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /dashboard
 Sitemap: https://my-desck-pro.vercel.app/sitemap.xml

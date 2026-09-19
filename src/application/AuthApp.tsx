@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, type ReactNode } from 'react';
+import '../lib/i18n';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
@@ -58,4 +59,3 @@ function AuthLoading() {
 export default function AuthApp({ view }: { view: AuthView }) {
   return <AuthProviders><Toaster richColors position="top-center" closeButton /><AuthStateRouter view={view} /></AuthProviders>;
 }
-

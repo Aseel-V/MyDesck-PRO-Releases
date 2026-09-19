@@ -15,22 +15,28 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+      injectRegister: false,
+      includeAssets: ['favicon.ico', 'pwa-icon.svg'],
       manifest: {
         name: 'MyDesck PRO',
         short_name: 'MyDesck',
-        description: 'Professional Travel Agency Dashboard',
+        description: 'Multilingual business operations platform for industry-specific workflows.',
         theme_color: '#0f172a',
+        background_color: '#f8fafc',
+        display: 'standalone',
+        start_url: './',
+        scope: './',
         icons: [
           {
-            src: 'favicon.ico',
-            sizes: '192x192',
-            type: 'image/x-icon',
+            src: 'pwa-192x192.png',
+            sizes: '256x256',
+            type: 'image/png',
           },
           {
-            src: 'favicon.ico',
-            sizes: '512x512',
-            type: 'image/x-icon',
+            src: 'pwa-icon.svg',
+            sizes: 'any',
+            type: 'image/svg+xml',
+            purpose: 'any maskable',
           },
         ],
       },
@@ -57,10 +63,6 @@ export default defineConfig({
       'react-dom',
       'react-router-dom',
       'lucide-react',
-      '@tanstack/react-query',
-      'framer-motion',
-      'sonner',
-      'recharts',
     ],
   },
   server: {
@@ -77,7 +79,7 @@ export default defineConfig({
     },
     // Pre-warm frequently used files
     warmup: {
-      clientFiles: ['./src/main.tsx', './src/App.tsx', './src/components/Dashboard.tsx'],
+      clientFiles: ['./src/main.tsx', './src/web-main.tsx'],
     },
   },
   preview: {
