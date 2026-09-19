@@ -2,6 +2,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { MarketingLanguageProvider } from './marketing/content/MarketingLanguageContext';
+import { MarketingAnalyticsProvider } from './marketing/analytics/analytics';
 import { MarketingRouter } from './marketing/routes/MarketingRouter';
 
 export default function WebRoot() {
@@ -9,12 +10,13 @@ export default function WebRoot() {
     <ErrorBoundary>
       <HelmetProvider>
         <BrowserRouter>
-          <MarketingLanguageProvider>
-            <MarketingRouter />
-          </MarketingLanguageProvider>
+          <MarketingAnalyticsProvider>
+            <MarketingLanguageProvider>
+              <MarketingRouter />
+            </MarketingLanguageProvider>
+          </MarketingAnalyticsProvider>
         </BrowserRouter>
       </HelmetProvider>
     </ErrorBoundary>
   );
 }
-

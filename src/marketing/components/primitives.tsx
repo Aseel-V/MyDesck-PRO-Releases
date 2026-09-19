@@ -3,6 +3,7 @@ import { ArrowUpRight, Check } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useMarketingLanguage } from '../content/MarketingLanguageContext';
 import { localizePath } from '../routes/routeModel';
+import { useMarketingAnalytics } from '../analytics/analytics';
 
 function classes(...values: Array<string | false | null | undefined>) {
   return values.filter(Boolean).join(' ');
@@ -77,11 +78,12 @@ export function MarketingButton({
   onClick?: () => void;
 }) {
   const { locale } = useMarketingLanguage();
+  const analytics = useMarketingAnalytics();
   const href = to.startsWith('/') ? localizePath(to, locale) : to;
   return (
     <Link
       to={href}
-      onClick={onClick}
+      onClick={() => { void analytics.track({ name: 'cta_click', cta: typeof children === 'string' ? children : 'cta', destination: href, locale }); onClick?.(); }}
       className={classes(
         'marketing-button inline-flex min-h-12 items-center justify-center gap-2 rounded-[0.7rem] px-5 py-3 text-sm font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--marketing-focus)] focus-visible:ring-offset-2',
         variant === 'primary' && 'bg-[var(--marketing-cta)] text-white shadow-[0_10px_30px_rgba(15,75,126,0.18)] hover:bg-[var(--marketing-cta-hover)]',

@@ -3,9 +3,11 @@ import { Check, ChevronDown, Languages } from 'lucide-react';
 import { useMarketingLanguage } from '../content/MarketingLanguageContext';
 import { siteContent } from '../content/siteContent';
 import { supportedLocales } from '../routes/routeModel';
+import { useMarketingAnalytics } from '../analytics/analytics';
 
 export function LanguageSwitcher({ inverse = false }: { inverse?: boolean }) {
   const { locale, setLocale, copy } = useMarketingLanguage();
+  const analytics = useMarketingAnalytics();
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -50,7 +52,7 @@ export function LanguageSwitcher({ inverse = false }: { inverse?: boolean }) {
               type="button"
               role="menuitemradio"
               aria-checked={locale === item}
-              onClick={() => { setLocale(item); setOpen(false); }}
+              onClick={() => { void analytics.track({ name: 'language_change', from: locale, to: item }); setLocale(item); setOpen(false); }}
               className="flex min-h-11 w-full items-center justify-between gap-3 rounded-lg px-3 text-start text-sm font-semibold hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
             >
               <span lang={item} dir={item === 'en' ? 'ltr' : 'rtl'}>{siteContent[item].localeName}</span>
@@ -62,4 +64,3 @@ export function LanguageSwitcher({ inverse = false }: { inverse?: boolean }) {
     </div>
   );
 }
-
