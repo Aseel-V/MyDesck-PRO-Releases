@@ -301,6 +301,12 @@ function createWindow() {
     autoHideMenuBar: true,
     webPreferences: getSecureWebPreferences({
       devTools: true,
+      // The window is created with show: false and revealed on ready-to-show, which means the
+      // renderer mounts the whole app while hidden. Chromium throttles frame production for a
+      // hidden window, so requestAnimationFrame does not fire and anything waiting on a frame to
+      // become visible never gets one. Keeping frames flowing costs little for a single desktop
+      // window and stops a hidden-then-shown window from stranding what it rendered.
+      backgroundThrottling: false,
     }),
     icon: fs.existsSync(path.join(__dirname, 'assets/app-icon.png')) 
       ? path.join(__dirname, 'assets/app-icon.png')
@@ -334,6 +340,28 @@ function createWindow() {
     
     // Auto-open devtools in production if needed for debugging
     // mainWindow.webContents.openDevTools({ mode: 'detach' });
+  }
+
+  // Development-only renderer diagnostics.
+  //
+  // A renderer that fails to boot shows an empty window and says nothing to the terminal, which is
+  // how a fully-rendered-but-invisible page went unexplained. These forward the three things that
+  // actually distinguish the causes — a load that failed, a renderer that died, and whatever the
+  // page logged — to the terminal the developer is already watching. Dev only: production users get
+  // no stack traces, and nothing here logs anything the page did not already print.
+  if (isDev) {
+    mainWindow.webContents.on('did-fail-load', (_event, code, description, url) => {
+      console.error(`[renderer] failed to load ${url}: ${description} (${code})`);
+    });
+    mainWindow.webContents.on('render-process-gone', (_event, details) => {
+      console.error('[renderer] process gone:', details.reason, details.exitCode ?? '');
+    });
+    mainWindow.webContents.on('preload-error', (_event, preloadPath, error) => {
+      console.error('[renderer] preload error in', preloadPath, String(error));
+    });
+    mainWindow.webContents.on('console-message', (_event, level, message, line, source) => {
+      if (level >= 2) console.error(`[renderer] ${message} (${source}:${line})`);
+    });
   }
 
   mainWindow.once('ready-to-show', () => {

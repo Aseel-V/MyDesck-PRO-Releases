@@ -221,3 +221,30 @@
     size: auto;
   }
 }
+
+/*
+ * Page entrance motion.
+ *
+ * Deliberately not an opacity fade. A whole page wrapped in an animation that starts at opacity 0 is
+ * invisible until that animation advances, and an animation only advances while the renderer is
+ * producing frames. Electron creates its window hidden and reveals it on ready-to-show, so the app
+ * mounts while nothing is being painted: the animation holds its first keyframe and the page stays
+ * invisible even after the window appears. That is true of a CSS animation as much as a JavaScript
+ * one — the compositor does not advance it either.
+ *
+ * So the entrance moves the content instead of hiding it. If the animation never runs, the worst
+ * case is content sitting four pixels from where it belongs, which nobody will notice and everybody
+ * can read.
+ */
+@keyframes pageRiseIn {
+  from { transform: translateY(4px); }
+  to { transform: none; }
+}
+
+.page-fade-in {
+  animation: pageRiseIn 0.3s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-fade-in { animation: none; }
+}
