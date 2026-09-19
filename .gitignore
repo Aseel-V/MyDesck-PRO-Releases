@@ -16,6 +16,7 @@ dist-ssr/
 build/
 release/
 win-unpacked/
+output/playwright/
 
 # Ignore executables and installers
 *.exe

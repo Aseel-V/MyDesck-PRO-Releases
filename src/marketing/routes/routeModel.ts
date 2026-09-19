@@ -6,6 +6,7 @@ export const defaultLocale: MarketingLocale = 'en';
 export const marketingPaths = [
   '/',
   '/features',
+  '/demo',
   '/solutions',
   '/solutions/travel-agencies',
   '/solutions/supermarkets',
@@ -103,4 +104,3 @@ export type IndustryReadiness = (typeof industryReadiness)[IndustrySlug];
 export function isPublicIndustry(value: string): value is IndustrySlug {
   return Object.prototype.hasOwnProperty.call(industryReadiness, value);
 }
-

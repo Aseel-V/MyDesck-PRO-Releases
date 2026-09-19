@@ -13,6 +13,12 @@ import {
   ShoppingBasket,
   Soup,
   WalletCards,
+  Globe2,
+  MonitorSmartphone,
+  LockKeyhole,
+  FileDown,
+  Workflow,
+  RefreshCw,
 } from 'lucide-react';
 import { useMarketingLanguage } from '../content/MarketingLanguageContext';
 import { MarketingSEO } from '../seo/MarketingSEO';
@@ -29,13 +35,17 @@ import {
   MarketingSection,
   SectionHeading,
 } from '../components/primitives';
-import { ProductFrame } from '../visuals/ProductFrame';
+import { ProductVisual } from '../visuals/ProductVisual';
+import { ProductShowcase } from '../demo/ProductShowcase';
+import { phase2Content } from '../content/phase2Content';
 
 const capabilityIcons = [ClipboardList, WalletCards, Landmark, Files];
 const industryIcons = { 'travel-agencies': Plane, supermarkets: ShoppingBasket, restaurants: Soup, 'auto-repair': CarFront };
+const trustIcons = [Globe2, MonitorSmartphone, LockKeyhole, FileDown, Workflow, RefreshCw];
 
 export default function HomePage() {
-  const { copy } = useMarketingLanguage();
+  const { copy, locale } = useMarketingLanguage();
+  const phase2 = phase2Content[locale];
   const industryCopies = [
     copy.solutionsBySlug['travel-agencies'],
     copy.solutionsBySlug.supermarkets,
@@ -58,9 +68,24 @@ export default function HomePage() {
               <MarketingButton to="/features" variant="secondary">{copy.common.exploreProduct}</MarketingButton>
             </div>
           </div>
-          <div className="mx-auto mt-12 max-w-6xl lg:mt-16"><ProductFrame /></div>
+          <div className="mx-auto mt-12 max-w-6xl lg:mt-16"><ProductVisual screen="travel-dashboard" /></div>
         </MarketingContainer>
       </section>
+
+      <MarketingSection>
+        <MarketingContainer>
+          <SectionHeading eyebrow={phase2.demo.eyebrow} title={phase2.demo.title} description={phase2.demo.intro} />
+          <div className="mt-10"><ProductShowcase /></div>
+          <div className="mt-6 text-center"><MarketingButton to="/demo" variant="secondary">{phase2.nav.productTour}</MarketingButton></div>
+        </MarketingContainer>
+      </MarketingSection>
+
+      <MarketingSection tone="soft">
+        <MarketingContainer>
+          <SectionHeading eyebrow={phase2.trust.eyebrow} title={phase2.trust.title} description={phase2.trust.intro} />
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{phase2.trust.items.map((item, index) => { const Icon = trustIcons[index]; return <MarketingCard key={item.title} className="p-6"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--marketing-icon-bg)] text-[var(--marketing-primary)]"><Icon className="h-5 w-5" aria-hidden="true" /></span><h3 className="mt-5 text-lg font-semibold text-slate-950">{item.title}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{item.description}</p></MarketingCard>; })}</div>
+        </MarketingContainer>
+      </MarketingSection>
 
       <section aria-label="Product facts" className="border-b border-slate-200 bg-white py-6">
         <MarketingContainer>

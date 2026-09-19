@@ -5,6 +5,7 @@ import NotFoundPage from '../pages/NotFoundPage';
 
 const HomePage = lazy(() => import('../pages/HomePage'));
 const FeaturesPage = lazy(() => import('../pages/FeaturesPage'));
+const DemoPage = lazy(() => import('../pages/DemoPage'));
 const SolutionsPage = lazy(() => import('../pages/SolutionsPage'));
 const SolutionDetailPage = lazy(() => import('../pages/SolutionDetailPage'));
 const PricingPage = lazy(() => import('../pages/PricingPage'));
@@ -27,6 +28,7 @@ function LocalizedRoutes({ prefix }: { prefix: '' | '/ar' | '/he' }) {
       <Route element={<MarketingLayout />}>
         <Route path={prefix || '/'} element={<HomePage />} />
         <Route path={`${prefix}/features`} element={<FeaturesPage />} />
+        <Route path={`${prefix}/demo`} element={<DemoPage />} />
         <Route path={`${prefix}/solutions`} element={<SolutionsPage />} />
         <Route path={`${prefix}/solutions/:slug`} element={<SolutionDetailPage />} />
         <Route path={`${prefix}/pricing`} element={<PricingPage />} />
@@ -52,4 +54,3 @@ export function MarketingRouter() {
     </Suspense>
   );
 }
-

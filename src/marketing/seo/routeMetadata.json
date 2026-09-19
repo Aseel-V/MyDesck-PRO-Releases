@@ -7,6 +7,13 @@
     "description": { "en": "Run operations, customers, finances, documents, and reporting from one multilingual workspace built around real business workflows.", "ar": "أدر العمليات والعملاء والشؤون المالية والمستندات والتقارير من مساحة عمل متعددة اللغات مبنية حول سير العمل الحقيقي.", "he": "נהלו תפעול, לקוחות, כספים, מסמכים ודוחות מסביבת עבודה רב-לשונית שנבנתה סביב תהליכים עסקיים אמיתיים." }
   },
   {
+    "path": "/demo",
+    "indexable": true,
+    "structuredDataType": "SoftwareApplication",
+    "title": { "en": "Guided product tour", "ar": "جولة إرشادية في المنتج", "he": "סיור מודרך במוצר" },
+    "description": { "en": "Explore guided MyDesck PRO product views for travel, supermarket, restaurant, and auto-repair workflows using safe synthetic data.", "ar": "استكشف واجهات MyDesck PRO الإرشادية لمسارات السفر والمتاجر والمطاعم وورش السيارات باستخدام بيانات مصطنعة وآمنة.", "he": "גלו תצוגות מודרכות של MyDesck PRO לתהליכי נסיעות, סופרמרקט, מסעדה ומוסך באמצעות נתונים סינתטיים בטוחים." }
+  },
+  {
     "path": "/features",
     "indexable": true,
     "structuredDataType": "SoftwareApplication",
