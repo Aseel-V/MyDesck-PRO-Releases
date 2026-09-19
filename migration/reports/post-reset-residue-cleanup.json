@@ -1,0 +1,64 @@
+{
+  "generatedAt": "2026-09-19T10:46:57.623Z",
+  "artifact": "post-reset-residue-cleanup",
+  "offlineManifestHash": "cd1932b21e77284ffb72ad369c32582bf7de67de3c928186ad86550b8aceec7f",
+  "resolution": {
+    "deterministicFromOfflineManifest": 16,
+    "businessIdsDerivedByRead": 2,
+    "businessDocumentsListed": 6,
+    "descendantsFound": 5,
+    "perParent": [
+      {
+        "parent": "businesses/4996ab37-c04d-4953-a52c-1d1ecb81ccd1",
+        "subcollections": [
+          "menuCategories"
+        ],
+        "documents": 1
+      },
+      {
+        "parent": "businesses/7e429b04-1bfd-4ca0-a1d8-3974c7e64910",
+        "subcollections": [],
+        "documents": 0
+      },
+      {
+        "parent": "businesses/871cbc37-1362-4734-8de2-5d14bdf91ff6",
+        "subcollections": [
+          "menuCategories",
+          "vehiclePlates",
+          "vehicles"
+        ],
+        "documents": 3
+      },
+      {
+        "parent": "businesses/b49d0123-482d-4bd8-93fa-4ae0e123a967",
+        "subcollections": [],
+        "documents": 0
+      },
+      {
+        "parent": "businesses/82daab7a-150f-4eaa-915d-662fbf423514",
+        "subcollections": [
+          "menuItems"
+        ],
+        "documents": 1
+      },
+      {
+        "parent": "businesses/439c2946-e5fe-4d6a-a6e8-ab241cf919c4",
+        "subcollections": [],
+        "documents": 0
+      }
+    ]
+  },
+  "candidates": 23,
+  "presentBeforeDelete": 23,
+  "deleted": 23,
+  "failed": [],
+  "stillPresentAfterDelete": [],
+  "syntheticFirestoreResidueRemaining": 0,
+  "overlapWithMigrationBaseline": 0,
+  "unattributedCandidates": 0,
+  "budget": {
+    "reads": 54,
+    "deletes": 23
+  },
+  "decision": "RESIDUE_CLEARED"
+}

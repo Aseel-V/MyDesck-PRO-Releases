@@ -1,0 +1,36 @@
+{
+  "generatedAt": "2026-09-19T10:59:27.889Z",
+  "artifact": "firestore-post-cutover-financial",
+  "derivedFrom": {
+    "reconciliation": "migration/reports/firestore-production-reconciliation.json",
+    "reconciliationAt": "2026-09-19T10:59:27.569Z"
+  },
+  "summary": {
+    "valuesDerivedFromSource": 1462,
+    "valuesChecked": 1462,
+    "valuesUncheckable": 0,
+    "currencies": [
+      "EUR",
+      "ILS",
+      "UNSPECIFIED",
+      "USD"
+    ],
+    "perValueMismatches": 0,
+    "perCurrencyDigestMismatches": 0,
+    "derivedSummariesChecked": 200,
+    "derivedSummaryMismatches": 0,
+    "delta": [
+      {
+        "currency": "ALL",
+        "units": "0",
+        "scale": 0
+      }
+    ],
+    "eventOrderingMismatches": 0,
+    "eventAmountMismatches": 0,
+    "timestampsCompared": 1816,
+    "timestampPrecisionLoss": 0
+  },
+  "note": "money is compared against the SOURCE row rather than against the migrated document, so a transform that was wrong in both directions could not satisfy it",
+  "decision": "FINANCIAL_PARITY_PASS"
+}

@@ -1,0 +1,80 @@
+{
+  "generatedAt": "2026-09-19T10:51:11.111Z",
+  "artifact": "firestore-tourism-proof",
+  "runId": "tourism-da68c5ac-aa91-42db-ba54-49c91e682eac",
+  "target": "PRODUCTION",
+  "project": "mydesckpro",
+  "releasedVersion": "0.0.62",
+  "method": "FirestoreTravelRepository via createFirestoreBackend, the same call useTripMutations makes",
+  "tripId": "7ed5fcf4-d989-40b2-a577-7dbdea3388da",
+  "checks": [
+    {
+      "operation": "bootstrap tenant A",
+      "ok": true,
+      "classification": "PASS",
+      "detail": null
+    },
+    {
+      "operation": "bootstrap tenant B",
+      "ok": true,
+      "classification": "PASS",
+      "detail": null
+    },
+    {
+      "operation": "CREATE saveTrip",
+      "ok": true,
+      "classification": "PASS",
+      "detail": null
+    },
+    {
+      "operation": "READ getTripDetails",
+      "ok": true,
+      "classification": "PASS",
+      "detail": null
+    },
+    {
+      "operation": "UPDATE saveTrip with editTripId",
+      "ok": true,
+      "classification": "PASS",
+      "detail": null
+    },
+    {
+      "operation": "UPDATE is observable on read",
+      "ok": true,
+      "classification": "PASS",
+      "detail": null
+    },
+    {
+      "operation": "tenant isolation: B cannot read A trip",
+      "ok": true,
+      "classification": "PASS",
+      "detail": null
+    },
+    {
+      "operation": "cross-tenant delete leaves the victim unchanged",
+      "ok": true,
+      "classification": "PASS",
+      "detail": null
+    },
+    {
+      "operation": "DELETE deleteTrip",
+      "ok": true,
+      "classification": "PASS",
+      "detail": null
+    }
+  ],
+  "totalChecks": 9,
+  "failedChecks": 0,
+  "classifications": {},
+  "cleanup": {
+    "runId": "tourism-da68c5ac-aa91-42db-ba54-49c91e682eac",
+    "firestoreSwept": 35,
+    "firestoreSweepFailed": 0,
+    "authDeleted": 2,
+    "authFailed": 0,
+    "residue": 0
+  },
+  "syntheticResidue": 0,
+  "customerMutations": 0,
+  "decision": "TOURISM_PROOF_PASS"
+}

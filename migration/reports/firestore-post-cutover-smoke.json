@@ -1,363 +1,247 @@
 {
-  "runId": "postcutover-7606d24d-2d75-46ea-bc31-b78e452b49b1",
-  "generatedAt": "2026-09-18T13:06:48.017Z",
+  "generatedAt": "2026-09-19T10:56:38.674Z",
+  "artifact": "firestore-post-cutover-smoke",
+  "runId": "clientpath-0869f01b-c0a5-4078-8018-4e63462f9568",
   "target": "PRODUCTION",
   "project": "mydesckpro",
   "releasedVersion": "0.0.62",
-  "reachability": {
-    "firebaseAuth": 23,
-    "firestore": 13,
-    "firestoreEvidence": "operations answered by firestore.googleapis.com (success or explicit denial)",
-    "supabaseStorage": 10,
-    "hostsContacted": {
-      "identitytoolkit.googleapis.com": 21,
-      "pubugnfaqqukelvgckdr.supabase.co": 10,
-      "securetoken.googleapis.com": 2
+  "method": "application repositories via createFirestoreBackend; Admin SDK used only for cleanup",
+  "byVertical": {
+    "bootstrap": {
+      "pass": 2,
+      "fail": 0
+    },
+    "carParts": {
+      "pass": 5,
+      "fail": 0
+    },
+    "supermarket": {
+      "pass": 5,
+      "fail": 0
+    },
+    "restaurant": {
+      "pass": 6,
+      "fail": 0
+    },
+    "autoRepair": {
+      "pass": 3,
+      "fail": 0
+    },
+    "tourism": {
+      "pass": 4,
+      "fail": 0
+    },
+    "financial": {
+      "pass": 1,
+      "fail": 0
+    },
+    "tenantIsolation": {
+      "pass": 1,
+      "fail": 0
     }
   },
-  "manifest": "migration/post-cutover-smoke.local/postcutover-7606d24d-2d75-46ea-bc31-b78e452b49b1.json",
-  "syntheticPrefix": "migration-test--postcutover-7606d24d-2d75-46ea-bc31-b78e452b49b1",
-  "created": {
-    "authUids": 3,
-    "firestorePaths": 15,
-    "storageObjects": 1
-  },
-  "cleanup": {
-    "firestoreDeleted": [
-      "businesses/4c868d4a-ed39-4b77-bc08-8b529b0e7a78/parts/7e6606f4-b21f-4878-be35-beb4afc577bb",
-      "businesses/4c868d4a-ed39-4b77-bc08-8b529b0e7a78/repairOrders/bb1ca697-f137-46dd-90a5-3de8d42a33e5",
-      "businesses/4c868d4a-ed39-4b77-bc08-8b529b0e7a78/marketTransactions/c83f4ac2-89d0-45f6-b1da-2be370a26127",
-      "businesses/4c868d4a-ed39-4b77-bc08-8b529b0e7a78/restaurantStaff/7560ca2c-4c23-450d-ad4e-d097f4664ee0",
-      "businesses/4c868d4a-ed39-4b77-bc08-8b529b0e7a78/orders/c842c064-bc61-4d9c-907c-c3c507e1438b",
-      "businesses/4c868d4a-ed39-4b77-bc08-8b529b0e7a78/menuItems/48d3f876-c428-4801-8df1-0aadb79f5549",
-      "businesses/4c868d4a-ed39-4b77-bc08-8b529b0e7a78/menuCategories/90e2c94e-efb3-46a7-9be4-8272cb87dc95",
-      "users/Top7qBtAkUXSB4JIYCMi3mq0IUN2",
-      "businesses/4c868d4a-ed39-4b77-bc08-8b529b0e7a78",
-      "businessOwners/Top7qBtAkUXSB4JIYCMi3mq0IUN2",
-      "users/z7yPEsmy9pSBtoc0uVHi3UGjs4c2",
-      "businesses/9b7433f5-2cd2-4fd1-b366-59f21cd7eee4",
-      "businessOwners/z7yPEsmy9pSBtoc0uVHi3UGjs4c2"
-    ],
-    "firestoreFailed": [],
-    "storageDeleted": [
-      "business-signatures/Top7qBtAkUXSB4JIYCMi3mq0IUN2/migration-test--postcutover-7606d24d-2d75-46ea-bc31-b78e452b49b1-signature.png"
-    ],
-    "storageFailed": [],
-    "authDeleted": [
-      "Top7qBtAkUXSB4JIYCMi3mq0IUN2",
-      "z7yPEsmy9pSBtoc0uVHi3UGjs4c2",
-      "oBB1M8O17zOnocAtXiG0eT3cYq23"
-    ],
-    "authFailed": []
-  },
-  "syntheticResidue": 0,
-  "categories": {
-    "auth": "PASS",
-    "firestore": "PASS",
-    "tourism": "FAIL",
-    "restaurant": "FAIL",
-    "supermarket": "FAIL",
-    "autoRepair": "FAIL",
-    "carParts": "FAIL",
-    "placeholders": "PASS",
-    "tenantIsolation": "PASS",
-    "maliciousClient": "PASS",
-    "hybridStorage": "PASS",
-    "adminCreateUser": "PASS",
-    "runtimeReachability": "PASS"
-  },
-  "totalChecks": 48,
-  "failedChecks": 9,
+  "totalChecks": 27,
+  "failedChecks": 0,
+  "classifications": {},
   "checks": [
     {
-      "category": "auth",
-      "name": "synthetic user A sign-up",
+      "vertical": "bootstrap",
+      "operation": "tenant A: createOwnerProfiles",
       "ok": true,
+      "classification": "PASS",
       "detail": null
     },
     {
-      "category": "auth",
-      "name": "synthetic user B sign-up",
+      "vertical": "bootstrap",
+      "operation": "tenant B: createOwnerProfiles",
       "ok": true,
+      "classification": "PASS",
       "detail": null
     },
     {
-      "category": "auth",
-      "name": "sign-out succeeds",
+      "vertical": "carParts",
+      "operation": "createPart",
       "ok": true,
+      "classification": "PASS",
       "detail": null
     },
     {
-      "category": "auth",
-      "name": "sign-in with correct credentials succeeds",
+      "vertical": "carParts",
+      "operation": "listParts",
       "ok": true,
+      "classification": "PASS",
       "detail": null
     },
     {
-      "category": "auth",
-      "name": "uid is a 28-character Firebase uid for a new signup",
+      "vertical": "carParts",
+      "operation": "updatePart",
       "ok": true,
+      "classification": "PASS",
       "detail": null
     },
     {
-      "category": "auth",
-      "name": "incorrect password is rejected",
+      "vertical": "carParts",
+      "operation": "cross-tenant updatePart leaves the victim unchanged",
       "ok": true,
+      "classification": "PASS",
       "detail": null
     },
     {
-      "category": "auth",
-      "name": "seven migrated accounts present with preserved uuid uids",
+      "vertical": "carParts",
+      "operation": "deletePart",
       "ok": true,
-      "detail": "7 accounts"
-    },
-    {
-      "category": "auth",
-      "name": "this run created no uuid-shaped account",
-      "ok": true,
+      "classification": "PASS",
       "detail": null
     },
     {
-      "category": "auth",
-      "name": "operator-excluded identities remain absent",
+      "vertical": "supermarket",
+      "operation": "createProduct",
       "ok": true,
+      "classification": "PASS",
       "detail": null
     },
     {
-      "category": "firestore",
-      "name": "tenant A: owner bootstrap committed atomically",
+      "vertical": "supermarket",
+      "operation": "listAvailableProducts",
       "ok": true,
+      "classification": "PASS",
       "detail": null
     },
     {
-      "category": "firestore",
-      "name": "tenant B: owner bootstrap committed atomically",
+      "vertical": "supermarket",
+      "operation": "updateProduct",
       "ok": true,
+      "classification": "PASS",
       "detail": null
     },
     {
-      "category": "firestore",
-      "name": "authorized read of own document",
+      "vertical": "supermarket",
+      "operation": "cross-tenant updateProduct leaves the victim unchanged",
       "ok": true,
+      "classification": "PASS",
       "detail": null
     },
     {
-      "category": "firestore",
-      "name": "authorized update of own document",
+      "vertical": "supermarket",
+      "operation": "deleteProduct",
       "ok": true,
+      "classification": "PASS",
       "detail": null
     },
     {
-      "category": "tourism",
-      "name": "trips: authorized create",
-      "ok": false,
-      "detail": "7 PERMISSION_DENIED: Missing or insufficient permissions."
-    },
-    {
-      "category": "restaurant",
-      "name": "menuCategories: authorized create",
-      "ok": false,
-      "detail": "7 PERMISSION_DENIED: Missing or insufficient permissions."
-    },
-    {
-      "category": "restaurant",
-      "name": "menuItems: authorized create",
-      "ok": false,
-      "detail": "7 PERMISSION_DENIED: Missing or insufficient permissions."
-    },
-    {
-      "category": "restaurant",
-      "name": "orders: authorized create",
-      "ok": false,
-      "detail": "7 PERMISSION_DENIED: Missing or insufficient permissions."
-    },
-    {
-      "category": "restaurant",
-      "name": "orderItems: authorized create",
-      "ok": false,
-      "detail": "7 PERMISSION_DENIED: Missing or insufficient permissions."
-    },
-    {
-      "category": "restaurant",
-      "name": "restaurantStaff: authorized create",
-      "ok": false,
-      "detail": "7 PERMISSION_DENIED: Missing or insufficient permissions."
-    },
-    {
-      "category": "supermarket",
-      "name": "marketTransactions: authorized create",
-      "ok": false,
-      "detail": "7 PERMISSION_DENIED: Missing or insufficient permissions."
-    },
-    {
-      "category": "autoRepair",
-      "name": "repairOrders: authorized create",
-      "ok": false,
-      "detail": "7 PERMISSION_DENIED: Missing or insufficient permissions."
-    },
-    {
-      "category": "carParts",
-      "name": "parts: authorized create",
-      "ok": false,
-      "detail": "7 PERMISSION_DENIED: Missing or insufficient permissions."
-    },
-    {
-      "category": "placeholders",
-      "name": "phoneShop: no dedicated collections, business-type field only",
+      "vertical": "restaurant",
+      "operation": "createTable",
       "ok": true,
+      "classification": "PASS",
       "detail": null
     },
     {
-      "category": "placeholders",
-      "name": "clothesShop: no dedicated collections, business-type field only",
+      "vertical": "restaurant",
+      "operation": "listTables",
       "ok": true,
+      "classification": "PASS",
       "detail": null
     },
     {
-      "category": "placeholders",
-      "name": "furnitureStore: no dedicated collections, business-type field only",
+      "vertical": "restaurant",
+      "operation": "updateTable",
       "ok": true,
+      "classification": "PASS",
       "detail": null
     },
     {
-      "category": "tenantIsolation",
-      "name": "tenant B cannot read tenant A business",
+      "vertical": "restaurant",
+      "operation": "cross-tenant updateTable leaves the victim unchanged",
       "ok": true,
+      "classification": "PASS",
       "detail": null
     },
     {
-      "category": "tenantIsolation",
-      "name": "tenant B cannot write into tenant A business",
+      "vertical": "restaurant",
+      "operation": "deleteTable",
       "ok": true,
+      "classification": "PASS",
       "detail": null
     },
     {
-      "category": "maliciousClient",
-      "name": "tenant B cannot overwrite tenant A owner index",
+      "vertical": "restaurant",
+      "operation": "createCategory",
       "ok": true,
+      "classification": "PASS",
       "detail": null
     },
     {
-      "category": "maliciousClient",
-      "name": "privilege escalation on own profile denied",
+      "vertical": "autoRepair",
+      "operation": "registerVehicleAndOpenOrder",
       "ok": true,
+      "classification": "PASS",
       "detail": null
     },
     {
-      "category": "maliciousClient",
-      "name": "cannot read a migrated customer business",
+      "vertical": "autoRepair",
+      "operation": "listRepairOrders",
       "ok": true,
+      "classification": "PASS",
       "detail": null
     },
     {
-      "category": "maliciousClient",
-      "name": "cannot enumerate the trips collection across tenants",
+      "vertical": "autoRepair",
+      "operation": "deleteRepairOrder",
       "ok": true,
+      "classification": "PASS",
       "detail": null
     },
     {
-      "category": "hybridStorage",
-      "name": "role claim applied to synthetic user A",
+      "vertical": "tourism",
+      "operation": "CREATE saveTrip",
       "ok": true,
+      "classification": "PASS",
       "detail": null
     },
     {
-      "category": "hybridStorage",
-      "name": "role claim applied to synthetic user B",
+      "vertical": "tourism",
+      "operation": "READ getTripDetails",
       "ok": true,
+      "classification": "PASS",
       "detail": null
     },
     {
-      "category": "hybridStorage",
-      "name": "authorized upload with a Firebase id token",
+      "vertical": "tourism",
+      "operation": "UPDATE saveTrip with editTripId",
       "ok": true,
+      "classification": "PASS",
       "detail": null
     },
     {
-      "category": "hybridStorage",
-      "name": "authorized read returns the same bytes",
+      "vertical": "financial",
+      "operation": "money survives the edit round trip",
       "ok": true,
+      "classification": "PASS",
       "detail": null
     },
     {
-      "category": "hybridStorage",
-      "name": "authorized overwrite succeeds",
+      "vertical": "tenantIsolation",
+      "operation": "tenant B cannot read tenant A trip",
       "ok": true,
+      "classification": "PASS",
       "detail": null
     },
     {
-      "category": "hybridStorage",
-      "name": "overwrite is observable on read",
+      "vertical": "tourism",
+      "operation": "DELETE deleteTrip",
       "ok": true,
+      "classification": "PASS",
       "detail": null
-    },
-    {
-      "category": "hybridStorage",
-      "name": "wrong user read denied",
-      "ok": true,
-      "detail": null
-    },
-    {
-      "category": "hybridStorage",
-      "name": "wrong user overwrite denied",
-      "ok": true,
-      "detail": null
-    },
-    {
-      "category": "hybridStorage",
-      "name": "wrong user delete denied",
-      "ok": true,
-      "detail": null
-    },
-    {
-      "category": "hybridStorage",
-      "name": "anonymous read denied",
-      "ok": true,
-      "detail": null
-    },
-    {
-      "category": "hybridStorage",
-      "name": "synthetic identity sees nothing in the customer folder",
-      "ok": true,
-      "detail": null
-    },
-    {
-      "category": "adminCreateUser",
-      "name": "admin creates a Firebase account",
-      "ok": true,
-      "detail": null
-    },
-    {
-      "category": "adminCreateUser",
-      "name": "admin-created uid is a 28-character Firebase uid",
-      "ok": true,
-      "detail": "length 28"
-    },
-    {
-      "category": "runtimeReachability",
-      "name": "Firebase Auth contacted at runtime",
-      "ok": true,
-      "detail": "23 calls"
-    },
-    {
-      "category": "runtimeReachability",
-      "name": "Firestore contacted at runtime",
-      "ok": true,
-      "detail": "13 calls"
-    },
-    {
-      "category": "runtimeReachability",
-      "name": "Supabase reached only on Storage paths",
-      "ok": true,
-      "detail": "10 calls to pubugnfaqqukelvgckdr.supabase.co"
-    },
-    {
-      "category": "runtimeReachability",
-      "name": "no Supabase database, RPC, auth or realtime host contacted",
-      "ok": true,
-      "detail": "hosts: identitytoolkit.googleapis.com, securetoken.googleapis.com, pubugnfaqqukelvgckdr.supabase.co"
     }
   ],
+  "cleanup": {
+    "firestoreSwept": 38,
+    "firestoreSweepFailed": 0,
+    "authCreated": 2,
+    "authDeleted": 2,
+    "authFailed": 0
+  },
+  "syntheticResidue": 0,
   "customerMutations": 0,
-  "decision": "PRODUCTION_SMOKE_FAIL"
+  "decision": "PRODUCTION_SMOKE_PASS"
 }

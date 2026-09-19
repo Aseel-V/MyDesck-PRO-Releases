@@ -1,0 +1,32 @@
+{
+  "generatedAt": "2026-09-19T10:59:27.892Z",
+  "artifact": "firestore-production-rollback-readiness",
+  "derivedFrom": {
+    "journal": "migration/production-copy.local/bulkcopy-15363817-711a-4b52-9414-4885a8585bf4.json",
+    "reconciliation": "migration/reports/firestore-production-reconciliation.json",
+    "writeLock": "migration/reports/legacy-write-lock.json"
+  },
+  "summary": {
+    "copyJournalStatus": "RECONCILED",
+    "copyJournalWrittenPaths": 1477,
+    "authorizedWithdrawals": 3,
+    "expectedTargetDocuments": 1474,
+    "rollbackCommandPresent": true,
+    "rollbackRequiresItsOwnAcknowledgement": true,
+    "rollbackRePlansFromSource": true,
+    "supabaseSourceIntact": true,
+    "supabaseAuthUsers": 10,
+    "supabaseStorageObjects": 4,
+    "legacyWriteLockApplied": true,
+    "legacyWriteLockReleaseStatements": 388,
+    "legacyWriteLockSelectRetained": 146,
+    "previousReleaseStillPublished": "v0.0.61"
+  },
+  "procedure": [
+    "1. release the legacy Supabase write lock: legacy-write-lock.mjs --release --ack=<release ack> (388 statements, captured before the lock, not guessed)",
+    "2. publish a build with VITE_DATA_BACKEND=supabase; the Supabase source still holds every row and every identity, so the old backend resumes where it left off",
+    "3. only if Firestore must also be emptied: production-rollback.mjs, which re-plans from source to derive its allowlist and can delete nothing the journal did not record writing"
+  ],
+  "note": "Supabase source data and auth.users are deliberately retained; nothing in this migration deletes them, and rollback depends on them.",
+  "decision": "ROLLBACK_READY"
+}

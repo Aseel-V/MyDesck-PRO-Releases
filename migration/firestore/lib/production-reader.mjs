@@ -89,6 +89,29 @@ export async function openProductionReader({ projectId, databaseId, firestoreFac
       return { paths, perCollection };
     },
 
+    /**
+     * Every document beneath the given document paths, found by listing their subcollections.
+     *
+     * The narrow alternative to a collection-group scan. A scan reads the whole corpus to find a
+     * handful of documents, which is what exhausted the daily allowance; this asks only about the
+     * documents we already know we own, and returns ids rather than contents.
+     */
+    async listDescendantPaths(documentPaths) {
+      const found = [];
+      const perParent = [];
+      for (const path of documentPaths) {
+        const collections = await db.doc(path).listCollections();
+        const children = [];
+        for (const child of collections) {
+          const refs = await child.listDocuments();
+          for (const ref of refs) { found.push(ref.path); children.push(ref.path); }
+        }
+        perParent.push({ parent: path, subcollections: collections.map((c) => c.id),
+          documents: children.length });
+      }
+      return { paths: found, perParent };
+    },
+
     async close() { if (connection.close) await connection.close(); },
   });
 }

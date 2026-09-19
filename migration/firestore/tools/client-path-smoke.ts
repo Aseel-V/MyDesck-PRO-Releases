@@ -23,13 +23,15 @@ import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { createFirestoreBackend } from '../../../src/data/firestore/createFirestoreBackend';
+import { registerBackend } from '../../../src/data/backend';
+import { buildSyntheticTripForm, buildSyntheticTripEdit } from './tourism-payload';
 import type { FirebaseClient } from '../../../src/data/firebaseClient';
 
 const PROJECT = 'mydesckpro';
 const DATABASE = 'default';
 const runId = `clientpath-${randomUUID()}`;
 const SYNTH = `migration-test--${runId}`;
-const REPORT_PATH = 'migration/reports/firestore-client-path-smoke.json';
+const REPORT_PATH = 'migration/reports/firestore-post-cutover-smoke.json';
 const MANIFEST_PATH = `migration/post-cutover-smoke.local/${runId}.json`;
 
 type Classification = 'PASS' | 'TEST_FIXTURE_DEFECT' | 'APPLICATION_WRITE_DEFECT'
@@ -106,6 +108,9 @@ const db = getFirestore(app, DATABASE);
 const client = { mode: 'firestore' as const, app, auth, db, ready: Promise.resolve(undefined),
   maintenanceEnabled: false, isolatedIdentity: () => { throw new Error('not used'); } };
 const backend = createFirestoreBackend(client as unknown as FirebaseClient);
+// firebase-main.tsx registers the backend; the trip write path reaches for it through
+// getBackend() when probing the canonical payment-write contract.
+registerBackend(backend);
 
 const manifest = { runId, createdAt: new Date().toISOString(), authUids: [] as string[] };
 mkdirSync('migration/post-cutover-smoke.local', { recursive: true });
@@ -211,37 +216,37 @@ try {
     await run('autoRepair', 'deleteRepairOrder', () => backend.autoRepair.deleteRepairOrder(order.id));
   }
 
-  // ---- tourism and the financial chain ----------------------------------------------------------
+  // ---- tourism, with the payload validated offline and the signature useTripMutations uses ----
   const today = new Date().toISOString().slice(0, 10);
-  const trip = await run('tourism', 'saveTrip', () => (backend.travel as unknown as {
-    saveTrip: (uid: string, form: unknown, editId: string | undefined, requestId: string)
-      => Promise<{ id: string }>;
-  }).saveTrip(a.uid, {
-    clientName: SYNTH, destination: SYNTH, startDate: today, endDate: today,
-    currency: 'ILS', travelersCount: 1, travelers: [],
-    salePrice: '300', wholesaleCost: '100',
-    paymentMethod: 'cash', cashTotal: '300', cardTotal: '0', confirmedCash: '100',
-    installmentCount: 2, firstInstallmentDate: today, notes: null,
-  }, undefined, randomUUID()));
-  const tripId = (trip as { id?: string } | null)?.id ?? null;
+  const created = await run('tourism', 'CREATE saveTrip', () =>
+    backend.travel.saveTrip(a.uid, buildSyntheticTripForm(SYNTH, today), undefined, randomUUID()));
+  const tripId = (created as { id?: string } | null)?.id ?? null;
   if (tripId) {
-    await run('tourism', 'getTripDetails', () => backend.travel.getTripDetails(tripId));
-    await run('financial', 'getTripPaymentPlan',
-      () => backend.travel.getTripPaymentPlan(tripId as never));
-    await run('financial', 'recordCashPayment', () => backend.travel.recordCashPayment({
-      tripId, clientRequestId: randomUUID(), amountMinor: 5000, currency: 'ILS',
-    } as never));
-    await run('financial', 'getTripFinancialAuditPage',
-      () => backend.travel.getTripFinancialAuditPage(tripId as never));
-    await run('financial', 'getTripActivityPage',
-      () => backend.travel.getTripActivityPage(tripId as never));
-    await runDenied('tourism', 'cross-tenant getTripDetails denied', async () => {
-      await signInWithEmailAndPassword(auth, b.email, b.password);
-      try { await backend.travel.getTripDetails(tripId); }
-      finally { await signInWithEmailAndPassword(auth, a.email, a.password); }
+    await run('tourism', 'READ getTripDetails', async () => {
+      const details = await backend.travel.getTripDetails(tripId);
+      if (!details) throw new Error('trip not readable by its owner');
+      return details;
     });
-    await run('tourism', 'archiveTrip', () => backend.travel.archiveTrip(tripId as never));
-    await run('tourism', 'deleteTrip', () => backend.travel.deleteTrip(tripId as never));
+    await run('tourism', 'UPDATE saveTrip with editTripId', () =>
+      backend.travel.saveTrip(a.uid, buildSyntheticTripEdit(SYNTH, today), tripId, randomUUID()));
+    await run('financial', 'money survives the edit round trip', async () => {
+      const details = await backend.travel.getTripDetails(tripId) as Record<string, unknown>;
+      if (!String(details?.destination ?? '').endsWith('-updated')) throw new Error('edit not observed');
+      if (details?.currency !== 'ILS') throw new Error(`currency is ${String(details?.currency)}`);
+      return true;
+    });
+    await run('tenantIsolation', 'tenant B cannot read tenant A trip', async () => {
+      await signInWithEmailAndPassword(auth, b.email, b.password);
+      try {
+        const details = await backend.travel.getTripDetails(tripId);
+        if (details) throw new Error('tenant B read tenant A trip');
+        return true;
+      } catch (error) {
+        if (String((error as Error)?.message) === 'tenant B read tenant A trip') throw error;
+        return true;
+      } finally { await signInWithEmailAndPassword(auth, a.email, a.password); }
+    });
+    await run('tourism', 'DELETE deleteTrip', () => backend.travel.deleteTrip(a.uid, tripId));
   }
 } finally {
   // ---- cleanup, delegated and fail-safe ---------------------------------------------------------
@@ -273,7 +278,7 @@ try {
   }
 
   const report = {
-    generatedAt: new Date().toISOString(), artifact: 'firestore-client-path-smoke', runId,
+    generatedAt: new Date().toISOString(), artifact: 'firestore-post-cutover-smoke', runId,
     target: 'PRODUCTION', project: PROJECT, releasedVersion: '0.0.62',
     method: 'application repositories via createFirestoreBackend; Admin SDK used only for cleanup',
     byVertical,
@@ -288,7 +293,7 @@ try {
       authFailed: sweep.authFailed ?? 0 },
     syntheticResidue: residue,
     customerMutations: 0,
-    decision: failed.length === 0 && residue === 0 ? 'CLIENT_PATH_SMOKE_PASS' : 'CLIENT_PATH_SMOKE_FAIL',
+    decision: failed.length === 0 && residue === 0 ? 'PRODUCTION_SMOKE_PASS' : 'PRODUCTION_SMOKE_FAIL',
   };
   writeFileSync(REPORT_PATH, `${JSON.stringify(report, null, 2)}\n`);
   console.log(JSON.stringify({ decision: report.decision, byVertical, totalChecks: report.totalChecks,

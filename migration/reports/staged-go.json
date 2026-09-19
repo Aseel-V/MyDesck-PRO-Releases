@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-18T13:10:07.782Z",
+  "generatedAt": "2026-09-19T10:59:28.126Z",
   "readOnly": true,
   "productionMutations": 0,
   "architecture": "FIREBASE_AUTH_FIRESTORE_PLUS_SUPABASE_STORAGE_ONLY",
@@ -99,14 +99,12 @@
     "HYBRID_STORAGE_AUTH_GO": {
       "ownedGates": 5,
       "evaluatedGates": 5,
-      "pass": 4,
-      "fail": 1,
+      "pass": 5,
+      "fail": 0,
       "notRun": 0,
       "missing": 0,
-      "decision": "NO_GO",
-      "blockers": [
-        "supabaseRoleClaim:FAIL"
-      ],
+      "decision": "GO",
+      "blockers": [],
       "dependsOn": []
     },
     "STORAGE_ISOLATION_GO": {
@@ -145,14 +143,12 @@
     "PRODUCT_PARITY_GO": {
       "ownedGates": 23,
       "evaluatedGates": 37,
-      "pass": 36,
-      "fail": 1,
+      "pass": 37,
+      "fail": 0,
       "notRun": 0,
       "missing": 0,
-      "decision": "NO_GO",
-      "blockers": [
-        "supabaseRoleClaim:FAIL"
-      ],
+      "decision": "GO",
+      "blockers": [],
       "dependsOn": [
         "HYBRID_STORAGE_AUTH_GO",
         "STORAGE_ISOLATION_GO",
@@ -163,14 +159,12 @@
     "DRY_RUN_GO": {
       "ownedGates": 8,
       "evaluatedGates": 45,
-      "pass": 44,
-      "fail": 1,
+      "pass": 45,
+      "fail": 0,
       "notRun": 0,
       "missing": 0,
-      "decision": "NO_GO",
-      "blockers": [
-        "supabaseRoleClaim:FAIL"
-      ],
+      "decision": "GO",
+      "blockers": [],
       "dependsOn": [
         "PRODUCT_PARITY_GO"
       ]
@@ -178,14 +172,12 @@
     "BULK_COPY_GO": {
       "ownedGates": 2,
       "evaluatedGates": 47,
-      "pass": 46,
-      "fail": 1,
+      "pass": 47,
+      "fail": 0,
       "notRun": 0,
       "missing": 0,
-      "decision": "NO_GO",
-      "blockers": [
-        "supabaseRoleClaim:FAIL"
-      ],
+      "decision": "GO",
+      "blockers": [],
       "dependsOn": [
         "DRY_RUN_GO"
       ]
@@ -193,14 +185,12 @@
     "CUTOVER_GO": {
       "ownedGates": 3,
       "evaluatedGates": 50,
-      "pass": 49,
-      "fail": 1,
+      "pass": 50,
+      "fail": 0,
       "notRun": 0,
       "missing": 0,
-      "decision": "NO_GO",
-      "blockers": [
-        "supabaseRoleClaim:FAIL"
-      ],
+      "decision": "GO",
+      "blockers": [],
       "dependsOn": [
         "BULK_COPY_GO"
       ]
@@ -208,21 +198,16 @@
     "POST_CUTOVER_HEALTHY": {
       "ownedGates": 3,
       "evaluatedGates": 53,
-      "pass": 49,
-      "fail": 2,
-      "notRun": 2,
+      "pass": 53,
+      "fail": 0,
+      "notRun": 0,
       "missing": 0,
-      "decision": "NO_GO",
-      "blockers": [
-        "supabaseRoleClaim:FAIL",
-        "productionSmoke:FAIL",
-        "postCutoverFinancialCheck:NOT_RUN",
-        "rollbackJournal:NOT_RUN"
-      ],
+      "decision": "GO",
+      "blockers": [],
       "dependsOn": [
         "CUTOVER_GO"
       ]
     }
   },
-  "overallDecision": "NO_GO"
+  "overallDecision": "GO"
 }
