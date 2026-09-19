@@ -3,11 +3,13 @@ import { useMarketingLanguage } from '../content/MarketingLanguageContext';
 import { localizePath } from '../routes/routeModel';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { MarketingContainer } from './primitives';
+import { phase2Content } from '../content/phase2Content';
 
 export function MarketingFooter() {
   const { copy, locale } = useMarketingLanguage();
+  const phase2 = phase2Content[locale];
   const groups = [
-    { title: copy.footer.product, links: copy.footer.links.product },
+    { title: copy.footer.product, links: [...copy.footer.links.product.slice(0, 1), { label: phase2.nav.productTour, path: '/demo' }, ...copy.footer.links.product.slice(1)] },
     { title: copy.footer.industries, links: copy.footer.links.industries },
     { title: copy.footer.resources, links: copy.footer.links.resources },
     { title: copy.footer.legal, links: copy.footer.links.legal },
@@ -43,4 +45,3 @@ export function MarketingFooter() {
     </footer>
   );
 }
-

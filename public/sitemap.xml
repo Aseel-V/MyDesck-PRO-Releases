@@ -28,6 +28,33 @@
     <priority>1.0</priority>
   </url>
   <url>
+    <loc>https://my-desck-pro.vercel.app/demo</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://my-desck-pro.vercel.app/demo" />
+    <xhtml:link rel="alternate" hreflang="ar" href="https://my-desck-pro.vercel.app/ar/demo" />
+    <xhtml:link rel="alternate" hreflang="he" href="https://my-desck-pro.vercel.app/he/demo" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://my-desck-pro.vercel.app/demo" />
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://my-desck-pro.vercel.app/ar/demo</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://my-desck-pro.vercel.app/demo" />
+    <xhtml:link rel="alternate" hreflang="ar" href="https://my-desck-pro.vercel.app/ar/demo" />
+    <xhtml:link rel="alternate" hreflang="he" href="https://my-desck-pro.vercel.app/he/demo" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://my-desck-pro.vercel.app/demo" />
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://my-desck-pro.vercel.app/he/demo</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://my-desck-pro.vercel.app/demo" />
+    <xhtml:link rel="alternate" hreflang="ar" href="https://my-desck-pro.vercel.app/ar/demo" />
+    <xhtml:link rel="alternate" hreflang="he" href="https://my-desck-pro.vercel.app/he/demo" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://my-desck-pro.vercel.app/demo" />
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://my-desck-pro.vercel.app/features</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://my-desck-pro.vercel.app/features" />
     <xhtml:link rel="alternate" hreflang="ar" href="https://my-desck-pro.vercel.app/ar/features" />
