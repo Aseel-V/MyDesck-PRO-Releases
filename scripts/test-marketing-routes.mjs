@@ -29,5 +29,9 @@ const webMain = await readFile(new URL('../src/web-main.tsx', import.meta.url), 
 assert.doesNotMatch(webMain, /CurrencyProvider|createFirestoreBackend|firebaseClient|Dashboard/);
 const webRoot = await readFile(new URL('../src/WebRoot.tsx', import.meta.url), 'utf8');
 assert.doesNotMatch(webRoot, /CurrencyProvider|PersistQueryClientProvider|WebsiteUpdateNotice/);
+const prerenderTool = await readFile('scripts/generate-marketing-artifacts.mjs', 'utf8');
+const electronMain = await readFile('electron.js', 'utf8');
+assert.match(prerenderTool, /electron\.html[^\n]+shell/);
+assert.match(electronMain, /dist[^\n]+electron\.html/);
+assert.ok(electronMain.indexOf('fs.existsSync(electronPath)') < electronMain.indexOf('fs.existsSync(distPath)'), 'Electron must prefer the relative-asset shell');
 console.log('public route and marketing-boundary tests passed');
-

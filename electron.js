@@ -327,10 +327,13 @@ function createWindow() {
     mainWindow.webContents.openDevTools();
   } else {
     // Robust production loading: Check both dist/index.html and root index.html
+    const electronPath = path.join(__dirname, 'dist', 'electron.html');
     const distPath = path.join(__dirname, 'dist', 'index.html');
     const rootPath = path.join(__dirname, 'index.html');
     
-    if (fs.existsSync(distPath)) {
+    if (fs.existsSync(electronPath)) {
+      mainWindow.loadFile(electronPath);
+    } else if (fs.existsSync(distPath)) {
       mainWindow.loadFile(distPath);
     } else if (fs.existsSync(rootPath)) {
       mainWindow.loadFile(rootPath);

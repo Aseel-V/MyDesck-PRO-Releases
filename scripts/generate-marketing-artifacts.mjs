@@ -95,6 +95,10 @@ async function writeSitemap(targetDirectory) {
 
 async function prerender() {
   const shell = await readFile(join(distDirectory, 'index.html'), 'utf8');
+  // The web entry uses root-relative assets so nested clean URLs hydrate correctly. Electron loads
+  // from file:// and therefore needs the untouched Vite shell with ./assets paths. Keeping a
+  // dedicated shell prevents web prerendering from silently breaking the packaged application.
+  await writeFile(join(distDirectory, 'electron.html'), shell, 'utf8');
   for (const route of indexableRoutes) {
     for (const locale of locales) {
       const path = localizedPath(route.path, locale);
