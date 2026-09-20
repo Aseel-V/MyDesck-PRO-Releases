@@ -15,6 +15,7 @@ async function launchBrowser() {
 
 const browser = await launchBrowser();
 const consoleErrors = [];
+const unexpectedNetworkRequests = [];
 const menuNames = { en: 'Open menu', ar: 'افتح القائمة', he: 'פתיחת תפריט' };
 const closeMenuNames = { en: 'Close menu', ar: 'أغلق القائمة', he: 'סגירת תפריט' };
 try {
@@ -29,6 +30,10 @@ try {
     const context = await browser.newContext({ viewport: { width: testCase.width, height: 900 }, reducedMotion: 'reduce', colorScheme: 'light' });
     const page = await context.newPage();
     page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(`${testCase.locale}/${testCase.width}: ${message.text()}`); });
+    page.on('request', (request) => {
+      const url = new URL(request.url());
+      if (url.origin !== parsedBase.origin && !url.protocol.startsWith('data') && !url.protocol.startsWith('blob')) unexpectedNetworkRequests.push(request.url());
+    });
     await page.goto(`${baseUrl}${testCase.prefix}/demo?industry=travel&view=travel-dashboard`, { waitUntil: 'networkidle' });
     const audit = await page.evaluate(() => ({
       lang: document.documentElement.lang,
@@ -93,6 +98,7 @@ try {
   await context.close();
 
   assert.deepEqual(consoleErrors, []);
+  assert.deepEqual(unexpectedNetworkRequests, [], 'Public demo must not call production or third-party endpoints');
   console.log('marketing browser, responsive, RTL, keyboard, and form-state checks passed');
 } finally {
   await browser.close();
