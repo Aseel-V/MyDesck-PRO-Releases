@@ -201,6 +201,9 @@ if (!dotenv.VITE_SUPABASE_URL || !dotenv.VITE_SUPABASE_ANON_KEY) fail('C', 'SUPA
 
 const cutoverEnv = {
   ...process.env,
+  // electron-builder's dependency collector invokes powershell.exe by name. Codex's isolated
+  // runtime PATH omits the Windows inbox location even though the executable is installed there.
+  Path: `${join(process.env.SystemRoot ?? 'C:\\Windows', 'System32/WindowsPowerShell/v1.0')};${process.env.Path ?? ''}`,
   // Selector — src/data/backendMode.ts
   VITE_DATA_BACKEND: 'firestore',
   VITE_FIREBASE_PROJECT_ID: PROJECT,
