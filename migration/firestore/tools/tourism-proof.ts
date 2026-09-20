@@ -48,8 +48,6 @@ const run = async <T>(operation: string, fn: () => Promise<T>): Promise<T | null
   }
 };
 
-const sdk = process.env.GCLOUD_SDK_ROOT
-  ?? join(process.env.LOCALAPPDATA ?? '', 'Google/Cloud SDK/google-cloud-sdk');
 const firebaseEntry = join(process.env.APPDATA ?? '', 'npm', 'node_modules', 'firebase-tools',
   'lib', 'bin', 'firebase.js');
 const raw = execFileSync(process.execPath,

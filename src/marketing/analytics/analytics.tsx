@@ -19,7 +19,8 @@ export interface AnalyticsAdapter {
 }
 
 export class NoopAnalyticsAdapter implements AnalyticsAdapter {
-  track(_event: MarketingAnalyticsEvent): void {
+  track(event: MarketingAnalyticsEvent): void {
+    void event;
     // Privacy-conscious default: deliberately no network, cookies, or storage.
   }
 }

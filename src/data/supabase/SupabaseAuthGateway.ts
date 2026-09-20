@@ -103,7 +103,7 @@ export class SupabaseAuthGateway implements AuthGateway {
     if (error) throw error;
   }
 
-  async getAccessToken(_forceRefresh = false): Promise<string | null> {
+  async getAccessToken(): Promise<string | null> {
     const { data } = await supabase.auth.getSession();
     this.uid = data.session?.user?.id ?? null;
     return data.session?.access_token ?? null;

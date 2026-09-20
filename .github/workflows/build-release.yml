@@ -89,8 +89,18 @@ jobs:
     permissions:
       contents: read
     env:
+      VITE_DATA_BACKEND: firestore
+      VITE_FIREBASE_PROJECT_ID: mydesckpro
+      VITE_FIRESTORE_DATABASE_ID: default
+      VITE_FIRESTORE_PRODUCTION_RELEASE: mydesck-firestore-v1
+      VITE_SUPABASE_FALLBACK_DISABLED: 'true'
+      VITE_FIREBASE_EXPECTED_PLAN: SPARK
+      VITE_FIREBASE_BILLING_ENABLED: 'false'
+      VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+      VITE_FIREBASE_AUTH_DOMAIN: mydesckpro.firebaseapp.com
       VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
       VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+      VITE_MIGRATION_MAINTENANCE: 'false'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -98,16 +108,19 @@ jobs:
           node-version: 20
           cache: 'npm'
       - run: npm ci
-      - name: Require Production Frontend Auth Configuration
+      - name: Require Production Firebase and Storage Configuration
         shell: pwsh
         run: |
+          if ([string]::IsNullOrWhiteSpace($env:VITE_FIREBASE_API_KEY)) {
+            throw 'Tag Windows build requires repository secret VITE_FIREBASE_API_KEY.'
+          }
           if ([string]::IsNullOrWhiteSpace($env:VITE_SUPABASE_URL)) {
-            throw 'Tag Windows build requires repository secret VITE_SUPABASE_URL.'
+            throw 'Tag Windows build requires repository secret VITE_SUPABASE_URL for Storage.'
           }
           if ([string]::IsNullOrWhiteSpace($env:VITE_SUPABASE_ANON_KEY)) {
-            throw 'Tag Windows build requires repository secret VITE_SUPABASE_ANON_KEY.'
+            throw 'Tag Windows build requires repository secret VITE_SUPABASE_ANON_KEY for Storage.'
           }
-          Write-Host 'Production frontend auth configuration is present.'
+          node scripts/check-auth-build-config.mjs --env --require-firestore
       - run: npm run dist:win
       - name: Require Complete Updater Asset Set
         shell: pwsh

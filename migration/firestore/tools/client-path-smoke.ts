@@ -40,12 +40,6 @@ interface Check { vertical: string; operation: string; ok: boolean;
   classification: Classification; detail: string | null }
 
 const checks: Check[] = [];
-const sdk = process.env.GCLOUD_SDK_ROOT
-  ?? join(process.env.LOCALAPPDATA ?? '', 'Google/Cloud SDK/google-cloud-sdk');
-const operatorToken = () => execFileSync(join(sdk, 'platform/bundledpython/python.exe'),
-  [join(sdk, 'lib/gcloud.py'), 'auth', 'print-access-token'],
-  { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 120_000 }).trim();
-
 /**
  * Classify a failure rather than calling everything a production defect.
  *
@@ -76,20 +70,6 @@ const run = async <T>(vertical: string, operation: string, fn: () => Promise<T>)
     return null;
   }
 };
-const runDenied = async (vertical: string, operation: string, fn: () => Promise<unknown>) => {
-  try {
-    await fn();
-    checks.push({ vertical, operation, ok: false, classification: 'RULES_DEFECT',
-      detail: 'cross-tenant operation unexpectedly succeeded' });
-  } catch (error) {
-    const denied = /permission|insufficient|PERMISSION_DENIED|not found|UNAUTHORIZED/i
-      .test(String((error as Error)?.message ?? error));
-    checks.push({ vertical, operation, ok: denied,
-      classification: denied ? 'PASS' : 'APPLICATION_WRITE_DEFECT',
-      detail: denied ? null : String((error as Error)?.message ?? error).slice(0, 220) });
-  }
-};
-
 // ---- the real client, built without the env-reading factory ---------------------------------------
 const firebaseEntry = join(process.env.APPDATA ?? '', 'npm', 'node_modules', 'firebase-tools',
   'lib', 'bin', 'firebase.js');
@@ -168,7 +148,7 @@ try {
   const products = await run('supermarket', 'listAvailableProducts',
     () => backend.supermarket.listAvailableProducts(a.uid));
   const product = Array.isArray(products)
-    ? (products as Array<{ id: string }>).find((p) => true) ?? null : null;
+    ? (products as Array<{ id: string }>)[0] ?? null : null;
   if (product) {
     await run('supermarket', 'updateProduct',
       () => backend.supermarket.updateProduct(product.id, { price: 13.5 }));
