@@ -374,6 +374,8 @@ const newTripFormSource = readFileSync('src/components/trips/NewTripForm.tsx', '
 const installmentFieldsSource = readFileSync('src/components/trips/TripInstallmentPlanFields.tsx', 'utf8');
 const tripFormStylesSource = readFileSync('src/components/trips/tripFormStyles.ts', 'utf8');
 const tripMutationsSource = readFileSync('src/hooks/useTripMutations.ts', 'utf8');
+const firestoreTravelRepositorySource = readFileSync('src/data/firestore/FirestoreTravelRepository.ts', 'utf8');
+const supabaseTravelRepositorySource = readFileSync('src/data/supabase/SupabaseTravelRepository.ts', 'utf8');
 const cardSummaryMigration = readFileSync('supabase/migrations/20260719170000_trip_card_payment_summary.sql', 'utf8');
 const paymentSaveContractMigration = readFileSync('supabase/migrations/20260723100000_fix_trip_payment_save_contract.sql', 'utf8');
 const paymentSummaryContractMigration = readFileSync('supabase/migrations/20260723110000_sync_trip_payment_summaries.sql', 'utf8');
@@ -485,7 +487,14 @@ assert.ok(newTripFormSource.includes("clearErrors(['payment_plan'") && newTripFo
 assert.ok(newTripFormSource.includes("...(usesVisaAllocation ? ['payment_plan'"), 'Cash missing-fields navigation must exclude the hidden payment plan');
 assert.ok(tripFormStylesSource.includes('appearance:textfield') && tripFormStylesSource.includes('webkit-inner-spin-button') && tripFormStylesSource.includes('webkit-outer-spin-button'), 'Travel numeric style must hide Firefox and Chromium spinners');
 assert.ok(newTripFormSource.includes('travelNumberInputClass') && installmentFieldsSource.includes('travelNumberInputClass'), 'Travel financial and installment inputs must opt into no-spinner styling');
-assert.ok(tripMutationsSource.includes('toTripPaymentPlanInput(formData)') && (tripMutationsSource.includes('save_trip_transaction') || tripMutationsSource.includes('syncTripPaymentPlan(data.id, paymentPlan)')), 'trip submission must persist its payment plan');
+assert.ok(
+  tripMutationsSource.includes('getBackend().travel.saveTrip')
+    && firestoreTravelRepositorySource.includes('toTripPaymentPlanInput(formData)')
+    && firestoreTravelRepositorySource.includes('saveTripTransaction(world')
+    && supabaseTravelRepositorySource.includes('toTripPaymentPlanInput(formData)')
+    && supabaseTravelRepositorySource.includes('save_trip_transaction'),
+  'trip submission must delegate to repositories that persist its payment plan',
+);
 assert.ok(tripMutationsSource.includes('restoreTripPages(queryClient, context?.snapshot)'), 'failed trip saves must roll back optimistic card state');
 for (const queryKey of ['trips-page', 'trips-search', 'trip-dashboard', 'trip-payment-plan', 'trip-details', 'travel-reports']) {
   assert.ok(tripMutationsSource.includes(`queryKey: ['${queryKey}']`), `successful trip saves must invalidate ${queryKey}`);
@@ -530,9 +539,10 @@ for (const contract of [
 assert.ok((paymentSummaryContractMigration.match(/public\.get_owned_trip_payment_summary\(/g) || []).length >= 5, 'all read RPCs must use the shared payment summary contract');
 assert.ok(!paymentSummaryContractMigration.match(/(?:DELETE|TRUNCATE)\s+(?:TABLE\s+)?public\.trips/i), 'payment summary correction must not delete trips');
 for (const rpcName of ['get_trip_details', 'get_trips_page', 'get_trip_dashboard_items']) {
-  assert.ok(tripQueriesSource.includes(`supabase.rpc('${rpcName}'`), `development comparison must call ${rpcName}`);
+  assert.ok(supabaseTravelRepositorySource.includes(`supabase.rpc('${rpcName}'`), `the legacy comparison adapter must call ${rpcName}`);
 }
-assert.ok(tripQueriesSource.includes("'[Travel payment contract] mismatch'"), 'development diagnostics must identify differing financial fields');
+assert.ok(tripQueriesSource.includes('getBackend().travel.logPaymentContractComparison'), 'development comparison must use the selected backend');
+assert.ok(supabaseTravelRepositorySource.includes("'[Travel payment contract] mismatch'"), 'development diagnostics must identify differing financial fields');
 assert.ok(tripCardSource.includes('payment.authoritativePaymentStatus'), 'cash cards must render the authoritative payment status');
 assert.ok(tripCardSource.includes('payment.isFullyPaid') && tripCardSource.includes("t('trips.card.noOutstandingBalance')"), 'fully paid cards must replace the red zero balance with a success state');
 assert.ok(tripCardSource.includes('payment.hasReconciliationIssue'), 'reconciliation errors must not be hidden by the fully-paid state');
