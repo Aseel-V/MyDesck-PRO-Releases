@@ -1,9 +1,39 @@
 import assert from 'node:assert/strict';
+import { spawn } from 'node:child_process';
+import { resolve } from 'node:path';
 import { chromium } from '@playwright/test';
 
 const baseUrl = process.env.MARKETING_TEST_BASE_URL || 'http://127.0.0.1:4173';
 const parsedBase = new URL(baseUrl);
 assert.ok(['127.0.0.1', 'localhost'].includes(parsedBase.hostname), 'Marketing browser tests are local-only');
+
+let previewProcess = null;
+
+async function ensureLocalPreview() {
+  try {
+    const response = await fetch(baseUrl);
+    if (response.ok) return;
+  } catch {
+    // Start the already-built local preview below.
+  }
+
+  previewProcess = spawn(process.execPath, [resolve('node_modules/vite/bin/vite.js'), 'preview', '--host', parsedBase.hostname, '--port', parsedBase.port || '4173', '--strictPort'], {
+    cwd: process.cwd(),
+    stdio: 'ignore',
+  });
+
+  for (let attempt = 0; attempt < 40; attempt += 1) {
+    await new Promise((resolveDelay) => setTimeout(resolveDelay, 250));
+    if (previewProcess.exitCode !== null) throw new Error('Local marketing preview stopped before it became ready');
+    try {
+      const response = await fetch(baseUrl);
+      if (response.ok) return;
+    } catch {
+      // Keep waiting for the strictly local preview.
+    }
+  }
+  throw new Error(`Local marketing preview did not become ready at ${baseUrl}`);
+}
 
 async function launchBrowser() {
   try { return await chromium.launch(); }
@@ -13,6 +43,7 @@ async function launchBrowser() {
   }
 }
 
+await ensureLocalPreview();
 const browser = await launchBrowser();
 const consoleErrors = [];
 const unexpectedNetworkRequests = [];
@@ -102,4 +133,5 @@ try {
   console.log('marketing browser, responsive, RTL, keyboard, and form-state checks passed');
 } finally {
   await browser.close();
+  previewProcess?.kill();
 }
