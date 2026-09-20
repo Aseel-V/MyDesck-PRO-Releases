@@ -17,6 +17,13 @@ build/
 release/
 win-unpacked/
 output/playwright/
+.playwright-cli/
+.playwright-mcp/
+.source-test-*/
+.vercel/
+**/__pycache__/
+*.pyc
+*.tsbuildinfo
 
 # Ignore executables and installers
 *.exe
