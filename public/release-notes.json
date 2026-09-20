@@ -1,32 +1,32 @@
 {
-  "version": "0.0.62",
-  "releasedAt": "2026-09-18T12:00:00.000Z",
+  "version": "0.0.63",
+  "releasedAt": "2026-09-20T12:00:00.000Z",
   "title": {
-    "en": "New Secure Backend",
-    "he": "תשתית מאובטחת חדשה",
-    "ar": "بنية خلفية آمنة جديدة"
+    "en": "A clearer MyDesck PRO experience",
+    "he": "חוויית MyDesck PRO ברורה ונגישה יותר",
+    "ar": "تجربة أوضح وأسهل في MyDesck PRO"
   },
   "changes": {
     "en": [
-      "MyDesck PRO now runs on a new backend built on Firebase Authentication and Firestore",
-      "Sign in with the same email and password you already use; no account changes are needed",
-      "All trips, payments, installments, documents and business data were migrated and verified",
-      "Signatures and business logos continue to work exactly as before",
-      "Your previous data remains preserved and unchanged throughout the transition"
+      "Explore the redesigned MyDesck PRO website, with clearer Features, Solutions, Pricing and Security pages",
+      "See real product workflows through a guided tour built with safe synthetic demo data",
+      "Request a trial, product demo, sales conversation or support through a clearer access flow",
+      "Use the public experience in English, Arabic or Hebrew with improved RTL, responsive and keyboard support",
+      "Benefit from faster public pages, improved discoverability and a more reliable desktop startup experience"
     ],
     "he": [
-      "MyDesck PRO עובדת מעתה על תשתית חדשה המבוססת על Firebase Authentication ו-Firestore",
-      "התחברו עם אותה כתובת אימייל וסיסמה שאתם משתמשים בהן; אין צורך בשינוי בחשבון",
-      "כל הטיולים, התשלומים, התשלומים לשיעורין, המסמכים ונתוני העסק הועברו ואומתו",
-      "החתימות ולוגו העסק ממשיכים לעבוד בדיוק כמו קודם",
-      "הנתונים הקודמים שלכם נשמרים ללא שינוי לאורך כל המעבר"
+      "גלו את אתר MyDesck PRO המחודש, עם עמודים ברורים יותר לתכונות, פתרונות, תמחור ואבטחה",
+      "הכירו תהליכי עבודה אמיתיים בסיור מודרך המבוסס על נתוני הדגמה סינתטיים ובטוחים",
+      "בקשו תקופת ניסיון, הדגמת מוצר, שיחת מכירה או תמיכה בתהליך גישה ברור יותר",
+      "השתמשו בחוויה הציבורית באנגלית, בערבית או בעברית עם תמיכה משופרת ב-RTL, במסכים שונים ובמקלדת",
+      "יהנו מעמודים ציבוריים מהירים יותר, נראות משופרת וחוויית הפעלה יציבה יותר במחשב"
     ],
     "ar": [
-      "يعمل MyDesck PRO الآن على بنية خلفية جديدة مبنية على Firebase Authentication و Firestore",
-      "سجّل الدخول بالبريد الإلكتروني وكلمة المرور نفسها التي تستخدمها؛ لا حاجة لأي تغيير في الحساب",
-      "تم نقل جميع الرحلات والمدفوعات والأقساط والمستندات وبيانات العمل والتحقق منها",
-      "تستمر التواقيع وشعارات العمل في العمل تمامًا كما كانت",
-      "تبقى بياناتك السابقة محفوظة دون تغيير طوال عملية الانتقال"
+      "اكتشف موقع MyDesck PRO بتصميمه الجديد وصفحاته الأوضح للميزات والحلول والأسعار والأمان",
+      "تعرّف إلى سير العمل الحقيقي من خلال جولة إرشادية مبنية على بيانات تجريبية اصطناعية وآمنة",
+      "اطلب تجربة أو عرضًا توضيحيًا أو تواصلًا مع المبيعات أو الدعم عبر مسار وصول أكثر وضوحًا",
+      "استخدم التجربة العامة بالإنجليزية أو العربية أو العبرية مع دعم أفضل لاتجاه RTL والشاشات المختلفة ولوحة المفاتيح",
+      "استفد من صفحات عامة أسرع، وظهور أفضل في البحث، وتجربة تشغيل أكثر استقرارًا على سطح المكتب"
     ]
   }
 }
