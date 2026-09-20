@@ -1,0 +1,97 @@
+{
+  "generatedAt": "2026-09-17T21:11:50.830Z",
+  "migrationRunId": "final-smoke-2ae408b1-48f7-4e2c-a871-10b1279452ab",
+  "cleanup": {
+    "status": "PASS",
+    "authUsersRemaining": 0,
+    "firestoreDocumentsRemaining": 0,
+    "storageObjectsRemaining": 0,
+    "measuredIndependently": true,
+    "measurement": {
+      "firestoreRootCollectionsAfter": [
+        "businesses"
+      ],
+      "firestoreDocumentsRemainingByCollection": {},
+      "firestoreResidueNote": "Counted in documents, paged through every root collection. The database held zero collections at baseline, so any document here is residue.",
+      "productionAuthAccountsBaseline": 5,
+      "productionAuthAccountsAfter": 5,
+      "syntheticAuthAccountsRemainingForThisRun": 0,
+      "preExistingSyntheticAccountsNotOwnedByThisRun": [
+        {
+          "createdAt": "2026-09-09",
+          "emailPrefix": "migration-test--202609090958..."
+        },
+        {
+          "createdAt": "2026-09-09",
+          "emailPrefix": "migration-test--travel-20260..."
+        },
+        {
+          "createdAt": "2026-09-09",
+          "emailPrefix": "migration-test--202609090958..."
+        },
+        {
+          "createdAt": "2026-09-09",
+          "emailPrefix": "migration-test--travel-20260..."
+        },
+        {
+          "createdAt": "2026-09-09",
+          "emailPrefix": "migration-test--202609090958..."
+        }
+      ],
+      "preExistingSyntheticNote": "Pre-existing migration-test-- accounts from an earlier session. They are the 5-account baseline, are NOT residue of this run, and were deliberately left alone: the manifest forbids deleting anything outside this runId. They should be removed separately.",
+      "storageChecks": [
+        "business-signatures/091rY67QSZg6lrhgx2aLlNCXjfp2/migration-test--final-smoke-2ae408b1-48f7-4e2c-a871-10b1279452ab-signature.png: gone (http 400)"
+      ]
+    },
+    "sweep": {
+      "byRecordedPath": {
+        "deleted": [
+          "trips/32873033-4732-47ac-bd61-c1ebb7db1f7f",
+          "businesses/170ca1ea-e5ee-47e3-ad40-b34699671802/parts/d2763dcc-3030-4b94-b79f-772373b0aac1",
+          "businessOwners/ChVDxTY6iqZi1h3PYD1JuHVU7su2",
+          "businesses/170ca1ea-e5ee-47e3-ad40-b34699671802",
+          "users/ChVDxTY6iqZi1h3PYD1JuHVU7su2",
+          "businessOwners/XEv3gnfieDhxAxYEFoeB34EfhIq1",
+          "businesses/e081ad01-78b7-4dc0-8616-7afec4be7746",
+          "users/XEv3gnfieDhxAxYEFoeB34EfhIq1",
+          "businessOwners/pOU4MSyHP4bqTYqObuGj6fNsjFV2",
+          "businesses/0472ffb4-76b9-4076-9e54-2935a847eb16",
+          "users/pOU4MSyHP4bqTYqObuGj6fNsjFV2",
+          "businesses/c22dcf30-11b6-42f9-99cf-1cbfb4e20843/restaurantOrders/dd2c378a-e916-44d9-93aa-4bc34a124265",
+          "businesses/c22dcf30-11b6-42f9-99cf-1cbfb4e20843/restaurantStaff/3b2784c5-2a01-49c9-9be0-f0ee6b227f27",
+          "businessOwners/EoIjLqxaScPjzCWSBGrCIPOgd3p2",
+          "businesses/c22dcf30-11b6-42f9-99cf-1cbfb4e20843",
+          "users/EoIjLqxaScPjzCWSBGrCIPOgd3p2",
+          "trips/e64de20f-4daf-4151-87bf-d65d49e53107",
+          "trips/7af9facf-a5b6-4157-b7b7-cbfdcf7e8c0c",
+          "trips/5756abee-88f5-4d84-b307-7916e8a53a58",
+          "businessOwners/9SiD7q7fERZIseW9nqKJJCo1i1B2",
+          "businesses/d512b2b3-e3f8-455a-8ea9-aca527b73d9a",
+          "users/9SiD7q7fERZIseW9nqKJJCo1i1B2",
+          "businessOwners/091rY67QSZg6lrhgx2aLlNCXjfp2",
+          "businesses/c6cb14fb-1aa4-40b4-b0a3-6c36a9bfb7f7",
+          "users/091rY67QSZg6lrhgx2aLlNCXjfp2"
+        ],
+        "alreadyGone": [],
+        "failed": []
+      },
+      "byOwnerUid": {
+        "deleted": 92,
+        "failed": [],
+        "byCollection": {
+          "idempotency": 5,
+          "sparkOperations": 5,
+          "tripActivityLog": 23,
+          "tripFinancialAudit": 48,
+          "tripInstallments": 3,
+          "tripPaymentPlans": 4,
+          "tripPlans": 4
+        }
+      },
+      "authSweep": {
+        "deleted": [],
+        "failed": []
+      }
+    }
+  }
+}

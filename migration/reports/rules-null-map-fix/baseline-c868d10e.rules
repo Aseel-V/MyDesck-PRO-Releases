@@ -188,6 +188,13 @@ service cloud.firestore {
     }
     function sfBools(values) { return values.removeAll([true, false, null]).size() == 0; }
     function sfBoolsRequired(values) { return values.removeAll([true, false]).size() == 0; }
+    // Every non-null value is an integer: the joined text holds only integers, it splits into one
+    // piece per value (no value contains the separator), and no value is itself a digit string.
+    function sfInts(values) {
+      let l = values.removeAll([null]).concat([0]);
+      let pieces = l.join('\uffff').split('\uffff');
+      return l.join('\uffff').matches('-?[0-9]+(\uffff-?[0-9]+)*') && pieces.size() == l.size() && !l.hasAny(pieces);
+    }
     // Exact decimal as the migration and the codec write it: unitsText is authoritative, scale is an
     // integer, units is null or the same integer, and there are no other keys. A value whose units do
     // not fit int64 is refused here (the codec marks it exceedsInt64; no product column holds one).
@@ -483,6 +490,21 @@ service cloud.firestore {
         d.warrantyDays == null || d.warrantyDays is int,
         d.get('schemaVersion', 1) == 1
       ].hasOnly([true]);
+    }
+    function svu_repair_order_items(changed, d) {
+      return changed.hasOnly(['businessId', 'cost', 'createdAt', 'createdAtMicros', 'createdBy', 'id', 'inventoryItemId', 'isDeleted', 'mechanicId', 'migrationExcludedFields', 'migrationTransformVersion', 'name', 'orderId', 'ownerUid', 'price', 'quantity', 'repairServiceId', 'schemaVersion', 'transformVersion', 'type', 'warrantyDays']) && (changed.size() > 8 ? sv_repair_order_items(d) : [
+        !('id' in changed) || (d.id is string),
+        !('orderId' in changed) || (d.orderId is string),
+        !('type' in changed) || (d.type in ['part', 'labor']),
+        !('name' in changed) || (d.name is string),
+        !('quantity' in changed) || (d.quantity == null || sfDecimal(d.quantity)),
+        !('cost' in changed) || (d.cost == null || sfDecimal(d.cost)),
+        !('price' in changed) || (d.price == null || sfDecimal(d.price)),
+        !changed.hasAny(['createdAt', 'createdAtMicros']) || ((d.createdAt is timestamp) && (d.get('createdAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['inventoryItemId', 'mechanicId']) || (sfStrings([d.inventoryItemId, d.mechanicId])),
+        !('warrantyDays' in changed) || (d.warrantyDays == null || d.warrantyDays is int),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
     }
     function sv_car_parts(d) {
       return d.keys().hasOnly(['businessId', 'compatibleCars', 'createdAt', 'createdAtMicros', 'createdBy', 'description', 'id', 'isDeleted', 'lastRepairServiceId', 'migrationExcludedFields', 'migrationTransformVersion', 'ownerUid', 'partName', 'purchasePriceTotal', 'purchasePriceUnit', 'quantity', 'schemaVersion', 'sellingPriceUnit', 'serialNumber', 'sourceBusinessId', 'transformVersion', 'updatedAt', 'updatedAtMicros']) && [
@@ -780,6 +802,18 @@ service cloud.firestore {
         d.get('schemaVersion', 1) == 1
       ].hasOnly([true]);
     }
+    function svu_restaurant_void_logs(changed, d) {
+      return changed.hasOnly(['approvedBy', 'businessId', 'createdAt', 'createdAtMicros', 'createdBy', 'id', 'isDeleted', 'legacyBusinessUserId', 'migrationExcludedFields', 'migrationTransformVersion', 'orderId', 'orderItemId', 'originalAmount', 'ownerUid', 'performedBy', 'reason', 'schemaVersion', 'transformVersion', 'voidType']) && (changed.size() > 8 ? sv_restaurant_void_logs(d) : [
+        !('id' in changed) || (d.id is string),
+        !('legacyBusinessUserId' in changed) || (d.legacyBusinessUserId is string),
+        !('voidType' in changed) || (d.voidType in ['order', 'item']),
+        !('originalAmount' in changed) || (sfDecimal(d.originalAmount)),
+        !('reason' in changed) || (d.reason is string),
+        !changed.hasAny(['createdAt', 'createdAtMicros']) || ((d.createdAt is timestamp) && (d.get('createdAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['orderId', 'orderItemId', 'approvedBy', 'performedBy']) || (sfStrings([d.orderId, d.orderItemId, d.approvedBy, d.performedBy])),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
     function sv_restaurant_audit_logs(d) {
       return d.keys().hasOnly(['actionType', 'actorId', 'businessId', 'createdAt', 'createdAtMicros', 'createdBy', 'details', 'detailsEncoding', 'detailsJson', 'detailsTextReason', 'entityId', 'id', 'isDeleted', 'legacyBusinessUserId', 'migrationExcludedFields', 'migrationTransformVersion', 'ownerUid', 'schemaVersion', 'staffId', 'transformVersion']) && [
         d.id is string,
@@ -791,6 +825,17 @@ service cloud.firestore {
         sfStrings([d.actorId, d.staffId, d.entityId]),
         d.get('schemaVersion', 1) == 1
       ].hasOnly([true]);
+    }
+    function svu_restaurant_audit_logs(changed, d) {
+      return changed.hasOnly(['actionType', 'actorId', 'businessId', 'createdAt', 'createdAtMicros', 'createdBy', 'details', 'detailsEncoding', 'detailsJson', 'detailsTextReason', 'entityId', 'id', 'isDeleted', 'legacyBusinessUserId', 'migrationExcludedFields', 'migrationTransformVersion', 'ownerUid', 'schemaVersion', 'staffId', 'transformVersion']) && (changed.size() > 8 ? sv_restaurant_audit_logs(d) : [
+        !('id' in changed) || (d.id is string),
+        !('legacyBusinessUserId' in changed) || (d.legacyBusinessUserId is string),
+        !('actionType' in changed) || (d.actionType is string),
+        !changed.hasAny(['details', 'detailsEncoding', 'detailsJson', 'detailsTextReason']) || (sfJson(d.get('detailsEncoding', null), d.get('details', null), d.get('detailsJson', null))),
+        !changed.hasAny(['createdAt', 'createdAtMicros']) || ((d.createdAt is timestamp) && (d.get('createdAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['actorId', 'staffId', 'entityId']) || (sfStrings([d.actorId, d.staffId, d.entityId])),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
     }
     function sv_restaurant_reservations(d) {
       return d.keys().hasOnly(['businessId', 'confirmationSent', 'createdAt', 'createdAtMicros', 'createdBy', 'durationMinutes', 'guestEmail', 'guestId', 'guestName', 'guestPhone', 'id', 'isDeleted', 'legacyBusinessUserId', 'migrationExcludedFields', 'migrationTransformVersion', 'notes', 'ownerUid', 'partySize', 'reminderSent', 'reservationDate', 'reservationTime', 'schemaVersion', 'seatedAt', 'seatedAtMicros', 'source', 'specialRequests', 'status', 'tableIds', 'transformVersion']) && [
@@ -923,6 +968,109 @@ service cloud.firestore {
         !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
       ].hasOnly([true]));
     }
+    function sv_trips(d) {
+      return d.keys().hasOnly(['airlineName', 'amountDue', 'amountDueMinor', 'amountPaid', 'amountPaidMinor', 'arrivalAirport', 'arrivalDatetime', 'arrivalDatetimeMicros', 'attachments', 'attachmentsEncoding', 'attachmentsJson', 'attachmentsTextReason', 'boardBasis', 'bookingReference', 'businessId', 'cardPaidAmount', 'cashPaidAmount', 'checklistFlight', 'checklistHotel', 'checklistPayment', 'clientName', 'clientPhone', 'createdAt', 'createdAtMicros', 'createdBy', 'currency', 'deletedAt', 'deletedAtMicros', 'deletedBy', 'departureAirport', 'departureDatetime', 'departureDatetimeMicros', 'destination', 'endDate', 'exchangeRate', 'exportToPdf', 'flightNumber', 'hotelName', 'id', 'isDeleted', 'itinerary', 'itineraryEncoding', 'itineraryJson', 'itineraryTextReason', 'lastOperationId', 'migrationExcludedFields', 'migrationTransformVersion', 'moneyScale', 'notes', 'ownerUid', 'paymentDate', 'paymentMethod', 'paymentStatus', 'payments', 'paymentsEncoding', 'paymentsJson', 'paymentsTextReason', 'profit', 'profitMinor', 'profitPercentage', 'returnArrivalAirport', 'returnArrivalDatetime', 'returnArrivalDatetimeMicros', 'returnDepartureAirport', 'returnDepartureDatetime', 'returnDepartureDatetimeMicros', 'returnFlightNumber', 'revision', 'roomType', 'roomTypeEncoding', 'roomTypeJson', 'roomTypeTextReason', 'saleCurrency', 'saleOriginalAmount', 'salePrice', 'salePriceMinor', 'schemaVersion', 'searchDocument', 'serviceType', 'startDate', 'status', 'ticketClass', 'ticketCostIls', 'ticketNotes', 'transformVersion', 'travelers', 'travelersCount', 'travelersEncoding', 'travelersJson', 'travelersTextReason', 'tripType', 'updatedAt', 'updatedAtMicros', 'userId', 'wholesaleCost', 'wholesaleCostMinor', 'wholesaleCurrency', 'wholesaleOriginalAmount']) && [
+        d.id is string,
+        d.userId is string,
+        d.destination is string,
+        d.clientName is string,
+        d.travelersCount is int,
+        d.startDate.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}'),
+        d.endDate.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}'),
+        sfDecimalScaled(d.wholesaleCost, 2, '-?[0-9]{1,12}'),
+        sfDecimalScaled(d.salePrice, 2, '-?[0-9]{1,12}'),
+        d.profit == null || sfDecimalScaled(d.profit, 2, '-?[0-9]{1,12}'),
+        d.profitPercentage == null || sfDecimalScaled(d.profitPercentage, 2, '-?[0-9]{1,6}'),
+        d.paymentStatus in ['paid', 'partial', 'unpaid'],
+        sfDecimalScaled(d.amountPaid, 2, '-?[0-9]{1,12}'),
+        d.amountDue == null || sfDecimalScaled(d.amountDue, 2, '-?[0-9]{1,12}'),
+        d.status in ['active', 'completed', 'cancelled', 'archived'],
+        d.createdAt == null || d.createdAt is timestamp,
+        d.get('createdAtMicros', '0').matches('-?[0-9]+'),
+        d.updatedAt == null || d.updatedAt is timestamp,
+        d.get('updatedAtMicros', '0').matches('-?[0-9]+'),
+        d.currency in [null, 'USD', 'EUR', 'ILS'],
+        d.exchangeRate == null || sfDecimal(d.exchangeRate),
+        sfJson(d.get('attachmentsEncoding', null), d.get('attachments', null), d.get('attachmentsJson', null)),
+        sfJson(d.get('itineraryEncoding', null), d.get('itinerary', null), d.get('itineraryJson', null)),
+        sfJson(d.get('travelersEncoding', null), d.get('travelers', null), d.get('travelersJson', null)),
+        d.paymentDate == null || d.paymentDate.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}'),
+        sfJson(d.get('paymentsEncoding', null), d.get('payments', null), d.get('paymentsJson', null)),
+        d.wholesaleOriginalAmount == null || sfDecimal(d.wholesaleOriginalAmount),
+        d.saleOriginalAmount == null || sfDecimal(d.saleOriginalAmount),
+        sfJson(d.get('roomTypeEncoding', null), d.get('roomType', null), d.get('roomTypeJson', null)),
+        d.serviceType in ['ticket', 'hotel', 'both'],
+        d.tripType in [null, 'one_way', 'round_trip'],
+        d.departureDatetime == null || d.departureDatetime is timestamp,
+        d.get('departureDatetimeMicros', '0').matches('-?[0-9]+'),
+        d.arrivalDatetime == null || d.arrivalDatetime is timestamp,
+        d.get('arrivalDatetimeMicros', '0').matches('-?[0-9]+'),
+        d.returnDepartureDatetime == null || d.returnDepartureDatetime is timestamp,
+        d.get('returnDepartureDatetimeMicros', '0').matches('-?[0-9]+'),
+        d.returnArrivalDatetime == null || d.returnArrivalDatetime is timestamp,
+        d.get('returnArrivalDatetimeMicros', '0').matches('-?[0-9]+'),
+        d.ticketClass in [null, 'economy', 'premium_economy', 'business', 'first'],
+        d.ticketCostIls == null || sfDecimal(d.ticketCostIls),
+        d.paymentMethod in [null, 'card', 'cash', 'mixed'],
+        d.cardPaidAmount == null || sfDecimal(d.cardPaidAmount),
+        d.cardPaidAmount == null || sfDecimalValue(d.cardPaidAmount) >= 0,
+        d.cashPaidAmount == null || sfDecimal(d.cashPaidAmount),
+        d.cashPaidAmount == null || sfDecimalValue(d.cashPaidAmount) >= 0,
+        d.deletedAt == null || d.deletedAt is timestamp,
+        d.get('deletedAtMicros', '0').matches('-?[0-9]+'),
+        sfStrings([d.notes, d.boardBasis, d.clientPhone, d.wholesaleCurrency, d.saleCurrency, d.hotelName, d.airlineName, d.flightNumber, d.bookingReference, d.departureAirport, d.arrivalAirport, d.returnFlightNumber, d.returnDepartureAirport, d.returnArrivalAirport, d.ticketNotes, d.deletedBy, d.searchDocument]),
+        sfBools([d.exportToPdf, d.checklistFlight, d.checklistHotel, d.checklistPayment]),
+        d.get('schemaVersion', 1) == 1
+      ].hasOnly([true]);
+    }
+    function svu_trips(changed, d) {
+      return changed.hasOnly(['airlineName', 'amountDue', 'amountDueMinor', 'amountPaid', 'amountPaidMinor', 'arrivalAirport', 'arrivalDatetime', 'arrivalDatetimeMicros', 'attachments', 'attachmentsEncoding', 'attachmentsJson', 'attachmentsTextReason', 'boardBasis', 'bookingReference', 'businessId', 'cardPaidAmount', 'cashPaidAmount', 'checklistFlight', 'checklistHotel', 'checklistPayment', 'clientName', 'clientPhone', 'createdAt', 'createdAtMicros', 'createdBy', 'currency', 'deletedAt', 'deletedAtMicros', 'deletedBy', 'departureAirport', 'departureDatetime', 'departureDatetimeMicros', 'destination', 'endDate', 'exchangeRate', 'exportToPdf', 'flightNumber', 'hotelName', 'id', 'isDeleted', 'itinerary', 'itineraryEncoding', 'itineraryJson', 'itineraryTextReason', 'lastOperationId', 'migrationExcludedFields', 'migrationTransformVersion', 'moneyScale', 'notes', 'ownerUid', 'paymentDate', 'paymentMethod', 'paymentStatus', 'payments', 'paymentsEncoding', 'paymentsJson', 'paymentsTextReason', 'profit', 'profitMinor', 'profitPercentage', 'returnArrivalAirport', 'returnArrivalDatetime', 'returnArrivalDatetimeMicros', 'returnDepartureAirport', 'returnDepartureDatetime', 'returnDepartureDatetimeMicros', 'returnFlightNumber', 'revision', 'roomType', 'roomTypeEncoding', 'roomTypeJson', 'roomTypeTextReason', 'saleCurrency', 'saleOriginalAmount', 'salePrice', 'salePriceMinor', 'schemaVersion', 'searchDocument', 'serviceType', 'startDate', 'status', 'ticketClass', 'ticketCostIls', 'ticketNotes', 'transformVersion', 'travelers', 'travelersCount', 'travelersEncoding', 'travelersJson', 'travelersTextReason', 'tripType', 'updatedAt', 'updatedAtMicros', 'userId', 'wholesaleCost', 'wholesaleCostMinor', 'wholesaleCurrency', 'wholesaleOriginalAmount']) && (changed.size() > 22 ? sv_trips(d) : [
+        !('id' in changed) || (d.id is string),
+        !('userId' in changed) || (d.userId is string),
+        !('destination' in changed) || (d.destination is string),
+        !('clientName' in changed) || (d.clientName is string),
+        !('travelersCount' in changed) || (d.travelersCount is int),
+        !('startDate' in changed) || (d.startDate.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')),
+        !('endDate' in changed) || (d.endDate.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')),
+        !('wholesaleCost' in changed) || (sfDecimalScaled(d.wholesaleCost, 2, '-?[0-9]{1,12}')),
+        !('salePrice' in changed) || (sfDecimalScaled(d.salePrice, 2, '-?[0-9]{1,12}')),
+        !('profit' in changed) || (d.profit == null || sfDecimalScaled(d.profit, 2, '-?[0-9]{1,12}')),
+        !('profitPercentage' in changed) || (d.profitPercentage == null || sfDecimalScaled(d.profitPercentage, 2, '-?[0-9]{1,6}')),
+        !('paymentStatus' in changed) || (d.paymentStatus in ['paid', 'partial', 'unpaid']),
+        !('amountPaid' in changed) || (sfDecimalScaled(d.amountPaid, 2, '-?[0-9]{1,12}')),
+        !('amountDue' in changed) || (d.amountDue == null || sfDecimalScaled(d.amountDue, 2, '-?[0-9]{1,12}')),
+        !('status' in changed) || (d.status in ['active', 'completed', 'cancelled', 'archived']),
+        !changed.hasAny(['createdAt', 'createdAtMicros']) || ((d.createdAt == null || d.createdAt is timestamp) && (d.get('createdAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['updatedAt', 'updatedAtMicros']) || ((d.updatedAt == null || d.updatedAt is timestamp) && (d.get('updatedAtMicros', '0').matches('-?[0-9]+'))),
+        !('currency' in changed) || (d.currency in [null, 'USD', 'EUR', 'ILS']),
+        !('exchangeRate' in changed) || (d.exchangeRate == null || sfDecimal(d.exchangeRate)),
+        !changed.hasAny(['attachments', 'attachmentsEncoding', 'attachmentsJson', 'attachmentsTextReason']) || (sfJson(d.get('attachmentsEncoding', null), d.get('attachments', null), d.get('attachmentsJson', null))),
+        !changed.hasAny(['itinerary', 'itineraryEncoding', 'itineraryJson', 'itineraryTextReason']) || (sfJson(d.get('itineraryEncoding', null), d.get('itinerary', null), d.get('itineraryJson', null))),
+        !changed.hasAny(['travelers', 'travelersEncoding', 'travelersJson', 'travelersTextReason']) || (sfJson(d.get('travelersEncoding', null), d.get('travelers', null), d.get('travelersJson', null))),
+        !('paymentDate' in changed) || (d.paymentDate == null || d.paymentDate.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')),
+        !changed.hasAny(['payments', 'paymentsEncoding', 'paymentsJson', 'paymentsTextReason']) || (sfJson(d.get('paymentsEncoding', null), d.get('payments', null), d.get('paymentsJson', null))),
+        !('wholesaleOriginalAmount' in changed) || (d.wholesaleOriginalAmount == null || sfDecimal(d.wholesaleOriginalAmount)),
+        !('saleOriginalAmount' in changed) || (d.saleOriginalAmount == null || sfDecimal(d.saleOriginalAmount)),
+        !changed.hasAny(['roomType', 'roomTypeEncoding', 'roomTypeJson', 'roomTypeTextReason']) || (sfJson(d.get('roomTypeEncoding', null), d.get('roomType', null), d.get('roomTypeJson', null))),
+        !('serviceType' in changed) || (d.serviceType in ['ticket', 'hotel', 'both']),
+        !('tripType' in changed) || (d.tripType in [null, 'one_way', 'round_trip']),
+        !changed.hasAny(['departureDatetime', 'departureDatetimeMicros']) || ((d.departureDatetime == null || d.departureDatetime is timestamp) && (d.get('departureDatetimeMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['arrivalDatetime', 'arrivalDatetimeMicros']) || ((d.arrivalDatetime == null || d.arrivalDatetime is timestamp) && (d.get('arrivalDatetimeMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['returnDepartureDatetime', 'returnDepartureDatetimeMicros']) || ((d.returnDepartureDatetime == null || d.returnDepartureDatetime is timestamp) && (d.get('returnDepartureDatetimeMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['returnArrivalDatetime', 'returnArrivalDatetimeMicros']) || ((d.returnArrivalDatetime == null || d.returnArrivalDatetime is timestamp) && (d.get('returnArrivalDatetimeMicros', '0').matches('-?[0-9]+'))),
+        !('ticketClass' in changed) || (d.ticketClass in [null, 'economy', 'premium_economy', 'business', 'first']),
+        !('ticketCostIls' in changed) || (d.ticketCostIls == null || sfDecimal(d.ticketCostIls)),
+        !('paymentMethod' in changed) || (d.paymentMethod in [null, 'card', 'cash', 'mixed']),
+        !('cardPaidAmount' in changed) || (d.cardPaidAmount == null || sfDecimal(d.cardPaidAmount)),
+        !('cardPaidAmount' in changed) || (d.cardPaidAmount == null || sfDecimalValue(d.cardPaidAmount) >= 0),
+        !('cashPaidAmount' in changed) || (d.cashPaidAmount == null || sfDecimal(d.cashPaidAmount)),
+        !('cashPaidAmount' in changed) || (d.cashPaidAmount == null || sfDecimalValue(d.cashPaidAmount) >= 0),
+        !changed.hasAny(['deletedAt', 'deletedAtMicros']) || ((d.deletedAt == null || d.deletedAt is timestamp) && (d.get('deletedAtMicros', '0').matches('-?[0-9]+'))),
+        !changed.hasAny(['notes', 'boardBasis', 'clientPhone', 'wholesaleCurrency', 'saleCurrency', 'hotelName', 'airlineName', 'flightNumber', 'bookingReference', 'departureAirport', 'arrivalAirport', 'returnFlightNumber', 'returnDepartureAirport', 'returnArrivalAirport', 'ticketNotes', 'deletedBy', 'searchDocument']) || (sfStrings([d.notes, d.boardBasis, d.clientPhone, d.wholesaleCurrency, d.saleCurrency, d.hotelName, d.airlineName, d.flightNumber, d.bookingReference, d.departureAirport, d.arrivalAirport, d.returnFlightNumber, d.returnDepartureAirport, d.returnArrivalAirport, d.ticketNotes, d.deletedBy, d.searchDocument])),
+        !changed.hasAny(['exportToPdf', 'checklistFlight', 'checklistHotel', 'checklistPayment']) || (sfBools([d.exportToPdf, d.checklistFlight, d.checklistHotel, d.checklistPayment])),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
     function sv_trip_payment_plans(d) {
       return d.keys().hasOnly(['businessId', 'cardPaidMinor', 'cardTotalMinor', 'cashConfirmedMinor', 'cashPaidMinor', 'cashTotalMinor', 'createdAt', 'createdAtMicros', 'createdBy', 'currency', 'deletedAt', 'deletedAtMicros', 'firstInstallmentDate', 'id', 'installmentCount', 'isDeleted', 'lastOperationId', 'migrationExcludedFields', 'migrationTransformVersion', 'notes', 'ownerUid', 'paymentMethod', 'schemaVersion', 'source', 'status', 'transformVersion', 'tripId', 'updatedAt', 'updatedAtMicros', 'userId', 'visaConfirmedMinor', 'visaReceiptedMinor']) && [
         d.id is string,
@@ -1042,6 +1190,18 @@ service cloud.firestore {
         d.get('schemaVersion', 1) == 1
       ].hasOnly([true]);
     }
+    function svu_trip_activity_log(changed, d) {
+      return changed.hasOnly(['activityType', 'actorUserId', 'businessId', 'createdAt', 'createdAtMicros', 'createdBy', 'id', 'isDeleted', 'lastOperationId', 'metadata', 'metadataEncoding', 'metadataJson', 'metadataTextReason', 'migrationExcludedFields', 'migrationTransformVersion', 'ownerUid', 'schemaVersion', 'sequence', 'sequenceParent', 'transformVersion', 'tripId', 'userId']) && (changed.size() > 8 ? sv_trip_activity_log(d) : [
+        !('id' in changed) || (d.id is int),
+        !('tripId' in changed) || (d.tripId is string),
+        !('userId' in changed) || (d.userId is string),
+        !('activityType' in changed) || (d.activityType is string),
+        !changed.hasAny(['metadata', 'metadataEncoding', 'metadataJson', 'metadataTextReason']) || (sfJsonRequired(d.get('metadataEncoding', null), d.get('metadata', null), d.get('metadataJson', null))),
+        !changed.hasAny(['createdAt', 'createdAtMicros']) || ((d.createdAt is timestamp) && (d.get('createdAtMicros', '0').matches('-?[0-9]+'))),
+        !('actorUserId' in changed) || (d.actorUserId == null || d.actorUserId is string),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
     function sv_trip_financial_audit(d) {
       return d.keys().hasOnly(['actorUserId', 'businessId', 'changedAt', 'changedAtMicros', 'changedField', 'createdBy', 'id', 'isDeleted', 'lastOperationId', 'migrationExcludedFields', 'migrationTransformVersion', 'newValue', 'newValueEncoding', 'newValueJson', 'newValueTextReason', 'operationType', 'ownerUid', 'previousValue', 'previousValueEncoding', 'previousValueJson', 'previousValueTextReason', 'schemaVersion', 'sequence', 'sequenceParent', 'transformVersion', 'tripId', 'userId']) && [
         d.id is int,
@@ -1056,6 +1216,20 @@ service cloud.firestore {
         d.actorUserId == null || d.actorUserId is string,
         d.get('schemaVersion', 1) == 1
       ].hasOnly([true]);
+    }
+    function svu_trip_financial_audit(changed, d) {
+      return changed.hasOnly(['actorUserId', 'businessId', 'changedAt', 'changedAtMicros', 'changedField', 'createdBy', 'id', 'isDeleted', 'lastOperationId', 'migrationExcludedFields', 'migrationTransformVersion', 'newValue', 'newValueEncoding', 'newValueJson', 'newValueTextReason', 'operationType', 'ownerUid', 'previousValue', 'previousValueEncoding', 'previousValueJson', 'previousValueTextReason', 'schemaVersion', 'sequence', 'sequenceParent', 'transformVersion', 'tripId', 'userId']) && (changed.size() > 8 ? sv_trip_financial_audit(d) : [
+        !('id' in changed) || (d.id is int),
+        !('tripId' in changed) || (d.tripId is string),
+        !('userId' in changed) || (d.userId is string),
+        !changed.hasAny(['changedAt', 'changedAtMicros']) || ((d.changedAt is timestamp) && (d.get('changedAtMicros', '0').matches('-?[0-9]+'))),
+        !('changedField' in changed) || (d.changedField is string),
+        !changed.hasAny(['previousValue', 'previousValueEncoding', 'previousValueJson', 'previousValueTextReason']) || (sfJson(d.get('previousValueEncoding', null), d.get('previousValue', null), d.get('previousValueJson', null))),
+        !changed.hasAny(['newValue', 'newValueEncoding', 'newValueJson', 'newValueTextReason']) || (sfJson(d.get('newValueEncoding', null), d.get('newValue', null), d.get('newValueJson', null))),
+        !('operationType' in changed) || (d.operationType in ['insert', 'update']),
+        !('actorUserId' in changed) || (d.actorUserId == null || d.actorUserId is string),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
     }
     function sv_trip_payment_events(d) {
       return d.keys().hasOnly(['actorUserId', 'businessId', 'createdAt', 'createdAtMicros', 'createdBy', 'eventType', 'id', 'isDeleted', 'lastOperationId', 'migrationExcludedFields', 'migrationTransformVersion', 'newState', 'newStateEncoding', 'newStateJson', 'newStateTextReason', 'ownerUid', 'paymentPlanId', 'previousState', 'previousStateEncoding', 'previousStateJson', 'previousStateTextReason', 'schemaVersion', 'sequence', 'sequenceParent', 'transformVersion', 'tripId', 'userId']) && [
@@ -1072,6 +1246,20 @@ service cloud.firestore {
         d.get('schemaVersion', 1) == 1
       ].hasOnly([true]);
     }
+    function svu_trip_payment_events(changed, d) {
+      return changed.hasOnly(['actorUserId', 'businessId', 'createdAt', 'createdAtMicros', 'createdBy', 'eventType', 'id', 'isDeleted', 'lastOperationId', 'migrationExcludedFields', 'migrationTransformVersion', 'newState', 'newStateEncoding', 'newStateJson', 'newStateTextReason', 'ownerUid', 'paymentPlanId', 'previousState', 'previousStateEncoding', 'previousStateJson', 'previousStateTextReason', 'schemaVersion', 'sequence', 'sequenceParent', 'transformVersion', 'tripId', 'userId']) && (changed.size() > 8 ? sv_trip_payment_events(d) : [
+        !('id' in changed) || (d.id is int),
+        !('paymentPlanId' in changed) || (d.paymentPlanId is string),
+        !('tripId' in changed) || (d.tripId is string),
+        !('userId' in changed) || (d.userId is string),
+        !('eventType' in changed) || (d.eventType in ['cash_paid', 'cash_corrected', 'cash_undone', 'plan_recalculated']),
+        !changed.hasAny(['previousState', 'previousStateEncoding', 'previousStateJson', 'previousStateTextReason']) || (sfJson(d.get('previousStateEncoding', null), d.get('previousState', null), d.get('previousStateJson', null))),
+        !changed.hasAny(['newState', 'newStateEncoding', 'newStateJson', 'newStateTextReason']) || (sfJson(d.get('newStateEncoding', null), d.get('newState', null), d.get('newStateJson', null))),
+        !changed.hasAny(['createdAt', 'createdAtMicros']) || ((d.createdAt is timestamp) && (d.get('createdAtMicros', '0').matches('-?[0-9]+'))),
+        !('actorUserId' in changed) || (d.actorUserId == null || d.actorUserId is string),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
     function sv_trip_installment_events(d) {
       return d.keys().hasOnly(['actorUserId', 'businessId', 'createdAt', 'createdAtMicros', 'createdBy', 'eventType', 'id', 'installmentId', 'isDeleted', 'lastOperationId', 'migrationExcludedFields', 'migrationTransformVersion', 'newState', 'newStateEncoding', 'newStateJson', 'newStateTextReason', 'ownerUid', 'previousState', 'previousStateEncoding', 'previousStateJson', 'previousStateTextReason', 'schemaVersion', 'sequence', 'sequenceParent', 'transformVersion', 'tripId', 'userId']) && [
         d.id is int,
@@ -1087,6 +1275,20 @@ service cloud.firestore {
         d.get('schemaVersion', 1) == 1
       ].hasOnly([true]);
     }
+    function svu_trip_installment_events(changed, d) {
+      return changed.hasOnly(['actorUserId', 'businessId', 'createdAt', 'createdAtMicros', 'createdBy', 'eventType', 'id', 'installmentId', 'isDeleted', 'lastOperationId', 'migrationExcludedFields', 'migrationTransformVersion', 'newState', 'newStateEncoding', 'newStateJson', 'newStateTextReason', 'ownerUid', 'previousState', 'previousStateEncoding', 'previousStateJson', 'previousStateTextReason', 'schemaVersion', 'sequence', 'sequenceParent', 'transformVersion', 'tripId', 'userId']) && (changed.size() > 8 ? sv_trip_installment_events(d) : [
+        !('id' in changed) || (d.id is int),
+        !('installmentId' in changed) || (d.installmentId is string),
+        !('tripId' in changed) || (d.tripId is string),
+        !('userId' in changed) || (d.userId is string),
+        !('eventType' in changed) || (d.eventType in ['created', 'paid', 'corrected', 'payment_undone', 'rescheduled', 'recalculated', 'cancelled']),
+        !changed.hasAny(['previousState', 'previousStateEncoding', 'previousStateJson', 'previousStateTextReason']) || (sfJson(d.get('previousStateEncoding', null), d.get('previousState', null), d.get('previousStateJson', null))),
+        !changed.hasAny(['newState', 'newStateEncoding', 'newStateJson', 'newStateTextReason']) || (sfJson(d.get('newStateEncoding', null), d.get('newState', null), d.get('newStateJson', null))),
+        !changed.hasAny(['createdAt', 'createdAtMicros']) || ((d.createdAt is timestamp) && (d.get('createdAtMicros', '0').matches('-?[0-9]+'))),
+        !('actorUserId' in changed) || (d.actorUserId == null || d.actorUserId is string),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
+    }
     function sv_trip_write_requests(d) {
       return d.keys().hasOnly(['businessId', 'clientRequestId', 'createdAt', 'createdAtMicros', 'createdBy', 'isDeleted', 'lastOperationId', 'migrationExcludedFields', 'migrationTransformVersion', 'ownerUid', 'responsePayload', 'responsePayloadEncoding', 'responsePayloadJson', 'responsePayloadTextReason', 'schemaVersion', 'transformVersion', 'tripId', 'userId']) && [
         d.clientRequestId is string,
@@ -1097,6 +1299,16 @@ service cloud.firestore {
         d.tripId == null || d.tripId is string,
         d.get('schemaVersion', 1) == 1
       ].hasOnly([true]);
+    }
+    function svu_trip_write_requests(changed, d) {
+      return changed.hasOnly(['businessId', 'clientRequestId', 'createdAt', 'createdAtMicros', 'createdBy', 'isDeleted', 'lastOperationId', 'migrationExcludedFields', 'migrationTransformVersion', 'ownerUid', 'responsePayload', 'responsePayloadEncoding', 'responsePayloadJson', 'responsePayloadTextReason', 'schemaVersion', 'transformVersion', 'tripId', 'userId']) && (changed.size() > 8 ? sv_trip_write_requests(d) : [
+        !('clientRequestId' in changed) || (d.clientRequestId is string),
+        !('userId' in changed) || (d.userId is string),
+        !changed.hasAny(['responsePayload', 'responsePayloadEncoding', 'responsePayloadJson', 'responsePayloadTextReason']) || (sfJsonRequired(d.get('responsePayloadEncoding', null), d.get('responsePayload', null), d.get('responsePayloadJson', null))),
+        !changed.hasAny(['createdAt', 'createdAtMicros']) || ((d.createdAt is timestamp) && (d.get('createdAtMicros', '0').matches('-?[0-9]+'))),
+        !('tripId' in changed) || (d.tripId == null || d.tripId is string),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
     }
     function sv_trip_attachment_cleanup_queue(d) {
       return d.keys().hasOnly(['attachments', 'attachmentsEncoding', 'attachmentsJson', 'attachmentsTextReason', 'attempts', 'businessId', 'completedAt', 'completedAtMicros', 'createdAt', 'createdAtMicros', 'createdBy', 'id', 'isDeleted', 'lastAttemptedAt', 'lastAttemptedAtMicros', 'lastError', 'lastOperationId', 'migrationExcludedFields', 'migrationTransformVersion', 'nextRetryAt', 'nextRetryAtMicros', 'ownerUid', 'schemaVersion', 'sequence', 'sequenceParent', 'status', 'transformVersion', 'tripId', 'userId']) && [
@@ -1191,6 +1403,19 @@ service cloud.firestore {
         sfBoolsRequired([d.upcomingEnabled, d.paymentEnabled, d.cleanupEnabled, d.retentionEnabled]),
         d.get('schemaVersion', 1) == 1
       ].hasOnly([true]);
+    }
+    function svu_trip_notification_settings(changed, d) {
+      return changed.hasOnly(['businessId', 'cleanupEnabled', 'createdBy', 'isDeleted', 'migrationExcludedFields', 'migrationTransformVersion', 'ownerUid', 'paymentEnabled', 'paymentReminderDays', 'retentionEnabled', 'schemaVersion', 'timezone', 'transformVersion', 'tripReminderDays', 'upcomingDays', 'upcomingEnabled', 'updatedAt', 'updatedAtMicros', 'userId']) && (changed.size() > 8 ? sv_trip_notification_settings(d) : [
+        !('userId' in changed) || (d.userId is string),
+        !('timezone' in changed) || (d.timezone is string),
+        !('upcomingDays' in changed) || (d.upcomingDays is int),
+        !('upcomingDays' in changed) || ((d.upcomingDays >= 1 && d.upcomingDays <= 90)),
+        !changed.hasAny(['updatedAt', 'updatedAtMicros']) || ((d.updatedAt is timestamp) && (d.get('updatedAtMicros', '0').matches('-?[0-9]+'))),
+        !('tripReminderDays' in changed) || (d.tripReminderDays is list),
+        !('paymentReminderDays' in changed) || (d.paymentReminderDays is list),
+        !changed.hasAny(['upcomingEnabled', 'paymentEnabled', 'cleanupEnabled', 'retentionEnabled']) || (sfBoolsRequired([d.upcomingEnabled, d.paymentEnabled, d.cleanupEnabled, d.retentionEnabled])),
+        !('schemaVersion' in changed) || (d.get('schemaVersion', 1) == 1)
+      ].hasOnly([true]));
     }
     function sv_trip_templates(d) {
       return d.keys().hasOnly(['businessId', 'createdAt', 'createdAtMicros', 'createdBy', 'deletedAt', 'deletedAtMicros', 'description', 'id', 'isDeleted', 'isFavorite', 'lastUsedAt', 'lastUsedAtMicros', 'migrationExcludedFields', 'migrationTransformVersion', 'name', 'ownerUid', 'schemaVersion', 'status', 'templateData', 'templateDataEncoding', 'templateDataJson', 'templateDataTextReason', 'templateType', 'transformVersion', 'updatedAt', 'updatedAtMicros', 'usageCount', 'userId']) && [

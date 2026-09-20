@@ -299,3 +299,14 @@ test('a suspended owner or business loses access', async () => {
     await bypass.update(`businesses/${s.a.businessId}`, { isSuspended: false });
   }
 });
+
+test('a labor-only service remains valid without looking up a null part reference', async () => {
+  const [order] = await s.a.repair.listRepairOrders(s.a.businessId);
+  await s.a.repair.addServiceToOrder(order.id, [
+    { type: 'labor', inventory_item_id: null, name: 'Labor', quantity: 1, cost: 0, price: 25 },
+  ]);
+  const updated = (await s.a.repair.listRepairOrders(s.a.businessId)).find(entry => entry.id === order.id);
+  assert.equal(updated.total_amount, 25);
+  assert.equal(updated.items.length, 1);
+  assert.equal(updated.items[0].type, 'labor');
+});

@@ -1,0 +1,21 @@
+{
+  "generatedAt": "2026-09-17T14:47:55.652Z",
+  "candidateSha256": "c868d10e0cff341f8d109b9b1758930735174202c587bbbba932636b470b90f0",
+  "results": [
+    {
+      "label": "Rules evaluation budget",
+      "script": "scripts/test-firestore-rules-budget.mjs",
+      "startedAt": "2026-09-17T13:41:46.876Z",
+      "exitCode": 0,
+      "tests": 10,
+      "passed": 10,
+      "failed": 0,
+      "skipped": 0,
+      "log": "migration/reports/rules-null-map-fix/test-firestore-rules-budget.mjs.log",
+      "error": null
+    }
+  ],
+  "passed": 10,
+  "failed": 0,
+  "status": "PASS"
+}

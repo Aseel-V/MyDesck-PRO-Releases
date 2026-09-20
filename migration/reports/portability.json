@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-09T07:36:28.858Z",
+  "generatedAt": "2026-09-09T09:00:38.211Z",
   "note": "Static analysis only. A PORTABLE classification is a hypothesis until the migration actually runs against PostgreSQL 17; see migration/tools/verify-portability.mjs.",
   "totalMigrations": 93,
   "summary": {

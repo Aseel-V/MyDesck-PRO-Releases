@@ -6,6 +6,7 @@ import { evaluateGo, validateCounts, evaluateSourceCountDrift } from '../lib/pro
 import { indexReadiness, classifyIndexes } from '../lib/environment-readiness.mjs';
 import { verifyRulesCapture } from '../lib/environment-go-evidence.mjs';
 import { evaluateProductionClientSmoke } from '../lib/client-smoke-evidence.mjs';
+import { evaluateSecretRevocation } from '../lib/secret-revocation-evidence.mjs';
 import { writeReport } from '../../tools/lib/write-report.mjs';
 
 const value = (name, fallback) => process.argv.find((x) => x.startsWith(`${name}=`))?.slice(name.length + 1) ?? fallback;
@@ -29,6 +30,7 @@ const harness = existsSync('migration/reports/firestore-full-harness.json') ? re
 const clientSmoke = existsSync('migration/reports/firestore-spark-client-smoke.json') ? readJson('migration/reports/firestore-spark-client-smoke.json') : null;
 // A separate artifact, so the emulator smoke above can never be read as production evidence.
 const productionSmoke = existsSync('migration/reports/firestore-production-client-smoke.json') ? readJson('migration/reports/firestore-production-client-smoke.json') : null;
+const secretRevocation = existsSync('migration/reports/github-credential-revocation.json') ? readJson('migration/reports/github-credential-revocation.json') : null;
 const liveSource = existsSync('migration/reports/live-source-inventory.json') ? readJson('migration/reports/live-source-inventory.json') : null;
 const indexClassification = readJson('migration/firestore/config/index-classification.json');
 const suite = (label) => harness?.suites?.find((item) => item.label === label)?.outcome;
@@ -62,6 +64,7 @@ const hardIndexesReady = indexReview.reviewComplete
   && indexReview.hardRequired === indexReview.hardRequiredReady
   && classifiedIndexes.filter((item) => item.hardDryRunGate).every((item) => item.state === 'READY');
 const realSmoke = evaluateProductionClientSmoke(productionSmoke);
+const secretGate = evaluateSecretRevocation(secretRevocation);
 const rulesCaptured = verifyRulesCapture(env);
 const clientSuite = clientSmoke?.status === 'PASS' && clientSmoke?.clientSdk === true;
 const rulesSuite = suite('Firestore Rules') === 'PASS';
@@ -78,7 +81,21 @@ const evidence = {
         delta: sourceDrift.delta, expectedTables: sourceDrift.expectedTables, measuredTables: sourceDrift.measuredTables,
         measuredAt: sourceDrift.measuredAt, referenceOrigin: sourceDrift.referenceOrigin,
         measuredOrigin: sourceDrift.measuredOrigin, reasons: sourceDrift.reasons } } },
-  iam: { status: env.migrationSyntheticRead.http === 200 ? 'PASS' : 'FAIL', evidence: { identity: environment.migrationIdentity, syntheticRead: env.migrationSyntheticRead.http, requiredRole: 'roles/datastore.user scoped to projects/mydesckpro/databases/default where supported' } },
+  // The probe reads migration-test--permission-probe/never-created, a document that by design is
+  // never created, so 200 is unreachable and requiring it made this gate unsatisfiable. Firestore
+  // evaluates IAM before existence: a principal without datastore.entities.get gets 403
+  // PERMISSION_DENIED whether or not the document exists (this same probe returned 403 before the
+  // binding), and a permitted principal gets 404 NOT_FOUND. So document-level NOT_FOUND is the proof
+  // of read access. 403 still fails, and http 0 (impersonation unavailable) still fails.
+  iam: { status: env.migrationSyntheticRead.http === 200
+    || (env.migrationSyntheticRead.http === 404 && env.migrationSyntheticRead.status === 'NOT_FOUND')
+    ? 'PASS' : 'FAIL',
+    evidence: { identity: environment.migrationIdentity, syntheticRead: env.migrationSyntheticRead.http,
+      syntheticReadStatus: env.migrationSyntheticRead.status ?? 'OK',
+      impersonation: environment.impersonation,
+      readProvenBy: env.migrationSyntheticRead.http === 404 ? 'NOT_FOUND on a never-created document: permitted, absent' : 'document returned',
+      writeAuthority: 'granted by projects/mydesckpro/roles/mydesckFirestoreMigrator; not exercised by this read-only probe',
+      requiredRole: 'projects/mydesckpro/roles/mydesckFirestoreMigrator scoped to projects/mydesckpro/databases/default' } },
   rules: { status: rulesCaptured && rulesSuite ? 'PASS' : 'NOT_RUN', evidence: { currentRetrievable: rulesCaptured, current: env.currentRules, candidateSha256: sha('migration/firestore/rules/firestore.rules'), rollback: env.rollbackRules, emulatorSuite: rulesSuite ? 'PASS' : 'NOT_RUN', candidateDeployed: false } },
   indexes: { status: hardIndexesReady ? 'PASS' : 'FAIL', evidence: { edition: 'ENTERPRISE',
     hardRequired: classifiedIndexes.filter((item)=>item.hardDryRunGate).length,
@@ -117,7 +134,11 @@ const evidence = {
       supportedInFirebaseMode: parity.verticalsSupported, blockingCutover: parity.verticalsBlocking,
       databaseRuntimeZeroInFirebaseRoot: parity.databaseRuntimeZeroInFirebaseRoot,
       decision: parity.decision } : 'active-product parity evidence not generated' },
-  secret: { status: 'FAIL', evidence: 'GitHub credential removed from active source; provider revocation confirmation missing' },
+  // Was a hardcoded FAIL, so a genuine operator revocation could never close it. Now derived:
+  // an attributed provider confirmation AND fingerprint-verified absence from tree and index.
+  secret: { status: secretGate.status, evidence: { ...secretGate.evidence, reasons: secretGate.reasons,
+    artifact: 'migration/reports/github-credential-revocation.json',
+    basis: 'revocation is a provider fact and cannot be observed from this repository; it is recorded on explicit operator confirmation and paired with fingerprint-verified local removal' } },
   writeFreeze: { status: 'PASS', evidence: 'maintenance guard and no-Supabase-fallback behavior' },
   rollback: { status: clientSuite ? 'PASS' : 'NOT_RUN', evidence: 'synthetic Firestore operation journal, detection and exact-ID cleanup rehearsed in emulator; production customer data excluded' },
   observability: { status: 'PASS', evidence: 'operationId, canonical fingerprint and immutable audit/event records' },

@@ -1,0 +1,432 @@
+{
+  "results": [
+    {
+      "version": "previous",
+      "name": "part consumption",
+      "expected": "ALLOW",
+      "status": 200
+    },
+    {
+      "version": "previous",
+      "name": "part before missing/empty/null/wrong-type 0",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "previous",
+      "name": "part before missing/empty/null/wrong-type 1",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "previous",
+      "name": "part before missing/empty/null/wrong-type 2",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "previous",
+      "name": "part before missing/empty/null/wrong-type 3",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "previous",
+      "name": "part after missing/empty/null/wrong-link 0",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "previous",
+      "name": "part after missing/empty/null/wrong-link 1",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "previous",
+      "name": "part after missing/empty/null/wrong-link 2",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "previous",
+      "name": "part after missing/empty/null/wrong-link 3",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "previous",
+      "name": "both part documents absent",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "previous",
+      "name": "missing service item",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "previous",
+      "name": "null service item linkage",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "previous",
+      "name": "forged financial value",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "previous",
+      "name": "null part with nonzero charge",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "previous",
+      "name": "valid labor-only absence",
+      "expected": "ALLOW",
+      "status": 200
+    },
+    {
+      "version": "previous",
+      "name": "missing partId field",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "previous",
+      "name": "non-string partId with matching document name",
+      "expected": "ALLOW",
+      "status": 200
+    },
+    {
+      "version": "previous",
+      "name": "line created with exact ledger",
+      "expected": "ALLOW",
+      "status": 200
+    },
+    {
+      "version": "previous",
+      "name": "line deleted with exact ledger",
+      "expected": "ALLOW",
+      "status": 200
+    },
+    {
+      "version": "previous",
+      "name": "line updated with exact ledger",
+      "expected": "ALLOW",
+      "status": 200
+    },
+    {
+      "version": "previous",
+      "name": "both line documents absent even with zero delta",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "previous",
+      "name": "malformed/foreign line after 0",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "previous",
+      "name": "malformed/foreign line before 0",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "previous",
+      "name": "malformed/foreign line after 1",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "previous",
+      "name": "malformed/foreign line before 1",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "previous",
+      "name": "malformed/foreign line after 2",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "previous",
+      "name": "malformed/foreign line before 2",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "previous",
+      "name": "malformed/foreign line after 3",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "previous",
+      "name": "malformed/foreign line before 3",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "previous",
+      "name": "malformed/foreign line after 4",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "previous",
+      "name": "malformed/foreign line before 4",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "previous",
+      "name": "null ledger reference",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "previous",
+      "name": "missing ledger reference",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "previous",
+      "name": "forged total",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "previous",
+      "name": "skipped revision",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "candidate",
+      "name": "part consumption",
+      "expected": "ALLOW",
+      "status": 200
+    },
+    {
+      "version": "candidate",
+      "name": "part before missing/empty/null/wrong-type 0",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "candidate",
+      "name": "part before missing/empty/null/wrong-type 1",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "candidate",
+      "name": "part before missing/empty/null/wrong-type 2",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "candidate",
+      "name": "part before missing/empty/null/wrong-type 3",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "candidate",
+      "name": "part after missing/empty/null/wrong-link 0",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "candidate",
+      "name": "part after missing/empty/null/wrong-link 1",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "candidate",
+      "name": "part after missing/empty/null/wrong-link 2",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "candidate",
+      "name": "part after missing/empty/null/wrong-link 3",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "candidate",
+      "name": "both part documents absent",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "candidate",
+      "name": "missing service item",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "candidate",
+      "name": "null service item linkage",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "candidate",
+      "name": "forged financial value",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "candidate",
+      "name": "null part with nonzero charge",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "candidate",
+      "name": "valid labor-only absence",
+      "expected": "ALLOW",
+      "status": 200
+    },
+    {
+      "version": "candidate",
+      "name": "missing partId field",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "candidate",
+      "name": "non-string partId with matching document name",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "candidate",
+      "name": "line created with exact ledger",
+      "expected": "ALLOW",
+      "status": 200
+    },
+    {
+      "version": "candidate",
+      "name": "line deleted with exact ledger",
+      "expected": "ALLOW",
+      "status": 200
+    },
+    {
+      "version": "candidate",
+      "name": "line updated with exact ledger",
+      "expected": "ALLOW",
+      "status": 200
+    },
+    {
+      "version": "candidate",
+      "name": "both line documents absent even with zero delta",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "candidate",
+      "name": "malformed/foreign line after 0",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "candidate",
+      "name": "malformed/foreign line before 0",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "candidate",
+      "name": "malformed/foreign line after 1",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "candidate",
+      "name": "malformed/foreign line before 1",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "candidate",
+      "name": "malformed/foreign line after 2",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "candidate",
+      "name": "malformed/foreign line before 2",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "candidate",
+      "name": "malformed/foreign line after 3",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "candidate",
+      "name": "malformed/foreign line before 3",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "candidate",
+      "name": "malformed/foreign line after 4",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "candidate",
+      "name": "malformed/foreign line before 4",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "candidate",
+      "name": "null ledger reference",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "candidate",
+      "name": "missing ledger reference",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "candidate",
+      "name": "forged total",
+      "expected": "DENY",
+      "status": 403
+    },
+    {
+      "version": "candidate",
+      "name": "skipped revision",
+      "expected": "DENY",
+      "status": 403
+    }
+  ],
+  "differences": [
+    {
+      "version": "candidate",
+      "name": "non-string partId with matching document name",
+      "expected": "DENY",
+      "status": 403
+    }
+  ]
+}

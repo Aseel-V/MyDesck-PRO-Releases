@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-15T11:35:05.668Z",
+  "generatedAt": "2026-09-17T21:24:27.514Z",
   "readOnly": true,
   "productionMutations": 0,
   "bytesDownloaded": 0,
@@ -7,11 +7,12 @@
     {
       "bucket": "business-signatures",
       "public": false,
-      "objects": 1,
+      "objects": 2,
       "bytes": 146338,
       "classification": "PRIVATE_USER",
       "kinds": [
-        "SIGNATURE_IMAGE"
+        "SIGNATURE_IMAGE",
+        "EMPTY_FOLDER_PLACEHOLDER"
       ]
     },
     {
@@ -46,6 +47,18 @@
       "sizeBytes": 146338,
       "ownerPresent": false,
       "createdAt": "2026-09-14T18:09:14.198Z",
+      "anonymousHttp": 400,
+      "publiclyReadable": false
+    },
+    {
+      "bucket": "business-signatures",
+      "pathPrefix": "T1uzH1YKAAdcOoBlIKfMzyTCE0A3",
+      "nameHash": "96a80c0ced93",
+      "kind": "EMPTY_FOLDER_PLACEHOLDER",
+      "mime": "application/octet-stream",
+      "sizeBytes": 0,
+      "ownerPresent": false,
+      "createdAt": "2026-09-17T20:46:27.761Z",
       "anonymousHttp": 400,
       "publiclyReadable": false
     },
@@ -98,15 +111,15 @@
       "name": "Allow users to delete their own files",
       "cmd": "d",
       "permissive": true,
-      "usesAuthUid": true,
-      "usesJwtClaim": false
+      "usesAuthUid": false,
+      "usesJwtClaim": true
     },
     {
       "name": "Allow users to update their own files",
       "cmd": "w",
       "permissive": true,
-      "usesAuthUid": true,
-      "usesJwtClaim": false
+      "usesAuthUid": false,
+      "usesJwtClaim": true
     },
     {
       "name": "Authenticated Deletes",
@@ -168,36 +181,36 @@
       "name": "signatures never anonymous",
       "cmd": "*",
       "permissive": false,
-      "usesAuthUid": true,
-      "usesJwtClaim": false
+      "usesAuthUid": false,
+      "usesJwtClaim": true
     },
     {
       "name": "signatures owner delete",
       "cmd": "d",
       "permissive": true,
-      "usesAuthUid": true,
-      "usesJwtClaim": false
+      "usesAuthUid": false,
+      "usesJwtClaim": true
     },
     {
       "name": "signatures owner insert",
       "cmd": "a",
       "permissive": true,
-      "usesAuthUid": true,
-      "usesJwtClaim": false
+      "usesAuthUid": false,
+      "usesJwtClaim": true
     },
     {
       "name": "signatures owner read",
       "cmd": "r",
       "permissive": true,
-      "usesAuthUid": true,
-      "usesJwtClaim": false
+      "usesAuthUid": false,
+      "usesJwtClaim": true
     },
     {
       "name": "signatures owner update",
       "cmd": "w",
       "permissive": true,
-      "usesAuthUid": true,
-      "usesJwtClaim": false
+      "usesAuthUid": false,
+      "usesJwtClaim": true
     }
   ],
   "restrictivePolicyCount": 1,

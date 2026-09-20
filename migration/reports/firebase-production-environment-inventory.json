@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-09-17T11:24:25.785Z",
+  "generatedAt": "2026-09-17T21:33:50.758Z",
   "project": "mydesckpro",
   "database": "projects/mydesckpro/databases/default",
   "migrationIdentity": "mydesck-firestore-migration@mydesckpro.iam.gserviceaccount.com",
   "readOnly": true,
   "productionMutations": 0,
-  "impersonation": "NOT_RUN",
+  "impersonation": "PASS",
   "evidence": {
     "billing": {
       "http": 200,
@@ -58,7 +58,7 @@
             "type": "FIRESTORE_NATIVE",
             "concurrencyMode": "OPTIMISTIC",
             "versionRetentionPeriod": "3600s",
-            "earliestVersionTime": "2026-09-17T10:24:17.640216Z",
+            "earliestVersionTime": "2026-09-17T20:33:39.348842Z",
             "appEngineIntegrationMode": "DISABLED",
             "pointInTimeRecoveryEnablement": "POINT_IN_TIME_RECOVERY_DISABLED",
             "deleteProtectionState": "DELETE_PROTECTION_DISABLED",
@@ -68,7 +68,7 @@
             "firestoreDataAccessMode": "DATA_ACCESS_MODE_ENABLED",
             "mongodbCompatibleDataAccessMode": "DATA_ACCESS_MODE_DISABLED",
             "enhancedTextSearchQueryMode": "ENHANCED_QUERY_MODE_ENABLED",
-            "etag": "ILf07bHA9ZYDMIPCl9GH55YD"
+            "etag": "IL2h68vI9pYDMIPCl9GH55YD"
           }
         ]
       }
@@ -84,7 +84,7 @@
         "type": "FIRESTORE_NATIVE",
         "concurrencyMode": "OPTIMISTIC",
         "versionRetentionPeriod": "3600s",
-        "earliestVersionTime": "2026-09-17T10:24:18.046793Z",
+        "earliestVersionTime": "2026-09-17T20:33:39.821550Z",
         "appEngineIntegrationMode": "DISABLED",
         "pointInTimeRecoveryEnablement": "POINT_IN_TIME_RECOVERY_DISABLED",
         "deleteProtectionState": "DELETE_PROTECTION_DISABLED",
@@ -94,7 +94,7 @@
         "firestoreDataAccessMode": "DATA_ACCESS_MODE_ENABLED",
         "mongodbCompatibleDataAccessMode": "DATA_ACCESS_MODE_DISABLED",
         "enhancedTextSearchQueryMode": "ENHANCED_QUERY_MODE_ENABLED",
-        "etag": "IPXgmbLA9ZYDMIPCl9GH55YD"
+        "etag": "INiwm8zI9pYDMIPCl9GH55YD"
       }
     },
     "parenthesizedDatabase": {
@@ -436,9 +436,9 @@
         "releases": [
           {
             "name": "projects/mydesckpro/releases/cloud.firestore/default",
-            "rulesetName": "projects/mydesckpro/rulesets/c6fc85cd-4681-491c-bb7c-b879e5893a92",
+            "rulesetName": "projects/mydesckpro/rulesets/efc1207e-86f8-4b84-a8bc-4da275a284a0",
             "createTime": "2026-09-09T08:05:20.911440Z",
-            "updateTime": "2026-09-09T08:05:20.911440Z"
+            "updateTime": "2026-09-17T18:19:30.360940Z"
           }
         ]
       }
@@ -613,40 +613,72 @@
       {
         "resource": "mydesck-migration@mydesckpro.iam.gserviceaccount.com",
         "result": {
-          "http": 0,
-          "status": "NOT_RUN_IMPERSONATION_UNAVAILABLE"
+          "http": 403,
+          "status": "PERMISSION_DENIED",
+          "reasons": [
+            {
+              "reason": "SERVICE_DISABLED",
+              "service": "iam.googleapis.com"
+            }
+          ],
+          "message": "Identity and Access Management (IAM) API has not been used in project 816880250172 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/iam.googleapis.com/overview?project=816880250172 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."
         }
       },
       {
         "resource": "firebase-adminsdk-fbsvc@mydesckpro.iam.gserviceaccount.com",
         "result": {
-          "http": 0,
-          "status": "NOT_RUN_IMPERSONATION_UNAVAILABLE"
+          "http": 403,
+          "status": "PERMISSION_DENIED",
+          "reasons": [
+            {
+              "reason": "SERVICE_DISABLED",
+              "service": "iam.googleapis.com"
+            }
+          ],
+          "message": "Identity and Access Management (IAM) API has not been used in project 816880250172 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/iam.googleapis.com/overview?project=816880250172 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."
         }
       },
       {
         "resource": "mydesck-firestore-migration@mydesckpro.iam.gserviceaccount.com",
         "result": {
-          "http": 0,
-          "status": "NOT_RUN_IMPERSONATION_UNAVAILABLE"
+          "http": 403,
+          "status": "PERMISSION_DENIED",
+          "reasons": [
+            {
+              "reason": "SERVICE_DISABLED",
+              "service": "iam.googleapis.com"
+            }
+          ],
+          "message": "Identity and Access Management (IAM) API has not been used in project 816880250172 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/iam.googleapis.com/overview?project=816880250172 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."
         }
       }
     ],
     "migrationProjectPermissions": {
-      "http": 0,
-      "status": "NOT_RUN_IMPERSONATION_UNAVAILABLE"
+      "http": 200,
+      "data": {}
     },
     "migrationDatabasePermissions": {
-      "http": 0,
-      "status": "NOT_RUN_IMPERSONATION_UNAVAILABLE"
+      "http": 500,
+      "status": "INTERNAL",
+      "reasons": [],
+      "message": "Internal error encountered."
     },
     "migrationRules": {
-      "http": 0,
-      "status": "NOT_RUN_IMPERSONATION_UNAVAILABLE"
+      "http": 403,
+      "status": "PERMISSION_DENIED",
+      "reasons": [
+        {
+          "reason": "IAM_PERMISSION_DENIED",
+          "permission": "firebaserules.releases.get"
+        }
+      ],
+      "message": "The caller does not have permission"
     },
     "migrationSyntheticRead": {
-      "http": 0,
-      "status": "NOT_RUN_IMPERSONATION_UNAVAILABLE"
+      "http": 404,
+      "status": "NOT_FOUND",
+      "reasons": [],
+      "message": "Document \"projects/mydesckpro/databases/default/documents/migration-test--permission-probe/never-created\" not found."
     },
     "troubleshooter": {
       "http": 403,
@@ -663,20 +695,20 @@
       "http": 200,
       "data": {
         "name": "projects/mydesckpro/releases/cloud.firestore/default",
-        "rulesetName": "projects/mydesckpro/rulesets/c6fc85cd-4681-491c-bb7c-b879e5893a92",
+        "rulesetName": "projects/mydesckpro/rulesets/efc1207e-86f8-4b84-a8bc-4da275a284a0",
         "createTime": "2026-09-09T08:05:20.911440Z",
-        "updateTime": "2026-09-09T08:05:20.911440Z"
+        "updateTime": "2026-09-17T18:19:30.360940Z"
       }
     },
     "currentRules": {
       "release": "projects/mydesckpro/releases/cloud.firestore/default",
-      "ruleset": "projects/mydesckpro/rulesets/c6fc85cd-4681-491c-bb7c-b879e5893a92",
-      "updateTime": "2026-09-09T08:05:20.911440Z",
+      "ruleset": "projects/mydesckpro/rulesets/efc1207e-86f8-4b84-a8bc-4da275a284a0",
+      "updateTime": "2026-09-17T18:19:30.360940Z",
       "files": [
         {
           "name": "firestore.rules",
-          "path": "migration/firestore/release/current-production/c6fc85cd-4681-491c-bb7c-b879e5893a92/source-0.rules",
-          "sha256": "ecf30f940747dcc3c5ba4993093e9a11ac9fc5df7e14b2a1512d2446923d84eb"
+          "path": "migration/firestore/release/current-production/efc1207e-86f8-4b84-a8bc-4da275a284a0/source-0.rules",
+          "sha256": "2f395787ccaa0ba5aecd5f7bf44e40828dcf15cff805d648556ffdbc57f0b70f"
         }
       ]
     },

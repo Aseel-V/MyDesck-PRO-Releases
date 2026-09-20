@@ -16,6 +16,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { HELPERS } from '../migration/firestore/tools/generate-rules-schema.mjs';
 
 const HOST = process.env.FIRESTORE_EMULATOR_HOST ?? '127.0.0.1:8080';
 const PROJECT = 'mydesck-validator-probe';
@@ -23,6 +24,39 @@ const RULES = readFileSync('migration/firestore/rules/firestore.rules', 'utf8');
 const BEGIN = RULES.indexOf('    // SCHEMA-VALIDATORS:BEGIN');
 const END = RULES.indexOf('    // SCHEMA-VALIDATORS:END');
 const BLOCK = RULES.slice(BEGIN, END);
+
+const HELPER_NAMES = ['sfStrings', 'sfBools', 'sfBoolsRequired', 'sfInts', 'sfDecimal', 'sfDecimalScaled',
+  'sfDecimalValue', 'sfJsonRequired', 'sfJson'];
+
+/** One `function NAME(...) { ... }` lifted from Rules source, brace-matched and string-aware. */
+function extractFunction(source, name) {
+  const start = source.indexOf(`function ${name}(`);
+  if (start < 0) return null;
+  let depth = 0;
+  let quote = null;
+  for (let i = source.indexOf('{', start); i < source.length; i += 1) {
+    const c = source[i];
+    if (quote) { if (c === '\\') i += 1; else if (c === quote) quote = null; }
+    else if (c === "'" || c === '"') quote = c;
+    else if (c === '{') depth += 1;
+    else if (c === '}' && (depth -= 1) === 0) return source.slice(start, i + 1);
+  }
+  throw new Error(`UNTERMINATED_HELPER:${name}`);
+}
+
+/**
+ * The generator emits only helpers the hand-written Rules can reach, so a correct helper can be
+ * absent from the committed block simply because no table currently needs it (sfInts is, today).
+ * Its behaviour is still a property of the generator, so probes are built from the committed block
+ * plus the generator's definition of any helper the block does not carry. Pruning therefore cannot
+ * silently drop helper coverage, and a helper returns to the block the moment a validator calls it.
+ */
+const PRUNED_HELPERS = HELPER_NAMES.filter((name) => !new RegExp(`function ${name}\\(`).test(BLOCK));
+const BLOCK_FOR_PROBES = [BLOCK, ...PRUNED_HELPERS.map((name) => {
+  const source = extractFunction(HELPERS, name);
+  assert.ok(source, `generator defines helper: ${name}`);
+  return `    ${source}`;
+})].join('\n');
 
 /** A double that happens to be integral; plain JS numbers that are integers are sent as integers. */
 class Double { constructor(value) { this.value = value; } }
@@ -42,7 +76,7 @@ function encode(value) {
 
 let counter = 0;
 async function verdict(expression, data) {
-  const content = `rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n${BLOCK}\n`
+  const content = `rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n${BLOCK_FOR_PROBES}\n`
     + `    function probe(d) { return ${expression}; }\n    match /probe/{id} { allow create: if probe(request.resource.data); }\n  }\n}\n`;
   const loaded = await fetch(`http://${HOST}/emulator/v1/projects/${PROJECT}:securityRules`, {
     method: 'PUT', headers: { 'Content-Type': 'application/json' },
@@ -67,8 +101,17 @@ async function expectAll(expression, cases) {
 
 test('the committed Rules contain the generated block', () => {
   assert.ok(BEGIN > 0 && END > BEGIN);
-  for (const helper of ['sfStrings', 'sfBools', 'sfBoolsRequired', 'sfInts', 'sfDecimal', 'sfDecimalScaled', 'sfDecimalValue', 'sfJsonRequired', 'sfJson']) {
-    assert.match(BLOCK, new RegExp(`function ${helper}\\(`), helper);
+  // Every helper must be available to the probes: emitted in the block, or supplied by the
+  // generator when reachability pruning left it out. An emitted helper must also be reachable,
+  // because an unreachable one is an 'Unused function' warning that blocks Console publication.
+  for (const helper of HELPER_NAMES) {
+    assert.match(BLOCK_FOR_PROBES, new RegExp(`function ${helper}\\(`), helper);
+  }
+  // Counted over the whole file, not just the block: the reachability roots are the hand-written
+  // Rules, so an emitted helper is often called only from there (sfDecimalValue is).
+  for (const helper of HELPER_NAMES.filter((name) => !PRUNED_HELPERS.includes(name))) {
+    const calls = RULES.split(new RegExp(`\\b${helper}\\s*\\(`)).length - 1;
+    assert.ok(calls > 1, `${helper} is emitted and called`);
   }
 });
 

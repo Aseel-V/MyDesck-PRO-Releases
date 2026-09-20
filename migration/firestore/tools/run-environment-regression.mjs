@@ -34,7 +34,10 @@ try {
   pg=new EmbeddedPostgres({databaseDir:join(directory,'data'),user:'postgres',password,port:55449,persistent:true,
     initdbFlags:['--encoding=UTF8','--locale=C'],postgresFlags:['-h','127.0.0.1'],onLog:()=>{},onError:()=>{}});
   await pg.initialise(); await pg.start(); await pg.createDatabase('migration_env_test');
-  const PGURL=`postgresql://postgres:${password}@127.0.0.1:55449/migration_env_test`;
+  const localDatabaseUrl = new URL('postgresql://127.0.0.1:55449/migration_env_test');
+  localDatabaseUrl.username = 'postgres';
+  localDatabaseUrl.password = password;
+  const PGURL = localDatabaseUrl.href;
   run('migration-postgres-reconciliation',['migration/tools/run-harness.mjs'],{PGURL,PGCLIENTENCODING:'UTF8'});
   run('security-postgres',['scripts/test-security-postgres.mjs']);
   for(const file of ['test-canonical-trip-payments.ts','test-trip-smoke-suite.mjs','test-currency-regression.mjs',

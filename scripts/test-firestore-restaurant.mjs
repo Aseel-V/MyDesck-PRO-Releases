@@ -516,6 +516,15 @@ test('malicious clients cannot move money, numbers, tickets or audit records out
   await assert.rejects(() => lineWithLedger(newLine(), toStoredDecimal(500n, 1)), denied, 'a ledger that under-counts the line');
   await assert.rejects(() => lineWithLedger(newLine({ price_at_time: 45.5, quantity: 2 }), toStoredDecimal(910n, 1)), denied, 'a ledger that counts the wrong quantity');
   await assert.rejects(() => updateDoc(ref('orders', order.id), { itemsTotal: toStoredDecimal(0n, 0) }), denied, 'itemsTotal edited alone');
+  // Missing referenced documents must never act as a zero-valued ledger line.
+  for (const ledgerItemId of [randomUUID(), null]) {
+    await assert.rejects(() => updateDoc(ref('orders', order.id), {
+      ledgerItemId, ledgerRevision: orderDoc.ledgerRevision + 1, itemsTotal: orderDoc.itemsTotal,
+    }), denied, 'missing/null line cannot advance even an unchanged total');
+  }
+  await assert.rejects(() => updateDoc(ref('orders', order.id), {
+    ledgerItemId: line.id, ledgerRevision: orderDoc.ledgerRevision + 1, itemsTotal: null,
+  }), denied, 'null itemsTotal is rejected by the complete schema and ledger rules');
   await assert.rejects(() => updateDoc(ref('orderItems', line.id), { quantity: 5 }), denied, 'a quantity change outside the ledger');
   await assert.rejects(() => updateDoc(ref('orderItems', line.id), encodeUpdate('restaurant_order_items', { price_at_time: 1 }, codec)), denied, 'a price change outside the ledger');
 

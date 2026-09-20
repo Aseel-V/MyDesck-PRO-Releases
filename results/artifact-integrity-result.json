@@ -1,0 +1,20 @@
+{
+  "test": "artifact-integrity",
+  "status": "STAGING PASS",
+  "commit_sha": "local",
+  "workflow_run_id": "local",
+  "timestamp": "2026-09-08T08:12:26.316Z",
+  "installer_filename": "MyDesck-PRO-Setup.exe",
+  "installer_size": 108689435,
+  "installer_sha256": "d14a71111c8e2c38d80efd388605cd495320a5c71acd7ada5005048f4d9c7bda",
+  "blockmap_filename": "MyDesck-PRO-Setup.exe.blockmap",
+  "blockmap_size": 114088,
+  "blockmap_sha256": "d5502e34442e5b77bb13cc37c708363e3bda45eb5f74a68d5b20902c431367c3",
+  "latest_yml_filename": "latest.yml",
+  "latest_yml_size": 340,
+  "latest_yml_sha256": "60264a4b3951fb1be9758aa05593a175acd60e8152ce00796e2b66afef8adf6f",
+  "latest_yml_version": "0.0.61",
+  "latest_yml_installer_filename": "MyDesck-PRO-Setup.exe",
+  "latest_yml_sha512": "sWsdMdPSAvE2WZ4Yc3FEECHuVweUavXXmcl0mjYPrkFK7lbXWZYy7Rm03E7QthAsacXvF4DhmlUk6IXR8+sqCA==",
+  "details": "Verified installer, blockmap, and latest.yml SHA256/SHA512 hashes and non-zero sizes."
+}

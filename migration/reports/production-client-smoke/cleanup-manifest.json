@@ -1,0 +1,137 @@
+{
+  "generatedAt": "2026-09-17T21:08:14.270Z",
+  "migrationRunId": "final-smoke-2ae408b1-48f7-4e2c-a871-10b1279452ab",
+  "target": "PRODUCTION",
+  "project": "mydesckpro",
+  "database": "projects/mydesckpro/databases/default",
+  "purpose": "Full 10-category production client-SDK security smoke. Written BEFORE any synthetic resource is created.",
+  "preExistingBaseline": {
+    "firestoreDocuments": 0,
+    "firestoreEvidence": "documents:listCollectionIds shows only an empty businesses marker; 0 documents before this run",
+    "productionAuthAccounts": 5,
+    "productionAuthEvidence": "identitytoolkit accounts:query recordsCount=5, all migration-test-- accounts created 2026-09-09",
+    "note": "Those 5 historical accounts are NOT owned by this run and MUST NOT be deleted."
+  },
+  "plannedAuthIdentities": [
+    {
+      "role": "tourism-a",
+      "email": "migration-test--final-smoke-2ae408b1-48f7-4e2c-a871-10b1279452ab-tourism-a@example.com",
+      "uid": "ASSIGNED_AT_SIGNUP"
+    },
+    {
+      "role": "tourism-b",
+      "email": "migration-test--final-smoke-2ae408b1-48f7-4e2c-a871-10b1279452ab-tourism-b@example.com",
+      "uid": "ASSIGNED_AT_SIGNUP"
+    },
+    {
+      "role": "restaurant-owner",
+      "email": "migration-test--final-smoke-2ae408b1-48f7-4e2c-a871-10b1279452ab-restaurant-owner@example.com",
+      "uid": "ASSIGNED_AT_SIGNUP"
+    },
+    {
+      "role": "restaurant-staff",
+      "email": "migration-test--final-smoke-2ae408b1-48f7-4e2c-a871-10b1279452ab-restaurant-staff@example.com",
+      "uid": "ASSIGNED_AT_SIGNUP"
+    },
+    {
+      "role": "supermarket",
+      "email": "migration-test--final-smoke-2ae408b1-48f7-4e2c-a871-10b1279452ab-supermarket@example.com",
+      "uid": "ASSIGNED_AT_SIGNUP"
+    },
+    {
+      "role": "autorepair",
+      "email": "migration-test--final-smoke-2ae408b1-48f7-4e2c-a871-10b1279452ab-autorepair@example.com",
+      "uid": "ASSIGNED_AT_SIGNUP"
+    },
+    {
+      "role": "carparts",
+      "email": "migration-test--final-smoke-2ae408b1-48f7-4e2c-a871-10b1279452ab-carparts@example.com",
+      "uid": "ASSIGNED_AT_SIGNUP"
+    },
+    {
+      "role": "malicious",
+      "email": "migration-test--final-smoke-2ae408b1-48f7-4e2c-a871-10b1279452ab-malicious@example.com",
+      "uid": "ASSIGNED_AT_SIGNUP"
+    }
+  ],
+  "plannedFirestorePathPrefixes": [
+    "users/{syntheticUid}",
+    "businesses/{syntheticBusinessId}",
+    "businessOwners/{syntheticUid}",
+    "businesses/{syntheticBusinessId}/**",
+    "trips/{doc}",
+    "tripPaymentPlans/{doc}",
+    "tripInstallments/{doc}",
+    "tripActivityLog/{doc}",
+    "tripFinancialAudit/{doc}",
+    "tripPaymentEvents/{doc}",
+    "tripInstallmentEvents/{doc}",
+    "tripPlans/{doc}",
+    "idempotency/{syntheticUid}__{operationId}",
+    "sparkOperations/{syntheticUid}__{operationId}"
+  ],
+  "plannedStorageObjects": [
+    "business-signatures/{ownerUid}/migration-test--final-smoke-2ae408b1-48f7-4e2c-a871-10b1279452ab-signature.png"
+  ],
+  "customerResourcesInScope": "NONE. No real customer UID, business ID, document or Storage object is read, written or deleted.",
+  "cleanupRules": {
+    "wildcardCleanupForbidden": true,
+    "deleteOnly": "resources recorded in createdResources for this migrationRunId, plus documents whose ownerUid is one of this run synthetic UIDs",
+    "immutableDocs": "Identity documents and immutable audit/event records are not client-deletable by design; they are removed with mydesck-firestore-migration@, whose custom role carries datastore.entities.delete for exactly this purpose.",
+    "historicalAccountsUntouched": "The 5 accounts from 2026-09-09 are out of scope and must remain.",
+    "successCriteria": {
+      "authUsersRemaining": 0,
+      "firestoreDocumentsRemaining": 0,
+      "storageObjectsRemaining": 0,
+      "productionCustomerWrites": 0,
+      "productionAuthAccountsAfter": 5
+    }
+  },
+  "createdResources": {
+    "authUids": [
+      "091rY67QSZg6lrhgx2aLlNCXjfp2",
+      "9SiD7q7fERZIseW9nqKJJCo1i1B2",
+      "EoIjLqxaScPjzCWSBGrCIPOgd3p2",
+      "ZEZXWLEh1FZcCgN46PZ2oggoLgJ2",
+      "pOU4MSyHP4bqTYqObuGj6fNsjFV2",
+      "XEv3gnfieDhxAxYEFoeB34EfhIq1",
+      "ChVDxTY6iqZi1h3PYD1JuHVU7su2",
+      "pHJs0reO0xfGmPPk76EFckGdEFh1"
+    ],
+    "firestorePaths": [
+      "users/091rY67QSZg6lrhgx2aLlNCXjfp2",
+      "businesses/c6cb14fb-1aa4-40b4-b0a3-6c36a9bfb7f7",
+      "businessOwners/091rY67QSZg6lrhgx2aLlNCXjfp2",
+      "users/9SiD7q7fERZIseW9nqKJJCo1i1B2",
+      "businesses/d512b2b3-e3f8-455a-8ea9-aca527b73d9a",
+      "businessOwners/9SiD7q7fERZIseW9nqKJJCo1i1B2",
+      "trips/5756abee-88f5-4d84-b307-7916e8a53a58",
+      "trips/7af9facf-a5b6-4157-b7b7-cbfdcf7e8c0c",
+      "trips/e64de20f-4daf-4151-87bf-d65d49e53107",
+      "users/EoIjLqxaScPjzCWSBGrCIPOgd3p2",
+      "businesses/c22dcf30-11b6-42f9-99cf-1cbfb4e20843",
+      "businessOwners/EoIjLqxaScPjzCWSBGrCIPOgd3p2",
+      "businesses/c22dcf30-11b6-42f9-99cf-1cbfb4e20843/restaurantStaff/3b2784c5-2a01-49c9-9be0-f0ee6b227f27",
+      "businesses/c22dcf30-11b6-42f9-99cf-1cbfb4e20843/restaurantOrders/dd2c378a-e916-44d9-93aa-4bc34a124265",
+      "users/pOU4MSyHP4bqTYqObuGj6fNsjFV2",
+      "businesses/0472ffb4-76b9-4076-9e54-2935a847eb16",
+      "businessOwners/pOU4MSyHP4bqTYqObuGj6fNsjFV2",
+      "users/XEv3gnfieDhxAxYEFoeB34EfhIq1",
+      "businesses/e081ad01-78b7-4dc0-8616-7afec4be7746",
+      "businessOwners/XEv3gnfieDhxAxYEFoeB34EfhIq1",
+      "users/ChVDxTY6iqZi1h3PYD1JuHVU7su2",
+      "businesses/170ca1ea-e5ee-47e3-ad40-b34699671802",
+      "businessOwners/ChVDxTY6iqZi1h3PYD1JuHVU7su2",
+      "businesses/170ca1ea-e5ee-47e3-ad40-b34699671802/parts/d2763dcc-3030-4b94-b79f-772373b0aac1",
+      "trips/32873033-4732-47ac-bd61-c1ebb7db1f7f"
+    ],
+    "operationIds": [
+      "final-smoke-2ae408b1-48f7-4e2c-a871-10b1279452ab-idem",
+      "final-smoke-2ae408b1-48f7-4e2c-a871-10b1279452ab-fin"
+    ],
+    "storageObjects": [
+      "business-signatures/091rY67QSZg6lrhgx2aLlNCXjfp2/migration-test--final-smoke-2ae408b1-48f7-4e2c-a871-10b1279452ab-signature.png"
+    ]
+  },
+  "status": "RESOURCES_CREATED"
+}

@@ -1,0 +1,202 @@
+{
+  "generatedAt": "2026-09-17T17:57:36.339Z",
+  "endpoint": "projects.test (source compilation only)",
+  "productionMutations": 0,
+  "releaseBefore": {
+    "name": "projects/mydesckpro/releases/cloud.firestore/default",
+    "rulesetName": "projects/mydesckpro/rulesets/c6fc85cd-4681-491c-bb7c-b879e5893a92",
+    "createTime": "2026-09-09T08:05:20.911440Z",
+    "updateTime": "2026-09-09T08:05:20.911440Z"
+  },
+  "releaseAfter": {
+    "name": "projects/mydesckpro/releases/cloud.firestore/default",
+    "rulesetName": "projects/mydesckpro/rulesets/c6fc85cd-4681-491c-bb7c-b879e5893a92",
+    "createTime": "2026-09-09T08:05:20.911440Z",
+    "updateTime": "2026-09-09T08:05:20.911440Z"
+  },
+  "releaseUnchanged": true,
+  "results": [
+    {
+      "label": "previous",
+      "path": "migration/reports/rules-null-map-fix/previous-candidate.rules",
+      "sha256": "ec88139550b4be4a149b475ed20330702c33a586d8074447c3d569d33307f98f",
+      "http": 200,
+      "issues": [
+        {
+          "sourcePosition": {
+            "fileName": "firestore.rules",
+            "line": 193,
+            "column": 14,
+            "currentOffset": 11349,
+            "endOffset": 11354
+          },
+          "description": "Unused function: sfInts.",
+          "severity": "WARNING"
+        },
+        {
+          "sourcePosition": {
+            "fileName": "firestore.rules",
+            "line": 494,
+            "column": 14,
+            "currentOffset": 37362,
+            "endOffset": 37383
+          },
+          "description": "Unused function: svu_repair_order_items.",
+          "severity": "WARNING"
+        },
+        {
+          "sourcePosition": {
+            "fileName": "firestore.rules",
+            "line": 805,
+            "column": 14,
+            "currentOffset": 64114,
+            "endOffset": 64137
+          },
+          "description": "Unused function: svu_restaurant_void_logs.",
+          "severity": "WARNING"
+        },
+        {
+          "sourcePosition": {
+            "fileName": "firestore.rules",
+            "line": 829,
+            "column": 14,
+            "currentOffset": 66110,
+            "endOffset": 66134
+          },
+          "description": "Unused function: svu_restaurant_audit_logs.",
+          "severity": "WARNING"
+        },
+        {
+          "sourcePosition": {
+            "fileName": "firestore.rules",
+            "line": 1026,
+            "column": 14,
+            "currentOffset": 84697,
+            "endOffset": 84705
+          },
+          "description": "Unused function: svu_trips.",
+          "severity": "WARNING"
+        },
+        {
+          "sourcePosition": {
+            "fileName": "firestore.rules",
+            "line": 1193,
+            "column": 14,
+            "currentOffset": 101420,
+            "endOffset": 101440
+          },
+          "description": "Unused function: svu_trip_activity_log.",
+          "severity": "WARNING"
+        },
+        {
+          "sourcePosition": {
+            "fileName": "firestore.rules",
+            "line": 1220,
+            "column": 14,
+            "currentOffset": 103819,
+            "endOffset": 103842
+          },
+          "description": "Unused function: svu_trip_financial_audit.",
+          "severity": "WARNING"
+        },
+        {
+          "sourcePosition": {
+            "fileName": "firestore.rules",
+            "line": 1249,
+            "column": 14,
+            "currentOffset": 106678,
+            "endOffset": 106700
+          },
+          "description": "Unused function: svu_trip_payment_events.",
+          "severity": "WARNING"
+        },
+        {
+          "sourcePosition": {
+            "fileName": "firestore.rules",
+            "line": 1278,
+            "column": 14,
+            "currentOffset": 109604,
+            "endOffset": 109630
+          },
+          "description": "Unused function: svu_trip_installment_events.",
+          "severity": "WARNING"
+        },
+        {
+          "sourcePosition": {
+            "fileName": "firestore.rules",
+            "line": 1303,
+            "column": 14,
+            "currentOffset": 112172,
+            "endOffset": 112194
+          },
+          "description": "Unused function: svu_trip_write_requests.",
+          "severity": "WARNING"
+        },
+        {
+          "sourcePosition": {
+            "fileName": "firestore.rules",
+            "line": 1407,
+            "column": 14,
+            "currentOffset": 121783,
+            "endOffset": 121812
+          },
+          "description": "Unused function: svu_trip_notification_settings.",
+          "severity": "WARNING"
+        },
+        {
+          "sourcePosition": {
+            "fileName": "firestore.rules",
+            "line": 1875,
+            "column": 41,
+            "currentOffset": 152622,
+            "endOffset": 152625
+          },
+          "description": "Invalid type. Received one of [null]. Expected one of [map].",
+          "severity": "WARNING"
+        },
+        {
+          "sourcePosition": {
+            "fileName": "firestore.rules",
+            "line": 1876,
+            "column": 46,
+            "currentOffset": 152715,
+            "endOffset": 152718
+          },
+          "description": "Invalid type. Received one of [null]. Expected one of [map].",
+          "severity": "WARNING"
+        },
+        {
+          "sourcePosition": {
+            "fileName": "firestore.rules",
+            "line": 2032,
+            "column": 68,
+            "currentOffset": 163245,
+            "endOffset": 163248
+          },
+          "description": "Invalid type. Received one of [null]. Expected one of [map].",
+          "severity": "WARNING"
+        },
+        {
+          "sourcePosition": {
+            "fileName": "firestore.rules",
+            "line": 2033,
+            "column": 77,
+            "currentOffset": 163327,
+            "endOffset": 163330
+          },
+          "description": "Invalid type. Received one of [null]. Expected one of [map].",
+          "severity": "WARNING"
+        }
+      ],
+      "error": null
+    },
+    {
+      "label": "candidate",
+      "path": "migration/firestore/rules/firestore.rules",
+      "sha256": "2f395787ccaa0ba5aecd5f7bf44e40828dcf15cff805d648556ffdbc57f0b70f",
+      "http": 200,
+      "issues": [],
+      "error": null
+    }
+  ]
+}

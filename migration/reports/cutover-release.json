@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-18T12:03:14.519Z",
+  "generatedAt": "2026-09-18T12:24:47.993Z",
   "artifact": "cutover-release",
-  "state": "BUILD_COMPLETE",
+  "state": "RELEASE_PUBLISHED",
   "gates": {
     "CUTOVER_GO": "GO",
     "BULK_COPY_GO": "GO",
@@ -79,6 +79,12 @@
     "productionMode": true
   },
   "buildComplete": true,
-  "releasePublished": false,
-  "publishAttempted": false
+  "github": {
+    "cli": "C:\\Program Files\\GitHub CLI\\gh.exe",
+    "authenticated": true,
+    "tokenSource": "gh auth token (memory only)",
+    "tokenPersisted": false
+  },
+  "releasePublished": true,
+  "publishAttempted": true
 }

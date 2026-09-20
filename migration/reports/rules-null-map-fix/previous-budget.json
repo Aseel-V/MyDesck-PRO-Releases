@@ -201,8 +201,8 @@
       "rule": "/repairServices/{serviceId} allow create",
       "product": true,
       "withinLimit": true,
-      "costAtMost": 847,
-      "costAbove": 844
+      "costAtMost": 814,
+      "costAbove": 811
     },
     {
       "path": "auto repair: add a part and labor (items)",
@@ -345,8 +345,8 @@
       "rule": "/orders/{orderId} allow update",
       "product": true,
       "withinLimit": true,
-      "costAtMost": 328,
-      "costAbove": 325
+      "costAtMost": 331,
+      "costAbove": 328
     },
     {
       "path": "restaurant (waiter member): add an order line at the menu price",
@@ -393,8 +393,8 @@
       "rule": "/orders/{orderId} allow update",
       "product": true,
       "withinLimit": true,
-      "costAtMost": 418,
-      "costAbove": 415
+      "costAtMost": 412,
+      "costAbove": 409
     },
     {
       "path": "restaurant: pay and close",
@@ -449,8 +449,8 @@
       "rule": "/orders/{orderId} allow update",
       "product": true,
       "withinLimit": true,
-      "costAtMost": 784,
-      "costAbove": 781
+      "costAtMost": 781,
+      "costAbove": 778
     },
     {
       "path": "restaurant: analytics delete an order (lines)",

@@ -211,7 +211,7 @@ function validators(tableName, schema) {
   ].join('\n');
 }
 
-const HELPERS = `    // Every non-null value is a string: joining on U+FFFF (a Unicode noncharacter, reserved for
+export const HELPERS = `    // Every non-null value is a string: joining on U+FFFF (a Unicode noncharacter, reserved for
     // internal use) and splitting again returns the same list only when every element is a string
     // that does not contain it. join() alone would accept numbers, booleans and null.
     function sfStrings(values) {
@@ -248,24 +248,135 @@ const HELPERS = `    // Every non-null value is a string: joining on U+FFFF (a U
       return sfJsonRequired(encoding, value, text) || (encoding == null && value == null);
     }`;
 
-export function generateBlock(schema) {
-  return [BEGIN, HELPERS, ...APP_WRITE_TABLES.map((table) => validators(table, schema)), END].join('\n');
+const NL = String.fromCharCode(10);
+const BACKSLASH = String.fromCharCode(92);
+const FUNCTION_LINE = new RegExp('^[ ]*function[ ]+([A-Za-z0-9_]+)[ ]*[(]');
+const CALL_NAME = new RegExp('([A-Za-z0-9_]+)[ ]*[(]', 'g');
+
+/**
+ * Rules source with comments and quoted string contents blanked, keeping length and line structure.
+ * Brace counting and identifier scanning then cannot be fooled by a brace inside a regex literal
+ * (sfDecimal matches '-?[0-9]{1,40}') or by a function name mentioned in a comment.
+ */
+function stripNoise(text) {
+  let out = '';
+  let quote = null;
+  for (let i = 0; i < text.length; i += 1) {
+    const ch = text[i];
+    if (quote) {
+      if (ch === BACKSLASH) { out += '  '; i += 1; continue; }
+      if (ch === quote) quote = null;
+      out += ch === NL ? NL : ' ';
+      continue;
+    }
+    if (ch === "'" || ch === '"') { quote = ch; out += ' '; continue; }
+    if (ch === '/' && text[i + 1] === '/') {
+      while (i < text.length && text[i] !== NL) { out += ' '; i += 1; }
+      // Keep the terminator: dropping it would shift every later line and desynchronise the mask.
+      if (i < text.length) out += NL;
+      continue;
+    }
+    out += ch;
+  }
+  return out;
+}
+
+/** Ordered [{ name, text }] for every generated function, each carrying the comments above it. */
+function splitFunctions(text) {
+  const lines = text.split(NL);
+  const masked = stripNoise(text).split(NL);
+  const segments = [];
+  let pending = [];
+  for (let i = 0; i < lines.length; i += 1) {
+    const match = FUNCTION_LINE.exec(masked[i] === undefined ? '' : masked[i]);
+    if (!match) { pending.push(lines[i]); continue; }
+    let depth = 0;
+    let end = i;
+    for (let j = i; j < lines.length; j += 1) {
+      for (const ch of masked[j] === undefined ? '' : masked[j]) {
+        if (ch === '{') depth += 1;
+        else if (ch === '}') depth -= 1;
+      }
+      end = j;
+      if (depth <= 0) break;
+    }
+    while (pending.length && pending[pending.length - 1].trim() === '') pending.pop();
+    segments.push({ name: match[1], text: [...pending, ...lines.slice(i, end + 1)].join(NL) });
+    pending = [];
+    i = end;
+  }
+  if (pending.some((line) => line.trim() !== '')) throw new Error('RULES_BLOCK_TRAILING_TEXT');
+  return segments;
+}
+
+/** Identifiers used as calls, ignoring comments and string contents. */
+function referencedNames(text) {
+  const names = new Set();
+  for (const match of stripNoise(text).matchAll(CALL_NAME)) names.add(match[1]);
+  return names;
+}
+
+function segmentsFor(schema) {
+  return splitFunctions([HELPERS, ...APP_WRITE_TABLES.map((table) => validators(table, schema))].join(NL));
+}
+
+/**
+ * Only validators the hand-written Rules can actually reach are emitted.
+ *
+ * Firestore's Rules compiler reports every uncalled function as "Unused function: NAME", and the
+ * Firebase Console refuses to publish while those warnings stand, so emitting one sv_/svu_ pair per
+ * table regardless of use blocked deployment on dead code. Reachability is transitive and computed
+ * to a fixed point: dropping an unreachable svu_ also drops an sv_ that nothing else referenced,
+ * while any validator with a real call site is always kept, and a helper such as sfInts returns
+ * automatically as soon as some kept validator calls it again.
+ *
+ * `outside` is the hand-written Rules with this generated block removed. It is the only root set,
+ * so it must be supplied; there is no default, because defaulting to '' would emit nothing.
+ */
+export function generateBlock(schema, outside) {
+  if (typeof outside !== 'string') throw new Error('REACHABILITY_ROOTS_REQUIRED');
+  const segments = segmentsFor(schema);
+  const byName = new Map(segments.map((segment) => [segment.name, segment]));
+  const keep = new Set();
+  const queue = [...referencedNames(outside)].filter((name) => byName.has(name));
+  while (queue.length) {
+    const name = queue.pop();
+    if (keep.has(name)) continue;
+    keep.add(name);
+    for (const ref of referencedNames(byName.get(name).text)) {
+      if (ref !== name && byName.has(ref) && !keep.has(ref)) queue.push(ref);
+    }
+  }
+  const kept = segments.filter((segment) => keep.has(segment.name));
+  return [BEGIN, ...kept.map((segment) => segment.text), END].join(NL);
+}
+
+/** Names this schema could produce that nothing reaches, so the pruning stays auditable. */
+export function unreachableNames(schema, outside) {
+  // BEGIN and END are single comment lines and are not part of any function segment.
+  const lines = generateBlock(schema, outside).split(NL);
+  const emitted = new Set(splitFunctions(lines.slice(1, -1).join(NL)).map((segment) => segment.name));
+  return segmentsFor(schema).map((segment) => segment.name).filter((name) => !emitted.has(name));
 }
 
 const isMain = process.argv[1] && import.meta.url.endsWith(process.argv[1].replace(/\\/g, '/').split('/').pop());
 if (isMain) {
   const snapshot = JSON.parse(readFileSync('migration/firestore/config/source-schema.json', 'utf8'));
-  const block = generateBlock(buildSchema(snapshot));
   const rules = readFileSync(RULES, 'utf8');
   const start = rules.indexOf(BEGIN);
   const stop = rules.indexOf(END);
   if (start < 0 || stop < 0 || stop < start) throw new Error('SCHEMA_VALIDATOR_MARKERS_MISSING');
+  // The hand-written Rules, with this generated block removed, are the reachability root set.
+  const outside = `${rules.slice(0, start)}${rules.slice(stop + END.length)}`;
+  const schema = buildSchema(snapshot);
+  const block = generateBlock(schema, outside);
   const next = `${rules.slice(0, start)}${block}${rules.slice(stop + END.length)}`;
   if (process.argv.includes('--check')) {
     if (next !== rules) { console.error('RULES_SCHEMA_VALIDATORS_STALE'); process.exitCode = 1; }
     else console.log('RULES_SCHEMA_VALIDATORS_CURRENT');
   } else {
     writeFileSync(RULES, next);
-    console.log(JSON.stringify({ tables: APP_WRITE_TABLES, bytes: Buffer.byteLength(next) }));
+    console.log(JSON.stringify({ tables: APP_WRITE_TABLES, bytes: Buffer.byteLength(next),
+      pruned: unreachableNames(schema, outside) }));
   }
 }

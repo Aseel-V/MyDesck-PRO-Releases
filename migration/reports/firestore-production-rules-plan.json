@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-17T11:28:05.461Z",
+  "generatedAt": "2026-09-17T17:32:09.246Z",
   "project": "mydesckpro",
   "database": "default",
   "mode": "plan",
@@ -8,7 +8,7 @@
   "currentRuleset": "projects/mydesckpro/rulesets/c6fc85cd-4681-491c-bb7c-b879e5893a92",
   "expectedCurrentSha256": "ecf30f940747dcc3c5ba4993093e9a11ac9fc5df7e14b2a1512d2446923d84eb",
   "currentSha256": "ecf30f940747dcc3c5ba4993093e9a11ac9fc5df7e14b2a1512d2446923d84eb",
-  "candidateSha256": "ec88139550b4be4a149b475ed20330702c33a586d8074447c3d569d33307f98f",
+  "candidateSha256": "2f395787ccaa0ba5aecd5f7bf44e40828dcf15cff805d648556ffdbc57f0b70f",
   "rollbackSha256": "ecf30f940747dcc3c5ba4993093e9a11ac9fc5df7e14b2a1512d2446923d84eb",
   "currentMatchesExpectedBaseline": true,
   "candidateDeployed": false,

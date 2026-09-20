@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-17T11:53:16.696Z",
-  "migrationRunId": "dryrun-366c706e-a649-41fe-98d0-4fcc5832e4c2",
+  "generatedAt": "2026-09-18T06:53:39.341Z",
+  "migrationRunId": "dryrun-a1b0c5f8-32a3-4e08-ac18-bd71e329a7fc",
   "architecture": "FIREBASE_SPARK_ONLY",
   "mode": "dry-run",
   "productionWrites": 0,
@@ -15,9 +15,9 @@
     "firebaseProject": "mydesckpro",
     "firestoreDatabaseId": "default"
   },
-  "executableCommitSha": "aab9ef22097cd0124981cde9dfc6de6d3b1410c7",
+  "executableCommitSha": "9b17e8092ee00fa2cf078905aad7a2e2bc9d05f7",
   "configHashes": {
-    "firestoreRules": "ec88139550b4be4a149b475ed20330702c33a586d8074447c3d569d33307f98f",
+    "firestoreRules": "2f395787ccaa0ba5aecd5f7bf44e40828dcf15cff805d648556ffdbc57f0b70f",
     "indexes": "b4321049ef068288250b8fd59faf935fbd6d78302edcf8b0a36b7177ae4e8bb2",
     "deltaMap": "cf60c2b43faf32d30a5965e958a10d2226cc57e161095eff40342ba1d5d3db85"
   },
@@ -47,7 +47,7 @@
           "delta": 0,
           "expectedTables": 77,
           "measuredTables": 77,
-          "measuredAt": "2026-09-17T08:31:01.257Z",
+          "measuredAt": "2026-09-17T21:31:14.052Z",
           "referenceOrigin": "migration/reports/firestore-full-import.json",
           "measuredOrigin": "migration/reports/live-source-inventory.json",
           "reasons": []
@@ -55,11 +55,15 @@
       }
     },
     "iam": {
-      "status": "FAIL",
+      "status": "PASS",
       "evidence": {
         "identity": "mydesck-firestore-migration@mydesckpro.iam.gserviceaccount.com",
-        "syntheticRead": 0,
-        "requiredRole": "roles/datastore.user scoped to projects/mydesckpro/databases/default where supported"
+        "syntheticRead": 404,
+        "syntheticReadStatus": "NOT_FOUND",
+        "impersonation": "PASS",
+        "readProvenBy": "NOT_FOUND on a never-created document: permitted, absent",
+        "writeAuthority": "granted by projects/mydesckpro/roles/mydesckFirestoreMigrator; not exercised by this read-only probe",
+        "requiredRole": "projects/mydesckpro/roles/mydesckFirestoreMigrator scoped to projects/mydesckpro/databases/default"
       }
     },
     "rules": {
@@ -68,17 +72,17 @@
         "currentRetrievable": true,
         "current": {
           "release": "projects/mydesckpro/releases/cloud.firestore/default",
-          "ruleset": "projects/mydesckpro/rulesets/c6fc85cd-4681-491c-bb7c-b879e5893a92",
-          "updateTime": "2026-09-09T08:05:20.911440Z",
+          "ruleset": "projects/mydesckpro/rulesets/efc1207e-86f8-4b84-a8bc-4da275a284a0",
+          "updateTime": "2026-09-17T18:19:30.360940Z",
           "files": [
             {
               "name": "firestore.rules",
-              "path": "migration/firestore/release/current-production/c6fc85cd-4681-491c-bb7c-b879e5893a92/source-0.rules",
-              "sha256": "ecf30f940747dcc3c5ba4993093e9a11ac9fc5df7e14b2a1512d2446923d84eb"
+              "path": "migration/firestore/release/current-production/efc1207e-86f8-4b84-a8bc-4da275a284a0/source-0.rules",
+              "sha256": "2f395787ccaa0ba5aecd5f7bf44e40828dcf15cff805d648556ffdbc57f0b70f"
             }
           ]
         },
-        "candidateSha256": "ec88139550b4be4a149b475ed20330702c33a586d8074447c3d569d33307f98f",
+        "candidateSha256": "2f395787ccaa0ba5aecd5f7bf44e40828dcf15cff805d648556ffdbc57f0b70f",
         "rollback": {
           "release": "projects/mydesckpro/releases/cloud.firestore/default",
           "ruleset": "projects/mydesckpro/rulesets/c6fc85cd-4681-491c-bb7c-b879e5893a92",
@@ -401,18 +405,119 @@
       "evidence": "raw client tampering, cross-tenant, immutable event and self-admin denied by candidate Rules"
     },
     "realClientSmoke": {
-      "status": "NOT_RUN",
+      "status": "PASS",
       "evidence": {
-        "present": false,
-        "target": null,
-        "project": null,
-        "generatedAt": null,
-        "categories": null,
-        "cleanup": null,
-        "productionCustomerWrites": null,
-        "reasons": [
-          "ARTIFACT_ABSENT"
-        ],
+        "present": true,
+        "target": "PRODUCTION",
+        "project": "mydesckpro",
+        "generatedAt": "2026-09-17T21:11:50.832Z",
+        "categories": {
+          "auth": "PASS",
+          "tourism": "PASS",
+          "restaurant": "PASS",
+          "supermarket": "PASS",
+          "autoRepair": "PASS",
+          "carParts": "PASS",
+          "maliciousClient": "PASS",
+          "financial": "PASS",
+          "hybridStorage": "PASS",
+          "cleanup": "PASS"
+        },
+        "cleanup": {
+          "status": "PASS",
+          "authUsersRemaining": 0,
+          "firestoreDocumentsRemaining": 0,
+          "storageObjectsRemaining": 0,
+          "measuredIndependently": true,
+          "measurement": {
+            "firestoreRootCollectionsAfter": [
+              "businesses"
+            ],
+            "firestoreDocumentsRemainingByCollection": {},
+            "firestoreResidueNote": "Counted in documents, paged through every root collection. The database held zero collections at baseline, so any document here is residue.",
+            "productionAuthAccountsBaseline": 5,
+            "productionAuthAccountsAfter": 5,
+            "syntheticAuthAccountsRemainingForThisRun": 0,
+            "preExistingSyntheticAccountsNotOwnedByThisRun": [
+              {
+                "createdAt": "2026-09-09",
+                "emailPrefix": "migration-test--202609090958..."
+              },
+              {
+                "createdAt": "2026-09-09",
+                "emailPrefix": "migration-test--travel-20260..."
+              },
+              {
+                "createdAt": "2026-09-09",
+                "emailPrefix": "migration-test--202609090958..."
+              },
+              {
+                "createdAt": "2026-09-09",
+                "emailPrefix": "migration-test--travel-20260..."
+              },
+              {
+                "createdAt": "2026-09-09",
+                "emailPrefix": "migration-test--202609090958..."
+              }
+            ],
+            "preExistingSyntheticNote": "Pre-existing migration-test-- accounts from an earlier session. They are the 5-account baseline, are NOT residue of this run, and were deliberately left alone: the manifest forbids deleting anything outside this runId. They should be removed separately.",
+            "storageChecks": [
+              "business-signatures/091rY67QSZg6lrhgx2aLlNCXjfp2/migration-test--final-smoke-2ae408b1-48f7-4e2c-a871-10b1279452ab-signature.png: gone (http 400)"
+            ]
+          },
+          "sweep": {
+            "byRecordedPath": {
+              "deleted": [
+                "trips/32873033-4732-47ac-bd61-c1ebb7db1f7f",
+                "businesses/170ca1ea-e5ee-47e3-ad40-b34699671802/parts/d2763dcc-3030-4b94-b79f-772373b0aac1",
+                "businessOwners/ChVDxTY6iqZi1h3PYD1JuHVU7su2",
+                "businesses/170ca1ea-e5ee-47e3-ad40-b34699671802",
+                "users/ChVDxTY6iqZi1h3PYD1JuHVU7su2",
+                "businessOwners/XEv3gnfieDhxAxYEFoeB34EfhIq1",
+                "businesses/e081ad01-78b7-4dc0-8616-7afec4be7746",
+                "users/XEv3gnfieDhxAxYEFoeB34EfhIq1",
+                "businessOwners/pOU4MSyHP4bqTYqObuGj6fNsjFV2",
+                "businesses/0472ffb4-76b9-4076-9e54-2935a847eb16",
+                "users/pOU4MSyHP4bqTYqObuGj6fNsjFV2",
+                "businesses/c22dcf30-11b6-42f9-99cf-1cbfb4e20843/restaurantOrders/dd2c378a-e916-44d9-93aa-4bc34a124265",
+                "businesses/c22dcf30-11b6-42f9-99cf-1cbfb4e20843/restaurantStaff/3b2784c5-2a01-49c9-9be0-f0ee6b227f27",
+                "businessOwners/EoIjLqxaScPjzCWSBGrCIPOgd3p2",
+                "businesses/c22dcf30-11b6-42f9-99cf-1cbfb4e20843",
+                "users/EoIjLqxaScPjzCWSBGrCIPOgd3p2",
+                "trips/e64de20f-4daf-4151-87bf-d65d49e53107",
+                "trips/7af9facf-a5b6-4157-b7b7-cbfdcf7e8c0c",
+                "trips/5756abee-88f5-4d84-b307-7916e8a53a58",
+                "businessOwners/9SiD7q7fERZIseW9nqKJJCo1i1B2",
+                "businesses/d512b2b3-e3f8-455a-8ea9-aca527b73d9a",
+                "users/9SiD7q7fERZIseW9nqKJJCo1i1B2",
+                "businessOwners/091rY67QSZg6lrhgx2aLlNCXjfp2",
+                "businesses/c6cb14fb-1aa4-40b4-b0a3-6c36a9bfb7f7",
+                "users/091rY67QSZg6lrhgx2aLlNCXjfp2"
+              ],
+              "alreadyGone": [],
+              "failed": []
+            },
+            "byOwnerUid": {
+              "deleted": 92,
+              "failed": [],
+              "byCollection": {
+                "idempotency": 5,
+                "sparkOperations": 5,
+                "tripActivityLog": 23,
+                "tripFinancialAudit": 48,
+                "tripInstallments": 3,
+                "tripPaymentPlans": 4,
+                "tripPlans": 4
+              }
+            },
+            "authSweep": {
+              "deleted": [],
+              "failed": []
+            }
+          }
+        },
+        "productionCustomerWrites": 0,
+        "reasons": [],
         "artifact": "migration/reports/firestore-production-client-smoke.json",
         "requires": "approved candidate Rules deployment, hard-required Enterprise indexes READY, migration IAM, and isolated production test identities"
       }
@@ -479,8 +584,22 @@
       }
     },
     "secret": {
-      "status": "FAIL",
-      "evidence": "GitHub credential removed from active source; provider revocation confirmation missing"
+      "status": "PASS",
+      "evidence": {
+        "present": true,
+        "credentialType": "GITHUB_CLASSIC_PERSONAL_ACCESS_TOKEN",
+        "revoked": true,
+        "revokedBy": "operator",
+        "revokedAt": "2026-09-17T21:18:12Z",
+        "removalVerified": {
+          "workingTreeMatches": 0,
+          "gitIndexMatches": 0,
+          "assignmentsRemaining": 0
+        },
+        "reasons": [],
+        "artifact": "migration/reports/github-credential-revocation.json",
+        "basis": "revocation is a provider fact and cannot be observed from this repository; it is recorded on explicit operator confirmation and paired with fingerprint-verified local removal"
+      }
     },
     "writeFreeze": {
       "status": "PASS",
@@ -529,7 +648,7 @@
             "delta": 0,
             "expectedTables": 77,
             "measuredTables": 77,
-            "measuredAt": "2026-09-17T08:31:01.257Z",
+            "measuredAt": "2026-09-17T21:31:14.052Z",
             "referenceOrigin": "migration/reports/firestore-full-import.json",
             "measuredOrigin": "migration/reports/live-source-inventory.json",
             "reasons": []
@@ -538,11 +657,15 @@
       },
       {
         "name": "iam",
-        "status": "FAIL",
+        "status": "PASS",
         "evidence": {
           "identity": "mydesck-firestore-migration@mydesckpro.iam.gserviceaccount.com",
-          "syntheticRead": 0,
-          "requiredRole": "roles/datastore.user scoped to projects/mydesckpro/databases/default where supported"
+          "syntheticRead": 404,
+          "syntheticReadStatus": "NOT_FOUND",
+          "impersonation": "PASS",
+          "readProvenBy": "NOT_FOUND on a never-created document: permitted, absent",
+          "writeAuthority": "granted by projects/mydesckpro/roles/mydesckFirestoreMigrator; not exercised by this read-only probe",
+          "requiredRole": "projects/mydesckpro/roles/mydesckFirestoreMigrator scoped to projects/mydesckpro/databases/default"
         }
       },
       {
@@ -552,17 +675,17 @@
           "currentRetrievable": true,
           "current": {
             "release": "projects/mydesckpro/releases/cloud.firestore/default",
-            "ruleset": "projects/mydesckpro/rulesets/c6fc85cd-4681-491c-bb7c-b879e5893a92",
-            "updateTime": "2026-09-09T08:05:20.911440Z",
+            "ruleset": "projects/mydesckpro/rulesets/efc1207e-86f8-4b84-a8bc-4da275a284a0",
+            "updateTime": "2026-09-17T18:19:30.360940Z",
             "files": [
               {
                 "name": "firestore.rules",
-                "path": "migration/firestore/release/current-production/c6fc85cd-4681-491c-bb7c-b879e5893a92/source-0.rules",
-                "sha256": "ecf30f940747dcc3c5ba4993093e9a11ac9fc5df7e14b2a1512d2446923d84eb"
+                "path": "migration/firestore/release/current-production/efc1207e-86f8-4b84-a8bc-4da275a284a0/source-0.rules",
+                "sha256": "2f395787ccaa0ba5aecd5f7bf44e40828dcf15cff805d648556ffdbc57f0b70f"
               }
             ]
           },
-          "candidateSha256": "ec88139550b4be4a149b475ed20330702c33a586d8074447c3d569d33307f98f",
+          "candidateSha256": "2f395787ccaa0ba5aecd5f7bf44e40828dcf15cff805d648556ffdbc57f0b70f",
           "rollback": {
             "release": "projects/mydesckpro/releases/cloud.firestore/default",
             "ruleset": "projects/mydesckpro/rulesets/c6fc85cd-4681-491c-bb7c-b879e5893a92",
@@ -893,18 +1016,119 @@
       },
       {
         "name": "realClientSmoke",
-        "status": "NOT_RUN",
+        "status": "PASS",
         "evidence": {
-          "present": false,
-          "target": null,
-          "project": null,
-          "generatedAt": null,
-          "categories": null,
-          "cleanup": null,
-          "productionCustomerWrites": null,
-          "reasons": [
-            "ARTIFACT_ABSENT"
-          ],
+          "present": true,
+          "target": "PRODUCTION",
+          "project": "mydesckpro",
+          "generatedAt": "2026-09-17T21:11:50.832Z",
+          "categories": {
+            "auth": "PASS",
+            "tourism": "PASS",
+            "restaurant": "PASS",
+            "supermarket": "PASS",
+            "autoRepair": "PASS",
+            "carParts": "PASS",
+            "maliciousClient": "PASS",
+            "financial": "PASS",
+            "hybridStorage": "PASS",
+            "cleanup": "PASS"
+          },
+          "cleanup": {
+            "status": "PASS",
+            "authUsersRemaining": 0,
+            "firestoreDocumentsRemaining": 0,
+            "storageObjectsRemaining": 0,
+            "measuredIndependently": true,
+            "measurement": {
+              "firestoreRootCollectionsAfter": [
+                "businesses"
+              ],
+              "firestoreDocumentsRemainingByCollection": {},
+              "firestoreResidueNote": "Counted in documents, paged through every root collection. The database held zero collections at baseline, so any document here is residue.",
+              "productionAuthAccountsBaseline": 5,
+              "productionAuthAccountsAfter": 5,
+              "syntheticAuthAccountsRemainingForThisRun": 0,
+              "preExistingSyntheticAccountsNotOwnedByThisRun": [
+                {
+                  "createdAt": "2026-09-09",
+                  "emailPrefix": "migration-test--202609090958..."
+                },
+                {
+                  "createdAt": "2026-09-09",
+                  "emailPrefix": "migration-test--travel-20260..."
+                },
+                {
+                  "createdAt": "2026-09-09",
+                  "emailPrefix": "migration-test--202609090958..."
+                },
+                {
+                  "createdAt": "2026-09-09",
+                  "emailPrefix": "migration-test--travel-20260..."
+                },
+                {
+                  "createdAt": "2026-09-09",
+                  "emailPrefix": "migration-test--202609090958..."
+                }
+              ],
+              "preExistingSyntheticNote": "Pre-existing migration-test-- accounts from an earlier session. They are the 5-account baseline, are NOT residue of this run, and were deliberately left alone: the manifest forbids deleting anything outside this runId. They should be removed separately.",
+              "storageChecks": [
+                "business-signatures/091rY67QSZg6lrhgx2aLlNCXjfp2/migration-test--final-smoke-2ae408b1-48f7-4e2c-a871-10b1279452ab-signature.png: gone (http 400)"
+              ]
+            },
+            "sweep": {
+              "byRecordedPath": {
+                "deleted": [
+                  "trips/32873033-4732-47ac-bd61-c1ebb7db1f7f",
+                  "businesses/170ca1ea-e5ee-47e3-ad40-b34699671802/parts/d2763dcc-3030-4b94-b79f-772373b0aac1",
+                  "businessOwners/ChVDxTY6iqZi1h3PYD1JuHVU7su2",
+                  "businesses/170ca1ea-e5ee-47e3-ad40-b34699671802",
+                  "users/ChVDxTY6iqZi1h3PYD1JuHVU7su2",
+                  "businessOwners/XEv3gnfieDhxAxYEFoeB34EfhIq1",
+                  "businesses/e081ad01-78b7-4dc0-8616-7afec4be7746",
+                  "users/XEv3gnfieDhxAxYEFoeB34EfhIq1",
+                  "businessOwners/pOU4MSyHP4bqTYqObuGj6fNsjFV2",
+                  "businesses/0472ffb4-76b9-4076-9e54-2935a847eb16",
+                  "users/pOU4MSyHP4bqTYqObuGj6fNsjFV2",
+                  "businesses/c22dcf30-11b6-42f9-99cf-1cbfb4e20843/restaurantOrders/dd2c378a-e916-44d9-93aa-4bc34a124265",
+                  "businesses/c22dcf30-11b6-42f9-99cf-1cbfb4e20843/restaurantStaff/3b2784c5-2a01-49c9-9be0-f0ee6b227f27",
+                  "businessOwners/EoIjLqxaScPjzCWSBGrCIPOgd3p2",
+                  "businesses/c22dcf30-11b6-42f9-99cf-1cbfb4e20843",
+                  "users/EoIjLqxaScPjzCWSBGrCIPOgd3p2",
+                  "trips/e64de20f-4daf-4151-87bf-d65d49e53107",
+                  "trips/7af9facf-a5b6-4157-b7b7-cbfdcf7e8c0c",
+                  "trips/5756abee-88f5-4d84-b307-7916e8a53a58",
+                  "businessOwners/9SiD7q7fERZIseW9nqKJJCo1i1B2",
+                  "businesses/d512b2b3-e3f8-455a-8ea9-aca527b73d9a",
+                  "users/9SiD7q7fERZIseW9nqKJJCo1i1B2",
+                  "businessOwners/091rY67QSZg6lrhgx2aLlNCXjfp2",
+                  "businesses/c6cb14fb-1aa4-40b4-b0a3-6c36a9bfb7f7",
+                  "users/091rY67QSZg6lrhgx2aLlNCXjfp2"
+                ],
+                "alreadyGone": [],
+                "failed": []
+              },
+              "byOwnerUid": {
+                "deleted": 92,
+                "failed": [],
+                "byCollection": {
+                  "idempotency": 5,
+                  "sparkOperations": 5,
+                  "tripActivityLog": 23,
+                  "tripFinancialAudit": 48,
+                  "tripInstallments": 3,
+                  "tripPaymentPlans": 4,
+                  "tripPlans": 4
+                }
+              },
+              "authSweep": {
+                "deleted": [],
+                "failed": []
+              }
+            }
+          },
+          "productionCustomerWrites": 0,
+          "reasons": [],
           "artifact": "migration/reports/firestore-production-client-smoke.json",
           "requires": "approved candidate Rules deployment, hard-required Enterprise indexes READY, migration IAM, and isolated production test identities"
         }
@@ -984,8 +1208,22 @@
       },
       {
         "name": "secret",
-        "status": "FAIL",
-        "evidence": "GitHub credential removed from active source; provider revocation confirmation missing"
+        "status": "PASS",
+        "evidence": {
+          "present": true,
+          "credentialType": "GITHUB_CLASSIC_PERSONAL_ACCESS_TOKEN",
+          "revoked": true,
+          "revokedBy": "operator",
+          "revokedAt": "2026-09-17T21:18:12Z",
+          "removalVerified": {
+            "workingTreeMatches": 0,
+            "gitIndexMatches": 0,
+            "assignmentsRemaining": 0
+          },
+          "reasons": [],
+          "artifact": "migration/reports/github-credential-revocation.json",
+          "basis": "revocation is a provider fact and cannot be observed from this repository; it is recorded on explicit operator confirmation and paired with fingerprint-verified local removal"
+        }
       },
       {
         "name": "writeFreeze",
@@ -1008,21 +1246,13 @@
         "evidence": "Spark plan and billing-disabled fail-closed runtime selector; cutover not started"
       }
     ],
-    "pass": 27,
-    "fail": 2,
-    "notRun": 1,
+    "pass": 30,
+    "fail": 0,
+    "notRun": 0,
     "missing": 0,
-    "decision": "NO_GO",
-    "blockers": [
-      "iam",
-      "realClientSmoke",
-      "secret"
-    ]
+    "decision": "GO",
+    "blockers": []
   },
-  "knownBlockers": [
-    "iam",
-    "realClientSmoke",
-    "secret"
-  ],
-  "decision": "NO_GO"
+  "knownBlockers": [],
+  "decision": "GO"
 }

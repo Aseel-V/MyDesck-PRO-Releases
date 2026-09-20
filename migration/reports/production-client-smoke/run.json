@@ -1,0 +1,559 @@
+{
+  "generatedAt": "2026-09-17T21:10:45.496Z",
+  "target": "PRODUCTION",
+  "project": "mydesckpro",
+  "clientSdk": true,
+  "migrationRunId": "final-smoke-2ae408b1-48f7-4e2c-a871-10b1279452ab",
+  "categories": {
+    "auth": "PASS",
+    "tourism": "PASS",
+    "restaurant": "PASS",
+    "supermarket": "PASS",
+    "autoRepair": "PASS",
+    "carParts": "PASS",
+    "maliciousClient": "PASS",
+    "financial": "PASS",
+    "hybridStorage": "PASS",
+    "cleanup": "PASS"
+  },
+  "checks": [
+    {
+      "category": "auth",
+      "name": "synthetic user A signUp succeeds",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "auth",
+      "name": "synthetic user B signUp succeeds",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "auth",
+      "name": "synthetic user A sign-in succeeds",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "auth",
+      "name": "synthetic user B sign-in succeeds",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "auth",
+      "name": "unauthenticated read of a private profile denied",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "auth",
+      "name": "unauthenticated read of a private business denied",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "auth",
+      "name": "user A cannot read user B tenant",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "auth",
+      "name": "user B cannot read user A tenant",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "auth",
+      "name": "user A cannot read user B profile",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "tourism",
+      "name": "trip create",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "tourism",
+      "name": "trip read",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "tourism",
+      "name": "trip update",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "tourism",
+      "name": "trip search/query path",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "tourism",
+      "name": "trip page query uses the composite index",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "tourism",
+      "name": "installment plan create",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "tourism",
+      "name": "idempotent save accepted",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "tourism",
+      "name": "idempotent duplicate replay has one effect",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "tourism",
+      "name": "tenant isolation: user B cannot read user A trip",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "tourism",
+      "name": "tenant isolation: user B cannot write user A trip",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "restaurant",
+      "name": "menu/table write as manager",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "restaurant",
+      "name": "menu category create",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "restaurant",
+      "name": "menu item create",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "restaurant",
+      "name": "menu read",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "restaurant",
+      "name": "membership create by manager",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "restaurant",
+      "name": "staff cannot forge a membership for itself",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "restaurant",
+      "name": "staff cannot escalate its own role to manager",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "restaurant",
+      "name": "cross-tenant denial: other tenant cannot read restaurant tables",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "restaurant",
+      "name": "order lifecycle: create",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "restaurant",
+      "name": "order lifecycle: add line at menu price",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "supermarket",
+      "name": "product create",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "supermarket",
+      "name": "product listing",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "supermarket",
+      "name": "POS transaction",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "supermarket",
+      "name": "sale read",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "supermarket",
+      "name": "analytics/query path",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "supermarket",
+      "name": "cross-tenant denial: other tenant cannot read products",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "autoRepair",
+      "name": "customer + vehicle + working order",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "autoRepair",
+      "name": "repair order listing",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "autoRepair",
+      "name": "parts in stock listing",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "autoRepair",
+      "name": "cross-tenant denial: other tenant cannot read repair orders",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "carParts",
+      "name": "part create",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "carParts",
+      "name": "part read",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "carParts",
+      "name": "part update / inventory flow",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "carParts",
+      "name": "cross-tenant denial: other tenant cannot read parts",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "maliciousClient",
+      "name": "businessId mutation",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "maliciousClient",
+      "name": "ownerUid mutation",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "maliciousClient",
+      "name": "membership forgery by outsider",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "maliciousClient",
+      "name": "role escalation on own profile",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "maliciousClient",
+      "name": "self-admin claim",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "maliciousClient",
+      "name": "cross-tenant relation write",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "maliciousClient",
+      "name": "audit tampering",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "maliciousClient",
+      "name": "subscription/suspension tampering",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "maliciousClient",
+      "name": "outsider cannot read another tenant business",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "financial",
+      "name": "valid financial transaction succeeds",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "financial",
+      "name": "duplicate financial write is idempotent",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "financial",
+      "name": "manual authoritative total mutation denied",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "financial",
+      "name": "invalid amount/scale rejected",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "financial",
+      "name": "wrong currency rejected",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "financial",
+      "name": "immutable financial event cannot be modified by a client",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "hybridStorage",
+      "name": "role claim provisioned by operator tooling",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "hybridStorage",
+      "name": "Firebase identity carries role=authenticated, no Supabase Auth session",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "hybridStorage",
+      "name": "authorized owner upload succeeds",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "hybridStorage",
+      "name": "authorized owner read succeeds",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "hybridStorage",
+      "name": "checksum/content matches what was written",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "hybridStorage",
+      "name": "authorized owner overwrite succeeds",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "hybridStorage",
+      "name": "cache-busted re-read confirms the new bytes",
+      "ok": true,
+      "detail": "len 68"
+    },
+    {
+      "category": "hybridStorage",
+      "name": "wrong user read denied",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "hybridStorage",
+      "name": "wrong user overwrite denied",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "hybridStorage",
+      "name": "wrong user delete denied",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "hybridStorage",
+      "name": "cross-tenant listing denied",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "hybridStorage",
+      "name": "anonymous API access denied",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "hybridStorage",
+      "name": "anonymous CDN access denied",
+      "ok": true,
+      "detail": "http 400"
+    },
+    {
+      "category": "hybridStorage",
+      "name": "authorized owner delete succeeds",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "hybridStorage",
+      "name": "cache-busted read after delete confirms removal",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "category": "cleanup",
+      "name": "cleanup executed for every recorded resource",
+      "ok": true,
+      "detail": "firestore deleted 2, refused 23; auth deleted 8"
+    }
+  ],
+  "cleanup": {
+    "clientDeletedPaths": [
+      "businesses/170ca1ea-e5ee-47e3-ad40-b34699671802/parts/d2763dcc-3030-4b94-b79f-772373b0aac1",
+      "businesses/c22dcf30-11b6-42f9-99cf-1cbfb4e20843/restaurantStaff/3b2784c5-2a01-49c9-9be0-f0ee6b227f27"
+    ],
+    "clientRefusedPaths": [
+      "trips/32873033-4732-47ac-bd61-c1ebb7db1f7f: permission-denied",
+      "businessOwners/ChVDxTY6iqZi1h3PYD1JuHVU7su2: permission-denied",
+      "businesses/170ca1ea-e5ee-47e3-ad40-b34699671802: permission-denied",
+      "users/ChVDxTY6iqZi1h3PYD1JuHVU7su2: permission-denied",
+      "businessOwners/XEv3gnfieDhxAxYEFoeB34EfhIq1: permission-denied",
+      "businesses/e081ad01-78b7-4dc0-8616-7afec4be7746: permission-denied",
+      "users/XEv3gnfieDhxAxYEFoeB34EfhIq1: permission-denied",
+      "businessOwners/pOU4MSyHP4bqTYqObuGj6fNsjFV2: permission-denied",
+      "businesses/0472ffb4-76b9-4076-9e54-2935a847eb16: permission-denied",
+      "users/pOU4MSyHP4bqTYqObuGj6fNsjFV2: permission-denied",
+      "businesses/c22dcf30-11b6-42f9-99cf-1cbfb4e20843/restaurantOrders/dd2c378a-e916-44d9-93aa-4bc34a124265: permission-denied",
+      "businessOwners/EoIjLqxaScPjzCWSBGrCIPOgd3p2: permission-denied",
+      "businesses/c22dcf30-11b6-42f9-99cf-1cbfb4e20843: permission-denied",
+      "users/EoIjLqxaScPjzCWSBGrCIPOgd3p2: permission-denied",
+      "trips/e64de20f-4daf-4151-87bf-d65d49e53107: permission-denied",
+      "trips/7af9facf-a5b6-4157-b7b7-cbfdcf7e8c0c: permission-denied",
+      "trips/5756abee-88f5-4d84-b307-7916e8a53a58: permission-denied",
+      "businessOwners/9SiD7q7fERZIseW9nqKJJCo1i1B2: permission-denied",
+      "businesses/d512b2b3-e3f8-455a-8ea9-aca527b73d9a: permission-denied",
+      "users/9SiD7q7fERZIseW9nqKJJCo1i1B2: permission-denied",
+      "businessOwners/091rY67QSZg6lrhgx2aLlNCXjfp2: permission-denied",
+      "businesses/c6cb14fb-1aa4-40b4-b0a3-6c36a9bfb7f7: permission-denied",
+      "users/091rY67QSZg6lrhgx2aLlNCXjfp2: permission-denied"
+    ],
+    "storageDeleted": [],
+    "storageFailed": [
+      "business-signatures/091rY67QSZg6lrhgx2aLlNCXjfp2/migration-test--final-smoke-2ae408b1-48f7-4e2c-a871-10b1279452ab-signature.png: http 400"
+    ],
+    "authDeleted": [
+      "091rY67QSZg6lrhgx2aLlNCXjfp2",
+      "9SiD7q7fERZIseW9nqKJJCo1i1B2",
+      "EoIjLqxaScPjzCWSBGrCIPOgd3p2",
+      "ZEZXWLEh1FZcCgN46PZ2oggoLgJ2",
+      "pOU4MSyHP4bqTYqObuGj6fNsjFV2",
+      "XEv3gnfieDhxAxYEFoeB34EfhIq1",
+      "ChVDxTY6iqZi1h3PYD1JuHVU7su2",
+      "pHJs0reO0xfGmPPk76EFckGdEFh1"
+    ],
+    "authFailed": []
+  },
+  "createdResources": {
+    "authUids": [
+      "091rY67QSZg6lrhgx2aLlNCXjfp2",
+      "9SiD7q7fERZIseW9nqKJJCo1i1B2",
+      "EoIjLqxaScPjzCWSBGrCIPOgd3p2",
+      "ZEZXWLEh1FZcCgN46PZ2oggoLgJ2",
+      "pOU4MSyHP4bqTYqObuGj6fNsjFV2",
+      "XEv3gnfieDhxAxYEFoeB34EfhIq1",
+      "ChVDxTY6iqZi1h3PYD1JuHVU7su2",
+      "pHJs0reO0xfGmPPk76EFckGdEFh1"
+    ],
+    "firestorePaths": [
+      "users/091rY67QSZg6lrhgx2aLlNCXjfp2",
+      "businesses/c6cb14fb-1aa4-40b4-b0a3-6c36a9bfb7f7",
+      "businessOwners/091rY67QSZg6lrhgx2aLlNCXjfp2",
+      "users/9SiD7q7fERZIseW9nqKJJCo1i1B2",
+      "businesses/d512b2b3-e3f8-455a-8ea9-aca527b73d9a",
+      "businessOwners/9SiD7q7fERZIseW9nqKJJCo1i1B2",
+      "trips/5756abee-88f5-4d84-b307-7916e8a53a58",
+      "trips/7af9facf-a5b6-4157-b7b7-cbfdcf7e8c0c",
+      "trips/e64de20f-4daf-4151-87bf-d65d49e53107",
+      "users/EoIjLqxaScPjzCWSBGrCIPOgd3p2",
+      "businesses/c22dcf30-11b6-42f9-99cf-1cbfb4e20843",
+      "businessOwners/EoIjLqxaScPjzCWSBGrCIPOgd3p2",
+      "businesses/c22dcf30-11b6-42f9-99cf-1cbfb4e20843/restaurantStaff/3b2784c5-2a01-49c9-9be0-f0ee6b227f27",
+      "businesses/c22dcf30-11b6-42f9-99cf-1cbfb4e20843/restaurantOrders/dd2c378a-e916-44d9-93aa-4bc34a124265",
+      "users/pOU4MSyHP4bqTYqObuGj6fNsjFV2",
+      "businesses/0472ffb4-76b9-4076-9e54-2935a847eb16",
+      "businessOwners/pOU4MSyHP4bqTYqObuGj6fNsjFV2",
+      "users/XEv3gnfieDhxAxYEFoeB34EfhIq1",
+      "businesses/e081ad01-78b7-4dc0-8616-7afec4be7746",
+      "businessOwners/XEv3gnfieDhxAxYEFoeB34EfhIq1",
+      "users/ChVDxTY6iqZi1h3PYD1JuHVU7su2",
+      "businesses/170ca1ea-e5ee-47e3-ad40-b34699671802",
+      "businessOwners/ChVDxTY6iqZi1h3PYD1JuHVU7su2",
+      "businesses/170ca1ea-e5ee-47e3-ad40-b34699671802/parts/d2763dcc-3030-4b94-b79f-772373b0aac1",
+      "trips/32873033-4732-47ac-bd61-c1ebb7db1f7f"
+    ],
+    "operationIds": [
+      "final-smoke-2ae408b1-48f7-4e2c-a871-10b1279452ab-idem",
+      "final-smoke-2ae408b1-48f7-4e2c-a871-10b1279452ab-fin"
+    ],
+    "storageObjects": [
+      "business-signatures/091rY67QSZg6lrhgx2aLlNCXjfp2/migration-test--final-smoke-2ae408b1-48f7-4e2c-a871-10b1279452ab-signature.png"
+    ]
+  },
+  "status": "PASS",
+  "note": "Self-reported. Residue is verified independently by finalize-production-client-smoke.mjs."
+}
