@@ -23,6 +23,7 @@
  * identifier and is deliberately still not printed.
  *
  *   node migration/firestore/tools/cutover-release.mjs --build-only
+ *   node migration/firestore/tools/cutover-release.mjs --package-only
  *   node migration/firestore/tools/cutover-release.mjs --publish
  */
 import { execFileSync } from 'node:child_process';
@@ -39,7 +40,8 @@ const EXPECTED_FIRESTORE_DOCS = 1474;
 const REPORT_PATH = 'migration/reports/cutover-release.json';
 
 const publish = process.argv.includes('--publish');
-const buildOnly = process.argv.includes('--build-only') || !publish;
+const packageOnly = process.argv.includes('--package-only');
+const buildOnly = process.argv.includes('--build-only') || (!publish && !packageOnly);
 const shell = process.env.ComSpec || 'cmd.exe';
 const fail = (phase, message) => {
   console.error(JSON.stringify({ phase, state: 'CUTOVER_RELEASE_REFUSED', reason: message,
@@ -307,6 +309,25 @@ if (buildOnly) {
   console.log(JSON.stringify({ state: 'BUILD_COMPLETE', releasePublished: false,
     version, tag, report: REPORT_PATH,
     next: 'rerun with --publish to build and publish the release' }, null, 2));
+  process.exit(0);
+}
+
+if (packageOnly) {
+  try {
+    run('npx electron-builder --win --publish never', { env: cutoverEnv });
+  } catch {
+    fail('G', 'WINDOWS_PACKAGE_FAILED');
+  }
+  for (const asset of ['release/MyDesck-PRO-Setup.exe', 'release/MyDesck-PRO-Setup.exe.blockmap',
+    'release/latest.yml', 'release/win-unpacked/MyDesck PRO.exe']) {
+    if (!existsSync(asset)) fail('G', `PACKAGE_ASSET_MISSING:${asset}`);
+  }
+  const packagedLatestYml = readFileSync('release/latest.yml', 'utf8');
+  if (!packagedLatestYml.includes(`version: ${version}`)) fail('G', 'PACKAGE_VERSION_MISMATCH');
+  writeEvidence('PACKAGE_COMPLETE', { releasePublished: false, publishAttempted: false,
+    packageComplete: true });
+  console.log(JSON.stringify({ state: 'PACKAGE_COMPLETE', packageComplete: true,
+    releasePublished: false, version, tag, report: REPORT_PATH }, null, 2));
   process.exit(0);
 }
 
