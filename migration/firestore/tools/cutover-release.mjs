@@ -29,7 +29,7 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { writeReport } from '../../tools/lib/write-report.mjs';
 
@@ -367,7 +367,7 @@ if (!token) {
     publishBlocker: 'GITHUB_CLI_TOKEN_UNAVAILABLE' });
   process.exit(2);
 }
-evidence.github = { cli: gh, authenticated: true, tokenSource: 'gh auth token (memory only)',
+evidence.github = { cli: basename(gh), authenticated: true, tokenSource: 'gh auth token (memory only)',
   tokenPersisted: false };
 console.log('[G] GitHub CLI authenticated; token held in memory only');
 

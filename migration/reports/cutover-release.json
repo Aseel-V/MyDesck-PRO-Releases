@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-20T13:16:34.737Z",
+  "generatedAt": "2026-09-21T10:26:30.845Z",
   "artifact": "cutover-release",
-  "state": "PACKAGE_COMPLETE",
+  "state": "RELEASE_PUBLISHED",
   "gates": {
     "CUTOVER_GO": "GO",
     "BULK_COPY_GO": "GO",
@@ -25,14 +25,14 @@
     "syntheticResidue": 0
   },
   "release": {
-    "version": "0.0.63",
-    "tag": "v0.0.63",
+    "version": "0.0.64",
+    "tag": "v0.0.64",
     "owner": "Aseel-V",
     "repo": "MyDesck-PRO-Releases",
     "artifact": "MyDesck-PRO-Setup.exe",
     "channel": "latest",
     "target": "nsis",
-    "existingReleaseCount": 23,
+    "existingReleaseCount": 25,
     "previousTag": "v0.0.61"
   },
   "firebaseWebApp": {
@@ -79,7 +79,42 @@
     "productionMode": true
   },
   "buildComplete": true,
-  "releasePublished": false,
-  "publishAttempted": false,
-  "packageComplete": true
+  "github": {
+    "cli": "gh.exe",
+    "authenticated": true,
+    "tokenSource": "gh auth token (memory only)",
+    "tokenPersisted": false
+  },
+  "publishedAssets": [
+    {
+      "name": "MyDesck-PRO-Setup.exe",
+      "size": 120618874,
+      "sha256": "b1824e067a9d96a2c6afae9e642461848a2e3bf546d4e29895b8403888f628c3"
+    },
+    {
+      "name": "MyDesck-PRO-Setup.exe.blockmap",
+      "size": 125810,
+      "sha256": "70213d8e34b238b4a5cbc018576f4f61e9fa669c318f0a253a58a4d9fab94edc"
+    },
+    {
+      "name": "latest.yml",
+      "size": 340,
+      "sha256": "0f43ff64c255842adb345a6963a65c039372fb644538ea3460129fad75775627"
+    }
+  ],
+  "liveRelease": {
+    "url": "https://github.com/Aseel-V/MyDesck-PRO-Releases/releases/tag/v0.0.64",
+    "tag": "v0.0.64",
+    "draft": false,
+    "prerelease": false,
+    "targetCommitish": "ab59fb5186b0c5fc0a69206f16c00710daaf1a58",
+    "assetsVerified": [
+      "MyDesck-PRO-Setup.exe",
+      "MyDesck-PRO-Setup.exe.blockmap",
+      "latest.yml"
+    ]
+  },
+  "publishStagingRemoved": true,
+  "releasePublished": true,
+  "publishAttempted": true
 }
