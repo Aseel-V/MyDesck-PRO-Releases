@@ -27,9 +27,10 @@
  *   node migration/firestore/tools/cutover-release.mjs --publish
  */
 import { execFileSync } from 'node:child_process';
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { writeReport } from '../../tools/lib/write-report.mjs';
 
 const PROJECT = 'mydesckpro';
@@ -373,22 +374,37 @@ console.log('[G] GitHub CLI authenticated; token held in memory only');
 // ============================ H. publish ========================================================
 // The token exists only in this child environment. It is never echoed and never written to disk.
 const publishEnv = { ...cutoverEnv, GH_TOKEN: token, GITHUB_TOKEN: token };
+// OneDrive can hold directory-enumeration handles on release/win-unpacked between successive
+// builds. Publishing uses a unique OS-temp output so that a sync-client lock cannot strand the
+// official release after all product gates have passed.
+const publishOutput = join(tmpdir(), `mydesck-release-${version}-${process.pid}`);
+mkdirSync(publishOutput, { recursive: true });
 try {
-  run('npx electron-builder --win --publish always', { env: publishEnv });
+  run(`npx electron-builder --win --publish always --config.directories.output="${publishOutput}"`,
+    { env: publishEnv });
 } catch {
+  rmSync(publishOutput, { recursive: true, force: true });
   writeEvidence('PUBLISH_FAILED', { releasePublished: false, publishAttempted: true });
   console.error(JSON.stringify({ state: 'PUBLISH_FAILED', buildComplete: true,
     releasePublished: false, version, tag,
     note: 'the build succeeded; the release was not published, so no cutover occurred' }, null, 2));
   process.exit(1);
 }
-for (const asset of ['release/MyDesck-PRO-Setup.exe', 'release/MyDesck-PRO-Setup.exe.blockmap',
-  'release/latest.yml']) {
+const publishedAssetNames = ['MyDesck-PRO-Setup.exe', 'MyDesck-PRO-Setup.exe.blockmap', 'latest.yml'];
+for (const asset of publishedAssetNames.map((name) => join(publishOutput, name))) {
   if (!existsSync(asset)) fail('H', `RELEASE_ASSET_MISSING:${asset}`);
 }
-const latestYml = readFileSync('release/latest.yml', 'utf8');
+const latestYml = readFileSync(join(publishOutput, 'latest.yml'), 'utf8');
 if (!latestYml.includes(`version: ${version}`)) fail('H', 'LATEST_YML_VERSION_MISMATCH');
 if (!latestYml.includes('MyDesck-PRO-Setup.exe')) fail('H', 'LATEST_YML_ARTIFACT_MISMATCH');
+
+evidence.publishedAssets = publishedAssetNames.map((name) => {
+  const path = join(publishOutput, name);
+  return { name, size: statSync(path).size,
+    sha256: createHash('sha256').update(readFileSync(path)).digest('hex') };
+});
+rmSync(publishOutput, { recursive: true, force: true });
+evidence.publishStagingRemoved = !existsSync(publishOutput);
 
 evidence.releasePublished = true;
 writeEvidence('RELEASE_PUBLISHED', { releasePublished: true, publishAttempted: true });
