@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-18T12:24:47.993Z",
+  "generatedAt": "2026-09-20T13:16:34.737Z",
   "artifact": "cutover-release",
-  "state": "RELEASE_PUBLISHED",
+  "state": "PACKAGE_COMPLETE",
   "gates": {
     "CUTOVER_GO": "GO",
     "BULK_COPY_GO": "GO",
@@ -25,14 +25,14 @@
     "syntheticResidue": 0
   },
   "release": {
-    "version": "0.0.62",
-    "tag": "v0.0.62",
+    "version": "0.0.63",
+    "tag": "v0.0.63",
     "owner": "Aseel-V",
     "repo": "MyDesck-PRO-Releases",
     "artifact": "MyDesck-PRO-Setup.exe",
     "channel": "latest",
     "target": "nsis",
-    "existingReleaseCount": 21,
+    "existingReleaseCount": 23,
     "previousTag": "v0.0.61"
   },
   "firebaseWebApp": {
@@ -63,12 +63,12 @@
     }
   },
   "bundle": {
-    "chunks": 45,
-    "bytes": 4488077,
+    "chunks": 105,
+    "bytes": 4722985,
     "firebaseAuthReferences": 13,
-    "firestoreReferences": 23,
-    "firestoreReleaseMarker": 3,
-    "firebaseProjectReferences": 6,
+    "firestoreReferences": 41,
+    "firestoreReleaseMarker": 4,
+    "firebaseProjectReferences": 8,
     "supabaseStorageReferences": 2,
     "emulatorProjectReferences": 2,
     "emulatorProjectSelected": false,
@@ -79,12 +79,7 @@
     "productionMode": true
   },
   "buildComplete": true,
-  "github": {
-    "cli": "C:\\Program Files\\GitHub CLI\\gh.exe",
-    "authenticated": true,
-    "tokenSource": "gh auth token (memory only)",
-    "tokenPersisted": false
-  },
-  "releasePublished": true,
-  "publishAttempted": true
+  "releasePublished": false,
+  "publishAttempted": false,
+  "packageComplete": true
 }

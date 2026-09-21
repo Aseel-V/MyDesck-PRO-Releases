@@ -1,0 +1,15 @@
+{
+  "test": "desktop-updater-metadata",
+  "status": "STAGING PASS",
+  "commit_sha": "local",
+  "workflow_run_id": "local",
+  "timestamp": "2026-09-21T09:53:43.730Z",
+  "version": "0.0.63",
+  "installer_filename": "MyDesck-PRO-Setup.exe",
+  "blockmap_filename": "MyDesck-PRO-Setup.exe.blockmap",
+  "latest_yml_filename": "latest.yml",
+  "latest_yml_sha512": "i5t+MERxvltVjzumt46zd1x/IdUXNvVkhdZXYMy8jXPgC8C840y/yOm9Qj4MvPPMV9maBf5YIvb1ojwWY8RhNA==",
+  "installer_exists": true,
+  "blockmap_exists": true,
+  "details": "Verified provider, repo, latest.yml, installer, blockmap, version, and SHA512 metadata."
+}
