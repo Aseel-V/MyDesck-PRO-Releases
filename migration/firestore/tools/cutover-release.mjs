@@ -379,30 +379,61 @@ const publishEnv = { ...cutoverEnv, GH_TOKEN: token, GITHUB_TOKEN: token };
 // official release after all product gates have passed.
 const publishOutput = join(tmpdir(), `mydesck-release-${version}-${process.pid}`);
 mkdirSync(publishOutput, { recursive: true });
+const publishedAssetNames = ['MyDesck-PRO-Setup.exe', 'MyDesck-PRO-Setup.exe.blockmap', 'latest.yml'];
 try {
-  run(`npx electron-builder --win --publish always --config.directories.output="${publishOutput}"`,
+  run(`npx electron-builder --win --publish never --config.directories.output="${publishOutput}"`,
     { env: publishEnv });
-} catch {
+
+  for (const asset of publishedAssetNames.map((name) => join(publishOutput, name))) {
+    if (!existsSync(asset)) throw new Error(`RELEASE_ASSET_MISSING:${asset}`);
+  }
+  const latestYml = readFileSync(join(publishOutput, 'latest.yml'), 'utf8');
+  if (!latestYml.includes(`version: ${version}`)) throw new Error('LATEST_YML_VERSION_MISMATCH');
+  if (!latestYml.includes('MyDesck-PRO-Setup.exe')) throw new Error('LATEST_YML_ARTIFACT_MISMATCH');
+
+  evidence.publishedAssets = publishedAssetNames.map((name) => {
+    const path = join(publishOutput, name);
+    return { name, size: statSync(path).size,
+      sha256: createHash('sha256').update(readFileSync(path)).digest('hex') };
+  });
+
+  const releaseNotes = `RELEASE_NOTES_v${version}.md`;
+  if (!existsSync(releaseNotes)) throw new Error(`RELEASE_NOTES_MISSING:${releaseNotes}`);
+  const head = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+  execFileSync(gh, ['release', 'create', tag,
+    ...publishedAssetNames.map((name) => join(publishOutput, name)),
+    '--repo', `${publishConfig.owner}/${publishConfig.repo}`,
+    '--target', head,
+    '--title', `MyDesck PRO ${tag}`,
+    '--notes-file', releaseNotes],
+  { env: publishEnv, stdio: ['ignore', 'pipe', 'pipe'], timeout: 1_800_000, maxBuffer: 8 * 1024 * 1024 });
+
+  const live = JSON.parse(execFileSync(gh, ['release', 'view', tag,
+    '--repo', `${publishConfig.owner}/${publishConfig.repo}`,
+    '--json', 'tagName,isDraft,isPrerelease,targetCommitish,assets,url'],
+  { env: publishEnv, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 120_000 }));
+  if (live.tagName !== tag || live.isDraft || live.isPrerelease) throw new Error('LIVE_RELEASE_STATE_INVALID');
+  const liveByName = new Map(live.assets.map((asset) => [asset.name, asset]));
+  for (const local of evidence.publishedAssets) {
+    const remote = liveByName.get(local.name);
+    if (!remote) throw new Error(`LIVE_ASSET_MISSING:${local.name}`);
+    if (remote.size !== local.size) throw new Error(`LIVE_ASSET_SIZE_MISMATCH:${local.name}`);
+    if (remote.digest && remote.digest !== `sha256:${local.sha256}`) {
+      throw new Error(`LIVE_ASSET_DIGEST_MISMATCH:${local.name}`);
+    }
+  }
+  evidence.liveRelease = { url: live.url, tag: live.tagName, draft: live.isDraft,
+    prerelease: live.isPrerelease, targetCommitish: live.targetCommitish,
+    assetsVerified: publishedAssetNames };
+} catch (error) {
   rmSync(publishOutput, { recursive: true, force: true });
-  writeEvidence('PUBLISH_FAILED', { releasePublished: false, publishAttempted: true });
+  writeEvidence('PUBLISH_FAILED', { releasePublished: false, publishAttempted: true,
+    publishFailure: String(error?.message ?? error).slice(0, 240) });
   console.error(JSON.stringify({ state: 'PUBLISH_FAILED', buildComplete: true,
     releasePublished: false, version, tag,
     note: 'the build succeeded; the release was not published, so no cutover occurred' }, null, 2));
   process.exit(1);
 }
-const publishedAssetNames = ['MyDesck-PRO-Setup.exe', 'MyDesck-PRO-Setup.exe.blockmap', 'latest.yml'];
-for (const asset of publishedAssetNames.map((name) => join(publishOutput, name))) {
-  if (!existsSync(asset)) fail('H', `RELEASE_ASSET_MISSING:${asset}`);
-}
-const latestYml = readFileSync(join(publishOutput, 'latest.yml'), 'utf8');
-if (!latestYml.includes(`version: ${version}`)) fail('H', 'LATEST_YML_VERSION_MISMATCH');
-if (!latestYml.includes('MyDesck-PRO-Setup.exe')) fail('H', 'LATEST_YML_ARTIFACT_MISMATCH');
-
-evidence.publishedAssets = publishedAssetNames.map((name) => {
-  const path = join(publishOutput, name);
-  return { name, size: statSync(path).size,
-    sha256: createHash('sha256').update(readFileSync(path)).digest('hex') };
-});
 rmSync(publishOutput, { recursive: true, force: true });
 evidence.publishStagingRemoved = !existsSync(publishOutput);
 
